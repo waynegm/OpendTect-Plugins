@@ -19,7 +19,7 @@ Filtering
 
 Frequency
 +++++++++
-* `Recursive time-frequency decomposition <doc/RSpectAttrib.rst>`_
+* `Recursive time-frequency decomposition <doc/RSpecAttrib.rst>`_
 
 Binary Distribution
 *******************
