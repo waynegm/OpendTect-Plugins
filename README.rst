@@ -1,10 +1,6 @@
 =====================
-OpendTect-v5-Plugins 
+OpendTect v5+ Plugins 
 =====================
-|
-
-OpendTect v5+ Plugins
----------------------
 
 This is a collection of plugins for the open source seismic interpretation system `OpendTect v5+ <http://www.opendtect.org>`_. All code is provided under the terms of the `GNU General Public License Version 3 <./LICENSE.rst>`_.
 
