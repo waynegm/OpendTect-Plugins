@@ -12,33 +12,32 @@
  ________________________________________________________________________
 
  Author:        Wayne Mogg
- Date:          August 2014
+ Date:          January 2014
  ________________________________________________________________________
  
  -*/
 
-#include "rspecattrib.h"
+#include "avoattrib.h"
 #include "odplugin.h"
 
 
-mDefODPluginEarlyLoad(RSpecAttrib)
-mDefODPluginInfo(RSpecAttrib)
+mDefODPluginEarlyLoad(AVOAttrib)
+mDefODPluginInfo(AVOAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Recursive spectral decomposition attribute v5 (base)",
-		"Recursive spectral decomposition attribute v5 (base)",
+		"AVO attribute v5 (base)",
+		"AVO attribute v5 (base)",
 		"Wayne Mogg",
 		"5.0",
-		"Recursive spectral decomposition attribute for OpendTect v5+",
+		"Simple AVO for OpendTect v5+",
 		PluginInfo::GPL ) );
-	return &retpi;
+    return &retpi;
 }
 
 
-mDefODInitPlugin(RSpecAttrib)
+mDefODInitPlugin(AVOAttrib)
 {
-    Attrib::RSpecAttrib::initClass();
+    Attrib::AVOAttrib::initClass();
 
     return 0;
 }
-

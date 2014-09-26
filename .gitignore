@@ -29,4 +29,5 @@ install_manifest.txt
 
 #OpendTect
 *.alo
+*mod.h
 bin
