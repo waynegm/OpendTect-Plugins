@@ -26,8 +26,13 @@
 
 #include "arrayndimpl.h"
 #include "math2.h"
-#include "rsf.hh"
-
+#ifdef __cplusplus
+extern "C" {
+	#endif
+	#include "rsf.h"
+	#ifdef __cplusplus
+}
+#endif
 
 namespace Attrib
 {
