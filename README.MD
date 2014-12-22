@@ -9,6 +9,7 @@ For details please see the [documentation](http://waynegm.github.io/OpendTect-Pl
 | PLUGIN | DESCRIPTION |
 |--------|-------------|
 | [AVOAttrib](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/AVOAttrib/AVOAttrib.md) | Six attributes derived from reflection intercept and gradient |
+| [ExternalAttrib](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/ExternalAttrib/ExternalAttrib.md) ![](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/new-ribbon.png)| Calculation of attribute using an external process |
 | [LTFAttrib](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/LTFAttrib/LTFAttrib.md) | Local time-frequency decomposition |
 | [MLVFilter](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/MLVFilter/MLVFilter.md) | Structure preserving filtering |
 | [RSpecAttrib](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/RSpecAttrib/RSpecAttrib.md) | Recursive time-frequency decomposition |
