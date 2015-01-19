@@ -73,6 +73,7 @@ public:
 	float*			output;
 	int				nrSamples;
 	int				nrTraces;
+	int				nrOutput;
 	SeisInfo		seisInfo;
 	TrcInfo			trcInfo;
 	FILE*			read_fd;
@@ -90,6 +91,7 @@ ExtProcImpl::ExtProcImpl(const char* fname)
 {
 	nrSamples = 0;
 	nrTraces = 0;
+	nrOutput = 1;
 	setFile(fname);
 }
 	
@@ -195,10 +197,10 @@ bool ExtProcImpl::start( char *const argv[] )
 
 int ExtProcImpl::finish() {
 	int   status;
-	pid_t pid;
+	pid_t pid = -1;
 	
-	kill( child_pid, SIGKILL );
 	if (child_pid != -1) {
+		kill( child_pid, SIGKILL );
 		do {
 			pid = waitpid(child_pid, &status, 0);
 		} while (pid == -1 && errno == EINTR);
@@ -277,8 +279,8 @@ bool ExtProcImpl::readData()
 {
 	if (read_fd) {
 		size_t nbytes = sizeof(float);
-		size_t res = fread((void*) output, nbytes, nrSamples, read_fd);
-		if (res != nrSamples) {
+		size_t res = fread((void*) output, nbytes, nrSamples*nrOutput, read_fd);
+		if (res != nrSamples*nrOutput) {
 			ErrMsg("ExtProcImpl::readData - error reading from external attribute");
 			return false;
 		}
@@ -325,10 +327,12 @@ bool ExtProcImpl::getParam()
 	args[0] = (char*) exfile.str();
 	args[1] = (char*) "-g";
 	args[2] = 0;
-	
 	if (start( args )) {
 		params = readAllStdOut();
-		finish();
+		if (finish() != 0 ) {
+			ErrMsg("ExtProcImpl::getParam - external attribute exited abnormally");
+			return false;
+		}
 	} else {
 		ErrMsg("ExtProcImpl::getParam - run error"); 
 		return false;
@@ -366,6 +370,7 @@ void ExtProc::start(int ninl, int ncrl)
 	(pD->seisInfo).crlDistance = (float) SI().crlDistance();
 	pD->nrTraces = ninl*ncrl;
 	(pD->seisInfo).nrTraces = ninl*ncrl;
+	pD->nrOutput = numOutput();
 	
 	BufferString params(json::Serialize(pD->jsonpar).c_str());
 	char* args[4];
@@ -395,7 +400,8 @@ void ExtProc::setInput( int inpdx, int idx, float val )
 
 float ExtProc::getOutput( int outdx, int idx )
 {
-	return pD->output[idx];
+	int pos = outdx*pD->nrSamples + idx;
+	return pD->output[pos];
 }
 
 void ExtProc::resize( int nrsamples )
@@ -407,8 +413,9 @@ void ExtProc::resize( int nrsamples )
 			delete [] pD->output;
 		pD->nrSamples = nrsamples;
 		int nrtraces = pD->nrTraces;
+		int nrout = pD->nrOutput;
 		pD->input = new float[nrsamples*nrtraces];
-		pD->output = new float[nrsamples];
+		pD->output = new float[nrsamples*nrout];
 		if (pD->input==NULL || pD->output==NULL)
 			ErrMsg( "ExtProc::resize - error allocating array space" );
 	}
@@ -427,7 +434,6 @@ void ExtProc::compute( int z0, int inl, int crl)
 bool ExtProc::hasInput()
 {
 	return (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("Input"));
-	
 }
 
 BufferString ExtProc::inputName()
@@ -437,6 +443,33 @@ BufferString ExtProc::inputName()
 		res = pD->jsonpar["Input"].ToString().c_str();
 	}
 	return res;
+}
+
+bool ExtProc::hasOutput()
+{
+	return (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("Output"));
+}
+
+int ExtProc::numOutput()
+{
+	int nOut = 1;
+	if (hasOutput()) {
+		json::Array outarr = pD->jsonpar["Output"].ToArray();
+		nOut = outarr.size();
+	}
+	return nOut;
+}
+
+BufferString ExtProc::outputName( int onum )
+{
+	BufferString name;
+	if (hasOutput()) {
+		json::Array outarr = pD->jsonpar["Output"].ToArray();
+		int nOut = outarr.size();
+		if (onum >= 0 && onum <nOut)
+			name = outarr[onum].ToString().c_str();
+	}
+	return name;
 }
 
 bool ExtProc::hasZMargin()

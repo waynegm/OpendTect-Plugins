@@ -7,6 +7,7 @@ import numpy as np
 #
 params = {
 	'Input': 'Test Input',
+	'Output': ['Output_1', 'Output_2'],
 	'ZSampMargin' : [-10,10],
 	'StepOut' : [1,1],
 	'Par_0' : {'Name': 'First Parameter', 'Value' : 100.0},
@@ -30,7 +31,7 @@ params = {
 #		crl			current crossline
 #
 # Global numpy array Input contains the trace data as a 3D array with shape (SI['nrinl'], SI['nrcrl'], TI['nrsamp'])
-# Global numpy array Output a 1D array of size TI['nrsamp'] is written to stdout
+# Global dictionary Output contains a 1D array of size TI['nrsamp'] for is written to stdout
 #
 
 def doCompute():
@@ -42,7 +43,8 @@ def doCompute():
 	crldx = SI['nrcrl']//2
 	while True:
 		doInput()
-		Output = Input[ilndx,crldx,:]
+		Output['Output_1'] = Input[ilndx,crldx,:]
+		Output['Output_2'] = -Input[ilndx,crldx,:]
 		doOutput()
 	
 #------------------------------------------------------------------------------
@@ -57,7 +59,12 @@ def doInput():
 
 def doOutput():
 	global Output
-	sys.stdout.write(Output.astype(np.float32,copy=False).tobytes())
+	if 'Output' in params:
+	  for out in params['Output']:
+	    sys.stdout.write(Output[out].astype(np.float32,copy=False).tobytes())
+	else:
+	    sys.stdout.write(Output.astype(np.float32,copy=False).tobytes())
+	  
 	sys.stdout.flush()
 	
 	
@@ -71,13 +78,15 @@ def writePar():
 def readPar(jsonStr):
 	try:
 		global params
-		params = json.loads(jsonStr)
+		params.update(json.loads(jsonStr))
 	except (TypeError, ValueError) as err:
 		print('Error decoding parameter string: %s' % err, file=sys.stderr)
 
 def preCompute():
 	global dt_trcInfo
 	global SI
+	global Output
+	Output = {}
 	sys.stdin = os.fdopen(sys.stdin.fileno(), 'rb', 0) 
 	sys.stdout = os.fdopen(sys.stdout.fileno(), 'wb', 0)
 	dt_trcInfo = np.dtype([	('nrsamp','i4'),

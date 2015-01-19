@@ -41,6 +41,8 @@ public:
 							ExternalAttrib(Desc&);
 
 	static const char*		attribName()	{ return "ExternalAttrib"; }
+	void					getCompNames(BufferStringSet&) const;
+	
 
 	static const char*		exFileStr()		{ return "exfile"; }
 	static const char*		zmarginStr() 	{ return "zmargin"; }

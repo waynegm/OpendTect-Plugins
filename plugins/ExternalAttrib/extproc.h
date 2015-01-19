@@ -44,6 +44,10 @@ public:
 	
 	bool				hasInput();
 	BufferString		inputName();
+	
+	bool				hasOutput();
+	int					numOutput();
+	BufferString		outputName( int onum );
 
 	bool				hasZMargin();
 	Interval<int>		zmargin();

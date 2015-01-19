@@ -73,7 +73,6 @@ void ExternalAttrib::initClass()
 	
 	desc->addInput( InputSpec("Input data",true) );
 	desc->addOutputDataType( Seis::UnknowData );
-	desc->setLocality( Desc::MultiTrace );
 	
 	mAttrEndInitClass
 }
@@ -90,6 +89,16 @@ void ExternalAttrib::updateDesc( Desc& desc )
 	desc.setParamEnabled(par2Str(), p.hasParam(2));
 	desc.setParamEnabled(par3Str(), p.hasParam(3));
 	desc.setParamEnabled(par4Str(), p.hasParam(4));
+	
+	if (p.hasOutput())
+		desc.setNrOutputs(Seis::UnknowData, p.numOutput());
+	else
+		desc.setNrOutputs(Seis::UnknowData, 1);
+	
+	if (p.hasStepOut())
+		desc.setLocality(Desc::MultiTrace);
+	else
+		desc.setLocality(Desc::SingleTrace);
 }
 
 ExternalAttrib::ExternalAttrib( Desc& desc )
@@ -100,6 +109,7 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 	if ( !isOK() ) return;
 
 	indata_.allowNull(true);
+	enableAllOutputs(true);
 	
     mGetString( exfile_, exFileStr() );
 	proc_= new ExtProc( exfile_.str() );
@@ -159,6 +169,18 @@ bool ExternalAttrib::getTrcPos()
 	return true;
 }
 
+void ExternalAttrib::getCompNames( BufferStringSet& nms ) const
+{
+	if (proc_->hasOutput()) {
+		nms.erase();
+		for (int i = 0; i<proc_->numOutput();i++)
+		{
+			BufferString nm = proc_->outputName(i);
+			nms.add(nm.buf());
+		}
+	} else 
+		Provider::getCompNames( nms );
+}
 
 bool ExternalAttrib::getInputData( const BinID& relpos, int zintv )
 {
@@ -202,10 +224,11 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 	proc_->compute( z0, bin.inl(), bin.crl() );
 
 	for ( int idx=0; idx<nrsamples; idx++ )
-	{
-		float val = proc_->getOutput(0, idx);
-		setOutputValue( output, 0, idx, z0, val );
-	}
+		for (int iout = 0; iout<proc_->numOutput(); iout++)
+		{
+			float val = proc_->getOutput(iout, idx);
+			setOutputValue( output, iout, idx, z0, val );
+		}
 	return true;
 }
 

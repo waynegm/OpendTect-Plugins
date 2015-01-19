@@ -1,32 +1,84 @@
 #!/usr/bin/python
 #
-# Simple Butterworth LowPass Filter using Numpy/Scipy
-# for the OpendTect ExternalAttrib plugin
+# Calculate inline and crossline dip using the operator proposed by Xudong Jiang in
+# "Extracting image orientation feature by using integration operator" 
+# Pattern Recognition 40 (2007) 705-717
 #
 import sys, getopt, os, json
+from math import *
 import numpy as np
-import scipy.signal as sig
+import sympy as sp
+from scipy.ndimage import convolve
+from scipy.signal import gaussian_filter
 #
 # These are the attribute parameters
 #
 params = {
-	'Input': 'Filter Input',
-	'ZSampMargin' : [-30,30],
-	'Par_0' : {'Name': 'Filter Cutoff', 'Value': 40},
-	'Par_1' : {'Name': 'Filter Order', 'Value': 3}
+	'Input': 'Input',
+	'Output': ['Crl_dip', 'Inl_dip'],
+	'ZSampMargin' : [-10,10],
+	'StepOut' : [1,1],
 }
 
 def doCompute():
 	global Output
-	order = params['Par_1']['Value']
-	nyquist = 1.0/(2.0*SI['zstep'])
-	cutoff = params['Par_0']['Value']/nyquist
-	b, a = sig.butter(order, cutoff, 'low', analog=False)
+	global inl_kernel
+	global crl_kernel
+	
+	inl_kernel = xukernel(SI['nrcrl'].item())
+	crl_kernel = xukernel(SI['nrinl'].item())
+#
+# index of current trace position in Input numpy array
+#
+	ilndx = SI['nrinl']//2
+	crldx = SI['nrcrl']//2
 	while True:
 		doInput()
-		Output = sig.filtfilt(b, a, Input[0,0,:], padtype=None, padlen=0)
+		Output['Crl_dip'] = xudip(inl_kernel, Input[ilndx,:,:])
+		Output['Inl_dip'] = xudip(crl_kernel, Input[:,crldx,:])
 		doOutput()
 	
+
+#
+# Apply the orientation operator kernel
+#
+def xudip(kernel, inarr):
+    sz = np.shape(kernel)[0]
+    M2 = sz//2
+    r = convolve(inarr, kernel.T)
+    i = convolve(inarr, kernel)
+    res = np.where(r[M2,:] != 0.0, -i[M2,:]/r[M2,:], 0.0)
+    
+    return res
+
+#
+# Compute the orientation operator kernel
+#
+def xukernel(size):
+    s = sp.Symbol('s',integer=True)
+    b = sp.Symbol('b', integer=True)
+    _M = sp.Symbol('M',integer=True)
+    _mp = sp.Symbol('mp', integer=True)
+    p = sp.Symbol('p')
+    p = (sp.Product(s-b, (b,0,_M))/(s-_mp)).doit()
+    res = np.zeros((size, size))
+    M = size-1
+    M2 = M//2
+    for n in range(1,M2+1):
+        nmm = M2 - n
+        npp = M2 + n
+        for m in range(0,M2+1):
+            mmm = M2 - m
+            mpp = M2 + m
+            const = (-1.0)**mmm/(factorial(mmm)*factorial(mpp))
+            v = p.subs(_M,M).subs(_mp,mpp)
+            res[npp,mpp] = const*sp.re(sp.N(sp.integrate(v,(s,nmm,npp))))
+            res[npp,mmm] = res[npp,mpp]
+            res[nmm,mpp] = -res[npp,mpp]
+            res[nmm,mmm] = res[nmm,mpp]
+    
+    return res
+
 #------------------------------------------------------------------------------
 # Should not need to change anything below this point
 #------------------------------------------------------------------------------
@@ -44,7 +96,7 @@ def doOutput():
 	    sys.stdout.write(Output[out].astype(np.float32,copy=False).tobytes())
 	else:
 	    sys.stdout.write(Output.astype(np.float32,copy=False).tobytes())
-
+	  
 	sys.stdout.flush()
 	
 	
@@ -58,7 +110,7 @@ def writePar():
 def readPar(jsonStr):
 	try:
 		global params
-		params = json.loads(jsonStr)
+		params.update(json.loads(jsonStr))
 	except (TypeError, ValueError) as err:
 		print('Error decoding parameter string: %s' % err, file=sys.stderr)
 
