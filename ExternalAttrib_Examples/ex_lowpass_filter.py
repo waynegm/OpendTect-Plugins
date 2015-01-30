@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 #
 # Simple Butterworth LowPass Filter using Numpy/Scipy
 # for the OpendTect ExternalAttrib plugin
@@ -6,6 +7,7 @@
 import sys, getopt, os, json
 import numpy as np
 import scipy.signal as sig
+
 #
 # These are the attribute parameters
 #
@@ -15,7 +17,6 @@ params = {
 	'Par_0' : {'Name': 'Filter Cutoff', 'Value': 40},
 	'Par_1' : {'Name': 'Filter Order', 'Value': 3}
 }
-
 def doCompute():
 	global Output
 	order = params['Par_1']['Value']
@@ -54,13 +55,15 @@ def writePar():
 		sys.stdout.flush()
 	except (TypeError, ValueError) as err:
 		print('Error exporting parameter string: %s'% err, file=sys.stderr)
+		sys.exit(1)
   
 def readPar(jsonStr):
+	global params
 	try:
-		global params
-		params = json.loads(jsonStr)
+		params.update(json.loads(jsonStr))
 	except (TypeError, ValueError) as err:
 		print('Error decoding parameter string: %s' % err, file=sys.stderr)
+		sys.exit(1)
 
 def preCompute():
 	global dt_trcInfo

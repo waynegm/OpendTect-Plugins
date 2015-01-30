@@ -9,7 +9,7 @@ from math import *
 import numpy as np
 import sympy as sp
 from scipy.ndimage import convolve
-from scipy.signal import gaussian_filter
+#from scipy.signal import gaussian_filter
 #
 # These are the attribute parameters
 #
@@ -106,6 +106,7 @@ def writePar():
 		sys.stdout.flush()
 	except (TypeError, ValueError) as err:
 		print('Error exporting parameter string: %s'% err, file=sys.stderr)
+		sys.exit(1)
   
 def readPar(jsonStr):
 	try:
@@ -113,6 +114,7 @@ def readPar(jsonStr):
 		params.update(json.loads(jsonStr))
 	except (TypeError, ValueError) as err:
 		print('Error decoding parameter string: %s' % err, file=sys.stderr)
+		sys.exit(1)
 
 def preCompute():
 	global dt_trcInfo

@@ -94,9 +94,12 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 {
 	BufferString fname(exfilefld_->fileName());
 	if (!fname.isEmpty()) {
-		if (extproc_!=NULL)
+		if (extproc_ == NULL) 
+			extproc_ = new ExtProc(fname.str());
+		else if ( fname != extproc_->getFile() ) {
 			delete extproc_;
-		extproc_ = new ExtProc(fname.str());
+			extproc_ = new ExtProc(fname.str());
+		}
 
 		if (extproc_ && extproc_->hasInput()) {
 			inpfld_->setLabelText(extproc_->inputName().str());
