@@ -43,7 +43,7 @@ public:
 	static const char*		attribName()	{ return "ExternalAttrib"; }
 	void					getCompNames(BufferStringSet&) const;
 	
-
+	static const char*		interpFileStr()	{ return "interpfile"; }
 	static const char*		exFileStr()		{ return "exfile"; }
 	static const char*		zmarginStr() 	{ return "zmargin"; }
 	static const char*		stepoutStr()	{ return "stepout"; }
@@ -68,6 +68,7 @@ protected:
 	bool					computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const;
 
 				
+	BufferString			interpfile_;
 	BufferString			exfile_;
 	Interval<int>			zmargin_;
 	BinID					stepout_;

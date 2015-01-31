@@ -27,11 +27,11 @@ struct ExtProcImpl;
 
 class ExtProc {
 public:
-	ExtProc( const char* exFile );
+	ExtProc( const char* exFile , const char* inFile );
     ~ExtProc();
 	
 	BufferString	getFile();
-	void			setFile( const char* exFile );
+	void			setFile( const char* exFile, const char* inFile );
 	
 	void 			start( int niln, int ncrl );
 	void			compute( int z0, int inl, int crl );

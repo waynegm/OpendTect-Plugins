@@ -41,9 +41,16 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     : uiAttrDescEd(p,is2d,"mToDoHelpID"), extproc_(NULL)
 
 {
+	#ifdef __win__
+	interpfilefld_ = new uiFileInput( this, "Interpreter (optional)", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.exe") );
+	#else
+	interpfilefld_ = new uiFileInput( this, "Interpreter (optional)", uiFileInput::Setup(uiFileDialog::Gen).forread( true ));
+	#endif
+
 	exfilefld_ = new uiFileInput( this, "External File", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.py") );
 	exfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
-
+	exfilefld_->attach(alignedBelow, interpfilefld_);
+	
 	inpfld_ = createInpFld( is2D() );
 	inpfld_->attach( alignedBelow, exfilefld_ );
 
@@ -92,13 +99,14 @@ uiExternalAttrib::~uiExternalAttrib()
 
 void uiExternalAttrib::exfileChanged( CallBacker* )
 {
+	BufferString iname(interpfilefld_->fileName());
 	BufferString fname(exfilefld_->fileName());
 	if (!fname.isEmpty()) {
 		if (extproc_ == NULL) 
-			extproc_ = new ExtProc(fname.str());
+			extproc_ = new ExtProc(fname.str(), iname.str());
 		else if ( fname != extproc_->getFile() ) {
 			delete extproc_;
-			extproc_ = new ExtProc(fname.str());
+			extproc_ = new ExtProc(fname.str(), iname.str());
 		}
 
 		if (extproc_ && extproc_->hasInput()) {
@@ -161,7 +169,8 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
     if ( desc.attribName() != ExternalAttrib::attribName())
 	return false;
 	
-    mIfGetString(ExternalAttrib::exFileStr(),exfile, exfilefld_->setFileName(exfile) )
+	mIfGetString(ExternalAttrib::interpFileStr(),interpfile, interpfilefld_->setFileName(interpfile) )
+	mIfGetString(ExternalAttrib::exFileStr(),exfile, exfilefld_->setFileName(exfile) )
 	exfileChanged(NULL);
 	
 	if (extproc_ && extproc_->hasZMargin()) {
@@ -201,7 +210,8 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
     if ( desc.attribName() != ExternalAttrib::attribName())
 	return false;
 
-    mSetString( ExternalAttrib::exFileStr(), exfilefld_->fileName() );
+	mSetString( ExternalAttrib::interpFileStr(), interpfilefld_->fileName() );
+	mSetString( ExternalAttrib::exFileStr(), exfilefld_->fileName() );
 	if (extproc_ && extproc_->hasZMargin()) {
 		mSetIntInterval( ExternalAttrib::zmarginStr(), zmarginfld_->getIInterval() );
 	}

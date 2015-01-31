@@ -74,6 +74,7 @@ def writePar():
 		sys.stdout.flush()
 	except (TypeError, ValueError) as err:
 		print('Error exporting parameter string: %s'% err, file=sys.stderr)
+		sys.exit(1)
   
 def readPar(jsonStr):
 	try:
@@ -81,6 +82,7 @@ def readPar(jsonStr):
 		params.update(json.loads(jsonStr))
 	except (TypeError, ValueError) as err:
 		print('Error decoding parameter string: %s' % err, file=sys.stderr)
+		sys.exit(1)
 
 def preCompute():
 	global dt_trcInfo

@@ -38,7 +38,10 @@ void ExternalAttrib::initClass()
 {
 	mAttrStartInitClassWithUpdate
 
-    StringParam* exfilepar = new StringParam( exFileStr() );
+	StringParam* interpfilepar = new StringParam( interpFileStr() );
+	desc->addParam( interpfilepar );
+	
+	StringParam* exfilepar = new StringParam( exFileStr() );
 	desc->addParam( exfilepar );
 
 	IntGateParam* zMargin = new IntGateParam( zmarginStr() );
@@ -79,8 +82,9 @@ void ExternalAttrib::initClass()
 
 void ExternalAttrib::updateDesc( Desc& desc )
 {
+	BufferString iname = desc.getValParam( interpFileStr() )->getStringValue();
 	BufferString fname = desc.getValParam( exFileStr() )->getStringValue();
-	ExtProc p(fname.str());
+	ExtProc p(fname.str(), iname.str());
 	
 	desc.setParamEnabled(zmarginStr(), p.hasZMargin());
 	desc.setParamEnabled(stepoutStr(), p.hasStepOut());
@@ -111,8 +115,9 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 	indata_.allowNull(true);
 	enableAllOutputs(true);
 	
-    mGetString( exfile_, exFileStr() );
-	proc_= new ExtProc( exfile_.str() );
+	mGetString( interpfile_, interpFileStr() );
+	mGetString( exfile_, exFileStr() );
+	proc_= new ExtProc( exfile_.str(), interpfile_.str() );
 	
 	if (proc_) {
 		if (proc_->hasZMargin()) {

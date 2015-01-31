@@ -45,6 +45,7 @@ protected:
 
 	ExtProc*		extproc_;
 	uiFileInput*	exfilefld_;
+	uiFileInput*	interpfilefld_;
 	uiAttrSel*		inpfld_;
 	uiGenInput*		zmarginfld_;
 	uiStepOutSel*	stepoutfld_;

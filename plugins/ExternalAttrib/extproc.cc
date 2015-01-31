@@ -59,7 +59,7 @@ struct TrcInfo
 struct ExtProcImpl
 {
 public:
-	ExtProcImpl(const char* fname);
+	ExtProcImpl(const char* fname, const char* iname);
 	~ExtProcImpl();
 	
 	bool			start( char *const argv[] );
@@ -73,7 +73,7 @@ public:
 	BufferString	readAllStdOut();
 	
 	bool			getParam();
-	void			setFile(const char* fname);
+	void			setFile(const char* fname, const char* iname);
 	
 	float*			input;
 	float*			output;
@@ -91,12 +91,13 @@ public:
 	pid_t			child_pid;
 #endif
 	BufferString 	exfile;
+	BufferString	infile;
 	json::Value		jsonpar;
 	
 	
 };
 
-ExtProcImpl::ExtProcImpl(const char* fname)
+ExtProcImpl::ExtProcImpl(const char* fname, const char* iname)
 :  input(NULL), output(NULL), read_fd(NULL), write_fd(NULL)
 {
 #ifdef __win__
@@ -108,7 +109,7 @@ ExtProcImpl::ExtProcImpl(const char* fname)
 	nrSamples = 0;
 	nrTraces = 0;
 	nrOutput = 1;
-	setFile(fname);
+	setFile(fname, iname);
 }
 	
 ExtProcImpl::~ExtProcImpl()
@@ -126,9 +127,10 @@ ExtProcImpl::~ExtProcImpl()
 		delete [] output;
 }
 
-void ExtProcImpl::setFile(const char* fname)
+void ExtProcImpl::setFile(const char* fname, const char* iname)
 {
 	exfile = fname;
+	infile = iname;
 	getParam();
 }
 
@@ -496,10 +498,20 @@ BufferString ExtProcImpl::readAllStdOut()
 bool ExtProcImpl::getParam()
 {
 	BufferString params;
-	char* args[3];
-	args[0] = (char*) exfile.str();
-	args[1] = (char*) "-g";
-	args[2] = 0;
+	char* args[4];
+	if (infile.isEmpty()) {
+		args[0] = (char*) exfile.str();
+		args[1] = (char*) "-g";
+		args[2] = 0;
+	} else if (exfile.isEmpty()) {
+		ErrMsg("ExtProcImpl::getParam - no external attribute file provided");
+		return false;
+	} else {
+		args[0] = (char*) infile.str();
+		args[1] = (char*) exfile.str();
+		args[2] = (char*) "-g";
+		args[3] = 0;
+	}
 	if (start( args )) {
 		params = readAllStdOut();
 		if (finish() != 0 ) {
@@ -520,8 +532,8 @@ bool ExtProcImpl::getParam()
 	return true;
 }
 
-ExtProc::ExtProc( const char* fname ) 
-: pD(new ExtProcImpl(fname))
+ExtProc::ExtProc( const char* fname, const char* iname ) 
+: pD(new ExtProcImpl(fname, iname))
 { 
 }
 
@@ -551,11 +563,21 @@ void ExtProc::start(int ninl, int ncrl)
 	params.replace("\"","\"\""); 
 	params.embed('"','"');
 #endif
-	char* args[4];
-	args[0] = (char*) pD->exfile.str();
-	args[1] = (char*) "-c";
-	args[2] = (char*) params.str();
-	args[3] = 0;
+	char* args[5];
+	if (pD->infile.isEmpty()) {
+		args[0] = (char*) pD->exfile.str();
+		args[1] = (char*) "-c";
+		args[2] = (char*) params.str();
+		args[3] = 0;
+	} else if (pD->exfile.isEmpty()) {
+		ErrMsg("ExtProc::start - no external attribute file provided");
+	} else {
+		args[0] = (char*) pD->infile.str();
+		args[1] = (char*) pD->exfile.str();
+		args[2] = (char*) "-c";
+		args[3] = (char*) params.str();
+		args[4] = 0;
+	}
 
 	if (!pD->start( args ))
 		ErrMsg("ExtProc::start - run error");
@@ -752,8 +774,8 @@ BufferString ExtProc::getFile()
 	return pD->exfile;
 }
 
-void ExtProc::setFile( const char* fname )
+void ExtProc::setFile( const char* fname, const char* iname)
 {
-		pD->setFile(fname);
+		pD->setFile(fname, iname);
 	
 }
