@@ -32,7 +32,8 @@ namespace Attrib
 {
 
 mAttrDefCreateInstance(ExternalAttrib)    
-    
+
+ExtProc* ExternalAttrib::dProc_ = NULL;
 
 void ExternalAttrib::initClass()
 {
@@ -82,24 +83,31 @@ void ExternalAttrib::initClass()
 
 void ExternalAttrib::updateDesc( Desc& desc )
 {
+
 	BufferString iname = desc.getValParam( interpFileStr() )->getStringValue();
 	BufferString fname = desc.getValParam( exFileStr() )->getStringValue();
-	ExtProc p(fname.str(), iname.str());
+    if (dProc_) {
+        if (dProc_->getFile() != fname) {
+            delete dProc_;
+            dProc_ = new ExtProc(fname.str(), iname.str());
+        }
+    } else
+        dProc_ = new ExtProc(fname.str(), iname.str());
 	
-	desc.setParamEnabled(zmarginStr(), p.hasZMargin());
-	desc.setParamEnabled(stepoutStr(), p.hasStepOut());
-	desc.setParamEnabled(par0Str(), p.hasParam(0));
-	desc.setParamEnabled(par1Str(), p.hasParam(1));
-	desc.setParamEnabled(par2Str(), p.hasParam(2));
-	desc.setParamEnabled(par3Str(), p.hasParam(3));
-	desc.setParamEnabled(par4Str(), p.hasParam(4));
+	desc.setParamEnabled(zmarginStr(), dProc_->hasZMargin());
+	desc.setParamEnabled(stepoutStr(), dProc_->hasStepOut());
+	desc.setParamEnabled(par0Str(), dProc_->hasParam(0));
+	desc.setParamEnabled(par1Str(), dProc_->hasParam(1));
+	desc.setParamEnabled(par2Str(), dProc_->hasParam(2));
+	desc.setParamEnabled(par3Str(), dProc_->hasParam(3));
+	desc.setParamEnabled(par4Str(), dProc_->hasParam(4));
 	
-	if (p.hasOutput())
-		desc.setNrOutputs(Seis::UnknowData, p.numOutput());
+	if (dProc_->hasOutput())
+		desc.setNrOutputs(Seis::UnknowData, dProc_->numOutput());
 	else
 		desc.setNrOutputs(Seis::UnknowData, 1);
 	
-	if (p.hasStepOut())
+	if (dProc_->hasStepOut())
 		desc.setLocality(Desc::MultiTrace);
 	else
 		desc.setLocality(Desc::SingleTrace);
@@ -184,7 +192,7 @@ void ExternalAttrib::getCompNames( BufferStringSet& nms ) const
 			nms.add(nm.buf());
 		}
 	} else 
-		Provider::getCompNames( nms );
+		Provider::getCompNames( nms ); 
 }
 
 bool ExternalAttrib::getInputData( const BinID& relpos, int zintv )

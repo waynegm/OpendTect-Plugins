@@ -57,6 +57,7 @@ protected:
 							~ExternalAttrib();
 	static Provider*		createInstance(Desc&);
 	static void				updateDesc(Desc&);
+    static ExtProc*         dProc_;
 	
 	bool					allowParallelComputation() const
 							{ return false; }
