@@ -5,6 +5,7 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 .directory
+__pycache__
 # Compiled Object files
 *.slo
 *.lo
