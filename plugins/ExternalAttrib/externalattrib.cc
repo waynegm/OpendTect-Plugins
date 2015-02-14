@@ -54,7 +54,9 @@ void ExternalAttrib::initClass()
 	stepout->setDefaultValue( BinID(0,0) );
 	desc->addParam( stepout );
 
-	
+	EnumParam* selection = new EnumParam( selectStr() );
+    desc->addParam( selection );
+    
 	FloatParam* par0 = new FloatParam( par0Str() );
 	desc->addParam( par0 );
 	par0->setDefaultValue(0);
@@ -96,13 +98,23 @@ void ExternalAttrib::updateDesc( Desc& desc )
 	
 	desc.setParamEnabled(zmarginStr(), dProc_->hasZMargin());
 	desc.setParamEnabled(stepoutStr(), dProc_->hasStepOut());
+    desc.setParamEnabled(selectStr(), dProc_->hasSelect());
 	desc.setParamEnabled(par0Str(), dProc_->hasParam(0));
 	desc.setParamEnabled(par1Str(), dProc_->hasParam(1));
 	desc.setParamEnabled(par2Str(), dProc_->hasParam(2));
 	desc.setParamEnabled(par3Str(), dProc_->hasParam(3));
 	desc.setParamEnabled(par4Str(), dProc_->hasParam(4));
 	
-	if (dProc_->hasOutput())
+    if (dProc_->hasSelect()) {
+        ValParam* ep = desc.getValParam(selectStr());
+		int nsel = dProc_->numSelect();
+		for (int i=0; i<nsel; i++) {
+			BufferString name = dProc_->selectName(i);
+			ep->setValue(name.str(), i);
+		}
+    }
+        
+    if (dProc_->hasOutput())
 		desc.setNrOutputs(Seis::UnknowData, dProc_->numOutput());
 	else
 		desc.setNrOutputs(Seis::UnknowData, 1);
@@ -121,7 +133,6 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 	if ( !isOK() ) return;
 
 	indata_.allowNull(true);
-	enableAllOutputs(true);
 	
 	mGetString( interpfile_, interpFileStr() );
 	mGetString( exfile_, exFileStr() );
@@ -133,11 +144,15 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 			proc_->setZMargin(zmargin_);
 		}
 		if (proc_->hasStepOut()) {
-			mGetBinID( stepout_, stepoutStr() )
+			mGetBinID( stepout_, stepoutStr() );
 			proc_->setStepOut(stepout_);
 		} else {
 			stepout_ = BinID(0,0);
 		}
+		if (proc_->hasSelect()) {
+            mGetEnum( selection_, selectStr());
+            proc_->setSelection( selection_);
+        }
 		if (proc_->hasParam(0)) {
 			mGetFloat(par0_, par0Str());
 			proc_->setParam(0, par0_);
@@ -236,14 +251,18 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 
 	proc_->compute( z0, bin.inl(), bin.crl() );
 
-	for ( int idx=0; idx<nrsamples; idx++ )
-		for (int iout = 0; iout<proc_->numOutput(); iout++)
-		{
-			float val = proc_->getOutput(iout, idx);
-			setOutputValue( output, iout, idx, z0, val );
+	for (int iout = 0; iout<proc_->numOutput(); iout++) {
+		if (outputinterest_[iout]) {
+			for ( int idx=0; idx<nrsamples; idx++ ) {
+				float val = proc_->getOutput(iout, idx);
+				setOutputValue( output, iout, idx, z0, val );
+			}
 		}
+	}
 	return true;
 }
+
+
 
 }; //namespace
 

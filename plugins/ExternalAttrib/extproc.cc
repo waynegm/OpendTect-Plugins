@@ -681,15 +681,30 @@ bool ExtProc::hasZMargin()
 	return (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("ZSampMargin"));
 		 
 }
-	
+
+bool ExtProc::hideZMargin()
+{
+	if (hasZMargin()) {
+		json::Object jobj = pD->jsonpar["ZSampMargin"].ToObject();
+		if (jobj.HasKey("Hidden"))
+			return jobj["Hidden"];
+		else
+			return false;
+	} else
+		return true;
+}
+
 Interval<int> ExtProc::zmargin()
 {
 	Interval<int> res;
 	if (hasZMargin()) {
-		json::Array zmarr = pD->jsonpar["ZSampMargin"].ToArray();
-		int begin = zmarr[0];
-		int end = zmarr[1];
-		res = Interval<int>(begin, end);
+		json::Object jobj = pD->jsonpar["ZSampMargin"].ToObject();
+		if (jobj.HasKey("Value")) {
+			json::Array zmarr = jobj["Value"].ToArray();
+			int begin = zmarr[0];
+			int end = zmarr[1];
+			res = Interval<int>(begin, end);
+		}
 	}
 	return res;
 }
@@ -699,7 +714,9 @@ void ExtProc::setZMargin( Interval<int> g )
 	json::Array garr;
 	garr.insert(0, g.start);
 	garr.insert(1, g.stop);
-	pD->jsonpar["ZSampMargin"] = garr;
+	json::Object jobj;
+	jobj["Value"] = garr;
+	pD->jsonpar["ZSampMargin"] = jobj;
 }
 
 bool ExtProc::hasStepOut()
@@ -707,14 +724,29 @@ bool ExtProc::hasStepOut()
 	return (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("StepOut"));
 }
 
+bool ExtProc::hideStepOut()
+{
+	if (hasStepOut()) {
+		json::Object jobj = pD->jsonpar["StepOut"].ToObject();
+		if (jobj.HasKey("Hidden"))
+			return jobj["Hidden"];
+		else
+			return false;
+	} else
+		return true;
+}
+
 BinID ExtProc::stepout()
 {
 	BinID res;
 	if (hasStepOut()) {
-		json::Array sarr = pD->jsonpar["StepOut"].ToArray();
-		int inl = sarr[0];
-		int xln = sarr[1];
-		res = BinID(inl, xln);
+		json::Object jobj = pD->jsonpar["StepOut"].ToObject();
+		if (jobj.HasKey("Value")) {
+			json::Array sarr = jobj["Value"].ToArray();
+			int inl = sarr[0];
+			int xln = sarr[1];
+			res = BinID(inl, xln);
+		}
 	}
 	return res;
 }
@@ -724,7 +756,60 @@ void ExtProc::setStepOut(BinID s)
 	json::Array sarr;
 	sarr.insert(0, s.inl());
 	sarr.insert(1, s.crl());
-	pD->jsonpar["StepOut"] = sarr;
+	json::Object jobj;
+	jobj["Value"] = sarr;
+	pD->jsonpar["StepOut"] = jobj;
+}
+
+bool ExtProc::hasSelect()
+{
+	return (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("Select"));
+}
+
+int ExtProc::numSelect()
+{
+	int nsel = 0;
+	if (hasSelect()) {
+		json::Object jobj = pD->jsonpar["Select"].ToObject();
+		if (jobj.HasKey("Values")) {
+            json::Array selarr = pD->jsonpar["Values"].ToArray();
+            nsel = selarr.size();
+		}
+	}
+	return nsel;
+}
+
+BufferString ExtProc::selectName( int snum )
+{
+	BufferString name;
+	if (hasSelect()) {
+		json::Object jobj = pD->jsonpar["Select"].ToObject();
+		if (jobj.HasKey("Values")) {
+            json::Array selarr = pD->jsonpar["Values"].ToArray();
+            int nsel = selarr.size();
+			if (snum>=0 && snum<nsel)
+                name = selarr[snum].ToString().c_str();
+        }
+	}
+	return name;
+}
+
+int ExtProc::selectValue()
+{
+    int val = 0;
+    if (hasSelect()) {
+        json::Object jobj = pD->jsonpar["Select"].ToObject();
+        if (jobj.HasKey("Selection"))
+            val = jobj["Selection"];
+    }
+    return val;
+}
+
+void ExtProc::setSelection( int sel )
+{
+    json::Object jobj;
+    jobj["Selection"] = sel;
+    pD->jsonpar["Select"] = jobj;    
 }
 
 bool ExtProc::hasParam( int pnum )

@@ -40,7 +40,7 @@ public:
 
 	uiExternalAttrib(uiParent*,bool);
 	~uiExternalAttrib();
-
+    
 protected:
 
 	ExtProc*		extproc_;
@@ -49,6 +49,8 @@ protected:
 	uiAttrSel*		inpfld_;
 	uiGenInput*		zmarginfld_;
 	uiStepOutSel*	stepoutfld_;
+	uiGenInput*		outputfld_;
+	uiGenInput*		selectfld_;
 	uiGenInput*		par0fld_;
 	uiGenInput*		par1fld_;
 	uiGenInput*		par2fld_;
@@ -60,6 +62,9 @@ protected:
     bool		setInput(const Attrib::Desc&);
     bool		getParameters(Attrib::Desc&);
     bool		getInput(Attrib::Desc&);
+
+	bool		setOutput(const Attrib::Desc&);
+	bool		getOutput(Attrib::Desc&);
 	
     			mDeclReqAttribUIFns
 };

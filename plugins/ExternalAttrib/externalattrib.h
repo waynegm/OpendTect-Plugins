@@ -47,6 +47,7 @@ public:
 	static const char*		exFileStr()		{ return "exfile"; }
 	static const char*		zmarginStr() 	{ return "zmargin"; }
 	static const char*		stepoutStr()	{ return "stepout"; }
+	static const char*      selectStr()  { return "selection"; }
 	static const char*		par0Str()		{ return "par0"; }
 	static const char*		par1Str()		{ return "par1"; }
 	static const char*		par2Str()		{ return "par2"; }
@@ -73,6 +74,7 @@ protected:
 	BufferString			exfile_;
 	Interval<int>			zmargin_;
 	BinID					stepout_;
+    int                     selection_;
 	float					par0_, par1_, par2_, par3_, par4_;
 	TypeSet<BinID>			trcpos_;
 	

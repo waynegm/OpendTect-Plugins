@@ -54,17 +54,26 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	inpfld_ = createInpFld( is2D() );
 	inpfld_->attach( alignedBelow, exfilefld_ );
 
+	outputfld_ = new uiGenInput( this, "Output", StringListInpSpec() );
+	outputfld_->attach(rightTo, inpfld_);
+	outputfld_->display(false);
+
 	zmarginfld_ = new uiGenInput( this, "Z Window (samples)", IntInpIntervalSpec().setName("Samples before",0).setName("Samples after",1) );
 	zmarginfld_->attach( alignedBelow, inpfld_ );
 	zmarginfld_->display(false);
 	
 	stepoutfld_ = new uiStepOutSel( this, is2d );
-	stepoutfld_->attach( alignedBelow, zmarginfld_ );
+	stepoutfld_->attach( rightTo, zmarginfld_ );
 	stepoutfld_->setFieldNames( "Inl Stepout", "Crl Stepout" );
 	stepoutfld_->display(false);
 	
+
+	selectfld_ = new uiGenInput( this, "Selection_______________________________", StringListInpSpec() );
+	selectfld_->attach(alignedBelow, zmarginfld_);
+	selectfld_->display(false);
+	
 	par0fld_ = new uiGenInput( this, "Par________________________________________", FloatInpSpec() );
-	par0fld_->attach( alignedBelow, stepoutfld_ );
+	par0fld_->attach( alignedBelow, selectfld_ );
 	par0fld_->setValue(0);
 	par0fld_->display(false);
 
@@ -114,15 +123,42 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 		}
 		if (extproc_ && extproc_->hasZMargin()) {
 			zmarginfld_->setValue(extproc_->zmargin());
-			zmarginfld_->display(true);
-		} else {
+			if (extproc_->hideZMargin())
+				zmarginfld_->display(false);
+			else
+				zmarginfld_->display(true);
+		} else
 			zmarginfld_->display(false);
-		}
+
 		if (extproc_ && extproc_->hasStepOut()) {
 			stepoutfld_->setBinID(extproc_->stepout());
-			stepoutfld_->display(true);
-		} else {
+			if (extproc_->hideStepOut()) 
+				stepoutfld_->display(false);
+			else
+				stepoutfld_->display(true);
+		} else 
 			stepoutfld_->display(false);
+
+		if (extproc_ && extproc_->hasOutput()) {
+			int nout = extproc_->numOutput();
+			BufferStringSet nms;
+			for (int i = 0; i<nout; i++) {
+				BufferString nm = extproc_->outputName(i);
+				nms.add(nm.buf());
+			}
+			StringListInpSpec spec(nms);
+			outputfld_->newSpec(spec, 0);
+			outputfld_->display(true);
+		} else {
+			outputfld_->display(false);
+		}
+		if (extproc_ && extproc_->hasSelect()) {
+			int nsel = extproc_->numSelect();
+			for (int i=0; i<nsel; i++)
+				selectfld_->setText(extproc_->selectName(i), i);
+			selectfld_->display(true);
+		} else {
+			selectfld_->display(false);
 		}
 		if (extproc_ && extproc_->hasParam(0)) {
 			par0fld_->setTitleText(extproc_->paramName(0));
@@ -179,6 +215,9 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 	if (extproc_ && extproc_->hasStepOut()) {
 		mIfGetBinID( ExternalAttrib::stepoutStr(), stepout, stepoutfld_->setBinID(stepout) )
 	}
+	if (extproc_ && extproc_->hasSelect()) {
+		mIfGetEnum( ExternalAttrib::selectStr(), select, selectfld_->setText(extproc_->selectName(select)));
+	}
 	if (extproc_ && extproc_->hasParam(0))  {
 		mIfGetFloat( ExternalAttrib::par0Str(), par0, par0fld_->setValue(par0) )
 	}
@@ -204,6 +243,12 @@ bool uiExternalAttrib::setInput( const Attrib::Desc& desc )
     return true;
 }
 
+bool uiExternalAttrib::setOutput( const Attrib::Desc& desc )
+{
+	if (extproc_ && extproc_->hasOutput()) 
+		outputfld_->setValue(desc.selectedOutput());
+	return true;
+}
 
 bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 {
@@ -217,6 +262,15 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 	}
 	if (extproc_ && extproc_ && extproc_->hasStepOut())  {
 		mSetBinID(ExternalAttrib::stepoutStr(), stepoutfld_->getBinID());
+	}
+	if (extproc_ && extproc_->hasSelect())  {
+		int nsel = extproc_->numSelect();
+		for (int i=0; i<nsel; i++) {
+			if (extproc_->selectName(i) == selectfld_->text()) {
+				mSetEnum( ExternalAttrib::selectStr(), i );
+				break;
+			}
+		}
 	}
 	if (extproc_ && extproc_->hasParam(0))  {
 		mSetFloat( ExternalAttrib::par0Str(), par0fld_->getfValue() );
@@ -244,4 +298,11 @@ bool uiExternalAttrib::getInput( Attrib::Desc& desc )
 	inpfld_->processInput();
     fillInp( inpfld_, desc, 0 );
     return true;
+}
+
+bool uiExternalAttrib::getOutput( Desc& desc )
+{
+	if (extproc_ && extproc_->hasOutput()) 
+		fillOutput( desc, outputfld_->getIntValue() );
+	return true;
 }

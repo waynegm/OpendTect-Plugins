@@ -50,12 +50,20 @@ public:
 	BufferString		outputName( int onum );
 
 	bool				hasZMargin();
+	bool				hideZMargin();
 	Interval<int>		zmargin();
 	void				setZMargin(Interval<int> zint);
 
 	bool				hasStepOut();
+	bool				hideStepOut();
 	BinID				stepout();
 	void				setStepOut(BinID s);
+    
+    bool                hasSelect();
+    BufferString     	selectName( int snum );
+	int					numSelect();
+    int                 selectValue();
+    void                setSelection(int val);
 	
 	bool				hasParam( int pnum );
 	BufferString		paramName( int pnum );

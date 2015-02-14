@@ -17,7 +17,7 @@ import extattrib as xa
 #
 xa.params = {
 	'Input': 'Filter Input',
-	'ZSampMargin' : [-30,30],
+	'ZSampMargin' : {'Value': [-30,30]},
 	'Par_0' : {'Name': 'Filter Cutoff', 'Value': 40},
 	'Par_1' : {'Name': 'Filter Order', 'Value': 3}
 }
