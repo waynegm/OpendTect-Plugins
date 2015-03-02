@@ -60,7 +60,8 @@ public:
 	void				setStepOut(BinID s);
     
     bool                hasSelect();
-    BufferString     	selectName( int snum );
+	BufferString		selectName();
+    BufferString     	selectOpt( int snum );
 	int					numSelect();
     int                 selectValue();
     void                setSelection(int val);
@@ -69,6 +70,9 @@ public:
 	BufferString		paramName( int pnum );
 	float				paramValue( int pnum );
 	void				setParam( int pnum, float val );
+	
+	bool				hasHelp();
+	BufferString		helpValue();
 	
 protected:
 	ExtProcImpl*	pD;

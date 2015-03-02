@@ -19,7 +19,8 @@ xa.params = {
 	'Input': 'Filter Input',
 	'ZSampMargin' : {'Value': [-30,30]},
 	'Par_0' : {'Name': 'Filter Cutoff', 'Value': 40},
-	'Par_1' : {'Name': 'Filter Order', 'Value': 3}
+	'Par_1' : {'Name': 'Filter Order', 'Value': 3},
+	'Help'  : 'https://gist.github.com/waynegm/ed83d99c088db5cb37a9'
 }
 #
 # Define the compute function

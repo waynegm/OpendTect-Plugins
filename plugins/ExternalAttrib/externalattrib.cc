@@ -96,6 +96,17 @@ void ExternalAttrib::updateDesc( Desc& desc )
     } else
         dProc_ = new ExtProc(fname.str(), iname.str());
 	
+    if (dProc_->hasSelect()) {
+		EnumParam* ep = reinterpret_cast<EnumParam*>(desc.getValParam(selectStr()));
+		
+		int nsel = dProc_->numSelect();
+		for (int i=0; i<nsel; i++) {
+			BufferString name = dProc_->selectOpt(i);
+			ep->addEnum(name.str());
+		}
+    }
+
+	
 	desc.setParamEnabled(zmarginStr(), dProc_->hasZMargin());
 	desc.setParamEnabled(stepoutStr(), dProc_->hasStepOut());
     desc.setParamEnabled(selectStr(), dProc_->hasSelect());
@@ -105,15 +116,6 @@ void ExternalAttrib::updateDesc( Desc& desc )
 	desc.setParamEnabled(par3Str(), dProc_->hasParam(3));
 	desc.setParamEnabled(par4Str(), dProc_->hasParam(4));
 	
-    if (dProc_->hasSelect()) {
-        ValParam* ep = desc.getValParam(selectStr());
-		int nsel = dProc_->numSelect();
-		for (int i=0; i<nsel; i++) {
-			BufferString name = dProc_->selectName(i);
-			ep->setValue(name.str(), i);
-		}
-    }
-        
     if (dProc_->hasOutput())
 		desc.setNrOutputs(Seis::UnknowData, dProc_->numOutput());
 	else

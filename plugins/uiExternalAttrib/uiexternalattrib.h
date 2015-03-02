@@ -30,6 +30,7 @@ class uiAttrSel;
 class uiGenInput;
 class uiFileInput;
 class uiStepOutSel;
+class uiToolButton;
 class ExtProc;
 
 /*! \brief External Attribute description editor */
@@ -56,6 +57,7 @@ protected:
 	uiGenInput*		par2fld_;
 	uiGenInput*		par3fld_;
 	uiGenInput*		par4fld_;
+	uiToolButton*	help_;
 	
 	void		exfileChanged(CallBacker*);
 	bool		setParameters(const Attrib::Desc&);
@@ -65,6 +67,8 @@ protected:
 
 	bool		setOutput(const Attrib::Desc&);
 	bool		getOutput(Attrib::Desc&);
+	
+	void		doHelp( CallBacker* cb );
 	
     			mDeclReqAttribUIFns
 };

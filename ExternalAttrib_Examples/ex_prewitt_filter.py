@@ -17,7 +17,8 @@ xa.params = {
 	'Input': 'Input',
 	'Output': ['Average gradient', 'In-line gradient', 'Cross-line gradient', 'Z gradient'],
 	'ZSampMargin' : {'Value': [-1,1], 'Hidden': True},
-	'StepOut' : {'Value': [1,1], 'Hidden': True}
+	'StepOut' : {'Value': [1,1], 'Hidden': True},
+	'Help'    : 'https://gist.github.com/waynegm/84f323ec4aab3961c23d'
 }
 #
 # Define the compute function

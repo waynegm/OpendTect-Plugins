@@ -30,6 +30,8 @@ ________________________________________________________________________
 #include "uimsg.h"
 #include "uigeninput.h"
 #include "uistepoutsel.h"
+#include "uitoolbutton.h"
+#include "uidesktopservices.h"
 
 using namespace Attrib;
 
@@ -97,6 +99,12 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	par4fld_->setValue(0);
 	par4fld_->display(false);
 	
+	CallBack cb = mCB(this,uiExternalAttrib,doHelp);
+	help_ = new uiToolButton( this, "contexthelp", "Help", cb );
+	help_->attach (rightTo, exfilefld_);
+	help_->display(false);
+	
+	
 	setHAlignObj( exfilefld_ );
 }
 
@@ -153,9 +161,15 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 			outputfld_->display(false);
 		}
 		if (extproc_ && extproc_->hasSelect()) {
+			selectfld_->setTitleText(extproc_->selectName());
 			int nsel = extproc_->numSelect();
-			for (int i=0; i<nsel; i++)
-				selectfld_->setText(extproc_->selectName(i), i);
+			BufferStringSet nms;
+			for (int i = 0; i<nsel; i++) {
+				BufferString nm = extproc_->selectOpt(i);
+				nms.add(nm.buf());
+			}
+			StringListInpSpec spec(nms);
+			selectfld_->newSpec(spec, 0);
 			selectfld_->display(true);
 		} else {
 			selectfld_->display(false);
@@ -195,6 +209,10 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 		} else {
 			par4fld_->display(false);
 		}
+		if (extproc_ && extproc_->hasHelp())
+			help_->display(true);
+		else
+			help_->display(false);
 	}
 }
 
@@ -216,7 +234,7 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 		mIfGetBinID( ExternalAttrib::stepoutStr(), stepout, stepoutfld_->setBinID(stepout) )
 	}
 	if (extproc_ && extproc_->hasSelect()) {
-		mIfGetEnum( ExternalAttrib::selectStr(), select, selectfld_->setText(extproc_->selectName(select)));
+		mIfGetEnum( ExternalAttrib::selectStr(), select, selectfld_->setText(extproc_->selectOpt(select)));
 	}
 	if (extproc_ && extproc_->hasParam(0))  {
 		mIfGetFloat( ExternalAttrib::par0Str(), par0, par0fld_->setValue(par0) )
@@ -266,7 +284,7 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 	if (extproc_ && extproc_->hasSelect())  {
 		int nsel = extproc_->numSelect();
 		for (int i=0; i<nsel; i++) {
-			if (extproc_->selectName(i) == selectfld_->text()) {
+			if (extproc_->selectOpt(i) == selectfld_->text()) {
 				mSetEnum( ExternalAttrib::selectStr(), i );
 				break;
 			}
@@ -305,4 +323,11 @@ bool uiExternalAttrib::getOutput( Desc& desc )
 	if (extproc_ && extproc_->hasOutput()) 
 		fillOutput( desc, outputfld_->getIntValue() );
 	return true;
+}
+
+void uiExternalAttrib::doHelp( CallBacker* cb )
+{
+	if (extproc_ && extproc_->hasHelp())
+		uiDesktopServices::openUrl(extproc_->helpValue());
+	
 }

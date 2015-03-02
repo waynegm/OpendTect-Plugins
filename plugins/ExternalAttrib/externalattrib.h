@@ -47,7 +47,7 @@ public:
 	static const char*		exFileStr()		{ return "exfile"; }
 	static const char*		zmarginStr() 	{ return "zmargin"; }
 	static const char*		stepoutStr()	{ return "stepout"; }
-	static const char*      selectStr()  { return "selection"; }
+	static const char*      selectStr()  	{ return "selection"; }
 	static const char*		par0Str()		{ return "par0"; }
 	static const char*		par1Str()		{ return "par1"; }
 	static const char*		par2Str()		{ return "par2"; }

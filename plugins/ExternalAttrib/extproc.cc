@@ -772,20 +772,31 @@ int ExtProc::numSelect()
 	if (hasSelect()) {
 		json::Object jobj = pD->jsonpar["Select"].ToObject();
 		if (jobj.HasKey("Values")) {
-            json::Array selarr = pD->jsonpar["Values"].ToArray();
+            json::Array selarr = jobj["Values"].ToArray();
             nsel = selarr.size();
 		}
 	}
 	return nsel;
 }
 
-BufferString ExtProc::selectName( int snum )
+BufferString ExtProc::selectName()
+{
+	BufferString name;
+	if (hasSelect()) {
+		json::Object jobj = pD->jsonpar["Select"].ToObject();
+		if (jobj.HasKey("Name")) 
+			name = jobj["Name"].ToString().c_str();
+	}
+	return name;
+}
+
+BufferString ExtProc::selectOpt( int snum )
 {
 	BufferString name;
 	if (hasSelect()) {
 		json::Object jobj = pD->jsonpar["Select"].ToObject();
 		if (jobj.HasKey("Values")) {
-            json::Array selarr = pD->jsonpar["Values"].ToArray();
+            json::Array selarr = jobj["Values"].ToArray();
             int nsel = selarr.size();
 			if (snum>=0 && snum<nsel)
                 name = selarr[snum].ToString().c_str();
@@ -852,6 +863,20 @@ void ExtProc::setParam( int pnum, float val )
 	json::Object jobj;
 	jobj["Value"] = val;
 	pD->jsonpar[tmp.str()] = jobj;
+}
+
+bool ExtProc::hasHelp()
+{
+	return (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("Help"));
+}
+
+BufferString ExtProc::helpValue()
+{
+	BufferString res;
+	if (hasHelp()) {
+		res = pD->jsonpar["Help"].ToString().c_str();
+	}
+	return res;
 }
 
 BufferString ExtProc::getFile()
