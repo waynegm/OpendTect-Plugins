@@ -54,8 +54,9 @@ void ExternalAttrib::initClass()
 	stepout->setDefaultValue( BinID(0,0) );
 	desc->addParam( stepout );
 
-	EnumParam* selection = new EnumParam( selectStr() );
+	IntParam* selection = new IntParam( selectStr() );
     desc->addParam( selection );
+	selection->setDefaultValue(0);
     
 	FloatParam* par0 = new FloatParam( par0Str() );
 	desc->addParam( par0 );
@@ -88,35 +89,26 @@ void ExternalAttrib::updateDesc( Desc& desc )
 
 	BufferString iname = desc.getValParam( interpFileStr() )->getStringValue();
 	BufferString fname = desc.getValParam( exFileStr() )->getStringValue();
-    if (dProc_) {
+
+	if (dProc_) {
         if (dProc_->getFile() != fname) {
             delete dProc_;
             dProc_ = new ExtProc(fname.str(), iname.str());
-        }
-    } else
-        dProc_ = new ExtProc(fname.str(), iname.str());
-	
-    if (dProc_->hasSelect()) {
-		EnumParam* ep = reinterpret_cast<EnumParam*>(desc.getValParam(selectStr()));
-		
-		int nsel = dProc_->numSelect();
-		for (int i=0; i<nsel; i++) {
-			BufferString name = dProc_->selectOpt(i);
-			ep->addEnum(name.str());
 		}
-    }
+	} else {
+        dProc_ = new ExtProc(fname.str(), iname.str());
+	}
 
-	
 	desc.setParamEnabled(zmarginStr(), dProc_->hasZMargin());
 	desc.setParamEnabled(stepoutStr(), dProc_->hasStepOut());
-    desc.setParamEnabled(selectStr(), dProc_->hasSelect());
+	desc.setParamEnabled(selectStr(), dProc_->hasSelect());
 	desc.setParamEnabled(par0Str(), dProc_->hasParam(0));
 	desc.setParamEnabled(par1Str(), dProc_->hasParam(1));
 	desc.setParamEnabled(par2Str(), dProc_->hasParam(2));
 	desc.setParamEnabled(par3Str(), dProc_->hasParam(3));
 	desc.setParamEnabled(par4Str(), dProc_->hasParam(4));
 	
-    if (dProc_->hasOutput())
+	if (dProc_->hasOutput())
 		desc.setNrOutputs(Seis::UnknowData, dProc_->numOutput());
 	else
 		desc.setNrOutputs(Seis::UnknowData, 1);
@@ -152,7 +144,7 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 			stepout_ = BinID(0,0);
 		}
 		if (proc_->hasSelect()) {
-            mGetEnum( selection_, selectStr());
+            mGetInt( selection_, selectStr());
             proc_->setSelection( selection_);
         }
 		if (proc_->hasParam(0)) {

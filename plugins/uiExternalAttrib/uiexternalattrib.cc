@@ -170,6 +170,7 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 			}
 			StringListInpSpec spec(nms);
 			selectfld_->newSpec(spec, 0);
+			selectfld_->setValue(extproc_->selectValue());
 			selectfld_->display(true);
 		} else {
 			selectfld_->display(false);
@@ -234,7 +235,7 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 		mIfGetBinID( ExternalAttrib::stepoutStr(), stepout, stepoutfld_->setBinID(stepout) )
 	}
 	if (extproc_ && extproc_->hasSelect()) {
-		mIfGetEnum( ExternalAttrib::selectStr(), select, selectfld_->setText(extproc_->selectOpt(select)));
+		mIfGetInt( ExternalAttrib::selectStr(), select, selectfld_->setValue(select));
 	}
 	if (extproc_ && extproc_->hasParam(0))  {
 		mIfGetFloat( ExternalAttrib::par0Str(), par0, par0fld_->setValue(par0) )
@@ -282,13 +283,7 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 		mSetBinID(ExternalAttrib::stepoutStr(), stepoutfld_->getBinID());
 	}
 	if (extproc_ && extproc_->hasSelect())  {
-		int nsel = extproc_->numSelect();
-		for (int i=0; i<nsel; i++) {
-			if (extproc_->selectOpt(i) == selectfld_->text()) {
-				mSetEnum( ExternalAttrib::selectStr(), i );
-				break;
-			}
-		}
+		mSetInt( ExternalAttrib::selectStr(), selectfld_->getIntValue() );
 	}
 	if (extproc_ && extproc_->hasParam(0))  {
 		mSetFloat( ExternalAttrib::par0Str(), par0fld_->getfValue() );
