@@ -57,7 +57,7 @@ uiAVOAttrib::uiAVOAttrib( uiParent* p, bool is2d )
     outputfld_->valuechanged.notify( mCB(this,uiAVOAttrib,actionSel) );
     outputfld_->attach( alignedBelow, inp_gradientfld_ );
 
-    slopefld_ = new uiGenInput( this, "Crosssplot Slope", FloatInpSpec() );
+    slopefld_ = new uiGenInput( this, "Crossplot Slope", FloatInpSpec() );
     slopefld_->attach( alignedBelow, outputfld_ );
 
     intercept_devfld_ = new uiGenInput( this, "Intercept Standard Deviation", FloatInpSpec() );
