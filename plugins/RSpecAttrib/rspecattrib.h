@@ -41,9 +41,8 @@ public:
     static void			initClass();
 						RSpecAttrib(Desc&);
     static const char*	attribName()			{ return "RSpecAttrib"; }
-//    static const char*	freqStr()				{ return "freq"; }
     static const char*	stepStr()				{ return "step"; }
-    static const char*	windowStr()				{ return "window"; }
+    static const char*	gateStr()				{ return "gate"; }
     
     void				getCompNames(BufferStringSet&) const;
 	bool				prepPriorToOutputSetup();
@@ -53,6 +52,7 @@ protected:
 							~RSpecAttrib() {}
     static Provider*		createInstance(Desc&);
 	static void				updateDesc(Desc&);
+    static void				updateDefaults(Desc&);
 	
     bool					allowParallelComputation() const { return true; }
 
@@ -66,6 +66,7 @@ protected:
 
 	bool					areAllOutputsEnabled() const;
 	
+	Interval<float>		gate_;
 	float				window_; // effective time window
 	float				step_; // frequency spacing
 	int					order_; // recursive filter order

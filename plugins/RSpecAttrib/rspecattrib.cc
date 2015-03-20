@@ -33,27 +33,24 @@
 
 
 namespace Attrib
+
 {
 mAttrDefCreateInstance(RSpecAttrib)    
     
 void RSpecAttrib::initClass()
 {
-	mAttrStartInitClassWithUpdate
+	mAttrStartInitClassWithDescAndDefaultsUpdate
 
-	FloatParam* window = new FloatParam( windowStr() );
-	window->setLimits(0.0f,400.0f);
-	window->setDefaultValue( 56.0f);
-	desc->addParam( window );
+    ZGateParam* gate = new ZGateParam( gateStr() );
+    gate->setLimits( Interval<float>(-mLargestZGate,mLargestZGate) );
+    gate->setDefaultValue( Interval<float>(-20, 20) );
+    desc->addParam( gate );
 
 	FloatParam* step = new FloatParam( stepStr() );
 	step->setRequired( false );
 	step->setDefaultValue( 5.0f);
 	desc->addParam( step );
 	
-//	FloatParam* freq = new FloatParam( freqStr() );
-//    freq->setDefaultValue( 30.0f);
-//    desc->addParam( freq );
-
 	desc->addOutputDataType( Seis::UnknowData );
 	desc->addInput( InputSpec("Input Volume",true) );
 
@@ -70,6 +67,15 @@ void RSpecAttrib::updateDesc( Desc& desc )
 	desc.setNrOutputs( Seis::UnknowData, nrattribs );
 }
 
+void RSpecAttrib::updateDefaults( Desc& desc )
+{
+	ValParam* paramgate = desc.getValParam(gateStr());
+	mDynamicCastGet( ZGateParam*, zgate, paramgate )
+	float roundedzstep = SI().zStep()*SI().zDomain().userFactor();
+	if ( roundedzstep > 0 )
+		roundedzstep = floor ( roundedzstep );
+    zgate->setDefaultValue( Interval<float>(-roundedzstep*5, roundedzstep*5) );
+}
 
 RSpecAttrib::RSpecAttrib( Desc& desc )
     : Provider( desc )
@@ -77,12 +83,15 @@ RSpecAttrib::RSpecAttrib( Desc& desc )
 {
     if ( !isOK() ) return;
 
-    mGetFloat( window_, windowStr() );
+	mGetFloatInterval( gate_, gateStr() );
+	gate_.start = gate_.start / zFactor();
+	gate_.stop = gate_.stop / zFactor();
+
 	mGetFloat( step_, stepStr() );
 	
-	window_ = window_/zFactor();
+	window_ = gate_.stop - gate_.start;
 	float refstep = getRefStep();
-	zsampMargin_ = Interval<int>(mNINT32(-window_/refstep)-1, mNINT32(window_/refstep)+1);
+	zsampMargin_ = Interval<int>(mNINT32((gate_.start-window_/2.0)/refstep)-1, mNINT32((gate_.stop+window_/2.0)/refstep)+1);
 }
 
 bool RSpecAttrib::getInputData( const BinID& relpos, int zintv )
@@ -241,7 +250,8 @@ bool RSpecAttrib::computeData( const DataHolder& output, const BinID& relpos,
 		val = mIsUdf(val)?0.0f:val;
 		trc.set(idx,val);
 	}
-	
+
+	int off = zsampMargin_.start-mNINT32((gate_.start + gate_.stop)/2.0/getRefStep());
 	for (int idf=0; idf<nfreq; idf++) {
 		if (!outputinterest_[idf])
 			continue;
@@ -249,7 +259,7 @@ bool RSpecAttrib::computeData( const DataHolder& output, const BinID& relpos,
 		computeFilterTaps(freq, num, den);
 		computeFrequency(num, den, sz, trc, spec);
 		for (int idx=0; idx<nrsamples; idx++)
-			setOutputValue( output, idf, idx, z0, spec[idx-zsampMargin_.start] );
+			setOutputValue( output, idf, idx, z0, spec[idx-off] );
 	}
     return true;
 }

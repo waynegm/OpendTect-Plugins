@@ -41,7 +41,7 @@ public:
 protected:
 
     uiAttrSel*			inpfld_;
-	uiGenInput*			windowfld_;
+	uiGenInput*			gatefld_;
 	uiLabeledSpinBox*	freqfld_;
 	uiLabeledSpinBox*	stepfld_;
 	

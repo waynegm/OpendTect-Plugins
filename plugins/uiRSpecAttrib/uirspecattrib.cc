@@ -41,16 +41,14 @@ uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )
 {
 	inpfld_ = createInpFld( is2d );
 	
-	BufferString label = "Effective window ";
-	label += SI().getZUnitString( true );
-	windowfld_ = new uiGenInput( this, label.buf(), FloatInpSpec(50) );
-	windowfld_->attach( alignedBelow, inpfld_ );
-
+	gatefld_ = new uiGenInput( this, gateLabel(), DoubleInpIntervalSpec().setName("Z start",0).setName("Z stop",1) );
+    gatefld_->attach( alignedBelow, inpfld_ );
+	
 	BufferString lbl( "Output frequency (" );
 	lbl += zIsTime() ? "Hz" :
 	(SI().zInMeter() ? "cycles/km" : "cycles/kft"); lbl += ")";
 	freqfld_ = new uiLabeledSpinBox( this, lbl, 1 );
-	freqfld_->attach( alignedBelow, windowfld_ );
+	freqfld_->attach( alignedBelow, gatefld_ );
 	freqfld_->box()->doSnap( true );
 
 	stepfld_ = new uiLabeledSpinBox( this, "step", 1 );
@@ -111,13 +109,12 @@ bool uiRSpecAttrib::setParameters( const Attrib::Desc& desc )
 {
 	if ( desc.attribName() != RSpecAttrib::attribName() )
 		return false;
-	mIfGetFloat(RSpecAttrib::windowStr(), window, windowfld_->setValue(window));
+	mIfGetFloatInterval(RSpecAttrib::gateStr(), gate, gatefld_->setValue(gate));
+
 	const float freqscale = zIsTime() ? 1.f : 1000.f;
-//	mIfGetFloat(RSpecAttrib::freqStr(), freq, freqfld_->box()->setValue(freq*freqscale) )
 	mIfGetFloat(RSpecAttrib::stepStr(), step, stepfld_->box()->setValue(step*freqscale) );
 	
 	stepChg(0);
-	
 	return true;
 }
 
@@ -141,10 +138,9 @@ bool uiRSpecAttrib::getParameters( Attrib::Desc& desc )
 	if ( desc.attribName() != RSpecAttrib::attribName() )
 		return false;
 	
-	mSetFloat( RSpecAttrib::windowStr(), windowfld_->getfValue() );
+	mSetFloatInterval( RSpecAttrib::gateStr(), gatefld_->getFInterval() );
 	
 	const float freqscale = zIsTime() ? 1.f : 1000.f;
-//	mSetFloat( RSpecAttrib::freqStr(), freqfld_->box()->getFValue()/freqscale );
 	mSetFloat( RSpecAttrib::stepStr(), stepfld_->box()->getFValue()/freqscale );
 	
 	return true;
@@ -153,7 +149,6 @@ bool uiRSpecAttrib::getParameters( Attrib::Desc& desc )
 
 bool uiRSpecAttrib::getInput( Attrib::Desc& desc )
 {
-//	inpfld_->processInput();
 	fillInp( inpfld_, desc, 0 );
 	return true;
 }
@@ -170,7 +165,7 @@ void uiRSpecAttrib::getEvalParams( TypeSet<EvalParam>& params ) const
 {
 	EvalParam ep( "Frequency" ); ep.evaloutput_ = true;
 	params += ep;
-	params += EvalParam( "Window", RSpecAttrib::windowStr() );
+	params += EvalParam( timegatestr(), RSpecAttrib::gateStr() );
 }
 
 void uiRSpecAttrib::checkOutValSnapped() const
