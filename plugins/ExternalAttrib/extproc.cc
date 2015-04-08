@@ -694,6 +694,18 @@ bool ExtProc::hideZMargin()
 		return true;
 }
 
+bool ExtProc::zSymmetric()
+{
+	if (hasZMargin()) {
+		json::Object jobj = pD->jsonpar["ZSampMargin"].ToObject();
+		if (jobj.HasKey("Symmetric"))
+			return jobj["Symmetric"];
+		else
+			return false;
+	} else
+		return false;
+}
+
 Interval<int> ExtProc::zmargin()
 {
 	Interval<int> res;

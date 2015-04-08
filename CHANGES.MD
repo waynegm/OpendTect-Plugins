@@ -1,5 +1,9 @@
 # OpendTect v5+ Plugins Release Notes
 
+## Next Release
+#### ExternalAttrib
+- Add "Symmetric" tag to the "ZSampMargin' JSON parameter string tag. The value of the tag is a boolean constant (True/False). If set True the UI will show a single entry box. Input sets the 'ZSampMargin.Value' array to [-Input, Input]. Default is 'ZSampMargin.Symmetric': False for which the UI displays entry boxes for both the window start and stop.
+
 ## Release 5.0.6
 #### AVOAttrib
 - Fix typo in UI

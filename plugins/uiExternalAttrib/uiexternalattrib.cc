@@ -60,8 +60,9 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	outputfld_->attach(rightTo, inpfld_);
 	outputfld_->display(false);
 
-	zmarginfld_ = new uiGenInput( this, "Z Window (samples)", IntInpIntervalSpec().setName("Samples before",0).setName("Samples after",1) );
+	zmarginfld_ = new uiGenInput( this, "Z Window (samples)___", IntInpIntervalSpec().setName("Samples after",0).setName("Samples before",1) );
 	zmarginfld_->attach( alignedBelow, inpfld_ );
+	zmarginfld_->valuechanged.notify(mCB(this, uiExternalAttrib,doZmarginSymmetry) );
 	zmarginfld_->display(false);
 	
 	stepoutfld_ = new uiStepOutSel( this, is2d );
@@ -130,11 +131,23 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 			inpfld_->setLabelText(extproc_->inputName().str());
 		}
 		if (extproc_ && extproc_->hasZMargin()) {
-			zmarginfld_->setValue(extproc_->zmargin());
+			Interval<int> val = extproc_->zmargin();
+			if (extproc_->zSymmetric()) {
+				val.start = val.stop;
+				val.stop = -val.start;
+			}
+			zmarginfld_->setValue(val);
 			if (extproc_->hideZMargin())
 				zmarginfld_->display(false);
 			else
 				zmarginfld_->display(true);
+				if (extproc_->zSymmetric()) {
+					zmarginfld_->displayField(false, 1, 0);
+					zmarginfld_->setTitleText("Z Window (+/-samples)");
+				} else {
+					zmarginfld_->displayField(true, 1, 0);
+					zmarginfld_->setTitleText("Z Window (samples)");
+				}
 		} else
 			zmarginfld_->display(false);
 
@@ -230,6 +243,12 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 	
 	if (extproc_ && extproc_->hasZMargin()) {
 		mIfGetIntInterval( ExternalAttrib::zmarginStr(), zmargin, zmarginfld_->setValue(zmargin) )
+		if (extproc_->zSymmetric()) {
+			Interval<int> val = zmarginfld_->getIInterval();
+			val.start = val.stop;
+			val.stop = -val.start;
+			zmarginfld_->setValue( val );
+		}
 	}
 	if (extproc_ && extproc_->hasStepOut()) {
 		mIfGetBinID( ExternalAttrib::stepoutStr(), stepout, stepoutfld_->setBinID(stepout) )
@@ -277,7 +296,12 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 	mSetString( ExternalAttrib::interpFileStr(), interpfilefld_->fileName() );
 	mSetString( ExternalAttrib::exFileStr(), exfilefld_->fileName() );
 	if (extproc_ && extproc_->hasZMargin()) {
-		mSetIntInterval( ExternalAttrib::zmarginStr(), zmarginfld_->getIInterval() );
+		Interval<int> val = zmarginfld_->getIInterval();
+		if (extproc_->zSymmetric()) {
+			val.stop = val.start;
+			val.start = -val.stop;
+		}
+		mSetIntInterval( ExternalAttrib::zmarginStr(), val );
 	}
 	if (extproc_ && extproc_ && extproc_->hasStepOut())  {
 		mSetBinID(ExternalAttrib::stepoutStr(), stepoutfld_->getBinID());
@@ -325,4 +349,13 @@ void uiExternalAttrib::doHelp( CallBacker* cb )
 	if (extproc_ && extproc_->hasHelp())
 		uiDesktopServices::openUrl(extproc_->helpValue());
 	
+}
+
+void uiExternalAttrib::doZmarginSymmetry( CallBacker* cb )
+{
+	if (extproc_ && extproc_->zSymmetric()) {
+		Interval<int> val = zmarginfld_->getIInterval();
+		val.stop = -val.start;
+		zmarginfld_->setValue( val );
+	}
 }

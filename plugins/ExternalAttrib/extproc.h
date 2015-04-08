@@ -51,6 +51,7 @@ public:
 
 	bool				hasZMargin();
 	bool				hideZMargin();
+	bool				zSymmetric();
 	Interval<int>		zmargin();
 	void				setZMargin(Interval<int> zint);
 
@@ -59,7 +60,7 @@ public:
 	BinID				stepout();
 	void				setStepOut(BinID s);
     
-    bool                hasSelect();
+	bool                hasSelect();
 	BufferString		selectName();
     BufferString     	selectOpt( int snum );
 	int					numSelect();
