@@ -2,20 +2,20 @@
 
 This is the source code for a collection of plugins for the open source seismic interpretation system [OpendTect v5+](http://www.opendtect.org). All code is provided under the terms of the [GNU General Public License Version 3](./LICENSE.txt).
 
-For details please see the [documentation](http://waynegm.github.io/OpendTect-Plugin-Wiki/).
+For details please see the [documentation](http://waynegm.github.io/OpendTect-Plugin-Docs/).
 
 ## Plugins
 
 | PLUGIN | DESCRIPTION |
 |--------|-------------|
-| [AVOAttrib](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/AVOAttrib/AVOAttrib.md) | Six attributes derived from reflection intercept and gradient |
-| [ExternalAttrib](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/ExternalAttrib/ExternalAttrib.md) | Calculate attribute using an external process such as a python script |
-| [LTFAttrib](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/LTFAttrib/LTFAttrib.md) | Local time-frequency decomposition |
-| [MLVFilter](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/MLVFilter/MLVFilter.md) | Structure preserving filtering |
-| [RSpecAttrib](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/RSpecAttrib/RSpecAttrib.md) | Recursive time-frequency decomposition |
+| [AVOAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/AVOAttrib/) | Six attributes derived from reflection intercept and gradient |
+| [ExternalAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/) | Calculate attribute using an external process such as a python script |
+| [LTFAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/LTFAttrib/) | Local time-frequency decomposition |
+| [MLVFilter](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/MLVFilter/) | Structure preserving filtering |
+| [RSpecAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/RSpecAttrib/) | Recursive time-frequency decomposition |
 
 ## Building and Installation
 
-* [Build from Source](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/building-from-source.md)
+* [Build from Source](http://waynegm.github.io/OpendTect-Plugin-Docs/Installation/building-from-source/)
 
-* [Installation](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/installation.md)
+* [Installation](http://waynegm.github.io/OpendTect-Plugin-Docs/Installation/installation/)
