@@ -229,15 +229,16 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 		return false;
 	
 	const int nrtraces = indata_.size();
-	proc_->resize( nrsamples );
+	const int sz = zmargin_.width() + nrsamples;
+	proc_->resize( sz );
 	BinID bin = getCurrentPosition();
 	for (int trcidx=0; trcidx<nrtraces; trcidx++)
 	{
-		int offset = trcidx*nrsamples;
+		int offset = trcidx*sz;
 		const DataHolder* data = indata_[trcidx];
-		for ( int idx=0; idx<nrsamples; idx++ )
+		for ( int idx=0; idx<sz; idx++ )
 		{
-			float val = getInputValue(*data, indataidx_, idx, z0);
+			float val = getInputValue(*data, indataidx_, zmargin_.start+idx, z0);
 			val = mIsUdf(val)?0.0f:val;
 			proc_->setInput( 0, idx+offset, val );
 		}
@@ -248,7 +249,7 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 	for (int iout = 0; iout<proc_->numOutput(); iout++) {
 		if (outputinterest_[iout]) {
 			for ( int idx=0; idx<nrsamples; idx++ ) {
-				float val = proc_->getOutput(iout, idx);
+				float val = proc_->getOutput(iout, idx-zmargin_.start);
 				setOutputValue( output, iout, idx, z0, val );
 			}
 		}
