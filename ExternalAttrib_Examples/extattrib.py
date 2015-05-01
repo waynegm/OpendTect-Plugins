@@ -65,7 +65,9 @@ def preCompute():
 							('nrcrl','i4'),
 							('zstep','f4'),
 							('inldist','f4'),
-							('crldist','f4')])
+							('crldist','f4'),
+							('zFactor','f4'),
+							('dipFactor','f4')])
 	SI = np.frombuffer(sys.stdin.read(dt_seisInfo.itemsize), dtype=dt_seisInfo, count=1)[0]
 
 def usage():

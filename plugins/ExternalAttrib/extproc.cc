@@ -46,6 +46,8 @@ struct SeisInfo
 	float	zStep;
 	float	inlDistance;
 	float	crlDistance;
+	float	zFactor;
+	float	dipFactor;
 };
 
 struct TrcInfo
@@ -543,7 +545,7 @@ ExtProc::~ExtProc()
 }
 
 	
-void ExtProc::start(int ninl, int ncrl)
+void ExtProc::start(int ninl, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor )
 {
 	if (isBusy()) {
 		ErrMsg("ExtProc::start - error process is already busy");
@@ -552,8 +554,11 @@ void ExtProc::start(int ninl, int ncrl)
 	(pD->seisInfo).nrInl = ninl;
 	(pD->seisInfo).nrCrl = ncrl;
 	(pD->seisInfo).zStep = SI().zStep();
-	(pD->seisInfo).inlDistance = (float) SI().inlDistance();
-	(pD->seisInfo).crlDistance = (float) SI().crlDistance();
+	(pD->seisInfo).inlDistance = inlDist;
+	(pD->seisInfo).crlDistance = crlDist;
+	(pD->seisInfo).zFactor = zFactor;
+	(pD->seisInfo).dipFactor = dipFactor;
+	
 	pD->nrTraces = ninl*ncrl;
 	(pD->seisInfo).nrTraces = ninl*ncrl;
 	pD->nrOutput = numOutput();

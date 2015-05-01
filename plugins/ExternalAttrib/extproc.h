@@ -33,7 +33,7 @@ public:
 	BufferString	getFile();
 	void			setFile( const char* exFile, const char* inFile );
 	
-	void 			start( int niln, int ncrl );
+	void 			start( int niln, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor );
 	void			compute( int z0, int inl, int crl );
 	
 	void			resize( int nrsamples );

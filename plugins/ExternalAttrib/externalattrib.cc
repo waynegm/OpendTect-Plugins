@@ -170,7 +170,7 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 		getTrcPos();
 		int ninl = stepout_.inl()*2 + 1;
 		int ncrl = stepout_.crl()*2 + 1;
-		proc_->start(ninl, ncrl);
+		proc_->start(ninl, ncrl, inlDist(), crlDist(), zFactor(), dipFactor() );
 	} else 
 		ErrMsg("ExternalAttrib::ExternalAttrib - error creating extrenal procedure");
 }

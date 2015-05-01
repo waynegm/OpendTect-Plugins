@@ -2,6 +2,7 @@
 
 ## Next Release
 #### ExternalAttrib
+- Add dipFactor and zFactor items to the SeismicInfo block exported to external attribute scripts
 - Add "Symmetric" tag to the "ZSampMargin' JSON parameter string tag. The value of the tag is a boolean constant (True/False). If set True the UI will show a single entry box. Input sets the 'ZSampMargin.Value' array to [-Input, Input]. Default is 'ZSampMargin.Symmetric': False for which the UI displays entry boxes for both the window start and stop.
 - Bugfix: ensure number of samples provided to external attribute includes ZSampMargin - fixes calculation failure on horizons and slices 
 
@@ -16,11 +17,3 @@
 #### RSpecAttrib
 - Replace window parameter with Z gate. Window parameter set from Z gate width and attribute input taken at centre of Z gate. This allows attribute extraction offset from an horizon.
 
-## Documentation
-For details please see the [documentation](http://waynegm.github.io/OpendTect-Plugin-Wiki/).
-
-## Building and Installation
-
-* [Build from Source](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/building-from-source.md)
-
-* [Installation](http://waynegm.github.io/OpendTect-Plugin-Wiki/en/#!pages/installation.md)
