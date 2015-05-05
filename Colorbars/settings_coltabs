@@ -1,0 +1,124 @@
+dTect V5.0
+Default settings
+Tue 05 May 2015, 21:49:27
+!
+coltabs: 
+1.Name: mlv_elements
+1.Marker color: 0`0`0`0
+1.Undef color: 255`255`255`255
+1.Nr segments: 13
+1.Value-Color.0: 0`0`190`0`255
+1.Value-Color.1: 0.0833333`0`255`0`1.86138904
+1.Value-Color.2: 0.166667`190`255`0`1.6921711
+1.Value-Color.3: 0.25`255`255`0`1.52295458
+1.Value-Color.4: 0.33333299`255`190`0`1.35373819
+1.Value-Color.5: 0.41666701`255`0`0`1.18451965
+1.Value-Color.6: 0.5`190`127`0`1.01530302
+1.Value-Color.7: 0.58333302`0`255`255`0.84608656
+1.Value-Color.8: 0.66666698`0`190`255`0.67686814
+1.Value-Color.9: 0.75`0`0`255`0.50765157
+1.Value-Color.10: 0.83333302`255`0`255`0.33843499
+1.Value-Color.11: 0.91666698`191`0`255`0.16921657
+1.Value-Color.12: 1`170`0`0`0
+1.Transparency.0: 0`255
+1.Transparency.1: 0.0340136`253.03849792
+1.Transparency.2: 0.0340136`1.96153796
+1.Transparency.3: 1`0
+2.Name: avo_angle
+2.Marker color: 255`0`255`0
+2.Undef color: 255`255`127`255
+2.Nr segments: 13
+2.Value-Color.0: 0`0`0`255`0
+2.Value-Color.1: 0.125`85`255`255`0
+2.Value-Color.2: 0.25`85`255`255`0
+2.Value-Color.3: 0.375`0`255`255`0
+2.Value-Color.4: 0.5`255`255`0`0
+2.Value-Color.5: 0.625`255`0`0`0
+2.Value-Color.6: 0.75`255`0`0`0
+2.Value-Color.7: 0.875`255`0`0`0
+2.Value-Color.8: 1`0`0`255`0
+2.Transparency.0: 0`0
+2.Transparency.1: 1`0
+3.Name: xplot_dev
+3.Marker color: 0`0`0`0
+3.Undef color: 200`200`200`255
+3.Nr segments: 0
+3.Value-Color.0: 0`255`255`255`0
+3.Value-Color.1: 0.2`255`255`255`0.10123754
+3.Value-Color.2: 0.4`255`255`255`115.26832581
+3.Value-Color.3: 0.6`255`255`255`237.170578
+3.Value-Color.4: 0.8`255`255`255`255
+3.Value-Color.5: 1`255`255`255`255
+3.Transparency.0: 0`0
+3.Transparency.1: 0`0
+3.Transparency.2: 0`0
+3.Transparency.3: 0`0
+3.Transparency.4: 0`1.96153796
+3.Transparency.5: 0.210884`0
+3.Transparency.6: 0.62925202`255
+3.Transparency.7: 1`255
+3.Transparency.8: 1`255
+3.Transparency.9: 1`255
+4.Name: avo_class
+4.Marker color: 255`0`255`0
+4.Undef color: 255`255`127`255
+4.Nr segments: 0
+4.Value-Color.0: 0`255`255`255`0
+4.Value-Color.1: 0.01388`255`255`255`0
+4.Value-Color.2: 0.01389`0`0`255`0
+4.Value-Color.3: 0.111`0`0`255`0
+4.Value-Color.4: 0.1111`170`0`255`0
+4.Value-Color.5: 0.1388`170`0`255`0
+4.Value-Color.6: 0.13889`0`85`0`0
+4.Value-Color.7: 0.3749`0`85`0`0
+4.Value-Color.8: 0.375`170`0`0`0
+4.Value-Color.9: 0.486`170`0`0`0
+4.Value-Color.10: 0.4861`255`255`255`0
+4.Value-Color.11: 0.5138`255`255`255`0
+4.Value-Color.12: 0.5139`215`0`40`0
+4.Value-Color.13: 0.6249`215`0`40`0
+4.Value-Color.14: 0.625`0`170`0`0
+4.Value-Color.15: 0.861`0`170`0`0
+4.Value-Color.16: 0.8611`255`0`255`0
+4.Value-Color.17: 0.8888`255`0`255`0
+4.Value-Color.18: 0.8889`71`255`255`0
+4.Value-Color.19: 0.986`85`255`255`0
+4.Value-Color.20: 0.9861`255`255`255`0
+4.Value-Color.21: 1`255`255`255`0
+4.Value-Color.22: 1`255`255`255`0
+4.Value-Color.23: 1`255`255`255`0
+4.Value-Color.24: 1`255`255`255`0
+4.Value-Color.25: 1`255`255`255`0
+4.Transparency.0: 0`0
+4.Transparency.1: 1`0
+5.Name: avo_angle2
+5.Marker color: 0`240`0`0
+5.Undef color: 255`255`255`0
+5.Nr segments: 0
+5.Value-Color.0: 0`255`255`255`0
+5.Value-Color.1: 0.1`135`135`255`0
+5.Value-Color.2: 0.25`255`135`135`0
+5.Value-Color.3: 0.45`135`255`135`0
+5.Value-Color.4: 0.5`255`255`255`0
+5.Value-Color.5: 0.55`0`255`0`0
+5.Value-Color.6: 0.75`255`0`0`0
+5.Value-Color.7: 0.9`0`0`255`0
+5.Value-Color.8: 1`255`255`255`0
+5.Transparency.0: 0`0
+5.Transparency.1: 1`0
+6.Name: AVOClass
+6.Marker color: 0`0`0`0
+6.Undef color: 200`200`200`0
+6.Nr segments: 9
+6.Value-Color.0: 0`255`170`127`0
+6.Value-Color.1: 0.124513`0`170`0`0
+6.Value-Color.2: 0.249027`170`0`255`0
+6.Value-Color.3: 0.37743199`85`85`255`0
+6.Value-Color.4: 0.50583702`255`255`255`0
+6.Value-Color.5: 0.634242`85`255`255`0
+6.Value-Color.6: 0.76264602`255`85`255`0
+6.Value-Color.7: 0.88132298`0`255`0`0
+6.Value-Color.8: 1`255`0`127`0
+6.Transparency.0: 0`0
+6.Transparency.1: 1`0
+!
