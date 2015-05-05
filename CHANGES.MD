@@ -1,10 +1,17 @@
 # OpendTect v5+ Plugins Release Notes
 
-## Next Release
+## Release 5.0.6-1
+#### AVOAttrib
+- Add example color tables
+
 #### ExternalAttrib
-- Add dipFactor and zFactor items to the SeismicInfo block exported to external attribute scripts
+- Add local polynomial approximation external attribute examples
+- Add dipFactor and zFactor items to the SeismicInfo block exported to external attribute scripts (note changes to extattrib.py)
 - Add "Symmetric" tag to the "ZSampMargin' JSON parameter string tag. The value of the tag is a boolean constant (True/False). If set True the UI will show a single entry box. Input sets the 'ZSampMargin.Value' array to [-Input, Input]. Default is 'ZSampMargin.Symmetric': False for which the UI displays entry boxes for both the window start and stop.
 - Bugfix: ensure number of samples provided to external attribute includes ZSampMargin - fixes calculation failure on horizons and slices 
+
+#### MLVFilterttrib
+- Add example color table for mlv_elements
 
 ## Release 5.0.6
 #### AVOAttrib
