@@ -24,7 +24,8 @@ xa.params = {
 	'Output': ['t1x', 't1y', 't1z', 't2x', 't2y', 't2z', 't3x', 't3y', 't3z'],
 	'ZSampMargin' : {'Value':[-1,1], 'Symmetric': True},
 	'StepOut' : {'Value': [1,1]},
-	'Par_0': {'Name': 'Weight Factor', 'Value': 0.2}
+	'Par_0': {'Name': 'Weight Factor', 'Value': 0.2},
+	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External-Attributes/LPA-Attributes/'
 }
 #
 # Define the compute function
