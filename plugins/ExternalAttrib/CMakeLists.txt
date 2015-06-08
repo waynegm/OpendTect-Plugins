@@ -10,6 +10,7 @@ SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
 	json.cpp
 	extproc.cc
+	procinst.cc
 	externalattribpi.cc
 	externalattrib.cc)
 SET( OD_PLUGIN_ALO_EXEC ${OD_ATTRIB_EXECS} )
