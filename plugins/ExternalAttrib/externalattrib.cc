@@ -57,28 +57,14 @@ void ExternalAttrib::initClass()
 	IntParam* selection = new IntParam( selectStr() );
     desc->addParam( selection );
 	selection->setDefaultValue(0);
-    
-	FloatParam* par0 = new FloatParam( par0Str() );
-	desc->addParam( par0 );
-	par0->setDefaultValue(0);
 
-	FloatParam* par1 = new FloatParam( par1Str() );
-	desc->addParam( par1 );
-	par1->setDefaultValue(0);
+	for (int i=0; i<cNrParams; i++) {
+		FloatParam* par = new FloatParam( BufferString(parStr()).add(i) );
+		desc->addParam( par );
+		par->setDefaultValue(0);
+	}
 	
-	FloatParam* par2 = new FloatParam( par2Str() );
-	desc->addParam( par2 );
-	par2->setDefaultValue(0);
-	
-	FloatParam* par3 = new FloatParam( par3Str() );
-	desc->addParam( par3 );
-	par3->setDefaultValue(0);
-	
-	FloatParam* par4 = new FloatParam( par4Str() );
-	desc->addParam( par4 );
-	par4->setDefaultValue(0);
-	
-	desc->addInput( InputSpec("Input data",true) );
+	desc->addInput(InputSpec("Input Data", false));
 	desc->addOutputDataType( Seis::UnknowData );
 	
 	mAttrEndInitClass
@@ -102,16 +88,23 @@ void ExternalAttrib::updateDesc( Desc& desc )
 	desc.setParamEnabled(zmarginStr(), dProc_->hasZMargin());
 	desc.setParamEnabled(stepoutStr(), dProc_->hasStepOut());
 	desc.setParamEnabled(selectStr(), dProc_->hasSelect());
-	desc.setParamEnabled(par0Str(), dProc_->hasParam(0));
-	desc.setParamEnabled(par1Str(), dProc_->hasParam(1));
-	desc.setParamEnabled(par2Str(), dProc_->hasParam(2));
-	desc.setParamEnabled(par3Str(), dProc_->hasParam(3));
-	desc.setParamEnabled(par4Str(), dProc_->hasParam(4));
+	for (int i=0; i<cNrParams; i++) {
+		desc.setParamEnabled(BufferString(parStr()).add(i), dProc_->hasParam(i));
+	}
 	
 	if (dProc_->hasOutput())
 		desc.setNrOutputs(Seis::UnknowData, dProc_->numOutput());
 	else
 		desc.setNrOutputs(Seis::UnknowData, 1);
+
+    if ( desc.nrInputs() != dProc_->numInput() ) {
+		while ( desc.nrInputs() )
+			desc.removeInput(0);
+		for ( int idx=0; idx<dProc_->numInput(); idx++ ) {
+			BufferString bfs = "Input Data"; bfs += idx+1;
+			desc.addInput( InputSpec(bfs, true) );
+		}
+    }
 	
 	if (dProc_->hasStepOut())
 		desc.setLocality(Desc::MultiTrace);
@@ -147,30 +140,21 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
             mGetInt( selection_, selectStr());
             proc_->setSelection( selection_);
         }
-		if (proc_->hasParam(0)) {
-			mGetFloat(par0_, par0Str());
-			proc_->setParam(0, par0_);
+        par_.setSize(cNrParams);
+		for (int i=0; i<cNrParams; i++) {
+			if (proc_->hasParam(i)) {
+				BufferString s(parStr());
+				s.add(i);
+				mGetFloat(par_[i], s);
+				proc_->setParam(i, par_[i]);
+			}
 		}
-		if (proc_->hasParam(1)) {
-			mGetFloat(par1_, par1Str());
-			proc_->setParam(1, par1_);
-		}
-		if (proc_->hasParam(2)) {
-			mGetFloat(par2_, par2Str());
-			proc_->setParam(2, par2_);
-		}
-		if (proc_->hasParam(3)) {
-			mGetFloat(par3_, par3Str());
-			proc_->setParam(3, par3_);
-		}
-		if (proc_->hasParam(4)) {
-			mGetFloat(par4_, par4Str());
-			proc_->setParam(4, par4_);
-		}
+		nrout_ = proc_->numOutput();
+		nrin_ = proc_->numInput();
 		getTrcPos();
 		int ninl = stepout_.inl()*2 + 1;
 		int ncrl = stepout_.crl()*2 + 1;
-		proc_->start(ninl, ncrl, inlDist(), crlDist(), zFactor(), dipFactor() );
+		proc_->setSeisInfo( ninl, ncrl, inlDist(), crlDist(), zFactor(), dipFactor() );
 	} else 
 		ErrMsg("ExternalAttrib::ExternalAttrib - error creating extrenal procedure");
 }
@@ -180,6 +164,10 @@ ExternalAttrib::~ExternalAttrib()
 	if (proc_)
 		delete proc_;
 }
+
+bool ExternalAttrib::allowParallelComputation() const
+{
+	return proc_->doParallel(); }
 
 bool ExternalAttrib::getTrcPos()
 {
@@ -204,56 +192,60 @@ void ExternalAttrib::getCompNames( BufferStringSet& nms ) const
 		Provider::getCompNames( nms ); 
 }
 
-bool ExternalAttrib::getInputData( const BinID& relpos, int zintv )
+bool ExternalAttrib::getInputData( const BinID& relpos, int zintv ) 
 {
-	while ( indata_.size() < trcpos_.size() )
+	while ( indata_.size() < trcpos_.size()*nrin_ ) {
 		indata_ += 0;
+		indataidx_ += -1;
+	}
 
 	const BinID bidstep = inputs_[0]->getStepoutStep();
-	for ( int idx=0; idx<trcpos_.size(); idx++ )
-	{
-		const DataHolder* data = inputs_[0]->getData( relpos+trcpos_[idx]*bidstep, zintv );
-		if ( !data ) return false;
-		indata_.replace( idx, data );
+	for (int iin=0; iin<nrin_; iin++) {
+		for ( int idx=0; idx<trcpos_.size(); idx++ )
+		{
+			const DataHolder* data = inputs_[iin]->getData( relpos+trcpos_[idx]*bidstep, zintv );
+			if ( !data ) return false;
+			indata_.replace( iin*trcpos_.size()+idx, data );
+		}
+		indataidx_[iin] = getDataIndex(iin);
 	}
-	
-	indataidx_ = getDataIndex( 0 );
 	
 	return true;
 }
 
-bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos, 
-				int z0, int nrsamples, int threadid ) const
+bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos, int z0, int nrsamples, int threadid ) const
 {
 	if ( indata_.isEmpty() || output.isEmpty() )
 		return false;
-	
-	const int nrtraces = indata_.size();
+	const int nrtraces = trcpos_.size();
 	const int sz = zmargin_.width() + nrsamples;
-	proc_->resize( sz );
+	ProcInst* pi = proc_->getIdleInst( sz );
 	BinID bin = getCurrentPosition();
-	for (int trcidx=0; trcidx<nrtraces; trcidx++)
-	{
-		int offset = trcidx*sz;
-		const DataHolder* data = indata_[trcidx];
-		for ( int idx=0; idx<sz; idx++ )
+	for (int iin = 0; iin<nrin_; iin++) {
+		for (int trcidx=0; trcidx<nrtraces; trcidx++)
 		{
-			float val = getInputValue(*data, indataidx_, zmargin_.start+idx, z0);
-			val = mIsUdf(val)?0.0f:val;
-			proc_->setInput( 0, idx+offset, val );
+			int offset = trcidx*sz;
+			const DataHolder* data = indata_[iin*nrtraces+trcidx];
+			for ( int idx=0; idx<sz; idx++ )
+			{
+				float val = getInputValue(*data, indataidx_[iin], zmargin_.start+idx, z0);
+				val = mIsUdf(val)?0.0f:val;
+				proc_->setInput( pi, iin, idx+offset, val );
+			}
 		}
 	}
 
-	proc_->compute( z0, bin.inl(), bin.crl() );
+	proc_->compute( pi, z0, bin.inl(), bin.crl() );
 
-	for (int iout = 0; iout<proc_->numOutput(); iout++) {
+	for (int iout = 0; iout<nrout_; iout++) {
 		if (outputinterest_[iout]) {
 			for ( int idx=0; idx<nrsamples; idx++ ) {
-				float val = proc_->getOutput(iout, idx-zmargin_.start);
+				float val = proc_->getOutput( pi, iout, idx-zmargin_.start);
 				setOutputValue( output, iout, idx, z0, val );
 			}
 		}
 	}
+	proc_->setInstIdle( pi );
 	return true;
 }
 

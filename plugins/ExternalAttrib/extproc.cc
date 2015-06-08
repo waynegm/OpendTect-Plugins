@@ -17,10 +17,6 @@ ________________________________________________________________________
  ________________________________________________________________________
 
 -*/
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <sys/types.h>
 #include "survinfo.h"
 #include "errmsg.h"
 #include "ranges.h"
@@ -28,35 +24,10 @@ ________________________________________________________________________
 #include "extproc.h"
 #include "json.h"
 #include "msgh.h"
+#include "objectset.h"
 
-#ifdef __win__
-#include <windows.h>
-#include <io.h>
-#else
-#include <paths.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#endif
+#include "procinst.h"
 
-struct SeisInfo
-{
-	int		nrTraces;
-	int		nrInl;
-	int		nrCrl;
-	float	zStep;
-	float	inlDistance;
-	float	crlDistance;
-	float	zFactor;
-	float	dipFactor;
-};
-
-struct TrcInfo
-{
-	int		nrSamples;
-	int		z0;
-	int		inl;
-	int		crl;
-};
 
 struct ExtProcImpl
 {
@@ -64,69 +35,37 @@ public:
 	ExtProcImpl(const char* fname, const char* iname);
 	~ExtProcImpl();
 	
+	void			startInst( ProcInst* pi );
 	bool			start( char *const argv[] );
 	int				finish();
 	
-		
-	bool			writeSeisInfo();
-	bool			writeTrcInfo( int z0, int inl, int crl );
-	bool			writeData();
-	bool			readData();
 	BufferString	readAllStdOut();
 	
 	bool			getParam();
 	void			setFile(const char* fname, const char* iname);
 	
-	float*			input;
-	float*			output;
-	int				nrSamples;
-	int				nrTraces;
-	int				nrOutput;
 	SeisInfo		seisInfo;
-	TrcInfo			trcInfo;
-	FILE*			read_fd;
-	FILE*			write_fd;
-#ifdef __win__
-	HANDLE			hChildProcess;
-	HANDLE			hChildThread;
-#else
-	pid_t			child_pid;
-#endif
 	BufferString 	exfile;
 	BufferString	infile;
 	json::Value		jsonpar;
-	
+	ObjectSet<ProcInst> idleInsts;
+	Threads::Mutex	idleInstsLock;
 	
 };
 
 ExtProcImpl::ExtProcImpl(const char* fname, const char* iname)
-:  input(NULL), output(NULL), read_fd(NULL), write_fd(NULL)
+:  idleInsts()
 {
-#ifdef __win__
-	hChildProcess = NULL;
-	hChildThread = NULL;
-#else
-	child_pid = -1;
-#endif
-	nrSamples = 0;
-	nrTraces = 0;
-	nrOutput = 1;
 	setFile(fname, iname);
 }
 	
 ExtProcImpl::~ExtProcImpl()
 {	
-#ifdef __win__
-	if (hChildProcess)
-		finish();
-#else
-	if (child_pid != -1)
-		finish();
-#endif
-	if (input != NULL)
-		delete [] input;
-	if (output != NULL)
-		delete [] output;
+// Delete all ProcInst's in idleInsts
+	while (!idleInsts.isEmpty()) {
+		ProcInst* pi = idleInsts.pop();
+		delete pi;
+	}
 }
 
 void ExtProcImpl::setFile(const char* fname, const char* iname)
@@ -136,365 +75,32 @@ void ExtProcImpl::setFile(const char* fname, const char* iname)
 	getParam();
 }
 
-bool ExtProcImpl::start( char *const argv[] )
+void ExtProcImpl::startInst( ProcInst* pi )
 {
+	BufferString params(json::Serialize(jsonpar).c_str());
 #ifdef __win__
-
-	HANDLE g_hChildStd_IN_Rd = NULL;
-	HANDLE g_hChildStd_IN_Wr = NULL;
-	HANDLE g_hChildStd_OUT_Rd = NULL;
-	HANDLE g_hChildStd_OUT_Wr = NULL; 
-	SECURITY_ATTRIBUTES saAttr;
-	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
-	saAttr.bInheritHandle = TRUE; 
-	saAttr.lpSecurityDescriptor = NULL; 
-// Create a pipe for the child process's STDOUT. 
-	if ( ! CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0) ) {
-		ErrMsg("ExtProcImpl::start - opening stdout failed");
-		return false;
-	}
-	
-// Ensure the read handle to the pipe for STDOUT is not inherited.
-	
-	if ( ! SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0) ) {
-		ErrMsg("ExtProcImpl::start - stdout set handle information failed");
-		return false;
-	}
-	
-// Create a pipe for the child process's STDIN. 
-	
-	if (! CreatePipe(&g_hChildStd_IN_Rd, &g_hChildStd_IN_Wr, &saAttr, 0)) {
-		ErrMsg("ExtProcImpl::start - opening stdin failed");
-		return false;
-	}
-	
-// Ensure the write handle to the pipe for STDIN is not inherited. 
-	
-	if ( ! SetHandleInformation(g_hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0) ) {
-		ErrMsg("ExtProcImpl::start - stdin set handle information failed");
-		return false;
-	}
-// Convert the HANDLES to C FILE*
-	int fileInNo, fileOutNo;
-	if ((fileInNo = _open_osfhandle((LONG) g_hChildStd_IN_Wr, 0)) == -1 || (fileOutNo = _open_osfhandle((LONG) g_hChildStd_OUT_Rd, 0)) == -1) {
-		ErrMsg("ExtProcImpl::start - unable to get file number for child stdin/stdout");
-		CloseHandle( g_hChildStd_IN_Rd );
-		CloseHandle( g_hChildStd_IN_Wr );
-		CloseHandle( g_hChildStd_OUT_Rd );
-		CloseHandle( g_hChildStd_OUT_Wr ); 
-		return false;
-	}
-	if (!(read_fd = fdopen(fileOutNo, "r"))) {
-		read_fd = NULL;
-		write_fd = NULL;
-		CloseHandle( g_hChildStd_IN_Rd );
-		CloseHandle( g_hChildStd_IN_Wr );
-		CloseHandle( g_hChildStd_OUT_Rd );
-		CloseHandle( g_hChildStd_OUT_Wr ); 
-		ErrMsg("ExtProcImpl::start - open read_fd failed");
-		return false;
-	}
-	if (!(write_fd = fdopen(fileInNo, "w"))) {
-		fclose(read_fd);
-		read_fd = NULL;
-		write_fd = NULL;
-		CloseHandle( g_hChildStd_IN_Rd );
-		CloseHandle( g_hChildStd_OUT_Rd );
-		CloseHandle( g_hChildStd_OUT_Wr ); 
-		ErrMsg("ExtProcImpl::start - open write_fd failed");
-		return false;
-	}
-	setbuf( read_fd, NULL );
-	setbuf( write_fd, NULL);
-	
-// Get path to the shell
-	char* cmd_path = NULL;
-	cmd_path = getenv("ComSpec");
-	if (!cmd_path) {
-		ErrMsg("ExtProcImpl::start - ComSpec is not defined");
-		return false;
-	}
-// Build the command line
-	BufferString cmd = " /C";
-	int i = 0;
-	while (argv[i]!=0) {
-		cmd += " ";
-		cmd += argv[i];
-		i++;
-	}
-// Spawn the child process
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-	GetStartupInfo(&si);      
-	si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
-	si.wShowWindow = SW_HIDE;
-	si.hStdError = g_hChildStd_OUT_Wr;
-	si.hStdOutput = g_hChildStd_OUT_Wr;
-	si.hStdInput = g_hChildStd_IN_Rd;
-	ZeroMemory(&pi, sizeof(pi));
-	
-	bool res = CreateProcess( 	cmd_path, 
-								cmd.getCStr(),
-								NULL,
-								NULL,
-								true,
-								0,
-								NULL,
-								NULL,
-								&si,
-								&pi );
-							  
-	if (!res) {
-		ErrMsg("ExtProcImpl::start - CreateProcess failed");
-		CloseHandle( g_hChildStd_IN_Rd );
-		CloseHandle( g_hChildStd_IN_Wr );
-		CloseHandle( g_hChildStd_OUT_Rd );
-		CloseHandle( g_hChildStd_OUT_Wr ); 
-		return false;
-	}
-	hChildProcess = pi.hProcess;
-	hChildThread = pi.hThread;
-	CloseHandle(g_hChildStd_OUT_Wr);
-	CloseHandle(g_hChildStd_IN_Rd);
-	return true;
-#else
-	char* envp[3];
-	envp[0] = (char*) "IFS= \t\n";
-	envp[1] = (char*) "PATH=" _PATH_STDPATH;
-	envp[2] = 0;
-	
-	if (child_pid != -1)
-	{
-		ErrMsg("ExtProcImpl::start - already in use");
-		return false;
-	}
-	int		stdin_pipe[2], stdout_pipe[2];
-	
-	if (pipe(stdin_pipe) == -1) {
-		return false;
-	}
-	if (pipe(stdout_pipe) == -1) {
-		close(stdin_pipe[1]);
-		close(stdin_pipe[0]);
-		return false;
-	}
-	
-	if (!(read_fd = fdopen(stdout_pipe[0], "r"))) {
-		read_fd = NULL;
-		write_fd = NULL;
-		close(stdout_pipe[1]);
-		close(stdout_pipe[0]);
-		close(stdin_pipe[1]);
-		close(stdin_pipe[0]);
-		ErrMsg("Open read_fd failed");
-		return false;
-	}
-	if (!(write_fd = fdopen(stdin_pipe[1], "w"))) {
-		fclose(read_fd);
-		read_fd = NULL;
-		write_fd = NULL;
-		close(stdout_pipe[1]);
-		
-		close(stdin_pipe[1]);
-		close(stdin_pipe[0]);
-		return false;
-	}
-	setbuf( read_fd, NULL );
-	setbuf( write_fd, NULL);
-	if ((child_pid = fork()) == -1) {
-		fclose(write_fd);
-		fclose(read_fd);
-		read_fd = NULL;
-		write_fd = NULL;
-		close(stdout_pipe[1]);
-		close(stdin_pipe[0]);
-		return false;
-	}
-	
-	if (!child_pid) {
-//	This is the child process
-//	close open files other than stdin, stdout and stderr
-		close(stdout_pipe[0]);
-		close(stdin_pipe[1]);
-		if (stdin_pipe[0] != 0) {
-			dup2(stdin_pipe[0], 0);
-			close(stdin_pipe[0]);
-		}
-		if (stdout_pipe[1] != 1) {
-			dup2(stdout_pipe[1], 1);
-			close(stdout_pipe[1]);
-		}
-		int fd, fds;
-		if ((fds = getdtablesize()) == -1 )
-			fds = FOPEN_MAX;
-		for (fd = 3; fd<fds; fd++)
-			close(fd);
-		execve(argv[0], argv, envp);
-//	Should never get here
-		ErrMsg("ExtProcImpl::start - child process not started");
-		return false;
-	}
-	
-	close(stdout_pipe[1]);
-	close(stdin_pipe[0]);
-	return true;
-#endif	
-}
-
-int ExtProcImpl::finish() {
-#ifdef __win__
-	DWORD status;
-	if (hChildProcess) {
-		if (GetExitCodeProcess( hChildProcess, &status)) {
-			if (status == STILL_ACTIVE) {
-				WaitForInputIdle( hChildProcess, INFINITE );
-				TerminateProcess( hChildProcess, 0 );
-				WaitForSingleObject( hChildProcess, INFINITE ); 
-			}
-		} else {
-			ErrMsg("ExtProcImpl::finish - GetExitCodeProcess failed");
-			return -1;
-		}
-		CloseHandle( hChildProcess );
-		CloseHandle( hChildThread );
-		hChildProcess = NULL;
-		hChildThread = NULL;
-	}
-	if (write_fd) {
-		fclose(write_fd);
-		write_fd = NULL;
-	}
-	if (read_fd) {
-		fclose(read_fd);
-		read_fd = NULL;
-	}
-	return (int) status;
-#else
-	int   status;
-	pid_t pid = -1;
-	
-	if (child_pid != -1) {
-		kill( child_pid, SIGKILL );
-		do {
-			pid = waitpid(child_pid, &status, 0);
-		} while (pid == -1 && errno == EINTR);
-	}
-	if (write_fd) {
-		fclose(write_fd);
-		write_fd = NULL;
-	}
-	if (read_fd) {
-		fclose(read_fd);
-		read_fd = NULL;
-	}
-	child_pid=-1;
-	if (pid != -1 && WIFEXITED(status)) 
-		return WEXITSTATUS(status);
-	else 
-		return (pid == -1 ? -1 : 0);
-#endif	
-}	
-	
-bool ExtProcImpl::writeSeisInfo()
-{
-	if (write_fd) {
-		seisInfo.nrTraces = nrTraces;
-		size_t nbytes = sizeof(seisInfo);
-		size_t res = fwrite((void*) &seisInfo, nbytes, 1, write_fd);
-		if (res != 1) {
-			ErrMsg("ExtProcImpl::writeSeisInfo - error writing info block to external attribute");
-			return false;
-		}
-		fflush(write_fd);
-		return true;
+	params.replace("\"","\"\""); 
+	params.embed('"','"');
+#endif
+	char* args[5];
+	if (infile.isEmpty()) {
+		args[0] = (char*) exfile.str();
+		args[1] = (char*) "-c";
+		args[2] = (char*) params.str();
+		args[3] = 0;
+	} else if (exfile.isEmpty()) {
+		ErrMsg("ExtProcImpl::startInst - no external attribute file provided");
 	} else {
-		ErrMsg("ExtProcImpl::writeSeisInfo - no stdin");
-		return false;
+		args[0] = (char*) infile.str();
+		args[1] = (char*) exfile.str();
+		args[2] = (char*) "-c";
+		args[3] = (char*) params.str();
+		args[4] = 0;
 	}
-}
+	if (!pi->start( args, seisInfo ))
+		ErrMsg("ExtProcImpl::startInst - run error");
 
-bool ExtProcImpl::writeTrcInfo(int z0, int inl, int crl)
-{
-	if (write_fd) {
-		trcInfo.z0 = z0;
-		trcInfo.inl = inl;
-		trcInfo.crl = crl;
-		trcInfo.nrSamples = nrSamples;
-		
-		size_t nbytes = sizeof(trcInfo);
-		size_t res = fwrite((void*) &trcInfo, nbytes, 1, write_fd);
-		if (res != 1) {
-			ErrMsg("ExtProcImpl::writeTrcInfo - error writing info block to external attribute");
-			return false;
-		}
-		fflush(write_fd);
-		return true;
-	} else {
-		ErrMsg("ExtProcImpl::writeTrcInfo - no stdin");
-		return false;
-	}
-}
-	
-bool ExtProcImpl::writeData()
-{ 
-	if (write_fd) {
-		size_t nbytes = sizeof(float);
-		size_t res = fwrite((void*) input, nbytes, nrSamples*nrTraces, write_fd);
-		if (res != nrSamples*nrTraces) {
-			ErrMsg("ExtProcImpl::writeData - error writing data to external attribute");
-			return false;
-		}
-		fflush(write_fd);
-		return true;
-	} else {
-		ErrMsg("ExtProcImpl::writeData - no stdin");
-		return false;
-	}
-}
-
-bool ExtProcImpl::readData()
-{
-	if (read_fd) {
-		size_t nbytes = sizeof(float);
-		size_t res = fread((void*) output, nbytes, nrSamples*nrOutput, read_fd);
-		if (res != nrSamples*nrOutput) {
-			ErrMsg("ExtProcImpl::readData - error reading from external attribute");
-			return false;
-		}
-		return true;	
-		
-	} else {
-		ErrMsg("ExtProcImpl::readData - no stdout");	
-		
-		return false;
-	}
-}
-
-BufferString ExtProcImpl::readAllStdOut()
-{
-	BufferString result;
-	if (read_fd) {
-		char buffer[4096];
-		while (1) {
-			size_t count = fread( (void*) buffer, 1, sizeof(buffer-1), read_fd );
-			if (count == -1) {
-				if (errno == EINTR) 
-					continue;
-				else {
-					ErrMsg("ExtProcImpl::readAllStdOut- read error");
-					return BufferString();
-				}
-			} else if (count == 0) {
-				break;
-			} else {
-				buffer[count] = 0;
-				result += buffer;
-			}
-		}
-	} else
-		ErrMsg("ExtProcImpl::readAllStdOut - no stdout");
-	
-	return result;
+	return;
 }
 
 bool ExtProcImpl::getParam()
@@ -514,9 +120,10 @@ bool ExtProcImpl::getParam()
 		args[2] = (char*) "-g";
 		args[3] = 0;
 	}
-	if (start( args )) {
-		params = readAllStdOut();
-		if (finish() != 0 ) {
+	ProcInst pi;
+	if (pi.start( args )) {
+		params = pi.readAllStdOut();
+		if (pi.finish() != 0 ) {
 			ErrMsg("ExtProcImpl::getParam - external attribute exited abnormally");
 			ErrMsg(params.str());
 			return false;
@@ -544,13 +151,9 @@ ExtProc::~ExtProc()
 	delete pD;
 }
 
-	
-void ExtProc::start(int ninl, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor )
+void ExtProc::setSeisInfo( int ninl, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor )
 {
-	if (isBusy()) {
-		ErrMsg("ExtProc::start - error process is already busy");
-		return;
-	}
+	(pD->seisInfo).nrTraces = ninl*ncrl;
 	(pD->seisInfo).nrInl = ninl;
 	(pD->seisInfo).nrCrl = ncrl;
 	(pD->seisInfo).zStep = SI().zStep();
@@ -558,86 +161,52 @@ void ExtProc::start(int ninl, int ncrl, float inlDist, float crlDist, float zFac
 	(pD->seisInfo).crlDistance = crlDist;
 	(pD->seisInfo).zFactor = zFactor;
 	(pD->seisInfo).dipFactor = dipFactor;
-	
-	pD->nrTraces = ninl*ncrl;
-	(pD->seisInfo).nrTraces = ninl*ncrl;
-	pD->nrOutput = numOutput();
-	
-	BufferString params(json::Serialize(pD->jsonpar).c_str());
-#ifdef __win__
-	params.replace("\"","\"\""); 
-	params.embed('"','"');
-#endif
-	char* args[5];
-	if (pD->infile.isEmpty()) {
-		args[0] = (char*) pD->exfile.str();
-		args[1] = (char*) "-c";
-		args[2] = (char*) params.str();
-		args[3] = 0;
-	} else if (pD->exfile.isEmpty()) {
-		ErrMsg("ExtProc::start - no external attribute file provided");
-	} else {
-		args[0] = (char*) pD->infile.str();
-		args[1] = (char*) pD->exfile.str();
-		args[2] = (char*) "-c";
-		args[3] = (char*) params.str();
-		args[4] = 0;
+	(pD->seisInfo).nrOutput = numOutput();
+	(pD->seisInfo).nrInput = numInput();
+}
+
+void ExtProc::setInput( ProcInst* pi, int inpdx, int idx, float val )
+{
+	pi->setInput( inpdx, idx, val );
+}
+
+float ExtProc::getOutput( ProcInst* pi, int outdx, int idx )
+{
+	return pi->getOutput( outdx, idx );
+}
+
+ProcInst* ExtProc::getIdleInst( int nrsamples )
+{
+	ProcInst* pi = NULL;
+	pD->idleInstsLock.lock();
+	if (!pD->idleInsts.isEmpty())
+		pi = pD->idleInsts.pop();
+	pD->idleInstsLock.unLock();
+	if (pi==NULL) {
+		pi = new ProcInst();
+		if (pi==NULL)
+			ErrMsg( "ExtProc::getIdleInst - error allocating new ProcInst" );
+		else {
+			pD->startInst( pi );
+			pi->resize( nrsamples );
+		}
+	} else
+		pi->resize( nrsamples );
+	return pi;
+}
+
+void ExtProc::setInstIdle( ProcInst* pi )
+{
+	pD->idleInstsLock.lock();
+	if (pi!=NULL) {
+		pD->idleInsts.push(pi);
 	}
-
-	if (!pD->start( args ))
-		ErrMsg("ExtProc::start - run error");
-
-	pD->writeSeisInfo();
-	return;
+	pD->idleInstsLock.unLock();
 }
 
-bool ExtProc::isBusy() const
+void ExtProc::compute( ProcInst* pi,  int z0, int inl, int crl)
 {
-#ifdef __win__
-	return pD->hChildProcess != NULL;
-#else
-	return pD->child_pid != -1;
-#endif
-}
-
-void ExtProc::setInput( int inpdx, int idx, float val )
-{
-//	int pos = inpdx*(pD->info).nrSamples + idx;
-	int pos = idx;
-	pD->input[pos] = val;
-}
-
-float ExtProc::getOutput( int outdx, int idx )
-{
-	int pos = outdx*pD->nrSamples + idx;
-	return pD->output[pos];
-}
-
-void ExtProc::resize( int nrsamples )
-{
-	if (nrsamples != pD->nrSamples) {
-		if (pD->input != NULL)
-			delete [] pD->input;
-		if (pD->output != NULL)
-			delete [] pD->output;
-		pD->nrSamples = nrsamples;
-		int nrtraces = pD->nrTraces;
-		int nrout = pD->nrOutput;
-		pD->input = new float[nrsamples*nrtraces];
-		pD->output = new float[nrsamples*nrout];
-		if (pD->input==NULL || pD->output==NULL)
-			ErrMsg( "ExtProc::resize - error allocating array space" );
-	}
-}
-
-void ExtProc::compute( int z0, int inl, int crl)
-{
-	// Send info packet to process stdin
-	pD->writeTrcInfo( z0, inl, crl );
-// Send input array to process stdin
-	pD->writeData();
-// Read output array from process stdout 
-	pD->readData();
+	pi->compute( z0, inl, crl );
 }
 
 bool ExtProc::hasInput()
@@ -645,13 +214,33 @@ bool ExtProc::hasInput()
 	return (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("Input"));
 }
 
-BufferString ExtProc::inputName()
+bool ExtProc::hasInputs()
 {
-	BufferString res;
-	if (hasInput()) {
-		res = pD->jsonpar["Input"].ToString().c_str();
+	return (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("Inputs"));
+}
+
+int ExtProc::numInput()
+{
+	int nIn = 1;
+	if (hasInputs()) {
+		json::Array inarr = pD->jsonpar["Inputs"].ToArray();
+		nIn = inarr.size();
 	}
-	return res;
+	return nIn;
+}
+
+BufferString ExtProc::inputName(int inum )
+{
+	BufferString name;
+	if (hasInputs()) {
+		json::Array inarr = pD->jsonpar["Inputs"].ToArray();
+		int nIn = inarr.size();
+		if (inum >= 0 && inum <nIn)
+			name = inarr[inum].ToString().c_str();
+	} else if (hasInput()) {
+		name = pD->jsonpar["Input"].ToString().c_str();
+	}
+	return name;
 }
 
 bool ExtProc::hasOutput()
@@ -896,6 +485,14 @@ BufferString ExtProc::helpValue()
 	return res;
 }
 
+bool ExtProc::doParallel()
+{
+	if (pD->jsonpar.GetType() != json::NULLVal && pD->jsonpar.HasKey("Parallel")) 
+			return pD->jsonpar["Parallel"];
+	else
+			return true;
+}
+	
 BufferString ExtProc::getFile()
 {
 	return pD->exfile;

@@ -27,6 +27,8 @@ ________________________________________________________________________
 #include "uiattribfactory.h"
 #include "uiattrsel.h"
 #include "uifileinput.h"
+#include "uitable.h"
+#include "uilabel.h"
 #include "uimsg.h"
 #include "uigeninput.h"
 #include "uistepoutsel.h"
@@ -52,16 +54,30 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	exfilefld_ = new uiFileInput( this, "External File", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.py") );
 	exfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
 	exfilefld_->attach(alignedBelow, interpfilefld_);
-	
-	inpfld_ = createInpFld( is2D() );
-	inpfld_->attach( alignedBelow, exfilefld_ );
+
+	int lstfld = 0;
+	for (int i=0; i<cNrInputs; i++) {
+		BufferString bfs = "Input Data"; bfs += i+1;
+		uiAttrSel* tmp = createInpFld( is2d, bfs );
+		if (i==0) {
+			tmp->attach(alignedBelow, exfilefld_);
+			lstfld = 0;
+		}	else if (i%2)
+			tmp->attach(rightTo, inpflds_[i-1]);
+		else {
+			tmp->attach(alignedBelow, inpflds_[i-2]);
+			lstfld = i;
+		}
+		tmp->display(false);
+		inpflds_ += tmp;
+	}
 
 	outputfld_ = new uiGenInput( this, "Output", StringListInpSpec() );
-	outputfld_->attach(rightTo, inpfld_);
+	outputfld_->attach(alignedBelow, inpflds_[lstfld]);
 	outputfld_->display(false);
 
 	zmarginfld_ = new uiGenInput( this, "Z Window (samples)___", IntInpIntervalSpec().setName("Samples after",0).setName("Samples before",1) );
-	zmarginfld_->attach( alignedBelow, inpfld_ );
+	zmarginfld_->attach( alignedBelow, outputfld_ );
 	zmarginfld_->valuechanged.notify(mCB(this, uiExternalAttrib,doZmarginSymmetry) );
 	zmarginfld_->display(false);
 	
@@ -71,42 +87,30 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	stepoutfld_->display(false);
 	
 
-	selectfld_ = new uiGenInput( this, "Selection_______________________________", StringListInpSpec() );
+	selectfld_ = new uiGenInput( this, "Selection_______________", StringListInpSpec() );
 	selectfld_->attach(alignedBelow, zmarginfld_);
 	selectfld_->display(false);
-	
-	par0fld_ = new uiGenInput( this, "Par________________________________________", FloatInpSpec() );
-	par0fld_->attach( alignedBelow, selectfld_ );
-	par0fld_->setValue(0);
-	par0fld_->display(false);
 
-	par1fld_ = new uiGenInput( this, "Par________________________________________", FloatInpSpec() );
-	par1fld_->attach( alignedBelow, par0fld_ );
-	par1fld_->setValue(0);
-	par1fld_->display(false);
-	
-	par2fld_ = new uiGenInput( this, "Par________________________________________", FloatInpSpec() );
-	par2fld_->attach( alignedBelow, par1fld_ );
-	par2fld_->setValue(0);
-	par2fld_->display(false);
+	for (int i=0; i<cNrParams; i++) {
+		uiGenInput* tmp = new uiGenInput( this, "Par____________________", FloatInpSpec() );
+		if (i==0) 
+			tmp->attach( alignedBelow, selectfld_ );
+		else if (i%2)
+			tmp->attach( rightTo, parflds_[i-1] );
+		else
+			tmp->attach( alignedBelow, parflds_[i-2] );
+		tmp->setValue(0);
+		tmp->display(false);
+		parflds_ += tmp;
+	}
 
-	par3fld_ = new uiGenInput( this, "Par________________________________________", FloatInpSpec() );
-	par3fld_->attach( alignedBelow, par2fld_ );
-	par3fld_->setValue(0);
-	par3fld_->display(false);
-
-	par4fld_ = new uiGenInput( this, "Par________________________________________", FloatInpSpec() );
-	par4fld_->attach( alignedBelow, par3fld_ );
-	par4fld_->setValue(0);
-	par4fld_->display(false);
-	
 	CallBack cb = mCB(this,uiExternalAttrib,doHelp);
 	help_ = new uiToolButton( this, "contexthelp", "Help", cb );
 	help_->attach (rightTo, exfilefld_);
 	help_->display(false);
 	
 	
-	setHAlignObj( exfilefld_ );
+	setHAlignObj( interpfilefld_ );
 }
 
 uiExternalAttrib::~uiExternalAttrib()
@@ -117,6 +121,7 @@ uiExternalAttrib::~uiExternalAttrib()
 
 void uiExternalAttrib::exfileChanged( CallBacker* )
 {
+//	ErrMsg("uiExternalAttrib::exfileChanged - enter");
 	BufferString iname(interpfilefld_->fileName());
 	BufferString fname(exfilefld_->fileName());
 	if (!fname.isEmpty()) {
@@ -126,11 +131,19 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 			delete extproc_;
 			extproc_ = new ExtProc(fname.str(), iname.str());
 		}
-
-		if (extproc_ && extproc_->hasInput()) {
-			inpfld_->setLabelText(extproc_->inputName().str());
+		if (extproc_ == NULL)
+			return;
+		if (extproc_->hasInput() || extproc_->hasInputs()) {
+			int nIn = extproc_->numInput();
+			for (int i=0; i<cNrInputs; i++) {
+				if (i<nIn) {
+					inpflds_[i]->setLabelText(extproc_->inputName(i).str());
+					inpflds_[i]->display(true);
+				} else 
+					inpflds_[i]->display(false);
+			}
 		}
-		if (extproc_ && extproc_->hasZMargin()) {
+		if (extproc_->hasZMargin()) {
 			Interval<int> val = extproc_->zmargin();
 			if (extproc_->zSymmetric()) {
 				val.start = val.stop;
@@ -151,7 +164,7 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 		} else
 			zmarginfld_->display(false);
 
-		if (extproc_ && extproc_->hasStepOut()) {
+		if (extproc_->hasStepOut()) {
 			stepoutfld_->setBinID(extproc_->stepout());
 			if (extproc_->hideStepOut()) 
 				stepoutfld_->display(false);
@@ -160,7 +173,7 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 		} else 
 			stepoutfld_->display(false);
 
-		if (extproc_ && extproc_->hasOutput()) {
+		if (extproc_->hasOutput()) {
 			int nout = extproc_->numOutput();
 			BufferStringSet nms;
 			for (int i = 0; i<nout; i++) {
@@ -173,7 +186,7 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 		} else {
 			outputfld_->display(false);
 		}
-		if (extproc_ && extproc_->hasSelect()) {
+		if (extproc_->hasSelect()) {
 			selectfld_->setTitleText(extproc_->selectName());
 			int nsel = extproc_->numSelect();
 			BufferStringSet nms;
@@ -188,60 +201,41 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 		} else {
 			selectfld_->display(false);
 		}
-		if (extproc_ && extproc_->hasParam(0)) {
-			par0fld_->setTitleText(extproc_->paramName(0));
-			par0fld_->setValue(extproc_->paramValue(0));
-			par0fld_->display(true);
-		} else {
-			par0fld_->display(false);
+		for (int i=0; i<cNrParams; i++) {
+			if (extproc_->hasParam(i)) {
+				parflds_[i]->setTitleText(extproc_->paramName(i));
+				parflds_[i]->setValue(extproc_->paramValue(i));
+				parflds_[i]->display(true);
+			} else {
+				parflds_[i]->display(false);
+			}
 		}
-		if (extproc_ && extproc_->hasParam(1)) {
-			par1fld_->setTitleText(extproc_->paramName(1));
-			par1fld_->setValue(extproc_->paramValue(1));
-			par1fld_->display(true);
-		} else {
-			par1fld_->display(false);
-		}
-		if (extproc_ && extproc_->hasParam(2)) {
-			par2fld_->setTitleText(extproc_->paramName(2));
-			par2fld_->setValue(extproc_->paramValue(2));
-			par2fld_->display(true);
-		} else {
-			par2fld_->display(false);
-		}
-		if (extproc_ && extproc_->hasParam(3)) {
-			par3fld_->setTitleText(extproc_->paramName(3));
-			par3fld_->setValue(extproc_->paramValue(3));
-			par3fld_->display(true);
-		} else {
-			par3fld_->display(false);
-		}
-		if (extproc_ && extproc_->hasParam(4)) {
-			par4fld_->setTitleText(extproc_->paramName(4));
-			par4fld_->setValue(extproc_->paramValue(4));
-			par4fld_->display(true);
-		} else {
-			par4fld_->display(false);
-		}
-		if (extproc_ && extproc_->hasHelp())
+		if (extproc_->hasHelp())
 			help_->display(true);
 		else
 			help_->display(false);
 	}
+//	ErrMsg("uiExternalAttrib::exfileChanged - leave");
+
 }
 
 
 
 bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 {
+//	ErrMsg("uiExternalAttrib::setParameters - enter");
+
     if ( desc.attribName() != ExternalAttrib::attribName())
 	return false;
+
 	
 	mIfGetString(ExternalAttrib::interpFileStr(),interpfile, interpfilefld_->setFileName(interpfile) )
 	mIfGetString(ExternalAttrib::exFileStr(),exfile, exfilefld_->setFileName(exfile) )
 	exfileChanged(NULL);
+	if (extproc_==NULL)
+		return false;
 	
-	if (extproc_ && extproc_->hasZMargin()) {
+	if (extproc_->hasZMargin()) {
 		mIfGetIntInterval( ExternalAttrib::zmarginStr(), zmargin, zmarginfld_->setValue(zmargin) )
 		if (extproc_->zSymmetric()) {
 			Interval<int> val = zmarginfld_->getIInterval();
@@ -250,52 +244,59 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 			zmarginfld_->setValue( val );
 		}
 	}
-	if (extproc_ && extproc_->hasStepOut()) {
+	if (extproc_->hasStepOut()) {
 		mIfGetBinID( ExternalAttrib::stepoutStr(), stepout, stepoutfld_->setBinID(stepout) )
 	}
-	if (extproc_ && extproc_->hasSelect()) {
+	if (extproc_->hasSelect()) {
 		mIfGetInt( ExternalAttrib::selectStr(), select, selectfld_->setValue(select));
 	}
-	if (extproc_ && extproc_->hasParam(0))  {
-		mIfGetFloat( ExternalAttrib::par0Str(), par0, par0fld_->setValue(par0) )
+	for (int i=0; i<cNrParams; i++) {
+		if (extproc_->hasParam(i)) {
+			BufferString s(ExternalAttrib::parStr());
+			s.add(i);
+			mIfGetFloat( s, par, parflds_[i]->setValue(par) )
+		}
 	}
-	if (extproc_ && extproc_->hasParam(1)) {
-		mIfGetFloat( ExternalAttrib::par1Str(), par1, par1fld_->setValue(par1) )
-	}
-	if (extproc_ && extproc_->hasParam(2)) {
-		mIfGetFloat( ExternalAttrib::par2Str(), par2, par2fld_->setValue(par2) )
-	}
-	if (extproc_ && extproc_->hasParam(3)) {
-		mIfGetFloat( ExternalAttrib::par3Str(), par3, par3fld_->setValue(par3) )
-	}
-	if (extproc_ && extproc_->hasParam(4)) {
-		mIfGetFloat( ExternalAttrib::par4Str(), par4, par4fld_->setValue(par4) )
-	}
-	
+//	ErrMsg("uiExternalAttrib::setParameters - leave");
+
     return true;
 }
 
 bool uiExternalAttrib::setInput( const Attrib::Desc& desc )
 {
-	putInp( inpfld_, desc, 0 );
+//	ErrMsg("uiExternalAttrib::setInput - enter");
+	if (extproc_!=NULL) {
+		const int nrflds = extproc_->numInput();
+		for (int i=0; i<nrflds; i++)
+			putInp( inpflds_[i], desc, i );
+	}
+//	ErrMsg("uiExternalAttrib::setInput - leave");
     return true;
 }
 
 bool uiExternalAttrib::setOutput( const Attrib::Desc& desc )
 {
+//	ErrMsg("uiExternalSttrib::setOutput - enter");
+
 	if (extproc_ && extproc_->hasOutput()) 
 		outputfld_->setValue(desc.selectedOutput());
+//	ErrMsg("uiExternalAttrib::setOutput - leave");
 	return true;
 }
 
 bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 {
+//	ErrMsg("uiExternalSttrib::getParameters - enter");
     if ( desc.attribName() != ExternalAttrib::attribName())
 	return false;
 
 	mSetString( ExternalAttrib::interpFileStr(), interpfilefld_->fileName() );
 	mSetString( ExternalAttrib::exFileStr(), exfilefld_->fileName() );
-	if (extproc_ && extproc_->hasZMargin()) {
+	if (extproc_==NULL ) {
+		ErrMsg("uiExternalAttrib::getParameters - extproc_ is NULL");
+		return false;
+	}
+	if (extproc_->hasZMargin()) {
 		Interval<int> val = zmarginfld_->getIInterval();
 		if (extproc_->zSymmetric()) {
 			val.stop = val.start;
@@ -303,28 +304,21 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 		}
 		mSetIntInterval( ExternalAttrib::zmarginStr(), val );
 	}
-	if (extproc_ && extproc_ && extproc_->hasStepOut())  {
+	if (extproc_->hasStepOut())  {
 		mSetBinID(ExternalAttrib::stepoutStr(), stepoutfld_->getBinID());
 	}
-	if (extproc_ && extproc_->hasSelect())  {
+	if (extproc_->hasSelect())  {
 		mSetInt( ExternalAttrib::selectStr(), selectfld_->getIntValue() );
 	}
-	if (extproc_ && extproc_->hasParam(0))  {
-		mSetFloat( ExternalAttrib::par0Str(), par0fld_->getfValue() );
+	for (int i=0; i<cNrParams; i++) {
+		if (extproc_->hasParam(i))  {
+			BufferString s(ExternalAttrib::parStr());
+			s.add(i);
+			ErrMsg(s);
+			mSetFloat( s, (parflds_[i])->getfValue() );
+		}
 	}
-	if (extproc_ && extproc_->hasParam(1))  {
-		mSetFloat( ExternalAttrib::par1Str(), par1fld_->getfValue() );
-	}
-	if (extproc_ && extproc_->hasParam(2)) {
-		mSetFloat( ExternalAttrib::par2Str(), par2fld_->getfValue() );
-	}
-	if (extproc_ && extproc_->hasParam(3)) {
-		mSetFloat( ExternalAttrib::par3Str(), par3fld_->getfValue() );
-	}
-	if (extproc_ && extproc_->hasParam(4)) {
-		mSetFloat( ExternalAttrib::par4Str(), par4fld_->getfValue() );
-	}
-	
+//	ErrMsg("uiExternalSttrib::getParameters - leave");
 	
     return true;
 }
@@ -332,15 +326,23 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 
 bool uiExternalAttrib::getInput( Attrib::Desc& desc )
 {
-	inpfld_->processInput();
-    fillInp( inpfld_, desc, 0 );
-    return true;
+//	ErrMsg("uiExternalSttrib::getInput - enter");
+
+	for (int i=0; i<inpflds_.size(); i++) {
+		inpflds_[i]->processInput();
+		fillInp( inpflds_[i], desc, i );
+	}
+//	ErrMsg("uiExternalSttrib::getInput - leave");
+
+	return true;
 }
 
 bool uiExternalAttrib::getOutput( Desc& desc )
 {
+//	ErrMsg("uiExternalSttrib::getOutput - enter");
 	if (extproc_ && extproc_->hasOutput()) 
 		fillOutput( desc, outputfld_->getIntValue() );
+//	ErrMsg("uiExternalSttrib::getOutput - leave");
 	return true;
 }
 

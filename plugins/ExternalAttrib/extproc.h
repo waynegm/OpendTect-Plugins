@@ -24,6 +24,9 @@ ________________________________________________________________________
 #include "bufstring.h"
 
 struct ExtProcImpl;
+struct ProcInst;
+
+
 
 class ExtProc {
 public:
@@ -33,21 +36,21 @@ public:
 	BufferString	getFile();
 	void			setFile( const char* exFile, const char* inFile );
 	
-	void 			start( int niln, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor );
-	void			compute( int z0, int inl, int crl );
-	
-	void			resize( int nrsamples );
-	void			setInput( int input, int idx, float val );
-	float			getOutput( int output, int idx );
-	
-	bool			isBusy() const;
+	void			setSeisInfo( int niln, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor );
+	ProcInst*		getIdleInst( int nrsamples );
+	void			setInstIdle( ProcInst* pi );
+	void			setInput( ProcInst* pi, int input, int idx, float val );
+	float			getOutput( ProcInst* pi, int output, int idx );
+	void			compute( ProcInst* pi, int z0, int inl, int crl );
 	
 	bool				hasInput();
-	BufferString		inputName();
+	bool				hasInputs();
+	int					numInput();
+	BufferString		inputName( int inum = 0 );
 	
 	bool				hasOutput();
 	int					numOutput();
-	BufferString		outputName( int onum );
+	BufferString		outputName( int onum = 0 );
 
 	bool				hasZMargin();
 	bool				hideZMargin();
@@ -74,6 +77,8 @@ public:
 	
 	bool				hasHelp();
 	BufferString		helpValue();
+	
+	bool				doParallel();
 	
 protected:
 	ExtProcImpl*	pD;

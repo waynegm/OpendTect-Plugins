@@ -22,6 +22,7 @@ ________________________________________________________________________
 -*/
 #include "externalattribmod.h"
 #include "attribprovider.h"
+#include "bufstring.h"
 
 
 /*!\brief External Attribute
@@ -33,6 +34,9 @@ class ExtProc;
 
 namespace Attrib
 {
+
+static const int cNrParams = 6;
+static const int cNrInputs = 6;
 
 mClass(ExternalAttrib) ExternalAttrib : public Provider
 {
@@ -48,11 +52,7 @@ public:
 	static const char*		zmarginStr() 	{ return "zmargin"; }
 	static const char*		stepoutStr()	{ return "stepout"; }
 	static const char*      selectStr()  	{ return "selection"; }
-	static const char*		par0Str()		{ return "par0"; }
-	static const char*		par1Str()		{ return "par1"; }
-	static const char*		par2Str()		{ return "par2"; }
-	static const char*		par3Str()		{ return "par3"; }
-	static const char*		par4Str()		{ return "par4"; }
+	static const char*		parStr()		{ return "par"; }
 	
 protected:
 							~ExternalAttrib();
@@ -60,8 +60,7 @@ protected:
 	static void				updateDesc(Desc&);
     static ExtProc*         dProc_;
 	
-	bool					allowParallelComputation() const
-							{ return false; }
+	bool					allowParallelComputation() const;
 	const Interval<int>*	desZSampMargin(int,int) const { return &zmargin_; }
 	const BinID*			desStepout(int input,int output) const { return input?0:&stepout_; }
 	bool					getTrcPos();
@@ -75,14 +74,16 @@ protected:
 	Interval<int>			zmargin_;
 	BinID					stepout_;
     int                     selection_;
-	float					par0_, par1_, par2_, par3_, par4_;
+	TypeSet<float>			par_;
 	TypeSet<BinID>			trcpos_;
 	
-	int						indataidx_;
+	TypeSet<int>					indataidx_;
 
 	ObjectSet<const DataHolder>		indata_;
 	
 	ExtProc*				proc_;
+	int						nrin_;
+	int						nrout_;
 };
 
 }; // namespace Attrib

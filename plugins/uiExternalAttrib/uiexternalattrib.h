@@ -27,6 +27,7 @@ ________________________________________________________________________
 #include "wmparamsetget.h"
 
 class uiAttrSel;
+class uiTable;
 class uiGenInput;
 class uiFileInput;
 class uiStepOutSel;
@@ -44,20 +45,17 @@ public:
     
 protected:
 
-	ExtProc*		extproc_;
-	uiFileInput*	exfilefld_;
-	uiFileInput*	interpfilefld_;
-	uiAttrSel*		inpfld_;
-	uiGenInput*		zmarginfld_;
-	uiStepOutSel*	stepoutfld_;
-	uiGenInput*		outputfld_;
-	uiGenInput*		selectfld_;
-	uiGenInput*		par0fld_;
-	uiGenInput*		par1fld_;
-	uiGenInput*		par2fld_;
-	uiGenInput*		par3fld_;
-	uiGenInput*		par4fld_;
-	uiToolButton*	help_;
+	ExtProc*				extproc_;
+    uiTable*				table_;
+	uiFileInput*			exfilefld_;
+	uiFileInput*			interpfilefld_;
+	ObjectSet<uiAttrSel>	inpflds_;
+	uiGenInput*				zmarginfld_;
+	uiStepOutSel*			stepoutfld_;
+	uiGenInput*				outputfld_;
+	uiGenInput*				selectfld_;
+	ObjectSet<uiGenInput>	parflds_;
+	uiToolButton*			help_;
 	
 	void		exfileChanged(CallBacker*);
 	bool		setParameters(const Attrib::Desc&);
