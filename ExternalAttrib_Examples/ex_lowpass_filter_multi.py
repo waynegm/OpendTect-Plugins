@@ -20,7 +20,7 @@ xa.params = {
 	'ZSampMargin' : {'Value': [-30,30]},
 	'Par_0' : {'Name': 'Filter Cutoff', 'Value': 40},
 	'Par_1' : {'Name': 'Filter Order', 'Value': 3},
-	'Parallel' : False,
+	'Parallel' : True,
 	'Help'  : 'https://gist.github.com/waynegm/ed83d99c088db5cb37a9'
 }
 #

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Local Polynomial Approximation Smoother using Numba JIT Acceleration
+# Local Polynomial Approximation Smoother using Numba JIT Acceleration - single thread version
 #
 # Smooths the data by fitting a 2nd order polynomial to a small window around 
 # each data sample using gaussian weighted least squares. This implementation uses the Numba JIT to
@@ -18,10 +18,11 @@ import extattrib as xa
 # These are the attribute parameters
 #
 xa.params = {
-	'Inputs': ['Input'],
+	'Input': 'Input',
 	'ZSampMargin' : {'Value':[-1,1], 'Symmetric': True},
 	'StepOut' : {'Value': [1,1]},
 	'Par_0': {'Name': 'Weight Factor', 'Value': 0.2},
+	'Parallel': False,
 	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External-Attributes/LPA-Attributes/'
 }
 #
@@ -32,7 +33,7 @@ def doCompute():
 	kernel = lpa3D_init(xa.SI['nrinl'], xa.SI['nrcrl'], dz, xa.params['Par_0']['Value'])[0]
 	while True:
 		xa.doInput()
-		xa.Output = sconvolve(xa.Input['Input'], kernel)
+		xa.Output = sconvolve(xa.Input, kernel)
 		xa.doOutput()
 	
 

@@ -22,7 +22,11 @@ def doInput():
 	global TI
 	TI = np.frombuffer(sys.stdin.read(dt_trcInfo.itemsize), dtype=dt_trcInfo, count=1)[0]
 	nrsamples = TI['nrsamp']*SI['nrtraces']
-	Input = np.reshape(np.frombuffer(sys.stdin.read(nrsamples*4), dtype="f4", count=nrsamples),(SI['nrinl'],SI['nrcrl'],TI['nrsamp']))
+	if 'Inputs' in params:
+		for inp in params['Inputs']:
+			Input[inp] = np.reshape(np.frombuffer(sys.stdin.read(nrsamples*4), dtype="f4", count=nrsamples),(SI['nrinl'],SI['nrcrl'],TI['nrsamp']))
+	else:
+		Input = np.reshape(np.frombuffer(sys.stdin.read(nrsamples*4), dtype="f4", count=nrsamples),(SI['nrinl'],SI['nrcrl'],TI['nrsamp']))
 
 def doOutput():
 	global Output
@@ -61,6 +65,8 @@ def preCompute():
 							('inl','i4'),
 							('crl','i4')])
 	dt_seisInfo = np.dtype([('nrtraces','i4'),
+							('nrinput','i4'),
+							('nroutput','i4'),
 							('nrinl','i4'),
 							('nrcrl','i4'),
 							('zstep','f4'),

@@ -1,13 +1,11 @@
 #!/usr/bin/python
 #
-# Local Polynomial Approximation Smoother using Numba JIT Acceleration
+# Compute Gaussian and Mean curvature based on a local polynomial approximation
 #
-# Smooths the data by fitting a 2nd order polynomial to a small window around 
-# each data sample using gaussian weighted least squares. This implementation uses the Numba JIT to
-# accelerate the convolution.
 #
 import sys
 import numpy as np
+from scipy.ndimage import convolve
 from numba import jit,double
 #
 # Import the module with the I/O scaffolding of the External Attribute
@@ -18,7 +16,8 @@ import extattrib as xa
 # These are the attribute parameters
 #
 xa.params = {
-	'Inputs': ['Input'],
+	'Input': 'Input',
+	'Output': ['Gaussian', 'Mean'],
 	'ZSampMargin' : {'Value':[-1,1], 'Symmetric': True},
 	'StepOut' : {'Value': [1,1]},
 	'Par_0': {'Name': 'Weight Factor', 'Value': 0.2},
@@ -28,19 +27,45 @@ xa.params = {
 # Define the compute function
 #
 def doCompute():
-	dz = xa.params['ZSampMargin']['Value'][1] - xa.params['ZSampMargin']['Value'][0] + 1
-	kernel = lpa3D_init(xa.SI['nrinl'], xa.SI['nrcrl'], dz, xa.params['Par_0']['Value'])[0]
+	xs = xa.SI['nrinl']
+	ys = xa.SI['nrcrl']
+	zs = xa.params['ZSampMargin']['Value'][1] - xa.params['ZSampMargin']['Value'][0] + 1
+	wf = xa.params['Par_0']['Value']
+	kernel = lpa3D_init(xs, ys, zs, wf)
+	gam = 1/(8*((min(xs,ys,zs)-1)*wf)**2)
 	while True:
 		xa.doInput()
-		xa.Output = sconvolve(xa.Input['Input'], kernel)
+		r = np.zeros((10,xa.TI['nrsamp']))
+		for i in range(0,10):
+			r[i,:] = sconvolve(xa.Input,kernel[i])
+		fx = r[1,:]
+		fy = r[2,:]
+		fz = r[3,:]
+		fx2 = fx*fx
+		fy2 = fy*fy
+		fz2 = fz*fz
+		fxx = r[4,:]
+		fyy = r[5,:]
+		fzz = r[6,:]
+		fxz = r[8,:]
+		fyz = r[9,:]
+		fxy = r[7,:]
+		fmag = np.sqrt(fx2 + fy2 + fz2)
+		xa.Output['Gaussian'] = (	fx2*(fyy*fzz-fyz*fyz) + 2.0*fy*fz*(fxz*fxy-fxx*fyz) + 
+									fy2*(fxx*fzz-fxz*fxz) + 2.0*fx*fz*(fyz*fxy-fyy*fxz) +
+									fz2*(fxx*fyy-fxy*fxy) + 2.0*fx*fy*(fxz*fyz-fzz*fxy))/fmag**4
+		xa.Output['Mean'] = (	2.0*fy*fz*fyz - fx2*(fyy+fzz) + 
+								2.0*fx*fz*fxz - fy2*(fxx+fzz) + 
+								2.0*fx*fy*fxy - fz2*(fxx+fyy))/2/fmag**3
 		xa.doOutput()
 	
-
 #
 # Find the LPA solution for a 2nd order polynomial in 3D
 #
 def lpa3D_init( xs, ys, zs, sigma=0.2 ):
-	std = sigma * (min(xs,ys,zs)-1)
+	sx = sigma * (xs-1)
+	sy = sigma * (ys-1)
+	sz = sigma * (zs-1)
 	hxs = (xs-1)/2
 	hys = (ys-1)/2
 	hzs = (zs-1)/2
@@ -51,7 +76,7 @@ def lpa3D_init( xs, ys, zs, sigma=0.2 ):
 	x = xyz[0].flatten()
 	y = xyz[1].flatten()
 	z = xyz[2].flatten()
-	w = np.exp(-(x**2+y**2+z**2)/(2*std**2))
+	w = np.exp(-(x**2/(2*sx**2) + y**2/(2*sy**2) + z**2/(2*sz**2)))
 	W = np.diagflat(w)
 	A = np.dstack((np.ones(x.size), x, y, z, x*x, y*y, z*z, x*y, x*z, y*z)).reshape((x.size,10))
 	DB = np.linalg.inv(A.T.dot(W).dot(A)).dot(A.T).dot(W)
