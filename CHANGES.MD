@@ -1,5 +1,11 @@
 # OpendTect v5+ Plugins Release Notes
 
+## Next Release
+#### ExternalAttrib
+- Support multi-threaded execution by starting multiple copies of the external application
+- Support multi-attribute input (upto 6 input attributes)
+- Add "Parallel" (boolean) tag to the JSON parameter string to control single vs multi-threaded computation
+- Add "Inputs" (Array of Strings) tag to the JSON parameter string to indicate the number of input attributes
 ## Release 5.0.6-1
 #### AVOAttrib
 - Add example color tables
