@@ -165,9 +165,9 @@ void ExtProc::setSeisInfo( int ninl, int ncrl, float inlDist, float crlDist, flo
 	(pD->seisInfo).nrInput = numInput();
 }
 
-void ExtProc::setInput( ProcInst* pi, int inpdx, int idx, float val )
+void ExtProc::setInput( ProcInst* pi, int inpdx, int trc, int idx, float val )
 {
-	pi->setInput( inpdx, idx, val );
+	pi->setInput( inpdx, trc, idx, val );
 }
 
 float ExtProc::getOutput( ProcInst* pi, int outdx, int idx )

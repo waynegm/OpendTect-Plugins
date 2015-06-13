@@ -314,7 +314,6 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 		if (extproc_->hasParam(i))  {
 			BufferString s(ExternalAttrib::parStr());
 			s.add(i);
-			ErrMsg(s);
 			mSetFloat( s, (parflds_[i])->getfValue() );
 		}
 	}

@@ -224,13 +224,12 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 	for (int iin = 0; iin<nrin_; iin++) {
 		for (int trcidx=0; trcidx<nrtraces; trcidx++)
 		{
-			int offset = trcidx*sz;
 			const DataHolder* data = indata_[iin*nrtraces+trcidx];
 			for ( int idx=0; idx<sz; idx++ )
 			{
 				float val = getInputValue(*data, indataidx_[iin], zmargin_.start+idx, z0);
 				val = mIsUdf(val)?0.0f:val;
-				proc_->setInput( pi, iin, idx+offset, val );
+				proc_->setInput( pi, iin, trcidx, idx, val );
 			}
 		}
 	}

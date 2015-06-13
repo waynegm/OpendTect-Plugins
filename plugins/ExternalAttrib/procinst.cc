@@ -98,9 +98,9 @@ ProcInst::~ProcInst()
 	delete pD;
 }
 
-void ProcInst::setInput( int inpdx, int idx, float val )
+void ProcInst::setInput( int inpdx, int trc, int idx, float val )
 {
-	int pos = inpdx*pD->nrSamples + idx;
+	int pos = inpdx*pD->nrSamples*pD->nrTraces + trc*pD->nrSamples + idx;
 	pD->input[pos] = val;
 }
 

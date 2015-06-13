@@ -39,7 +39,7 @@ public:
 	void			setSeisInfo( int niln, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor );
 	ProcInst*		getIdleInst( int nrsamples );
 	void			setInstIdle( ProcInst* pi );
-	void			setInput( ProcInst* pi, int input, int idx, float val );
+	void			setInput( ProcInst* pi, int input, int trc, int idx, float val );
 	float			getOutput( ProcInst* pi, int output, int idx );
 	void			compute( ProcInst* pi, int z0, int inl, int crl );
 	

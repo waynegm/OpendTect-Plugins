@@ -43,7 +43,7 @@ public:
 	ProcInst();
 	~ProcInst();
 	
-	void			setInput( int input, int idx, float val );
+	void			setInput( int input, int trc, int idx, float val );
 	float			getOutput( int output, int idx );
 	void			resize( int nrsamples );
 

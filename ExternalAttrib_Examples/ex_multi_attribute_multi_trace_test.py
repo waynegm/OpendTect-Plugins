@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Simple test of single trace multi-attribute input
+# Simple test of multi trace multi-attribute input - output mean
 #
 #
 import sys
@@ -15,7 +15,8 @@ import extattrib as xa
 #
 xa.params = {
 	'Inputs': ['A','B','C'],
-	'Output': ['A','B','C','A+B-2C']
+	'Output': ['meanA','meanB','meanC'],
+	'StepOut': {'Value': [1,1]}
 }
 #
 # Define the compute function
@@ -23,10 +24,9 @@ xa.params = {
 def doCompute():
 	while True:
 		xa.doInput()
-		xa.Output['A'] = xa.Input['A']
-		xa.Output['B'] = xa.Input['B']
-		xa.Output['C'] = xa.Input['C']
-		xa.Output['A+B-2C'] = xa.Input['A'] + xa.Input['B'] - 2.0 * xa.Input['C']
+		xa.Output['meanA'] = np.mean(xa.Input['A'], axis=(0,1))
+		xa.Output['meanB'] = np.mean(xa.Input['B'], axis=(0,1))
+		xa.Output['meanC'] = np.mean(xa.Input['C'], axis=(0,1))
 		xa.doOutput()
 	
 
