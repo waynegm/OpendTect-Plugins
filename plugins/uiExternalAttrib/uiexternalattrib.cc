@@ -121,7 +121,6 @@ uiExternalAttrib::~uiExternalAttrib()
 
 void uiExternalAttrib::exfileChanged( CallBacker* )
 {
-//	ErrMsg("uiExternalAttrib::exfileChanged - enter");
 	BufferString iname(interpfilefld_->fileName());
 	BufferString fname(exfilefld_->fileName());
 	if (!fname.isEmpty()) {
@@ -215,19 +214,14 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 		else
 			help_->display(false);
 	}
-//	ErrMsg("uiExternalAttrib::exfileChanged - leave");
-
 }
 
 
 
 bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 {
-//	ErrMsg("uiExternalAttrib::setParameters - enter");
-
     if ( desc.attribName() != ExternalAttrib::attribName())
-	return false;
-
+		return false;
 	
 	mIfGetString(ExternalAttrib::interpFileStr(),interpfile, interpfilefld_->setFileName(interpfile) )
 	mIfGetString(ExternalAttrib::exFileStr(),exfile, exfilefld_->setFileName(exfile) )
@@ -257,38 +251,30 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 			mIfGetFloat( s, par, parflds_[i]->setValue(par) )
 		}
 	}
-//	ErrMsg("uiExternalAttrib::setParameters - leave");
-
     return true;
 }
 
 bool uiExternalAttrib::setInput( const Attrib::Desc& desc )
 {
-//	ErrMsg("uiExternalAttrib::setInput - enter");
 	if (extproc_!=NULL) {
 		const int nrflds = extproc_->numInput();
 		for (int i=0; i<nrflds; i++)
 			putInp( inpflds_[i], desc, i );
 	}
-//	ErrMsg("uiExternalAttrib::setInput - leave");
     return true;
 }
 
 bool uiExternalAttrib::setOutput( const Attrib::Desc& desc )
 {
-//	ErrMsg("uiExternalSttrib::setOutput - enter");
-
 	if (extproc_ && extproc_->hasOutput()) 
 		outputfld_->setValue(desc.selectedOutput());
-//	ErrMsg("uiExternalAttrib::setOutput - leave");
 	return true;
 }
 
 bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 {
-//	ErrMsg("uiExternalSttrib::getParameters - enter");
     if ( desc.attribName() != ExternalAttrib::attribName())
-	return false;
+		return false;
 
 	mSetString( ExternalAttrib::interpFileStr(), interpfilefld_->fileName() );
 	mSetString( ExternalAttrib::exFileStr(), exfilefld_->fileName() );
@@ -317,31 +303,23 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 			mSetFloat( s, (parflds_[i])->getfValue() );
 		}
 	}
-//	ErrMsg("uiExternalSttrib::getParameters - leave");
-	
     return true;
 }
 
 
 bool uiExternalAttrib::getInput( Attrib::Desc& desc )
 {
-//	ErrMsg("uiExternalSttrib::getInput - enter");
-
 	for (int i=0; i<inpflds_.size(); i++) {
 		inpflds_[i]->processInput();
 		fillInp( inpflds_[i], desc, i );
 	}
-//	ErrMsg("uiExternalSttrib::getInput - leave");
-
 	return true;
 }
 
 bool uiExternalAttrib::getOutput( Desc& desc )
 {
-//	ErrMsg("uiExternalSttrib::getOutput - enter");
 	if (extproc_ && extproc_->hasOutput()) 
 		fillOutput( desc, outputfld_->getIntValue() );
-//	ErrMsg("uiExternalSttrib::getOutput - leave");
 	return true;
 }
 
