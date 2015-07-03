@@ -30,7 +30,7 @@ xa.params = {
 	'Output': ['Cline', 'Cplane', 'Cfault', 'Cchaos', 'Ctype'],
 	'ZSampMargin' : {'Value':[-2,2], 'Hidden': True},
 	'StepOut' : {'Value': [2,2], 'Hidden': True},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External-Attributes/GET-Attributes/'
+	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External_Attributes/GET_Attributes/'
 }
 #
 # Define the compute function
