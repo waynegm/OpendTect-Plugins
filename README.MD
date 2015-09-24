@@ -2,6 +2,8 @@
 
 This is the source code for a collection of plugins for the open source seismic interpretation system [OpendTect v5+](http://www.opendtect.org). All code is provided under the terms of the [GNU General Public License Version 3](./LICENSE.txt).
 
+As of 24-Sep-2015 code development in the master branch is being transitioned to support the soon to be released OpendTect 6. If you are interested in the latest source code for OpendTect 5 please refer to the v5-stable branch of this repository.
+
 For details please see the [documentation](http://waynegm.github.io/OpendTect-Plugin-Docs/).
 
 ## Plugins
