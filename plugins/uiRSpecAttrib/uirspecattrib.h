@@ -30,7 +30,7 @@ class uiGenInput;
 class uiLabeledSpinBox;
 
 mExpClass(uiRSpecAttrib) uiRSpecAttrib : public uiAttrDescEd
-{
+{ mODTextTranslationClass(uiRSpecAttrib);
 public:
 
 				uiRSpecAttrib(uiParent*,bool);

@@ -23,12 +23,14 @@
 
 #include "attribdesc.h"
 #include "attribparam.h"
+#include "trckeyzsampling.h"
 #include "survinfo.h"
 #include "uiattribfactory.h"
 #include "uiattrsel.h"
 #include "uigeninput.h"
 #include "uimsg.h"
 #include "uispinbox.h"
+#include "uistrings.h"
 
 using namespace Attrib;
 
@@ -36,7 +38,7 @@ mInitAttribUI(uiRSpecAttrib,RSpecAttrib,"Recursive spectral decomposition",sKeyF
 
 
 uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )
-: uiAttrDescEd(p,is2d,"mToDoHelpID")
+: uiAttrDescEd(p,is2d,"mTODOHelpKey")
 
 {
 	inpfld_ = createInpFld( is2d );
@@ -51,7 +53,7 @@ uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )
 	freqfld_->attach( alignedBelow, gatefld_ );
 	freqfld_->box()->doSnap( true );
 
-	stepfld_ = new uiLabeledSpinBox( this, "step", 1 );
+	stepfld_ = new uiLabeledSpinBox( this, uiStrings::sStep(), 1 );
 	stepfld_->attach( rightTo, freqfld_ );
 	stepfld_->box()->valueChanged.notify(mCB(this,uiRSpecAttrib,stepChg));
 	
@@ -64,11 +66,11 @@ void uiRSpecAttrib::inputSel( CallBacker* )
 {
 	if ( !*inpfld_->getInput() ) return;
 	
-	CubeSampling cs;
+	TrcKeyZSampling cs;
 	if ( !inpfld_->getRanges(cs) )
 		cs.init(true);
 	
-	const float nyqfreq = 0.5f / cs.zrg.step;
+	const float nyqfreq = 0.5f / cs.zsamp_.step;
 	
 	const float freqscale = zIsTime() ? 1.f : 1000.f;
 	const float scalednyqfreq = nyqfreq * freqscale;
@@ -175,9 +177,9 @@ void uiRSpecAttrib::checkOutValSnapped() const
 	const float freq = getOutputValue( freqidx );
 	if ( oldfreq>0.5 && oldfreq!=freq )
 	{
-		BufferString wmsg = "Chosen output frequency \n";
-		wmsg += "does not fit with frequency step \n";
-		wmsg += "and will be snapped to nearest suitable frequency";
+		uiString wmsg = tr( "Chosen output frequency \n"
+							"does not fit with frequency step \n"
+							"and will be snapped to nearest suitable frequency");
 		uiMSG().warning( wmsg );
 	}
 }
