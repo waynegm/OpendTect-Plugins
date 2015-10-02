@@ -47,32 +47,32 @@ mInitAttribUI(uiAVOAttrib,AVOAttrib,"AVO Attribute",sKeyBasicGrp())
 
 
 uiAVOAttrib::uiAVOAttrib( uiParent* p, bool is2d )
-	: uiAttrDescEd(p,is2d,"mToDoHelpID")
+	: uiAttrDescEd(p,is2d,"mTODOHelpKeys")
 {
 	inp_interceptfld_ = createInpFld( is2d, "Intercept Volume" );
 	inp_gradientfld_ = createInpFld( is2d, "Gradient Volume" );
 	inp_gradientfld_->attach( alignedBelow, inp_interceptfld_ );
 	
-    outputfld_ = new uiGenInput( this, "Output", StringListInpSpec(outputstr) );
+    outputfld_ = new uiGenInput( this, uiStrings::sOutput(), StringListInpSpec(outputstr) );
     outputfld_->valuechanged.notify( mCB(this,uiAVOAttrib,actionSel) );
     outputfld_->attach( alignedBelow, inp_gradientfld_ );
 
-    slopefld_ = new uiGenInput( this, "Crossplot Slope", FloatInpSpec() );
+    slopefld_ = new uiGenInput( this, tr("Crossplot Slope"), FloatInpSpec() );
     slopefld_->attach( alignedBelow, outputfld_ );
 
-    intercept_devfld_ = new uiGenInput( this, "Intercept Standard Deviation", FloatInpSpec() );
+    intercept_devfld_ = new uiGenInput( this, tr("Intercept Standard Deviation"), FloatInpSpec() );
     intercept_devfld_->attach( alignedBelow, slopefld_ );
 	intercept_devfld_->display(false);
 	
-	gradient_devfld_ = new uiGenInput( this, "Gradient Standard Deviation", FloatInpSpec() );
+	gradient_devfld_ = new uiGenInput( this, tr("Gradient Standard Deviation"), FloatInpSpec() );
 	gradient_devfld_->attach( alignedBelow, intercept_devfld_ );
 	gradient_devfld_->display(false);
 	
-	correlationfld_ = new uiGenInput( this, "Correlation Coefficient", FloatInpSpec() );
+	correlationfld_ = new uiGenInput( this, tr("Correlation Coefficient"), FloatInpSpec() );
 	correlationfld_->attach( alignedBelow, gradient_devfld_ );
 	correlationfld_->display(false);
 
-	class2fld_ = new uiGenInput( this, "Class 2 Intercept Halfwidth", FloatInpSpec() );
+	class2fld_ = new uiGenInput( this, tr("Class 2 Intercept Halfwidth"), FloatInpSpec() );
 	class2fld_->attach( alignedBelow, correlationfld_ );
 	class2fld_->display(false);
 	

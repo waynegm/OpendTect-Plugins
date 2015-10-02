@@ -32,7 +32,7 @@ class uiStepOutSel;
 
 
 mExpClass(uiAVOAttrib) uiAVOAttrib : public uiAttrDescEd
-{
+{ mODTextTranslationClass(uiAVOAttrib);
 public:
 
 			uiAVOAttrib(uiParent*,bool);
