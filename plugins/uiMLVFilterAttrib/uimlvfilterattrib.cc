@@ -51,12 +51,12 @@ uiMLVFilterAttrib::uiMLVFilterAttrib( uiParent* p, bool is2d )
 {
     inpfld_ = createInpFld( is2d );
 
-    sizefld_ = new uiLabeledSpinBox( this, "Filter size" );
+    sizefld_ = new uiLabeledSpinBox( this, tr("Filter size") );
     sizefld_->box()->setMinValue( cMinVal );
     sizefld_->box()->setStep( cStepVal, true );
     sizefld_->attach( alignedBelow, inpfld_ );
  
-    outfld_ = new uiGenInput( this, "Output statistic",
+    outfld_ = new uiGenInput( this, tr("Output statistic"),
 	    			   StringListInpSpec(outstr) );
     outfld_->attach( alignedBelow, sizefld_ );
     setHAlignObj( outfld_ );

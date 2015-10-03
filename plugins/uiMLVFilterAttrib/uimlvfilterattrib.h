@@ -34,7 +34,7 @@ class uiLabeledSpinBox;
 /*! \brief Structure Preserving Smoothing Attribute description editor */
 
 class uiMLVFilterAttrib : public uiAttrDescEd
-{
+{ mODTextTranslationClass(uiMLVFilterAttrib);
 public:
 
 			uiMLVFilterAttrib(uiParent*,bool);
