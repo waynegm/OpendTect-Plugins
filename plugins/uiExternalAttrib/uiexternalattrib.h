@@ -27,7 +27,6 @@ ________________________________________________________________________
 #include "wmparamsetget.h"
 
 class uiAttrSel;
-class uiTable;
 class uiGenInput;
 class uiFileInput;
 class uiStepOutSel;
@@ -37,7 +36,7 @@ class ExtProc;
 /*! \brief External Attribute description editor */
 
 class uiExternalAttrib : public uiAttrDescEd
-{
+{ mODTextTranslationClass(uiExternalAttrib);
 public:
 
 	uiExternalAttrib(uiParent*,bool);
@@ -46,7 +45,6 @@ public:
 protected:
 
 	ExtProc*				extproc_;
-    uiTable*				table_;
 	uiFileInput*			exfilefld_;
 	uiFileInput*			interpfilefld_;
 	ObjectSet<uiAttrSel>	inpflds_;

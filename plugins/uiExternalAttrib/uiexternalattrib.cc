@@ -27,13 +27,14 @@ ________________________________________________________________________
 #include "uiattribfactory.h"
 #include "uiattrsel.h"
 #include "uifileinput.h"
-#include "uitable.h"
 #include "uilabel.h"
 #include "uimsg.h"
 #include "uigeninput.h"
 #include "uistepoutsel.h"
 #include "uitoolbutton.h"
 #include "uidesktopservices.h"
+#include "uistrings.h"
+#include "datainpspec.h"
 
 using namespace Attrib;
 
@@ -42,16 +43,16 @@ mInitAttribUI(uiExternalAttrib,ExternalAttrib,"External Attribute",sKeyBasicGrp(
 
 
 uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
-    : uiAttrDescEd(p,is2d,"mToDoHelpID"), extproc_(NULL)
+    : uiAttrDescEd(p,is2d,"mTODOHelpKey"), extproc_(NULL)
 
 {
 	#ifdef __win__
-	interpfilefld_ = new uiFileInput( this, "Interpreter (optional)", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.exe") );
+	interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.exe") );
 	#else
-	interpfilefld_ = new uiFileInput( this, "Interpreter (optional)", uiFileInput::Setup(uiFileDialog::Gen).forread( true ));
+	interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ));
 	#endif
 
-	exfilefld_ = new uiFileInput( this, "External File", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.py") );
+	exfilefld_ = new uiFileInput( this, tr("External File"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.py") );
 	exfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
 	exfilefld_->attach(alignedBelow, interpfilefld_);
 
@@ -72,11 +73,11 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 		inpflds_ += tmp;
 	}
 
-	outputfld_ = new uiGenInput( this, "Output", StringListInpSpec() );
+	outputfld_ = new uiGenInput( this, uiStrings::sOutput(), StringListInpSpec() );
 	outputfld_->attach(alignedBelow, inpflds_[lstfld]);
 	outputfld_->display(false);
 
-	zmarginfld_ = new uiGenInput( this, "Z Window (samples)___", IntInpIntervalSpec().setName("Samples after",0).setName("Samples before",1) );
+	zmarginfld_ = new uiGenInput( this, "Z Window (samples)___", IntInpIntervalSpec().setName("Samples after",1).setName("Samples before",0) );
 	zmarginfld_->attach( alignedBelow, outputfld_ );
 	zmarginfld_->valuechanged.notify(mCB(this, uiExternalAttrib,doZmarginSymmetry) );
 	zmarginfld_->display(false);
@@ -87,12 +88,12 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	stepoutfld_->display(false);
 	
 
-	selectfld_ = new uiGenInput( this, "Selection_______________", StringListInpSpec() );
+	selectfld_ = new uiGenInput( this, tr("Selection_______________"), StringListInpSpec() );
 	selectfld_->attach(alignedBelow, zmarginfld_);
 	selectfld_->display(false);
 
 	for (int i=0; i<cNrParams; i++) {
-		uiGenInput* tmp = new uiGenInput( this, "Par____________________", FloatInpSpec() );
+		uiGenInput* tmp = new uiGenInput( this, tr("Par____________________"), FloatInpSpec() );
 		if (i==0) 
 			tmp->attach( alignedBelow, selectfld_ );
 		else if (i%2)
@@ -105,7 +106,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	}
 
 	CallBack cb = mCB(this,uiExternalAttrib,doHelp);
-	help_ = new uiToolButton( this, "contexthelp", "Help", cb );
+	help_ = new uiToolButton( this, "contexthelp", uiStrings::sHelp(), cb );
 	help_->attach (rightTo, exfilefld_);
 	help_->display(false);
 	
@@ -130,8 +131,11 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 			delete extproc_;
 			extproc_ = new ExtProc(fname.str(), iname.str());
 		}
-		if (extproc_ == NULL)
+		if (extproc_ == NULL) {
+			for (int i=0; i<cNrInputs; i++)
+				inpflds_[i]->display(false);
 			return;
+		}
 		if (extproc_->hasInput() || extproc_->hasInputs()) {
 			int nIn = extproc_->numInput();
 			for (int i=0; i<cNrInputs; i++) {
@@ -141,13 +145,13 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 				} else 
 					inpflds_[i]->display(false);
 			}
+		} else {
+				for (int i=0; i<cNrInputs; i++)
+					inpflds_[i]->display(false);
 		}
 		if (extproc_->hasZMargin()) {
 			Interval<int> val = extproc_->zmargin();
-			if (extproc_->zSymmetric()) {
-				val.start = val.stop;
-				val.stop = -val.start;
-			}
+			val.start = -val.start;
 			zmarginfld_->setValue(val);
 			if (extproc_->hideZMargin())
 				zmarginfld_->display(false);
@@ -155,10 +159,10 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 				zmarginfld_->display(true);
 				if (extproc_->zSymmetric()) {
 					zmarginfld_->displayField(false, 1, 0);
-					zmarginfld_->setTitleText("Z Window (+/-samples)");
+					zmarginfld_->setTitleText(tr("Z Window (+/-samples)"));
 				} else {
 					zmarginfld_->displayField(true, 1, 0);
-					zmarginfld_->setTitleText("Z Window (samples)");
+					zmarginfld_->setTitleText(tr("Z Window (samples)"));
 				}
 		} else
 			zmarginfld_->display(false);
@@ -230,13 +234,7 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 		return false;
 	
 	if (extproc_->hasZMargin()) {
-		mIfGetIntInterval( ExternalAttrib::zmarginStr(), zmargin, zmarginfld_->setValue(zmargin) )
-		if (extproc_->zSymmetric()) {
-			Interval<int> val = zmarginfld_->getIInterval();
-			val.start = val.stop;
-			val.stop = -val.start;
-			zmarginfld_->setValue( val );
-		}
+		mIfGetIntInterval( ExternalAttrib::zmarginStr(), zmargin, zmarginfld_->setValues(-zmargin.start, zmargin.stop) )
 	}
 	if (extproc_->hasStepOut()) {
 		mIfGetBinID( ExternalAttrib::stepoutStr(), stepout, stepoutfld_->setBinID(stepout) )
@@ -286,8 +284,8 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 		Interval<int> val = zmarginfld_->getIInterval();
 		if (extproc_->zSymmetric()) {
 			val.stop = val.start;
-			val.start = -val.stop;
 		}
+		val.start = -val.start;
 		mSetIntInterval( ExternalAttrib::zmarginStr(), val );
 	}
 	if (extproc_->hasStepOut())  {

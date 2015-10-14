@@ -19,18 +19,18 @@ ________________________________________________________________________
 
 #include "externalattrib.h"
 #include "odplugin.h"
-
+#include "msgh.h"
 
 mDefODPluginEarlyLoad(ExternalAttrib)
 
 mDefODPluginInfo(ExternalAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"External Attribute v5 (base)",
-		"External Attribute v5 (base)",
+		"External Attribute (base)",
+		"External Attribute (base)",
 		"Wayne Mogg",
-		"5.0",
-		"Attribute calculation using an external process for OpendTect v5+",
+		"6.0",
+		"Attribute calculation using an external process for OpendTect",
 		PluginInfo::GPL ) );
 	return &retpi;
 }

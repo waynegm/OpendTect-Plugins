@@ -28,10 +28,10 @@ ________________________________________________________________________
 mDefODPluginInfo(uiExternalAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"External Attribute v5 (UI)",
-		"External Attribute v5 (UI)",
+		"External Attribute (UI)",
+		"External Attribute (UI)",
 		"Wayne Mogg",
-		"5.0",
+		"6.0",
 		"",
 		PluginInfo::GPL ) );
 	return &retpi;
@@ -39,7 +39,7 @@ mDefODPluginInfo(uiExternalAttrib)
 
 mDefODInitPlugin(uiExternalAttrib)
 {
-    uiExternalAttrib::initClass();
-   return 0;
+	uiExternalAttrib::initClass();
+	return 0;
 }
 
