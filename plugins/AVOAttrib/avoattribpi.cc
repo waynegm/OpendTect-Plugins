@@ -25,10 +25,10 @@ mDefODPluginEarlyLoad(AVOAttrib)
 mDefODPluginInfo(AVOAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"AVO attribute v5 (base)",
-		"AVO attribute v5 (base)",
+		"AVO attribute (base)",
+		"AVO attribute (base)",
 		"Wayne Mogg",
-		"5.0",
+		"6.0",
 		"Simple AVO for OpendTect v5+",
 		PluginInfo::GPL ) );
     return &retpi;
@@ -37,7 +37,7 @@ mDefODPluginInfo(AVOAttrib)
 
 mDefODInitPlugin(AVOAttrib)
 {
-    Attrib::AVOAttrib::initClass();
+   Attrib::AVOAttrib::initClass();
 
     return 0;
 }
