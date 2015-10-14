@@ -28,10 +28,10 @@
 mDefODPluginInfo(uiAVOAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"AVO Attribute v5 (UI)",
-		"AVO Attribute v5 (UI)",
+		"AVO Attribute (UI)",
+		"AVO Attribute (UI)",
 		"Wayne Mogg",
-		"5.0",
+		"6.0",
 		"",
 		PluginInfo::GPL ) );	
     return &retpi;
