@@ -27,10 +27,10 @@
 mDefODPluginInfo(uiRSpecAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Recursive spectral decomposition attribute v5 (UI)",
-		"Recursive spectral decomposition attribute v5 (UI)",
+		"Recursive spectral decomposition attribute (UI)",
+		"Recursive spectral decomposition attribute (UI)",
 		"Wayne Mogg",
-		"5.0",
+		"6.0",
 		"",
 		PluginInfo::GPL ) );
 	return &retpi;
