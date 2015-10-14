@@ -25,11 +25,11 @@ mDefODPluginEarlyLoad(RSpecAttrib)
 mDefODPluginInfo(RSpecAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Recursive spectral decomposition attribute v5 (base)",
-		"Recursive spectral decomposition attribute v5 (base)",
+		"Recursive spectral decomposition attribute (base)",
+		"Recursive spectral decomposition attribute (base)",
 		"Wayne Mogg",
-		"5.0",
-		"Recursive spectral decomposition attribute for OpendTect v5+",
+		"6.0",
+		"Recursive spectral decomposition attribute for OpendTect",
 		PluginInfo::GPL ) );
 	return &retpi;
 }
