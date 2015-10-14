@@ -27,10 +27,10 @@
 mDefODPluginInfo(uiLTFAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Time-Frequency analysis using local attributes v5 (UI)",
-		"Time-Frequency analysis using local attributes v5 (UI)",
+		"Time-Frequency analysis using local attributes (UI)",
+		"Time-Frequency analysis using local attributes (UI)",
 		"Wayne Mogg",
-		"5.0",
+		"6.0",
 		"",
 		PluginInfo::GPL ) );
 	return &retpi;

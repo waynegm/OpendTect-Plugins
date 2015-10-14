@@ -25,11 +25,11 @@ mDefODPluginEarlyLoad(LTFAttrib)
 mDefODPluginInfo(LTFAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Local Time-Frequency Attribute v5 (base)",
-		"Local Time-Frequency Attribute v5 (base)",
+		"Local Time-Frequency Attribute (base)",
+		"Local Time-Frequency Attribute (base)",
 		"Wayne Mogg",
-		"5.0",
-		"Time-Frequency decomposition using local attibutes for OpendTect v5+",
+		"6.0",
+		"Time-Frequency decomposition using local attibutes for OpendTect",
 		PluginInfo::GPL ) );
 	return &retpi;
 }

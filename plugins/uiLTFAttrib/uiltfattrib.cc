@@ -28,6 +28,7 @@
 #include "uiattrsel.h"
 #include "uigeninput.h"
 #include "uispinbox.h"
+#include "trckeyzsampling.h"
 
 using namespace Attrib;
 
@@ -35,7 +36,7 @@ mInitAttribUI(uiLTFAttrib,LTFAttrib,"Local Time-Frequency",sKeyFreqGrp())
 
 
 uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
-: uiAttrDescEd(p,is2d,"mToDoHelpID")
+: uiAttrDescEd(p,is2d,"mTODOHelpKey")
 
 {
 	inpfld_ = createInpFld( is2d );
@@ -47,17 +48,17 @@ uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
 	freqfld_->attach( alignedBelow, inpfld_ );
 	freqfld_->box()->doSnap( true );
 	
-	smoothfld_ = new uiLabeledSpinBox( this, "Smoothing Radius" );
+	smoothfld_ = new uiLabeledSpinBox( this, tr("Smoothing Radius") );
 	smoothfld_->box()->setMinValue( 2 );
 	smoothfld_->box()->setStep( 1, true );
 	smoothfld_->attach( alignedBelow, freqfld_ );
 	
-	niterfld_ = new uiLabeledSpinBox( this, "Iterations" );
+	niterfld_ = new uiLabeledSpinBox( this, tr("Iterations") );
 	niterfld_->box()->setMinValue( 50 );
 	niterfld_->box()->setStep( 10, true );
 	niterfld_->attach( alignedBelow, smoothfld_ );
 	
-	marginfld_ = new uiLabeledSpinBox( this, "Margin" );
+	marginfld_ = new uiLabeledSpinBox( this, tr("Margin") );
 	marginfld_->box()->setMinValue( 0 );
 	marginfld_->box()->setStep( 1, true );
 	marginfld_->attach( alignedBelow, niterfld_ );
@@ -69,11 +70,11 @@ void uiLTFAttrib::inputSel( CallBacker* )
 {
 	if ( !*inpfld_->getInput() ) return;
 	
-	CubeSampling cs;
+	TrcKeyZSampling cs;
 	if ( !inpfld_->getRanges(cs) )
 		cs.init(true);
 	
-	const float nyqfreq = 0.5f / cs.zrg.step;
+	const float nyqfreq = 0.5f / cs.zsamp_.step;
 	
 	const float freqscale = zIsTime() ? 1.f : 1000.f;
 	const float scalednyqfreq = nyqfreq * freqscale;
