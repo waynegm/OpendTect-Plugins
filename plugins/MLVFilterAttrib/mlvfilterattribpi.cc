@@ -28,10 +28,10 @@ mDefODPluginEarlyLoad(MLVFilterAttrib)
 mDefODPluginInfo(MLVFilterAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Mean of Least Variance Filter Attribute v5 (base)",
-		"Mean of Least Variance Filter Attribute v5 (base)",
+		"Mean of Least Variance Filter Attribute (base)",
+		"Mean of Least Variance Filter Attribute (base)",
 		"Wayne Mogg",
-		"5.0",
+		"6.0",
     	"Mean of least variance structure preserving smoothing for OpendTect v5+",
 		PluginInfo::GPL ) );
     return &retpi;
