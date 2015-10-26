@@ -4,7 +4,7 @@
 - Port all attributes for compatibility with OpendTect v6
 
 #### ExternalAttrib
-- Fix so changing attribute clears Input ui controls
+- Hide input ui controls on change of attribute [#11]
 
 ## Release 5.0.7
 #### ExternalAttrib
