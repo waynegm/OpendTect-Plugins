@@ -1,5 +1,9 @@
 # OpendTect v5+ Plugins Release Notes
 
+## Next Release
+#### ExternalAttrib
+- Hide input controls on change of attribute [#11]
+
 ## Release 5.0.7
 #### ExternalAttrib
 - Support multi-threaded execution by starting multiple copies of the external application
