@@ -1,0 +1,1 @@
+// Generated automatically by CMakeModules/ODSubversion.cmake//#ifndef mSVN_VERSION#define mSVN_VERSION 0#define mSVN_URL ""#endif

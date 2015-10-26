@@ -130,8 +130,11 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 			delete extproc_;
 			extproc_ = new ExtProc(fname.str(), iname.str());
 		}
-		if (extproc_ == NULL)
+		if (extproc_ == NULL) {
+			for (int i=0; i<cNrInputs; i++)
+				inpflds_[i]->display(false);
 			return;
+		}
 		if (extproc_->hasInput() || extproc_->hasInputs()) {
 			int nIn = extproc_->numInput();
 			for (int i=0; i<cNrInputs; i++) {
@@ -141,6 +144,9 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 				} else 
 					inpflds_[i]->display(false);
 			}
+		} else {
+			for (int i=0; i<cNrInputs; i++)
+				inpflds_[i]->display(false);
 		}
 		if (extproc_->hasZMargin()) {
 			Interval<int> val = extproc_->zmargin();
