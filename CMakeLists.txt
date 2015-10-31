@@ -7,7 +7,7 @@
 
 
 cmake_minimum_required (VERSION 2.6)
-project(OpendTect_v5_Plugins)
+project(OpendTect_Plugins)
 
 set ( OD_SUBSYSTEM "waynegm_plugin" )
 set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )

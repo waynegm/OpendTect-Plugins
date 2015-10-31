@@ -1,5 +1,9 @@
 # OpendTect v5+ Plugins Release Notes
 
+## Next Release
+#### ExternalAttrib
+- Allow %ENVVAR% construct in interpreter field where ENVVAR is a system environment variable with the interpreter path
+
 ## Release 6.0.0pre7
 - Port all attributes for compatibility with OpendTect v6
 

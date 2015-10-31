@@ -25,7 +25,8 @@ ________________________________________________________________________
 #include "json.h"
 #include "msgh.h"
 #include "objectset.h"
-
+#include "file.h"
+#include "envvars.h"
 #include "procinst.h"
 
 
@@ -36,10 +37,10 @@ public:
 	~ExtProcImpl();
 	
 	void			startInst( ProcInst* pi );
-	bool			start( char *const argv[] );
-	int				finish();
+//	bool			start( char *const argv[] );
+//	int				finish();
 	
-	BufferString	readAllStdOut();
+//	BufferString	readAllStdOut();
 	
 	bool			getParam();
 	void			setFile(const char* fname, const char* iname);
@@ -71,8 +72,19 @@ ExtProcImpl::~ExtProcImpl()
 void ExtProcImpl::setFile(const char* fname, const char* iname)
 {
 	exfile = fname;
-	infile = iname;
-	getParam();
+	if (File::isFile(exfile)) {
+		infile = BufferString(iname).trimBlanks();
+		if (infile.startsWith("%") && infile.endsWith("%")) {
+			BufferString tmp = infile.unEmbed('%','%');
+			infile = GetEnvVar(tmp);
+		}
+		if (File::isExecutable(infile))
+			getParam();
+		else
+			ErrMsg("ExtProcImpl::setFile - interpreter setting is not a valid executable file");
+	} else
+		ErrMsg("ExtProcImpl::setFile - external attribute is not a valid file");
+	return;
 }
 
 void ExtProcImpl::startInst( ProcInst* pi )
