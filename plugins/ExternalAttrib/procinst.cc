@@ -274,8 +274,8 @@ bool ProcInst::start( char *const argv[] )
 		close(stdin_pipe[0]);
 		return false;
 	}
-	
-	if (!(pD->read_fd = fdopen(stdout_pipe[0], "r"))) {
+	pD->read_fd = fdopen(stdout_pipe[0], "r");
+	if (!(pD->read_fd)) {
 		pD->read_fd = NULL;
 		pD->write_fd = NULL;
 		close(stdout_pipe[1]);
@@ -285,7 +285,8 @@ bool ProcInst::start( char *const argv[] )
 		ErrMsg("ProcInst::start - open read_fd failed");
 		return false;
 	}
-	if (!(pD->write_fd = fdopen(stdin_pipe[1], "w"))) {
+	pD->write_fd = fdopen(stdin_pipe[1], "w");
+	if (!(pD->write_fd )) {
 		fclose(pD->read_fd);
 		pD->read_fd = NULL;
 		pD->write_fd = NULL;
@@ -350,7 +351,7 @@ bool ProcInst::start( char *const argv[], SeisInfo& si )
 
 int ProcInst::finish() {
 #ifdef __win__
-	DWORD status;
+	DWORD status=0;
 	if (pD->hChildProcess) {
 		if (GetExitCodeProcess( pD->hChildProcess, &status)) {
 			if (status == STILL_ACTIVE) {

@@ -2,6 +2,7 @@
 
 ## Next Release
 #### ExternalAttrib
+- Allow %ENVVAR% construct in interpreter field where ENVVAR is a system environment variable with the interpreter path
 - Hide input controls on change of attribute [#11]
 
 ## Release 5.0.7

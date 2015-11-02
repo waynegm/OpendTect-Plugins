@@ -24,7 +24,7 @@ ________________________________________________________________________
 #include "bufstring.h"
 
 struct ExtProcImpl;
-struct ProcInst;
+class ProcInst;
 
 
 

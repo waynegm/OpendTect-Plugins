@@ -46,9 +46,9 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 
 {
 	#ifdef __win__
-	interpfilefld_ = new uiFileInput( this, "Interpreter (optional)", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.exe") );
+	interpfilefld_ = new uiFileInput( this, "Interpreter (optional)", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).defseldir("").filter("*.exe") );
 	#else
-	interpfilefld_ = new uiFileInput( this, "Interpreter (optional)", uiFileInput::Setup(uiFileDialog::Gen).forread( true ));
+	interpfilefld_ = new uiFileInput( this, "Interpreter (optional)", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).defseldir(""));
 	#endif
 
 	exfilefld_ = new uiFileInput( this, "External File", uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.py") );
