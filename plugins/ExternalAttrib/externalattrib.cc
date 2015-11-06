@@ -24,6 +24,7 @@ ________________________________________________________________________
 #include "attribdescset.h"
 #include "attribfactory.h"
 #include "attribparam.h"
+#include "envvars.h"
 
 #include "extproc.h"
 
@@ -34,6 +35,7 @@ namespace Attrib
 mAttrDefCreateInstance(ExternalAttrib)    
 
 ExtProc* ExternalAttrib::dProc_ = NULL;
+BufferString ExternalAttrib::exdir_ = "";
 
 void ExternalAttrib::initClass()
 {
@@ -67,6 +69,8 @@ void ExternalAttrib::initClass()
 	desc->addInput(InputSpec("Input Data", false));
 	desc->addOutputDataType( Seis::UnknowData );
 	
+	exdir_ = GetEnvVar("OD_EX_DIR");
+	
 	mAttrEndInitClass
 }
 
@@ -75,7 +79,11 @@ void ExternalAttrib::updateDesc( Desc& desc )
 
 	BufferString iname = desc.getValParam( interpFileStr() )->getStringValue();
 	BufferString fname = desc.getValParam( exFileStr() )->getStringValue();
-
+	fname.replace( "%OD_EX_DIR%", ExternalAttrib::exdir_ );
+#ifdef __win__
+	fname.replace("/","\\");
+#endif
+	
 	if (dProc_) {
         if (dProc_->getFile() != fname) {
             delete dProc_;
@@ -123,6 +131,11 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 	
 	mGetString( interpfile_, interpFileStr() );
 	mGetString( exfile_, exFileStr() );
+	exfile_.replace( "%OD_EX_DIR%", ExternalAttrib::exdir_ );
+#ifdef __win__
+	exfile_.replace("/","\\");
+#endif
+	
 	proc_= new ExtProc( exfile_.str(), interpfile_.str() );
 	
 	if (proc_) {

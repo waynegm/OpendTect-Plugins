@@ -51,8 +51,9 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	#else
 	interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).defseldir(""));
 	#endif
+	interpfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
 
-	exfilefld_ = new uiFileInput( this, tr("External File"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).filter("*.py") );
+	exfilefld_ = new uiFileInput( this, tr("External File"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).defseldir(ExternalAttrib::exdir_) );
 	exfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
 	exfilefld_->attach(alignedBelow, interpfilefld_);
 
@@ -220,7 +221,25 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 	}
 }
 
+void uiExternalAttrib::setExFileName( const char* fname )
+{
+	BufferString tmp(fname);
+	tmp.replace("%OD_EX_DIR%", ExternalAttrib::exdir_);
+#ifdef __win__
+	tmp.replace("/","\\");
+#endif
+	exfilefld_->setFileName(tmp);
+}
 
+BufferString uiExternalAttrib::getExFileName()
+{
+	BufferString tmp = exfilefld_->fileName();
+	tmp.replace( ExternalAttrib::exdir_, "%OD_EX_DIR%" );
+#ifdef __win__
+	tmp.replace("\\","/");
+#endif
+	return tmp;
+}
 
 bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 {
@@ -228,7 +247,7 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 		return false;
 	
 	mIfGetString(ExternalAttrib::interpFileStr(),interpfile, interpfilefld_->setFileName(interpfile) )
-	mIfGetString(ExternalAttrib::exFileStr(),exfile, exfilefld_->setFileName(exfile) )
+	mIfGetString(ExternalAttrib::exFileStr(),exfile, setExFileName(exfile) )
 	exfileChanged(NULL);
 	if (extproc_==NULL)
 		return false;
@@ -275,7 +294,7 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 		return false;
 
 	mSetString( ExternalAttrib::interpFileStr(), interpfilefld_->fileName() );
-	mSetString( ExternalAttrib::exFileStr(), exfilefld_->fileName() );
+	mSetString( ExternalAttrib::exFileStr(), getExFileName() );
 	if (extproc_==NULL ) {
 		ErrMsg("uiExternalAttrib::getParameters - extproc_ is NULL");
 		return false;

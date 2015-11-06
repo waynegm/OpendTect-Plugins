@@ -38,7 +38,7 @@ namespace Attrib
 static const int cNrParams = 6;
 static const int cNrInputs = 6;
 
-mClass(ExternalAttrib) ExternalAttrib : public Provider
+mExpClass(ExternalAttrib) ExternalAttrib : public Provider
 {
 public:
 	static void				initClass();
@@ -53,6 +53,8 @@ public:
 	static const char*		stepoutStr()	{ return "stepout"; }
 	static const char*      selectStr()  	{ return "selection"; }
 	static const char*		parStr()		{ return "par"; }
+	
+	static BufferString		exdir_;
 	
 protected:
 							~ExternalAttrib();

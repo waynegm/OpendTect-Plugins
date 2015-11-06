@@ -22,13 +22,14 @@ ________________________________________________________________________
 -*/ 
 
 #include "bufstring.h"
+#include "externalattribmod.h"
 
 struct ExtProcImpl;
 class ProcInst;
 
 
 
-class ExtProc {
+mExpClass(ExternalAttrib) ExtProc {
 public:
 	ExtProc( const char* exFile , const char* inFile );
     ~ExtProc();
