@@ -1,9 +1,11 @@
 # OpendTect v5+ Plugins Release Notes
 
-## Next Release
+## Release 5.0.10
 #### ExternalAttrib
-- Allow %ENVVAR% construct in interpreter field where ENVVAR is a system environment variable with the interpreter path
 - Hide input controls on change of attribute [#11]
+- Allow %ENVVAR% construct in interpreter field where ENVVAR is a system environment variable with the interpreter path [#12]
+- Use environment variable, OD_EX_DIR, as the root of the folder structure containing the external attribute files [#13]
+- Export ExternalAttrib and ExtProc classes to fix link errors during Windows build
 
 ## Release 5.0.7
 #### ExternalAttrib

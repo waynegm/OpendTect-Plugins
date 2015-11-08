@@ -58,6 +58,8 @@ protected:
 	uiToolButton*			help_;
 	
 	void		exfileChanged(CallBacker*);
+	void		setExFileName( const char* );
+	BufferString	getExFileName();
 	bool		setParameters(const Attrib::Desc&);
     bool		setInput(const Attrib::Desc&);
     bool		getParameters(Attrib::Desc&);
