@@ -25,6 +25,7 @@ set ( PLUGINS RSpecAttrib uiRSpecAttrib
 	      MLVFilterAttrib  uiMLVFilterAttrib 
 	      AVOAttrib uiAVOAttrib
 	      ExternalAttrib uiExternalAttrib
+	      GradientAttrib uiGradientAttrib
 	      LTFAttrib uiLTFAttrib )
 OD_ADD_MODULES( plugins ${PLUGINS} )
 

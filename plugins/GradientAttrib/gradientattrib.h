@@ -1,4 +1,4 @@
-/*Copyright (C) 2014 Wayne Mogg All rights reserved.
+/*Copyright (C) 2015 Wayne Mogg All rights reserved.
 
 This file may be used either under the terms of:
 
@@ -9,52 +9,55 @@ This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-#ifndef mlvfilterattrib_h
-#define mlvfilterattrib_h
+#ifndef gradientattrib_h
+#define gradientattrib_h
 
 /*+
 ________________________________________________________________________
 
  Author:        Wayne Mogg
- Date:          January 2014
+ Date:          November 2015
  ________________________________________________________________________
 
 -*/
 
+#include "gradientattribmod.h"
 #include "attribprovider.h"
-#include "statcalc.h"
-#include "point3D.h"
 
 
-/*!\brief MLVFilter Attribute
+/*!\brief Gradient Attribute
 
-Structure preserving smoothing 
+Calculate inline, crossline or Z gradient using the operators proposed by Kroon, 2009 
 
 */
 
 
 namespace Attrib
 {
-typedef wmGeom::Point3D<int> PlanePoint;
-typedef TypeSet<PlanePoint> PlanePointSet;
-typedef Geom::Point2D<int> SamplePoint;
-typedef TypeSet<SamplePoint> SamplePointSet;
 
-mClass(MLVFilterAttrib) MLVFilter : public Provider
+mClass(GradientAttrib) GradientAttrib : public Provider
 {
 public:
 	static void				initClass();
-							MLVFilter(Desc&);
+							GradientAttrib(Desc&);
 
-	static const char*		attribName()	{ return "MLVFilter"; }
+	static const char*		attribName()	{ return "GradientAttrib"; }
 
-	static const char*		sizeStr()	{ return "size"; }
+	static const char*		operatorStr()	{ return "operator"; }
 	static const char*		outputStr()	{ return "output"; }
 
-	enum OutputType			{ Average, Median, Element };
+	enum OutputType			{ Inline, Crossline, Z };
+	enum OperatorType		{ Kroon_3, Farid_5, Farid_7};
+	
+	static const float		kroon_3_d[];
+	static const float		kroon_3_s[];
+	static const float		farid_5_d[];
+	static const float		farid_5_s[];
+	static const float		farid_7_d[];
+	static const float		farid_7_s[];
 
 protected:
-							~MLVFilter() {}
+							~GradientAttrib();
 	static Provider*		createInstance(Desc&);
 
 	bool					allowParallelComputation() const
@@ -63,28 +66,28 @@ protected:
 	bool					getInputData(const BinID&,int zintv);
 	bool					computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const;
 
-	int						findLeastVarianceElement( int idx, int z0, float* result , wmStats::StatCalc<float>& elemStats ) const;
 	const BinID*			desStepout(int input,int output) const;
 	const Interval<int>*	desZSampMargin(int input,int output) const
-							{ return &dessampgate_; }
+							{ return &zmargin_; }
 				
 	bool					getTrcPos();
-	bool					getElements();
 
 	BinID					stepout_;
-	Interval<int>			dessampgate_;
+	Interval<int>			zmargin_;
 	TypeSet<BinID>			trcpos_;
-	TypeSet<SamplePointSet>	elements_;
 	int						centertrcidx_;
 	int						outtype_;
+	int						optype_;
 	int						size_;
+	
+	float					*ikernel_, *xkernel_, *zkernel_;
 
 	int						dataidx_;
 
 	ObjectSet<const DataHolder>	inputdata_;
 };
 
-} // namespace Attrib
+}; // namespace Attrib
 
 
 #endif

@@ -1,4 +1,8 @@
-# OpendTect v5+ Plugins Release Notes
+# OpendTect Plugins Release Notes
+
+## Release 6.0.0
+### GradientAttrib
+- New attribute for calculating inline, crossline or z gradient using various derivative operators
 
 ## Release 6.0.0pre7-1
 #### ExternalAttrib
