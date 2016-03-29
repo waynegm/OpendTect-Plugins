@@ -80,11 +80,12 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 
 	zmarginfld_ = new uiGenInput( this, "Z Window (samples)___", IntInpIntervalSpec().setName("Samples after",1).setName("Samples before",0) );
 	zmarginfld_->attach( alignedBelow, outputfld_ );
-	zmarginfld_->valuechanged.notify(mCB(this, uiExternalAttrib,doZmarginSymmetry) );
+	zmarginfld_->valuechanging.notify(mCB(this, uiExternalAttrib,doZmarginCheck) );
 	zmarginfld_->display(false);
 	
 	stepoutfld_ = new uiStepOutSel( this, is2d );
 	stepoutfld_->attach( rightTo, zmarginfld_ );
+	stepoutfld_->valueChanging.notify(mCB(this, uiExternalAttrib,doStepOutCheck) );
 	stepoutfld_->setFieldNames( "Inl Stepout", "Crl Stepout" );
 	stepoutfld_->display(false);
 	
@@ -347,11 +348,28 @@ void uiExternalAttrib::doHelp( CallBacker* cb )
 	
 }
 
-void uiExternalAttrib::doZmarginSymmetry( CallBacker* cb )
+void uiExternalAttrib::doZmarginCheck( CallBacker* cb )
 {
+	Interval<int> val = zmarginfld_->getIInterval();
+	if (extproc_ && extproc_->hasZMargin()) {
+		Interval<int> minval = extproc_->z_minimum();
+		val.stop = (val.stop > minval.stop)? minval.stop:val.stop;
+		val.start = (val.start < -minval.start)? -minval.start:val.start;
+		zmarginfld_->setValue( val );
+	}
 	if (extproc_ && extproc_->zSymmetric()) {
-		Interval<int> val = zmarginfld_->getIInterval();
 		val.stop = -val.start;
 		zmarginfld_->setValue( val );
+	}
+}
+
+void uiExternalAttrib::doStepOutCheck( CallBacker* cb )
+{
+	BinID val = stepoutfld_->getBinID();
+	if (extproc_ && extproc_->hasStepOut()) {
+		BinID minval = extproc_->so_minimum();
+		int inl = (val.inl() < minval.inl())? minval.inl():val.inl();
+		int crl = (val.crl() < minval.crl())? minval.crl():val.crl();
+		stepoutfld_->setBinID(BinID(inl,crl));
 	}
 }

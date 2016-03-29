@@ -56,11 +56,13 @@ public:
 	bool				hasZMargin();
 	bool				hideZMargin();
 	bool				zSymmetric();
+	Interval<int>		z_minimum();
 	Interval<int>		zmargin();
 	void				setZMargin(Interval<int> zint);
 
 	bool				hasStepOut();
 	bool				hideStepOut();
+	BinID				so_minimum();
 	BinID				stepout();
 	void				setStepOut(BinID s);
     

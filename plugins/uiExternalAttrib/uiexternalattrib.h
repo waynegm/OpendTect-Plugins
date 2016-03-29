@@ -67,7 +67,8 @@ protected:
 	bool		getOutput(Attrib::Desc&);
 	
 	void		doHelp( CallBacker* cb );
-	void		doZmarginSymmetry( CallBacker* cb );
+	void		doZmarginCheck( CallBacker* cb );
+	void		doStepOutCheck( CallBacker* cb );
 	
     			mDeclReqAttribUIFns
 };

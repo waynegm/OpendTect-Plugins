@@ -312,6 +312,21 @@ bool ExtProc::zSymmetric()
 		return false;
 }
 
+Interval<int> ExtProc::z_minimum()
+{
+	Interval<int> res;
+	if (hasZMargin()) {
+		json::Object jobj = pD->jsonpar["ZSampMargin"].ToObject();
+		if (jobj.HasKey("Minimum")) {
+			json::Array zmarr = jobj["Minimum"].ToArray();
+			int begin = zmarr[0];
+			int end = zmarr[1];
+			res = Interval<int>(begin, end);
+		}
+	}
+	return res;
+}
+
 Interval<int> ExtProc::zmargin()
 {
 	Interval<int> res;
@@ -352,6 +367,21 @@ bool ExtProc::hideStepOut()
 			return false;
 	} else
 		return true;
+}
+
+BinID ExtProc::so_minimum()
+{
+	BinID res;
+	if (hasStepOut()) {
+		json::Object jobj = pD->jsonpar["StepOut"].ToObject();
+		if (jobj.HasKey("Minimum")) {
+			json::Array sarr = jobj["Minimum"].ToArray();
+			int inl = sarr[0];
+			int xln = sarr[1];
+			res = BinID(inl, xln);
+		}
+	}
+	return res;
 }
 
 BinID ExtProc::stepout()
