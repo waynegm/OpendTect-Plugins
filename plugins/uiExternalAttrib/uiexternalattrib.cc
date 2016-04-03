@@ -23,6 +23,7 @@ ________________________________________________________________________
 #include "extproc.h"
 
 #include "attribdesc.h"
+#include "attribdescset.h"
 #include "attribparam.h"
 #include "uiattribfactory.h"
 #include "uiattrsel.h"
@@ -37,7 +38,6 @@ ________________________________________________________________________
 #include "datainpspec.h"
 
 using namespace Attrib;
-
 
 mInitAttribUI(uiExternalAttrib,ExternalAttrib,"External Attribute",sKeyBasicGrp())
 
@@ -57,9 +57,14 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	exfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
 	exfilefld_->attach(alignedBelow, interpfilefld_);
 
+	CallBack cb = mCB(this,uiExternalAttrib,doHelp);
+	help_ = new uiToolButton( this, "contexthelp", uiStrings::sHelp(), cb );
+	help_->attach (rightTo, exfilefld_);
+	help_->display(false);
+
 	int lstfld = 0;
 	for (int i=0; i<cNrInputs; i++) {
-		BufferString bfs = "Input Data"; bfs += i+1;
+		BufferString bfs = "Input_____________"; bfs += i+1;
 		uiAttrSel* tmp = createInpFld( is2d, bfs );
 		if (i==0) {
 			tmp->attach(alignedBelow, exfilefld_);
@@ -107,11 +112,6 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 		parflds_ += tmp;
 	}
 
-	CallBack cb = mCB(this,uiExternalAttrib,doHelp);
-	help_ = new uiToolButton( this, "contexthelp", uiStrings::sHelp(), cb );
-	help_->attach (rightTo, exfilefld_);
-	help_->display(false);
-	
 	
 	setHAlignObj( interpfilefld_ );
 }
@@ -144,6 +144,7 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 				if (i<nIn) {
 					inpflds_[i]->setLabelText(extproc_->inputName(i).str());
 					inpflds_[i]->display(true);
+					inpflds_[i]->setDescSet( ads_ );
 				} else 
 					inpflds_[i]->display(false);
 			}
@@ -276,8 +277,9 @@ bool uiExternalAttrib::setInput( const Attrib::Desc& desc )
 {
 	if (extproc_!=NULL) {
 		const int nrflds = extproc_->numInput();
-		for (int i=0; i<nrflds; i++)
+		for (int i=0; i<nrflds; i++) {
 			putInp( inpflds_[i], desc, i );
+		}
 	}
     return true;
 }
@@ -327,9 +329,12 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 
 bool uiExternalAttrib::getInput( Attrib::Desc& desc )
 {
-	for (int i=0; i<inpflds_.size(); i++) {
-		inpflds_[i]->processInput();
-		fillInp( inpflds_[i], desc, i );
+	if (extproc_!=NULL) {
+		const int nrflds = extproc_->numInput();
+		for (int i=0; i<nrflds; i++) {
+			inpflds_[i]->processInput();
+			fillInp( inpflds_[i], desc, i );
+		}
 	}
 	return true;
 }

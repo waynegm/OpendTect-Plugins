@@ -55,6 +55,7 @@ protected:
 	ObjectSet<uiGenInput>	parflds_;
 	uiToolButton*			help_;
 	
+	
 	void		exfileChanged(CallBacker*);
 	void		setExFileName( const char* );
 	BufferString	getExFileName();

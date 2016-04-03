@@ -66,7 +66,7 @@ void ExternalAttrib::initClass()
 		par->setDefaultValue(0);
 	}
 	
-	desc->addInput(InputSpec("Input Data", false));
+	desc->addInput(InputSpec("Input data", true));
 	desc->addOutputDataType( Seis::UnknowData );
 	
 	exdir_ = GetEnvVar("OD_EX_DIR");
@@ -109,7 +109,7 @@ void ExternalAttrib::updateDesc( Desc& desc )
 		while ( desc.nrInputs() )
 			desc.removeInput(0);
 		for ( int idx=0; idx<dProc_->numInput(); idx++ ) {
-			BufferString bfs = "Input Data"; bfs += idx+1;
+			BufferString bfs = "Input "; bfs += idx+1;
 			desc.addInput( InputSpec(bfs, true) );
 		}
     }
