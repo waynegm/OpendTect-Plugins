@@ -355,15 +355,15 @@ void uiExternalAttrib::doHelp( CallBacker* cb )
 
 void uiExternalAttrib::doZmarginCheck( CallBacker* cb )
 {
-	Interval<int> val = zmarginfld_->getIInterval();
 	if (extproc_ && extproc_->hasZMargin()) {
+		Interval<int> val = zmarginfld_->getIInterval();
 		Interval<int> minval = extproc_->z_minimum();
-		val.stop = (val.stop > minval.stop)? minval.stop:val.stop;
+
+		val.stop = (val.stop < minval.stop)? minval.stop:val.stop;
 		val.start = (val.start < -minval.start)? -minval.start:val.start;
-		zmarginfld_->setValue( val );
-	}
-	if (extproc_ && extproc_->zSymmetric()) {
-		val.stop = -val.start;
+		if (extproc_->zSymmetric())
+			val.stop = -val.start;
+
 		zmarginfld_->setValue( val );
 	}
 }
