@@ -3,6 +3,7 @@
 ## Release 6.0.1
 #### ExternalAttrib
 - Add Minimum option to ZSampMargin and StepOut parameters [#15]
+- Fix for error message for multi-attribute input [#16]
 
 ## Release 6.0.0
 ### GradientAttrib
