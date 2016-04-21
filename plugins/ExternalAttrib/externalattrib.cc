@@ -209,15 +209,29 @@ bool ExternalAttrib::getInputData( const BinID& relpos, int zintv )
 {
 	while ( indata_.size() < trcpos_.size()*nrin_ ) {
 		indata_ += 0;
-		indataidx_ += -1;
+	}
+	while (indataidx_.size() < nrin_) {
+		indataidx_.add(-1);
 	}
 
 	const BinID bidstep = inputs_[0]->getStepoutStep();
 	for (int iin=0; iin<nrin_; iin++) {
 		for ( int idx=0; idx<trcpos_.size(); idx++ )
 		{
-			const DataHolder* data = inputs_[iin]->getData( relpos+trcpos_[idx]*bidstep, zintv );
-			if ( !data ) return false;
+			BinID pos = relpos + trcpos_[idx] * bidstep;
+			const DataHolder* data = inputs_[iin]->getData( pos, zintv );
+			if ( !data ) {
+				BufferString err("ExternalAttrib::getInputData - Null DataHolder: ");
+				err += iin;
+				err += " Input Ref: ";
+				err +=  inputs_[iin]->getDesc().userRef();
+				err += " Pos: ";
+				err += inputs_[iin]->getCurrentPosition().toString(is2D());
+				err += " TrcPos: ";
+				err += pos.toString(is2D());
+				ErrMsg( err );
+				return false;
+			}
 			indata_.replace( iin*trcpos_.size()+idx, data );
 		}
 		indataidx_[iin] = getDataIndex(iin);

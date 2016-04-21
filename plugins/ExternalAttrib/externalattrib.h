@@ -64,7 +64,7 @@ protected:
 	
 	bool					allowParallelComputation() const;
 	const Interval<int>*	desZSampMargin(int,int) const { return &zmargin_; }
-	const BinID*			desStepout(int input,int output) const { return input?0:&stepout_; }
+	const BinID*			desStepout(int input,int output) const { return &stepout_; }
 	bool					getTrcPos();
 	
 	bool					getInputData(const BinID&,int zintv);
