@@ -221,15 +221,15 @@ bool ExternalAttrib::getInputData( const BinID& relpos, int zintv )
 			BinID pos = relpos + trcpos_[idx] * bidstep;
 			const DataHolder* data = inputs_[iin]->getData( pos, zintv );
 			if ( !data ) {
-				BufferString err("ExternalAttrib::getInputData - Null DataHolder: ");
-				err += iin;
-				err += " Input Ref: ";
-				err +=  inputs_[iin]->getDesc().userRef();
-				err += " Pos: ";
-				err += inputs_[iin]->getCurrentPosition().toString(is2D());
-				err += " TrcPos: ";
-				err += pos.toString(is2D());
-				ErrMsg( err );
+//				BufferString err("ExternalAttrib::getInputData - Null DataHolder: ");
+//				err += iin;
+//				err += " Input Ref: ";
+//				err +=  inputs_[iin]->getDesc().userRef();
+//				err += " Pos: ";
+//				err += inputs_[iin]->getCurrentPosition().toString(is2D());
+//				err += " TrcPos: ";
+//				err += pos.toString(is2D());
+//				ErrMsg( err );
 				return false;
 			}
 			indata_.replace( iin*trcpos_.size()+idx, data );
@@ -261,20 +261,38 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 		}
 	}
 
-	proc_->compute( pi, z0, bin.inl(), bin.crl() );
+	if (proc_->compute( pi, z0, bin.inl(), bin.crl() ))
+	{
 
-	for (int iout = 0; iout<nrout_; iout++) {
-		if (outputinterest_[iout]) {
-			for ( int idx=0; idx<nrsamples; idx++ ) {
-				float val = proc_->getOutput( pi, iout, idx-zmargin_.start);
-				setOutputValue( output, iout, idx, z0, val );
+		for (int iout = 0; iout<nrout_; iout++) {
+			if (outputinterest_[iout]) {
+				for ( int idx=0; idx<nrsamples; idx++ ) {
+					float val = proc_->getOutput( pi, iout, idx-zmargin_.start);
+					setOutputValue( output, iout, idx, z0, val );
+				}
 			}
 		}
-	}
-	proc_->setInstIdle( pi );
-	return true;
+		proc_->setInstIdle( pi );
+		return true;
+	} else
+		return false;
 }
 
+const Interval<int>*	ExternalAttrib::desZSampMargin(int,int) const
+{ 
+	if (zmargin_ == Interval<int>(0,0))
+		return 0;
+	else
+		return &zmargin_; 
+}
+
+const BinID* ExternalAttrib::desStepout(int input,int output) const
+{ 
+	if (stepout_ == BinID(0,0))
+		return 0;
+	else
+		return &stepout_;
+}
 
 
 }; //namespace

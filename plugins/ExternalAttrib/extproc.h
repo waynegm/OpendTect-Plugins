@@ -42,7 +42,7 @@ public:
 	void			setInstIdle( ProcInst* pi );
 	void			setInput( ProcInst* pi, int input, int trc, int idx, float val );
 	float			getOutput( ProcInst* pi, int output, int idx );
-	void			compute( ProcInst* pi, int z0, int inl, int crl );
+	bool			compute( ProcInst* pi, int z0, int inl, int crl );
 	
 	bool				hasInput();
 	bool				hasInputs();

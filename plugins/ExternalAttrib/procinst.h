@@ -50,8 +50,9 @@ public:
 	bool			start( char *const argv[] );
 	bool			start( char *const argv[], SeisInfo& si );
 	int				finish();
+	BufferString	logFileName();
 	BufferString	readAllStdOut();
-	void			compute( int z0, int inl, int crl );
+	bool			compute( int z0, int inl, int crl );
 
 	
 protected:

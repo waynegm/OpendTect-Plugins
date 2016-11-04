@@ -63,8 +63,8 @@ protected:
     static ExtProc*         dProc_;
 	
 	bool					allowParallelComputation() const;
-	const Interval<int>*	desZSampMargin(int,int) const { return &zmargin_; }
-	const BinID*			desStepout(int input,int output) const { return &stepout_; }
+	const Interval<int>*	desZSampMargin(int,int) const;
+	const BinID*			desStepout(int input,int output) const;
 	bool					getTrcPos();
 	
 	bool					getInputData(const BinID&,int zintv);
