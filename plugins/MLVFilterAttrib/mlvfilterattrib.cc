@@ -176,14 +176,14 @@ int MLVFilter::findLeastVarianceElement( int idx, int z0, float* result,  wmStat
 			elemStats.addValue(traceval);
 		}
 		if (np) {
-			float variance = elemStats.variance();
+			float variance = float(elemStats.variance());
 			if ( variance<minvar || minvar<0) {
 				minvar = variance;
 				minelem = elem;
 				if ( outtype_ == Average ) {
-					*result = elemStats.average();
+					*result = float(elemStats.average());
 				} else if (outtype_ == Median ) {
-					*result = elemStats.median();
+					*result = float(elemStats.median());
 				}
 			}
 			if (mIsZero(variance,mDefEpsF)) break;

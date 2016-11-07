@@ -157,7 +157,6 @@ bool ProcInst::start( char *const argv[] )
 	saAttr.bInheritHandle = TRUE; 
 	saAttr.lpSecurityDescriptor = NULL;
 	
-	HANDLE herr = CreateFile(
 // Create a pipe for the child process's STDOUT. 
 	if (!CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0) ||
 		!SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0)) {
@@ -173,9 +172,10 @@ bool ProcInst::start( char *const argv[] )
 	}
 
 // Convert the HANDLES to C FILE*
-	int fileInNo, fileOutNo, fileErrNo;
-	if ((fileInNo = _open_osfhandle((LONG) g_hChildStd_IN_Wr, 0)) == -1 || 
-		(fileOutNo = _open_osfhandle((LONG) g_hChildStd_OUT_Rd, 0)) == -1 {
+	int fileInNo = _open_osfhandle((LONG)g_hChildStd_IN_Wr, 0);
+	int fileOutNo = _open_osfhandle((LONG)g_hChildStd_OUT_Rd, 0);
+
+	if (fileInNo == -1 || fileOutNo == -1) {
 			ErrMsg("ProcInst::start - unable to get file number for child stdin/stdout");
 			CloseHandle( g_hChildStd_IN_Rd );
 			CloseHandle( g_hChildStd_IN_Wr );
@@ -183,10 +183,10 @@ bool ProcInst::start( char *const argv[] )
 			CloseHandle( g_hChildStd_OUT_Wr ); 
 			return false;
 	}
-	if (!(pD->read_fd = fdopen(fileOutNo, "r"))) {
+	pD->read_fd = fdopen(fileOutNo, "r");
+	if (!pD->read_fd) {
 		pD->read_fd = NULL;
 		pD->write_fd = NULL;
-		pD->err_fd = NULL;
 		CloseHandle( g_hChildStd_IN_Rd );
 		CloseHandle( g_hChildStd_IN_Wr );
 		CloseHandle( g_hChildStd_OUT_Rd );
@@ -194,11 +194,11 @@ bool ProcInst::start( char *const argv[] )
 		ErrMsg("ExtProcImpl::start - open read_fd failed");
 		return false;
 	}
-	if (!(pD->write_fd = fdopen(fileInNo, "w"))) {
+	pD->write_fd = fdopen(fileInNo, "w");
+	if (!pD->write_fd) {
 		fclose(pD->read_fd);
 		pD->read_fd = NULL;
 		pD->write_fd = NULL;
-		pD->err_fd = NULL;
 		CloseHandle( g_hChildStd_IN_Rd );
 		CloseHandle( g_hChildStd_OUT_Rd );
 		CloseHandle( g_hChildStd_OUT_Wr ); 
@@ -211,12 +211,12 @@ bool ProcInst::start( char *const argv[] )
 // Open the error log file. 
 	HANDLE herr = CreateFile(	logFileName().getCStr(),
 								GENERIC_WRITE,
-								0,
-								NULL,
+								FILE_SHARE_READ,
+								&saAttr,
 								CREATE_NEW,
 								FILE_ATTRIBUTE_NORMAL,
 								NULL );
-	if (herr -- INVALID_HANDLE_VALUE) {
+	if (herr == INVALID_HANDLE_VALUE) {
 		ErrMsg("ProcInst::start - unable to open error log file %s", logFileName().getCStr());
 		return false;
 	}

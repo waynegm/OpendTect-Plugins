@@ -94,7 +94,7 @@ AVOAttrib::AVOAttrib( Desc& desc )
 	mGetFloat( correlation_, correlationStr() );
 	mGetFloat( class2width_, class2Str() );
 	
-	xplotang_ = slope_ < 0 ? M_PI_2 + atan(slope_) : M_PI_2 - atan(slope_);
+	xplotang_ = float(slope_ < 0 ? M_PI_2 + atan(slope_) : M_PI_2 - atan(slope_));
 
 }
 
@@ -145,7 +145,7 @@ bool AVOAttrib::computeData( const DataHolder& output, const BinID& relpos,
 				outval = sqrt(intercept*intercept/idev2+gradient*gradient/gdev2-2*correlation_*intercept*gradient/igdev);
 			} else if (output_ == AVOClass) {
 				if (intercept<=class2width_ && intercept>=-class2width_) {
-					outval = gradient > slint ? -2: 2;
+					outval = float(gradient > slint ? -2: 2);
 				} else if (gradient<=slint && gradient>=0 && intercept<=0)
 					outval = 4;
 				else if (gradient>slint && gradient<=0 && intercept>=0)
