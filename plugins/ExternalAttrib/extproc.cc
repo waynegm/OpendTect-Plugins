@@ -19,7 +19,6 @@ ________________________________________________________________________
 -*/
 #include "survinfo.h"
 #include "errmsg.h"
-#include "file.h"E
 #include "ranges.h"
 #include "position.h"
 #include "extproc.h"
@@ -41,6 +40,7 @@ public:
 	bool			getParam();
 	void			setFile(const char* fname, const char* iname);
 	
+	bool			isOK;
 	SeisInfo		seisInfo;
 	BufferString 	exfile;
 	BufferString	infile;
@@ -51,7 +51,7 @@ public:
 };
 
 ExtProcImpl::ExtProcImpl(const char* fname, const char* iname)
-:  idleInsts()
+:  idleInsts(),isOK(true)
 {
 	setFile(fname, iname);
 }
@@ -61,10 +61,6 @@ ExtProcImpl::~ExtProcImpl()
 // Delete all ProcInst's in idleInsts
 	while (!idleInsts.isEmpty()) {
 		ProcInst* pi = idleInsts.pop();
-		BufferString log;
-		File::getContent(pi->logFileName().getCStr(), log);
-		UsrMsg(log);
-		File::remove(pi->logFileName().getCStr());
 		delete pi;
 	}
 }
@@ -94,33 +90,32 @@ void ExtProcImpl::startInst( ProcInst* pi )
 	params.replace("\"","\"\""); 
 	params.embed('"','"');
 #endif
-	BufferString logFile = pi->logFileName();
-	char* args[7];
+	char* args[5];
 	if (infile.isEmpty()) {
 		args[0] = (char*) exfile.getCStr();
-		args[1] = (char*) "-l";
-		args[2] = (char*) logFile.getCStr();
-		args[3] = (char*) "-c";
-		args[4] = (char*) params.getCStr();
-		args[5] = 0;
+		args[1] = (char*) "-c";
+		args[2] = (char*) params.getCStr();
+		args[3] = 0;
 	} else if (exfile.isEmpty()) {
 		ErrMsg("ExtProcImpl::startInst - no external attribute file provided");
 	} else {
 		args[0] = (char*) infile.getCStr();
 		args[1] = (char*) exfile.getCStr();
-		args[2] = (char*) "-l";
-		args[3] = (char*) logFile.getCStr();
-		args[4] = (char*) "-c";
-		args[5] = (char*) params.getCStr();
-		args[6] = 0;
+		args[2] = (char*) "-c";
+		args[3] = (char*) params.getCStr();
+		args[4] = 0;
 	}
 	if (!pi->start( args, seisInfo ))
+	{
 		ErrMsg("ExtProcImpl::startInst - run error");
+	}
 	return;
 }
 
 bool ExtProcImpl::getParam()
 {
+	ProcInst pi;
+	bool result = true;
 	BufferString params;
 	char* args[4];
 	if (infile.isEmpty()) {
@@ -136,24 +131,27 @@ bool ExtProcImpl::getParam()
 		args[2] = (char*) "-g";
 		args[3] = 0;
 	}
-	ProcInst pi;
 	if (pi.start( args )) {
 		params = pi.readAllStdOut();
 		if (pi.finish() != 0 ) {
 			ErrMsg("ExtProcImpl::getParam - external attribute exited abnormally");
-			return false;
+			result = false;
 		}
 	} else {
-		ErrMsg("ExtProcImpl::getParam - run error"); 
-		return false;
+		ErrMsg("ExtProcImpl::getParam - run error");
+		result = false;
 	}
-	jsonpar = json::Deserialize(params.str());
-	if (jsonpar.GetType() == json::NULLVal) {
-		ErrMsg("ExtProcImpl::getParam - parameter output of external attribute is not valid JSON");
-		ErrMsg(params.str());
-		return false;
+	if (result) {
+		jsonpar = json::Deserialize(params.str());
+		if (jsonpar.GetType() == json::NULLVal) {
+			ErrMsg("ExtProcImpl::getParam - parameter output of external attribute is not valid JSON");
+			if (!params.isEmpty())
+				UsrMsg(params);
+			result = false;
+		}
 	}
-	return true;
+	isOK = result;
+	return result;
 }
 
 ExtProc::ExtProc( const char* fname, const char* iname ) 
@@ -164,6 +162,11 @@ ExtProc::ExtProc( const char* fname, const char* iname )
 ExtProc::~ExtProc()
 { 
 	delete pD;
+}
+
+bool ExtProc::isOK()
+{
+	return pD->isOK;
 }
 
 void ExtProc::setSeisInfo( int ninl, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor )
@@ -221,7 +224,8 @@ void ExtProc::setInstIdle( ProcInst* pi )
 
 bool ExtProc::compute( ProcInst* pi,  int z0, int inl, int crl)
 {
-	return pi->compute( z0, inl, crl );
+	pD->isOK = pi->compute( z0, inl, crl );
+	return pD->isOK;
 }
 
 bool ExtProc::hasInput()

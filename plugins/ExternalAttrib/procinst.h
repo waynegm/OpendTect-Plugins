@@ -54,6 +54,7 @@ public:
 	BufferString	readAllStdOut();
 	bool			compute( int z0, int inl, int crl );
 
+	void			processLog();
 	
 protected:
 	bool			writeSeisInfo(SeisInfo& si);

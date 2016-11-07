@@ -37,6 +37,7 @@ public:
 	BufferString	getFile();
 	void			setFile( const char* exFile, const char* inFile );
 	
+	bool			isOK();
 	void			setSeisInfo( int niln, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor );
 	ProcInst*		getIdleInst( int nrsamples );
 	void			setInstIdle( ProcInst* pi );

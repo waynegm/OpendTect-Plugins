@@ -244,26 +244,25 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 {
 	if ( indata_.isEmpty() || output.isEmpty() )
 		return false;
-	const int nrtraces = trcpos_.size();
-	const int sz = zmargin_.width() + nrsamples;
-	ProcInst* pi = proc_->getIdleInst( sz );
-	BinID bin = getCurrentPosition();
-	for (int iin = 0; iin<nrin_; iin++) {
-		for (int trcidx=0; trcidx<nrtraces; trcidx++)
-		{
-			const DataHolder* data = indata_[iin*nrtraces+trcidx];
-			for ( int idx=0; idx<sz; idx++ )
+	if (proc_->isOK()) {
+		const int nrtraces = trcpos_.size();
+		const int sz = zmargin_.width() + nrsamples;
+		ProcInst* pi = proc_->getIdleInst( sz );
+		BinID bin = getCurrentPosition();
+		for (int iin = 0; iin<nrin_; iin++) {
+			for (int trcidx=0; trcidx<nrtraces; trcidx++)
 			{
-				float val = getInputValue(*data, indataidx_[iin], zmargin_.start+idx, z0);
-				val = mIsUdf(val)?0.0f:val;
-				proc_->setInput( pi, iin, trcidx, idx, val );
+				const DataHolder* data = indata_[iin*nrtraces+trcidx];
+				for ( int idx=0; idx<sz; idx++ )
+				{
+					float val = getInputValue(*data, indataidx_[iin], zmargin_.start+idx, z0);
+					val = mIsUdf(val)?0.0f:val;
+					proc_->setInput( pi, iin, trcidx, idx, val );
+				}
 			}
 		}
-	}
 
-	if (proc_->compute( pi, z0, bin.inl(), bin.crl() ))
-	{
-
+		proc_->compute( pi, z0, bin.inl(), bin.crl() );
 		for (int iout = 0; iout<nrout_; iout++) {
 			if (outputinterest_[iout]) {
 				for ( int idx=0; idx<nrsamples; idx++ ) {

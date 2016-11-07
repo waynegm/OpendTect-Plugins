@@ -21,11 +21,14 @@ ________________________________________________________________________
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <fcntl.h>
 
 #include "errmsg.h"
 #include "msgh.h"
 #include "procinst.h"
 #include "filepath.h"
+#include "file.h"
+
 
 #ifdef __win__
 #include <windows.h>
@@ -59,7 +62,6 @@ public:
 	
 	FILE*			read_fd;
 	FILE*			write_fd;
-	FILE*			err_fd;
 	BufferString	logFile;
 #ifdef __win__
 	HANDLE			hChildProcess;
@@ -149,14 +151,13 @@ bool ProcInst::start( char *const argv[] )
 	HANDLE g_hChildStd_IN_Wr = NULL;
 	HANDLE g_hChildStd_OUT_Rd = NULL;
 	HANDLE g_hChildStd_OUT_Wr = NULL; 
-	HANDLE g_hChildStd_ERR_Rd = NULL;
-	HANDLE g_hChildStd_ERR_Wr = NULL; 
 	
 	SECURITY_ATTRIBUTES saAttr;
 	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
 	saAttr.bInheritHandle = TRUE; 
 	saAttr.lpSecurityDescriptor = NULL;
 	
+	HANDLE herr = CreateFile(
 // Create a pipe for the child process's STDOUT. 
 	if (!CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0) ||
 		!SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0)) {
@@ -171,25 +172,15 @@ bool ProcInst::start( char *const argv[] )
 			return false;
 	}
 
-// Create a pipe for the child process's STERR. 
-	if (!CreatePipe(&g_hChildStd_ERR_Rd, &g_hChildStd_ERR_Wr, &saAttr, 0) ||
-		!SetHandleInformation(g_hChildStd_ERR_Rd, HANDLE_FLAG_INHERIT, 0)) {
-			ErrMsg("ProcInst::start - opening stderr failed");
-			return false;
-	}
-	
 // Convert the HANDLES to C FILE*
 	int fileInNo, fileOutNo, fileErrNo;
 	if ((fileInNo = _open_osfhandle((LONG) g_hChildStd_IN_Wr, 0)) == -1 || 
-		(fileOutNo = _open_osfhandle((LONG) g_hChildStd_OUT_Rd, 0)) == -1 ||
-		(fileErrNo = _open_osfhandle((LONG) g_hChildStd_ERR_Rd, 0)) == -1 {
-			ErrMsg("ProcInst::start - unable to get file number for child stdin/stdout/stderr");
+		(fileOutNo = _open_osfhandle((LONG) g_hChildStd_OUT_Rd, 0)) == -1 {
+			ErrMsg("ProcInst::start - unable to get file number for child stdin/stdout");
 			CloseHandle( g_hChildStd_IN_Rd );
 			CloseHandle( g_hChildStd_IN_Wr );
 			CloseHandle( g_hChildStd_OUT_Rd );
 			CloseHandle( g_hChildStd_OUT_Wr ); 
-			CloseHandle( g_hChildStd_ERR_Rd );
-			CloseHandle( g_hChildStd_ERR_Wr ); 
 			return false;
 	}
 	if (!(pD->read_fd = fdopen(fileOutNo, "r"))) {
@@ -198,10 +189,8 @@ bool ProcInst::start( char *const argv[] )
 		pD->err_fd = NULL;
 		CloseHandle( g_hChildStd_IN_Rd );
 		CloseHandle( g_hChildStd_IN_Wr );
-//		CloseHandle( g_hChildStd_OUT_Rd );
+		CloseHandle( g_hChildStd_OUT_Rd );
 		CloseHandle( g_hChildStd_OUT_Wr ); 
-		CloseHandle( g_hChildStd_ERR_Rd );
-		CloseHandle( g_hChildStd_ERR_Wr ); 
 		ErrMsg("ExtProcImpl::start - open read_fd failed");
 		return false;
 	}
@@ -213,30 +202,25 @@ bool ProcInst::start( char *const argv[] )
 		CloseHandle( g_hChildStd_IN_Rd );
 		CloseHandle( g_hChildStd_OUT_Rd );
 		CloseHandle( g_hChildStd_OUT_Wr ); 
-		CloseHandle( g_hChildStd_ERR_Rd );
-		CloseHandle( g_hChildStd_ERR_Wr ); 
 		ErrMsg("ProcInst::start - open write_fd failed");
-		return false;
-	}
-	if (!(pD->err_fd = fdopen(fileErrNo, "r"))) {
-		fclose(pD->read_fd);
-		fclose(pD->write_fd);
-		pD->read_fd = NULL;
-		pD->write_fd = NULL;
-		pD->err_fd = NULL;
-		CloseHandle( g_hChildStd_IN_Rd );
-		CloseHandle( g_hChildStd_IN_Wr );
-		CloseHandle( g_hChildStd_OUT_Rd );
-		CloseHandle( g_hChildStd_OUT_Wr ); 
-//		CloseHandle( g_hChildStd_ERR_Rd );
-		CloseHandle( g_hChildStd_ERR_Wr ); 
-		ErrMsg("ExtProcImpl::start - open err_fd failed");
 		return false;
 	}
 	setbuf( pD->read_fd, NULL );
 	setbuf( pD->write_fd, NULL);
-	setbuf( pD->err_fd, NULL);
-	
+//
+// Open the error log file. 
+	HANDLE herr = CreateFile(	logFileName().getCStr(),
+								GENERIC_WRITE,
+								0,
+								NULL,
+								CREATE_NEW,
+								FILE_ATTRIBUTE_NORMAL,
+								NULL );
+	if (herr -- INVALID_HANDLE_VALUE) {
+		ErrMsg("ProcInst::start - unable to open error log file %s", logFileName().getCStr());
+		return false;
+	}
+//	
 // Get path to the shell
 	char* cmd_path = NULL;
 	cmd_path = getenv("ComSpec");
@@ -258,7 +242,7 @@ bool ProcInst::start( char *const argv[] )
 	GetStartupInfo(&si);      
 	si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
 	si.wShowWindow = SW_HIDE;
-	si.hStdError = g_hChildStd_ERR_Wr;
+	si.hStdError = herr;
 	si.hStdOutput = g_hChildStd_OUT_Wr;
 	si.hStdInput = g_hChildStd_IN_Rd;
 	ZeroMemory(&pi, sizeof(pi));
@@ -280,15 +264,14 @@ bool ProcInst::start( char *const argv[] )
 		CloseHandle( g_hChildStd_IN_Wr );
 		CloseHandle( g_hChildStd_OUT_Rd );
 		CloseHandle( g_hChildStd_OUT_Wr ); 
-		CloseHandle( g_hChildStd_ERR_Rd );
-		CloseHandle( g_hChildStd_ERR_Wr ); 
+		CloseHandle( herr );
 		return false;
 	}
 	pD->hChildProcess = pi.hProcess;
 	pD->hChildThread = pi.hThread;
 	CloseHandle(g_hChildStd_OUT_Wr);
 	CloseHandle(g_hChildStd_IN_Rd);
-	CloseHandle(g_hChildStd_ERR_Wr);
+	CloseHandle(herr);
 	return true;
 #else
 	char* envp[3];
@@ -301,7 +284,7 @@ bool ProcInst::start( char *const argv[] )
 		ErrMsg("ProcInst::start - already in use");
 		return false;
 	}
-	int		stdin_pipe[2], stdout_pipe[2], stderr_pipe[2];
+	int	stdin_pipe[2], stdout_pipe[2];
 	
 	if (pipe(stdin_pipe) == -1) {
 		return false;
@@ -311,24 +294,14 @@ bool ProcInst::start( char *const argv[] )
 		close(stdin_pipe[0]);
 		return false;
 	}
-	if (pipe(stderr_pipe) == -1) {
-		close(stdin_pipe[1]);
-		close(stdin_pipe[0]);
-		close(stdout_pipe[1]);
-		close(stdout_pipe[0]);
-		return false;
-	}
 	pD->read_fd = fdopen(stdout_pipe[0], "r");
 	if (!(pD->read_fd)) {
 		pD->read_fd = NULL;
 		pD->write_fd = NULL;
-		pD->err_fd = NULL;
 		close(stdout_pipe[1]);
 		close(stdout_pipe[0]);
 		close(stdin_pipe[1]);
 		close(stdin_pipe[0]);
-		close(stderr_pipe[1]);
-		close(stderr_pipe[0]);
 		ErrMsg("ProcInst::start - open read_fd failed");
 		return false;
 	}
@@ -340,38 +313,20 @@ bool ProcInst::start( char *const argv[] )
 		close(stdout_pipe[1]);
 		close(stdin_pipe[1]);
 		close(stdin_pipe[0]);
-		close(stderr_pipe[1]);
-		close(stderr_pipe[0]);
 		ErrMsg("ProcInst::start - open write_fd failed");
-		return false;
-	}
-	pD->err_fd = fdopen(stderr_pipe[0], "r");
-	if (!(pD->err_fd )) {
-		fclose(pD->read_fd);
-		fclose(pD->write_fd);
-		pD->read_fd = NULL;
-		pD->write_fd = NULL;
-		pD->err_fd = NULL;
-		close(stdout_pipe[1]);
-		close(stdin_pipe[0]);
-		close(stderr_pipe[1]);
-		close(stderr_pipe[0]);
-		ErrMsg("ProcInst::start - open err_fd failed");
 		return false;
 	}
 	setbuf( pD->read_fd, NULL );
 	setbuf( pD->write_fd, NULL);
-	setbuf( pD->err_fd, NULL);
 	if ((pD->child_pid = fork()) == -1) {
 		fclose(pD->write_fd);
 		fclose(pD->read_fd);
-		fclose(pD->err_fd);
 		pD->read_fd = NULL;
 		pD->write_fd = NULL;
-		pD->err_fd = NULL;
+		close(stdout_pipe[0]);
 		close(stdout_pipe[1]);
 		close(stdin_pipe[0]);
-		close(stderr_pipe[1]);
+		close(stdin_pipe[1]);
 		return false;
 	}
 	
@@ -380,7 +335,6 @@ bool ProcInst::start( char *const argv[] )
 //	close open files other than stdin, stdout and stderr
 		close(stdout_pipe[0]);
 		close(stdin_pipe[1]);
-		close(stderr_pipe[0]);
 		if (stdin_pipe[0] != 0) {
 			dup2(stdin_pipe[0], 0);
 			close(stdin_pipe[0]);
@@ -389,9 +343,10 @@ bool ProcInst::start( char *const argv[] )
 			dup2(stdout_pipe[1], 1);
 			close(stdout_pipe[1]);
 		}
-		if (stderr_pipe[1] != 1) {
-			dup2(stderr_pipe[1], 2);
-			close(stderr_pipe[1]);
+		int fderr = open(pD->logFile, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+		if (fderr != -1 ) {
+			dup2(fderr, 2);
+			close(fderr);
 		}
 		int fd, fds;
 		if ((fds = getdtablesize()) == -1 )
@@ -406,7 +361,6 @@ bool ProcInst::start( char *const argv[] )
 	
 	close(stdout_pipe[1]);
 	close(stdin_pipe[0]);
-	close(stderr_pipe[1]);
 	return true;
 #endif	
 }
@@ -414,16 +368,29 @@ bool ProcInst::start( char *const argv[] )
 
 bool ProcInst::start( char *const argv[], SeisInfo& si )
 {
+	bool 	result = false;
 	if (start( argv )) {
 // Check for errors
-		return writeSeisInfo( si );
+		result = writeSeisInfo( si );
 	} else {
 		ErrMsg("ProcInst::start - run error");
-		return false;
 	}
+	return result;
 }
 
+void ProcInst::processLog()
+{
+	BufferString log;
+	if (!pD->logFile.isEmpty()) {
+		File::getContent(pD->logFile.getCStr(), log);
+		if (!log.isEmpty())
+			UsrMsg(log);
+		File::remove(pD->logFile.getCStr());
+	}
+}
+	
 int ProcInst::finish() {
+	int result = 0;
 #ifdef __win__
 	DWORD status=0;
 	if (pD->hChildProcess) {
@@ -450,11 +417,7 @@ int ProcInst::finish() {
 		fclose(pD->read_fd);
 		pD->read_fd = NULL;
 	}
-	if (pD->err_fd) {
-		fclose(pD->err_fd);
-		pD->err_fd = NULL;
-	}
-	return (int) status;
+	result = (int) status;
 #else
 	int   status;
 	pid_t pid = -1;
@@ -474,16 +437,14 @@ int ProcInst::finish() {
 		fclose(pD->read_fd);
 		pD->read_fd = NULL;
 	}
-	if (pD->err_fd) {
-		fclose(pD->err_fd);
-		pD->err_fd = NULL;
-	}
 	pD->child_pid=-1;
 	if (pid != -1 && WIFEXITED(status)) 
-		return WEXITSTATUS(status);
+		result = WEXITSTATUS(status);
 	else 
-		return (pid == -1 ? -1 : 0);
+		result = (pid == -1 ? -1 : 0);
 #endif	
+	processLog();
+	return result;
 }	
 	
 
@@ -516,12 +477,14 @@ BufferString ProcInst::readAllStdOut()
 
 bool ProcInst::compute( int z0, int inl, int crl )
 {
-// Send info packet to process stdin
-	writeTrcInfo( z0, inl, crl );
-// Send input array to process stdin
-	writeData();
-// Read output array from process stdout 
-	 return readData();
+	bool result = false;
+// 	Send info packet to process stdin
+	result |= writeTrcInfo( z0, inl, crl );
+// 	Send input array to process stdin
+	result |= writeData();
+// 	Read output array from process stdout 
+	result |= readData();
+	return result;
 }
 
 bool ProcInst::writeSeisInfo( SeisInfo& si )
