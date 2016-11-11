@@ -1,5 +1,9 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.0.4
+### ExternalAttrib
+- Capture external attribute script errors in OpendTect log file
+
 ## Release 6.0.2
 #### ExternalAttrib
 - Fix for multi-trace multi-attribute input - no longer restricted to input from same multi-attribute volume [#17]
