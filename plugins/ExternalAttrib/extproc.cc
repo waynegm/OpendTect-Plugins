@@ -376,6 +376,18 @@ bool ExtProc::hideStepOut()
 		return true;
 }
 
+bool ExtProc::so_same()
+{
+	if (hasStepOut()) {
+		json::Object jobj = pD->jsonpar["StepOut"].ToObject();
+		if (jobj.HasKey("Same"))
+			return jobj["Same"];
+		else
+			return false;
+	} else
+		return false;
+}
+		
 BinID ExtProc::so_minimum()
 {
 	BinID res;

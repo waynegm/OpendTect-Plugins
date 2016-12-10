@@ -19,6 +19,7 @@ ________________________________________________________________________
 -*/
 
 #include "uiexternalattrib.h"
+#include "uiext_stepoutsel.h"
 #include "externalattrib.h"
 #include "extproc.h"
 
@@ -88,7 +89,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	zmarginfld_->valuechanging.notify(mCB(this, uiExternalAttrib,doZmarginCheck) );
 	zmarginfld_->display(false);
 	
-	stepoutfld_ = new uiStepOutSel( this, is2d );
+	stepoutfld_ = new uiExt_StepOutSel( this, is2d );
 	stepoutfld_->attach( rightTo, zmarginfld_ );
 	stepoutfld_->valueChanging.notify(mCB(this, uiExternalAttrib,doStepOutCheck) );
 	stepoutfld_->setFieldNames( "Inl Stepout", "Crl Stepout" );
@@ -174,8 +175,10 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 			stepoutfld_->setBinID(extproc_->stepout());
 			if (extproc_->hideStepOut()) 
 				stepoutfld_->display(false);
-			else
+			else {
+				stepoutfld_->displayFld2(!extproc_->so_same());
 				stepoutfld_->display(true);
+			}
 		} else 
 			stepoutfld_->display(false);
 
@@ -375,6 +378,9 @@ void uiExternalAttrib::doStepOutCheck( CallBacker* cb )
 		BinID minval = extproc_->so_minimum();
 		int inl = (val.inl() < minval.inl())? minval.inl():val.inl();
 		int crl = (val.crl() < minval.crl())? minval.crl():val.crl();
+		stepoutfld_->setBinID(BinID(inl,crl));
+		if (extproc_->so_same())
+			crl = inl; 
 		stepoutfld_->setBinID(BinID(inl,crl));
 	}
 }

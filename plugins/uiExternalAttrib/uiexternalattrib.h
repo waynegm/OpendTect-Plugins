@@ -29,9 +29,9 @@ ________________________________________________________________________
 class uiAttrSel;
 class uiGenInput;
 class uiFileInput;
-class uiStepOutSel;
 class uiToolButton;
 class ExtProc;
+class uiExt_StepOutSel;
 
 /*! \brief External Attribute description editor */
 
@@ -49,7 +49,7 @@ protected:
 	uiFileInput*			interpfilefld_;
 	ObjectSet<uiAttrSel>	inpflds_;
 	uiGenInput*				zmarginfld_;
-	uiStepOutSel*			stepoutfld_;
+	uiExt_StepOutSel*		stepoutfld_;
 	uiGenInput*				outputfld_;
 	uiGenInput*				selectfld_;
 	ObjectSet<uiGenInput>	parflds_;

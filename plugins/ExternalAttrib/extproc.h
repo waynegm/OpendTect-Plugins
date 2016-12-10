@@ -63,6 +63,7 @@ public:
 
 	bool				hasStepOut();
 	bool				hideStepOut();
+	bool				so_same();
 	BinID				so_minimum();
 	BinID				stepout();
 	void				setStepOut(BinID s);

@@ -1,5 +1,9 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.0.4-1
+###ExternalAttrib
+- Add "Same" (boolean) option to StepOut parameter [#19]
+
 ## Release 6.0.4
 ### ExternalAttrib
 - Capture external attribute script errors in OpendTect log file
