@@ -1,7 +1,11 @@
 # OpendTect Plugins Release Notes
 
+## Next Release
+### MLVFilterAttrib
+- Fill missing traces to reduce edge effects - Fixes #20
+
 ## Release 6.0.4-1
-###ExternalAttrib
+### ExternalAttrib
 - Add "Same" (boolean) option to StepOut parameter [#19]
 
 ## Release 6.0.4
