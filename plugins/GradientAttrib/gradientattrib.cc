@@ -167,7 +167,11 @@ bool GradientAttrib::getInputData( const BinID& relpos, int zintv )
 	{
 		const DataHolder* data = 
 		inputs_[0]->getData( relpos+trcpos_[idx]*bidstep, zintv );
-		if ( !data ) return false;
+        if ( !data ) {
+            const BinID pos = relpos + trcpos_[centertrcidx_]*bidstep;
+            data = inputs_[0]->getData( pos, zintv );
+            if ( !data ) return false;
+        }
 		inputdata_.replace( idx, data );
 	}
 	

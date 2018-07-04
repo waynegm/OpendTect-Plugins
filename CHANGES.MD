@@ -1,8 +1,12 @@
 # OpendTect Plugins Release Notes
 
-## Next Release
+## Release 6.2.4
 ### MLVFilterAttrib
 - Fill missing traces to reduce edge effects - Fixes #20
+### ExternalAttrib
+- Fill missing traces to reduce edge effects - Fixes #21
+### GradientAttrib
+- Fill missing traces to reduce edge effects - Fixes #22
 
 ## Release 6.0.4-1
 ### ExternalAttrib
