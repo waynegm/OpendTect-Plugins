@@ -78,6 +78,7 @@ protected:
     int                     selection_;
 	TypeSet<float>			par_;
 	TypeSet<BinID>			trcpos_;
+    int						centertrcidx_;
 	
 	TypeSet<int>					indataidx_;
 

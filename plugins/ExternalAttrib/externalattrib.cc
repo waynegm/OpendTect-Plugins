@@ -25,6 +25,7 @@ ________________________________________________________________________
 #include "attribfactory.h"
 #include "attribparam.h"
 #include "envvars.h"
+#include "survinfo.h"
 
 #include "extproc.h"
 
@@ -167,7 +168,7 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 		getTrcPos();
 		int ninl = stepout_.inl()*2 + 1;
 		int ncrl = stepout_.crl()*2 + 1;
-		proc_->setSeisInfo( ninl, ncrl, inlDist(), crlDist(), zFactor(), dipFactor() );
+		proc_->setSeisInfo( ninl, ncrl, inlDist()*SI().inlStep(), crlDist()*SI().crlStep(), zFactor(), dipFactor() );
 	} else 
 		ErrMsg("ExternalAttrib::ExternalAttrib - error creating extrenal procedure");
 }
@@ -185,10 +186,17 @@ bool ExternalAttrib::allowParallelComputation() const
 bool ExternalAttrib::getTrcPos()
 {
 	trcpos_.erase();
+    int trcidx = 0;
+    centertrcidx_ = 0;
 	BinID bid;
-	for ( bid.inl()=-stepout_.inl(); bid.inl()<=stepout_.inl(); bid.inl()++ )
-		for ( bid.crl()=-stepout_.crl(); bid.crl()<=stepout_.crl(); bid.crl()++ )
+	for ( bid.inl()=-stepout_.inl(); bid.inl()<=stepout_.inl(); bid.inl()++ ) {
+		for ( bid.crl()=-stepout_.crl(); bid.crl()<=stepout_.crl(); bid.crl()++ ) {
+      	    if ( !bid.inl() && !bid.crl() )
+                centertrcidx_ = trcidx;
 			trcpos_ += bid;
+            trcidx++;
+        }
+    }
 	return true;
 }
 
@@ -221,16 +229,9 @@ bool ExternalAttrib::getInputData( const BinID& relpos, int zintv )
 			BinID pos = relpos + trcpos_[idx] * bidstep;
 			const DataHolder* data = inputs_[iin]->getData( pos, zintv );
 			if ( !data ) {
-//				BufferString err("ExternalAttrib::getInputData - Null DataHolder: ");
-//				err += iin;
-//				err += " Input Ref: ";
-//				err +=  inputs_[iin]->getDesc().userRef();
-//				err += " Pos: ";
-//				err += inputs_[iin]->getCurrentPosition().toString(is2D());
-//				err += " TrcPos: ";
-//				err += pos.toString(is2D());
-//				ErrMsg( err );
-				return false;
+                pos = relpos + trcpos_[centertrcidx_]*bidstep;
+                data = inputs_[iin]->getData( pos, zintv );
+                if ( !data ) return false;
 			}
 			indata_.replace( iin*trcpos_.size()+idx, data );
 		}
