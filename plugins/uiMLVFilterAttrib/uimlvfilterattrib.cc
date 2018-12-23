@@ -46,7 +46,7 @@ mInitAttribUI(uiMLVFilterAttrib,MLVFilter,"MLV Filter",sKeyFilterGrp())
 
 
 uiMLVFilterAttrib::uiMLVFilterAttrib( uiParent* p, bool is2d )
-    : uiAttrDescEd(p,is2d,"mToDoHelpID")
+: uiAttrDescEd(p,is2d,HelpKey("wgm", "mlv"))
 
 {
     inpfld_ = createInpFld( is2d );

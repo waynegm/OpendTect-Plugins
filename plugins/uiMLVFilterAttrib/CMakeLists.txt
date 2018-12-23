@@ -4,7 +4,7 @@
 # 	Jan 2014	Wayne Mogg
 #_______________________________________________________________________________
 
-SET(OD_MODULE_DEPS MLVFilterAttrib uiODMain)
+SET(OD_MODULE_DEPS MLVFilterAttrib uiODMain uiWGMHelp )
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
 	uimlvfilterattribpi.cc

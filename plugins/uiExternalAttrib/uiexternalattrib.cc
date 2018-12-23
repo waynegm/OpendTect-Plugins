@@ -44,7 +44,7 @@ mInitAttribUI(uiExternalAttrib,ExternalAttrib,"External Attribute",sKeyBasicGrp(
 
 
 uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
-    : uiAttrDescEd(p,is2d,"mTODOHelpKey"), extproc_(NULL)
+: uiAttrDescEd(p,is2d, HelpKey("wgm", "ext")), extproc_(NULL)
 
 {
 	#ifdef __win__

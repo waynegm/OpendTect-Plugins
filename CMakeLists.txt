@@ -21,12 +21,13 @@ list(APPEND CMAKE_MODULE_PATH "${OpendTect_DIR}/CMakeModules")
 find_package( OpendTect )
 
 #Setup the modules
-set ( PLUGINS RSpecAttrib uiRSpecAttrib 
-	      MLVFilterAttrib  uiMLVFilterAttrib 
-	      AVOAttrib uiAVOAttrib
-	      ExternalAttrib uiExternalAttrib
-	      GradientAttrib uiGradientAttrib
-	      LTFAttrib uiLTFAttrib )
+set ( PLUGINS uiWGMHelp
+            RSpecAttrib uiRSpecAttrib 
+            MLVFilterAttrib  uiMLVFilterAttrib 
+            AVOAttrib uiAVOAttrib
+            ExternalAttrib uiExternalAttrib
+            GradientAttrib uiGradientAttrib
+            LTFAttrib uiLTFAttrib )
 OD_ADD_MODULES( plugins ${PLUGINS} )
 
 #Add the plugins

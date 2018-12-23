@@ -6,7 +6,7 @@
 
 SET(OD_MODULE_NAME uiLTFAttrib)
 SET(OD_IS_PLUGIN 1 )
-SET(OD_MODULE_DEPS uiODMain LTFAttrib)
+SET(OD_MODULE_DEPS uiODMain LTFAttrib uiWGMHelp )
 SET(OD_MODULE_SOURCES 
 	uiltfattrib.cc
 	uiltfattribpi.cc)

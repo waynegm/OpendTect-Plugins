@@ -48,7 +48,7 @@ mInitAttribUI(uiGradientAttrib,GradientAttrib,"Gradient Attribute",sKeyFilterGrp
 
 
 uiGradientAttrib::uiGradientAttrib( uiParent* p, bool is2d )
-    : uiAttrDescEd(p,is2d,"mToDoHelpID")
+: uiAttrDescEd(p,is2d,HelpKey("wgm", "grad"))
 
 {
     inpfld_ = createInpFld( is2d );

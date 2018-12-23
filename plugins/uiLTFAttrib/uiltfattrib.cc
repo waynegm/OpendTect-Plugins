@@ -36,7 +36,7 @@ mInitAttribUI(uiLTFAttrib,LTFAttrib,"Local Time-Frequency",sKeyFreqGrp())
 
 
 uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
-: uiAttrDescEd(p,is2d,"mTODOHelpKey")
+: uiAttrDescEd(p,is2d,HelpKey("wgm", "ltf"))
 
 {
 	inpfld_ = createInpFld( is2d );

@@ -6,7 +6,7 @@
 
 SET(OD_MODULE_NAME uiAVOAttrib)
 SET(OD_IS_PLUGIN 1 )
-SET(OD_MODULE_DEPS uiODMain AVOAttrib)
+SET(OD_MODULE_DEPS uiODMain uiWGMHelp AVOAttrib)
 SET(OD_MODULE_SOURCES 
 	uiavoattrib.cc
 	uiavoattribpi.cc)

@@ -38,8 +38,7 @@ mInitAttribUI(uiRSpecAttrib,RSpecAttrib,"Recursive spectral decomposition",sKeyF
 
 
 uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )
-: uiAttrDescEd(p,is2d,"mTODOHelpKey")
-
+: uiAttrDescEd(p,is2d,HelpKey("wgm", "rspec"))
 {
 	inpfld_ = createInpFld( is2d );
 	

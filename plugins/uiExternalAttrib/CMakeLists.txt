@@ -4,7 +4,7 @@
 # 	Dec 2014	Wayne Mogg
 #_______________________________________________________________________________
 
-SET(OD_MODULE_DEPS ExternalAttrib uiODMain)
+SET(OD_MODULE_DEPS ExternalAttrib uiODMain uiWGMHelp)
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
 	uiexternalattribpi.cc

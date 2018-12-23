@@ -47,7 +47,7 @@ mInitAttribUI(uiAVOAttrib,AVOAttrib,"AVO Attribute",sKeyBasicGrp())
 
 
 uiAVOAttrib::uiAVOAttrib( uiParent* p, bool is2d )
-	: uiAttrDescEd(p,is2d,"mTODOHelpKeys")
+	: uiAttrDescEd(p,is2d,HelpKey("wgm", "avo"))
 {
 	inp_interceptfld_ = createInpFld( is2d, "Intercept Volume" );
 	inp_gradientfld_ = createInpFld( is2d, "Gradient Volume" );

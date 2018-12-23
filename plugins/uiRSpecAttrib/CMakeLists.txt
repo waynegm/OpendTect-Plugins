@@ -6,7 +6,7 @@
 
 SET(OD_MODULE_NAME uiRSpecAttrib)
 SET(OD_IS_PLUGIN 1 )
-SET(OD_MODULE_DEPS uiODMain RSpecAttrib)
+SET(OD_MODULE_DEPS uiODMain RSpecAttrib uiWGMHelp )
 SET(OD_MODULE_SOURCES 
 	uirspecattrib.cc
 	uirspecattribpi.cc)
