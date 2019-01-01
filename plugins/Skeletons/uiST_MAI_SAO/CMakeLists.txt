@@ -1,0 +1,8 @@
+set(OD_MODULE_NAME uiST_MAI_SAO)
+set(OD_IS_PLUGIN yes )
+set(OD_MODULE_DEPS  ST_MAI_SAO uiODMain)
+set(OD_MODULE_SOURCES
+	uist_mai_sao.cc
+	uist_mai_saopi.cc)
+SET( OD_PLUGIN_ALO_EXEC ${OD_MAIN_EXEC} )
+OD_INIT_MODULE()
