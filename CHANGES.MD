@@ -2,6 +2,11 @@
 
 ## Release 6.4.1
 - Allow all attributes to have documentation displayed from the help icon in the attribute description editor [#23]
+- Add attribute plugin skeleton code
+- Add test of Eigen and ArrayFire libraries
+
+### AVOPolarAttrib
+- First release
 
 ## Release 6.2.4
 ### MLVFilterAttrib

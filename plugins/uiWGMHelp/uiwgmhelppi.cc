@@ -10,6 +10,7 @@ typedef struct keyholder {
 
 keyholder keys[] = {
     {"avo", "AVOAttrib.html"},
+    {"avop","AVOPolarAttrib.html"},
     {"ext", "ExternalAttrib.html"},
     {"grad", "GradientAttrib.html"},
     {"ltf", "LTFAttrib.html"},
