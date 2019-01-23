@@ -18,17 +18,6 @@ namespace Attrib {
 
 mAttrDefCreateInstance(AVOPolarAttrib)
 
-const char* AVOPolarAttrib::OutputNames[] =
-{
-        "Background Polarization Angle",
-        "Event Polarization Angle",
-        "Polarization Angle Difference",
-        "Strength",
-        "Polarization Product",
-        "Quality",
-        0
-};
-
 void AVOPolarAttrib::initClass()
 {
     mAttrStartInitClass

@@ -11,6 +11,17 @@
 
 using namespace Attrib;
 
+static const char* OutputNames[] =
+{
+    "Background Polarization Angle",
+    "Event Polarization Angle",
+    "Polarization Angle Difference",
+    "Strength",
+    "Polarization Product",
+    "Quality",
+    0
+};
+
 mInitAttribUI(uiAVOPolarAttrib,AVOPolarAttrib,"AVOPolarAttrib",sKeyBasicGrp())
 
 uiAVOPolarAttrib::uiAVOPolarAttrib( uiParent* p, bool is2d )
@@ -20,7 +31,7 @@ uiAVOPolarAttrib::uiAVOPolarAttrib( uiParent* p, bool is2d )
     gradientfld_ = createInpFld( is2d, "Gradient" );
     gradientfld_->attach( rightTo, interceptfld_ );
     
-    outputfld_ = new uiGenInput( this, uiStrings::sOutput(), StringListInpSpec(AVOPolarAttrib::OutputNames) );
+    outputfld_ = new uiGenInput( this, uiStrings::sOutput(), StringListInpSpec(OutputNames) );
     CallBack cboutsel = mCB(this, uiAVOPolarAttrib, outSel);
     outputfld_->valuechanged.notify(cboutsel);
     outputfld_->attach( alignedBelow, interceptfld_ );

@@ -19,7 +19,6 @@ public:
     static const char*  gateStr()       { return "gate"; }
     
     enum Output { BGAngle, EventAngle, Difference, Strength, Product, Quality };
-    static const char* OutputNames[];
     
 protected:
                         ~AVOPolarAttrib() {}
