@@ -1,5 +1,10 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.2
+
+###  GeopackageExport
+- First release
+
 ## Release 6.4.1
 - Allow all attributes to have documentation displayed from the help icon in the attribute description editor [#23]
 - Add attribute plugin skeleton code
@@ -9,10 +14,13 @@
 - First release
 
 ## Release 6.2.4
+
 ### MLVFilterAttrib
 - Fill missing traces to reduce edge effects [#20]
+
 ### ExternalAttrib
 - Fill missing traces to reduce edge effects [#21]
+
 ### GradientAttrib
 - Fill missing traces to reduce edge effects [#22]
 

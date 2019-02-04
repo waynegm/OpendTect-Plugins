@@ -22,6 +22,7 @@ find_package( OpendTect )
 
 #Setup the modules
 set ( PLUGINS uiWGMHelp
+            uiGeopackageExport
             AVOPolarAttrib uiAVOPolarAttrib
             RSpecAttrib uiRSpecAttrib 
             MLVFilterAttrib  uiMLVFilterAttrib 

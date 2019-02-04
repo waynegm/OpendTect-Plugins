@@ -12,6 +12,7 @@ keyholder keys[] = {
     {"avo", "AVOAttrib.html"},
     {"avop","AVOPolarAttrib.html"},
     {"ext", "ExternalAttrib.html"},
+    {"geopkg", ""},
     {"grad", "GradientAttrib.html"},
     {"ltf", "LTFAttrib.html"},
     {"mlv", "MLVFilter.html"},
