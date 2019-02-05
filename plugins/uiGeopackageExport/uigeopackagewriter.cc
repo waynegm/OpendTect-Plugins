@@ -1,6 +1,8 @@
 #include "uigeopackagewriter.h"
 
 #include "survinfo.h"
+#include "survgeom2d.h"
+#include "posinfo2d.h"
 #include "coordsystem.h"
 #include "crssystem.h"
 #include "crsproj.h"
@@ -12,7 +14,7 @@
 #include "ogr_spatialref.h"
 
 uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
-: gdalDS_(NULL), poSRS_(NULL)
+: gdalDS_(nullptr), poSRS_(nullptr)
 {
     if (SI().getCoordSystem()->isProjection()) {
         const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
@@ -29,7 +31,7 @@ uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
 uiGeopackageWriter::~uiGeopackageWriter()
 {
     close();
-    if (poSRS_ != NULL)
+    if (poSRS_ != nullptr)
         delete poSRS_;
 }
 
@@ -40,19 +42,19 @@ bool uiGeopackageWriter::open( const char* filename, bool append )
     GDALAllRegister();
     
     if (append) {
-        gdalDS_ = GDALDataset::Open(filename, GDAL_OF_VECTOR || GDAL_OF_UPDATE, papszAllowedDrivers, NULL, NULL);
-        if (gdalDS_ == NULL) {
+        gdalDS_ = GDALDataset::Open(filename, GDAL_OF_VECTOR || GDAL_OF_UPDATE, papszAllowedDrivers, nullptr, nullptr);
+        if (gdalDS_ == nullptr) {
             ErrMsg("uiGeopackageWriter::open - cannot open output file for appending.");
             return false;
         }
     } else {
         GDALDriver* poDriver = GetGDALDriverManager()->GetDriverByName(papszAllowedDrivers[0]);
-        if (poDriver == NULL) {
+        if (poDriver == nullptr) {
             ErrMsg("uiGeopackageWriter::open - GPKG driver not available");
             return false;
         }
-        gdalDS_ = poDriver->Create(filename, 0, 0, 0, GDT_Unknown, NULL);
-        if (gdalDS_ == NULL) {
+        gdalDS_ = poDriver->Create(filename, 0, 0, 0, GDT_Unknown, nullptr);
+        if (gdalDS_ == nullptr) {
             ErrMsg("uiGeopackageWriter::open - cannot create output file.");
             return false;
         }
@@ -62,17 +64,17 @@ bool uiGeopackageWriter::open( const char* filename, bool append )
 
 void uiGeopackageWriter::close()
 {
-    if (gdalDS_)
+    if (gdalDS_ != nullptr)
         GDALClose( gdalDS_ );
 }
 
 void uiGeopackageWriter::writeSurvey()
 {
-    if (gdalDS_) {
+    if (gdalDS_ != nullptr) {
         SurveyInfo* si = const_cast<SurveyInfo*>( &SI() );
     
         OGRLayer* poLayer = gdalDS_->CreateLayer( "Survey", poSRS_, wkbPolygon, NULL );
-        if (poLayer == NULL) {
+        if (poLayer == nullptr) {
             ErrMsg("uiGeopackageWriter::writeSurvey - layer creation failed");
             return;
         }
@@ -107,6 +109,45 @@ void uiGeopackageWriter::writeSurvey()
         survpoly.addRing(&ring);
         feature.SetGeometry( &survpoly );
         if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
-            ErrMsg("uiGeopackageWriter::writeSurvey - create feature failed" );
+            ErrMsg("uiGeopackageWriter::writeSurvey - creating feature failed" );
+    }
+}
+
+void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
+{
+    if (gdalDS_ != nullptr) {
+        OGRLayer* poLayer = gdalDS_->CreateLayer( "2DLines", poSRS_, wkbLineString, NULL );
+        if (poLayer == nullptr) {
+            ErrMsg("uiGeopackageWriter::write2DLines - layer creation failed");
+            return;
+        }
+
+        OGRFieldDefn oField( "LineName", OFTString );
+        oField.SetWidth(32);
+        if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
+            ErrMsg("uiGeopackageWriter::writeSurvey - creating Line Name field failed" );
+            return;
+        }
+        
+        for ( int idx=0; idx<geomids.size(); idx++ ) {
+            mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+            if ( !geom2d )
+                continue;
+            
+            const PosInfo::Line2DData& geom = geom2d->data();
+            const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
+            
+            OGRFeature feature( poLayer->GetLayerDefn() );
+            feature.SetField("LineName", geom2d->getName());
+            
+            OGRLineString line;
+            for ( int tdx=0; tdx<posns.size(); tdx++ ) {
+                Coord pos = posns[tdx].coord_;
+                line.addPoint( pos.x, pos.y );
+            }
+            feature.SetGeometry( &line );
+            if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
+                ErrMsg("uiGeopackageWriter::write2DLines - creating feature failed" );
+        }
     }
 }

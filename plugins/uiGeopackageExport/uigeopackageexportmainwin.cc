@@ -15,6 +15,7 @@
 #include "uimsg.h"
 
 #include "uisurveygrp.h"
+#include "ui2dlinesgrp.h"
 #include "uigeopackagewriter.h"
 
 
@@ -31,6 +32,11 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     uiParent* tabparent = tabstack_->tabGroup();
     surveygrp_ = new uiSurveyGrp( tabparent );
     tabstack_->addTab( surveygrp_ );
+    
+    if (SI().has2D()) {
+        linesgrp_ = new ui2DLinesGrp( tabparent );
+        tabstack_->addTab( linesgrp_ );
+    }
     
     BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
     filefld_ = new uiFileInput( topgrp, "Output file",
@@ -527,6 +533,13 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         uiGeopackageWriter gpgWriter(filefld_->fileName(), modefld_->isChecked());
         if( surveygrp_->doExport() )
             gpgWriter.writeSurvey();
+        if (SI().has2D() && linesgrp_!=nullptr) {
+            TypeSet<Pos::GeomID> geomids;
+            linesgrp_->getGeoMids( geomids );
+            if( linesgrp_->doLineExport() ) {
+                gpgWriter.write2DLines( geomids );
+            }
+        }
     }
     else {
         uiMSG().error( tr("Please specify an output file") );

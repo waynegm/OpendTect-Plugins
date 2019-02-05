@@ -1,8 +1,11 @@
 #ifndef uigeopackagewriter_h
 #define uigeopackagewriter_h
 
+#include "typeset.h"
+
 class GDALDataset;
 class OGRSpatialReference;
+
 
 class uiGeopackageWriter
 {
@@ -16,6 +19,7 @@ public:
     void    close();
     
     void    writeSurvey();
+    void    write2DLines( TypeSet<Pos::GeomID>& geomids );
     
 protected:
     GDALDataset*    gdalDS_;

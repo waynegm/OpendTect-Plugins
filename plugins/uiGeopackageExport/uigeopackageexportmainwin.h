@@ -7,6 +7,7 @@ class uiFileInput;
 class uiCheckBox;
 class uiTabStack;
 class uiSurveyGrp;
+class ui2DLinesGrp;
 
 mClass(uiGeopackageExport) uiGeopackageExportMainWin : public uiDialog
 { mODTextTranslationClass(uiGeopackageExportMainWin);
@@ -21,6 +22,7 @@ protected:
     uiTabStack*     tabstack_;
     uiCheckBox*     modefld_;
     uiSurveyGrp*    surveygrp_;
+    ui2DLinesGrp*   linesgrp_;
 
     void            tabSel(CallBacker*);
     
