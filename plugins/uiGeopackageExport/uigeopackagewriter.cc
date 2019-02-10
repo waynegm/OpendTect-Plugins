@@ -7,9 +7,15 @@
 #include "crssystem.h"
 #include "crsproj.h"
 #include "bufstring.h"
+#include "bufstringset.h"
 #include "uistring.h"
 #include "uimsg.h"
 #include "errmsg.h"
+#include "ctxtioobj.h"
+#include "ioman.h"
+#include "randomlinetr.h"
+#include "randomlinegeom.h"
+
 #include "ogrsf_frmts.h"
 #include "ogr_spatialref.h"
 
@@ -125,7 +131,7 @@ void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
         OGRFieldDefn oField( "LineName", OFTString );
         oField.SetWidth(32);
         if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::writeSurvey - creating Line Name field failed" );
+            ErrMsg("uiGeopackageWriter::write2DLines - creating Line Name field failed" );
             return;
         }
         
@@ -150,4 +156,105 @@ void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
                 ErrMsg("uiGeopackageWriter::write2DLines - creating feature failed" );
         }
     }
+}
+
+void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
+{
+    if (gdalDS_ != nullptr) {
+        OGRLayer* poLayer = gdalDS_->CreateLayer( "2DStations", poSRS_, wkbPoint, NULL );
+        if (poLayer == nullptr) {
+            ErrMsg("uiGeopackageWriter::write2DStations - layer creation failed");
+            return;
+        }
+        
+        OGRFieldDefn oLineField( "LineName", OFTString );
+        oLineField.SetWidth(32);
+        if( poLayer->CreateField( &oLineField ) != OGRERR_NONE ) {
+            ErrMsg("uiGeopackageWriter::write2DStations - creating Line Name field failed" );
+            return;
+        }
+
+        OGRFieldDefn oStationField( "Station", OFTInteger );
+        if( poLayer->CreateField( &oStationField ) != OGRERR_NONE ) {
+            ErrMsg("uiGeopackageWriter::write2DStations - creating Station field failed" );
+            return;
+        }
+        
+        for ( int idx=0; idx<geomids.size(); idx++ ) {
+            mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+            if ( !geom2d )
+                continue;
+            
+            const PosInfo::Line2DData& geom = geom2d->data();
+            const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
+            
+            for ( int tdx=0; tdx<posns.size(); tdx++ ) {
+                OGRFeature feature( poLayer->GetLayerDefn() );
+                feature.SetField("LineName", geom2d->getName());
+                feature.SetField("Station", posns[tdx].nr_);
+                
+                OGRPoint pt;
+                Coord pos = posns[tdx].coord_;
+                pt.setX(pos.x);
+                pt.setY(pos.y);
+                feature.SetGeometry( &pt );
+                if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
+                    ErrMsg("uiGeopackageWriter::write2DStations - creating feature failed" );
+            }
+        }
+    }
+}
+
+void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
+{
+    if (gdalDS_ != nullptr) {
+        OGRLayer* poLayer = gdalDS_->CreateLayer( "RandomLines", poSRS_, wkbLineString, NULL );
+        if (poLayer == nullptr) {
+            ErrMsg("uiGeopackageWriter::writeRandomLines - layer creation failed");
+            return;
+        }
+        
+        OGRFieldDefn oField( "LineName", OFTString );
+        oField.SetWidth(32);
+        if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
+            ErrMsg("uiGeopackageWriter::writeRandomLines - creating Line Name field failed" );
+            return;
+        }
+        
+        for ( int idx=0; idx<lineids.size(); idx++ ) {
+            Geometry::RandomLineSet inprls;
+            BufferString msg;
+            IOObj* ioobj = IOM().get(lineids[idx]);
+            if ( ioobj == nullptr ) {
+                ErrMsg("uiGeopackageWriter::writeRandomLines - cannot get ioobj" );
+                continue;
+            }
+            
+            if (!RandomLineSetTranslator::retrieve( inprls, ioobj, msg )) {
+                BufferString tmp("uiGeopackageWriter::writeRandomLines - error reading random line - ");
+                tmp += msg;
+                ErrMsg(tmp);
+                return;
+            }
+            
+            for (int rdx=0; rdx<inprls.size(); rdx++) {
+                const Geometry::RandomLine* rdl = inprls.lines()[rdx];
+                if ( rdl == nullptr ) {
+                    ErrMsg("uiGeopackageWriter::writeRandomLines - cannot get random line geometry" );
+                    continue;
+                }
+                OGRFeature feature( poLayer->GetLayerDefn() );
+                feature.SetField("LineName", rdl->name());
+            
+                OGRLineString line;
+                for ( int tdx=0; tdx<rdl->nrNodes(); tdx++ ) {
+                    Coord pos = SI().transform( rdl->nodePosition(tdx) );;
+                    line.addPoint( pos.x, pos.y );
+                }
+                feature.SetGeometry( &line );
+                if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
+                    ErrMsg("uiGeopackageWriter::writeRandomLines - creating feature failed" );
+            }
+        }
+    }    
 }

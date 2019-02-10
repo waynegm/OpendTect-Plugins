@@ -5,13 +5,11 @@
 
 class GDALDataset;
 class OGRSpatialReference;
-
+class BufferStringSet;
 
 class uiGeopackageWriter
 {
 public:
-//    static void initClass();
-    
     uiGeopackageWriter( const char* filename=0, bool append=true);
     ~uiGeopackageWriter();
     
@@ -20,12 +18,12 @@ public:
     
     void    writeSurvey();
     void    write2DLines( TypeSet<Pos::GeomID>& geomids );
+    void    write2DStations( TypeSet<Pos::GeomID>& geomids );
+    void    writeRandomLines( TypeSet<MultiID>& lineids );
     
 protected:
     GDALDataset*    gdalDS_;
     OGRSpatialReference* poSRS_;
 };
-
-
 
 #endif

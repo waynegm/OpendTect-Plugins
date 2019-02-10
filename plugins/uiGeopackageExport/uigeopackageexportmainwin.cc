@@ -13,14 +13,20 @@
 #include "uibutton.h"
 #include "uitabstack.h"
 #include "uimsg.h"
+#include "ctxtioobj.h"
+#include "randomlinetr.h"
+#include "iodir.h"
+#include "bufstringset.h"
 
 #include "uisurveygrp.h"
 #include "ui2dlinesgrp.h"
+#include "uirandomlinesgrp.h"
 #include "uigeopackagewriter.h"
 
 
 uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
-    : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","geopkg")).modal(false) )
+    : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","geopkg")).modal(false) ),
+    linesgrp_(nullptr), randomgrp_(nullptr)
 {
     setCtrlStyle( OkAndCancel );
     setOkText( uiStrings::sExport() );
@@ -30,12 +36,23 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     tabstack_->selChange().notify( mCB(this,uiGeopackageExportMainWin,tabSel) );
     
     uiParent* tabparent = tabstack_->tabGroup();
-    surveygrp_ = new uiSurveyGrp( tabparent );
-    tabstack_->addTab( surveygrp_ );
+    if (SI().has3D()) {
+        surveygrp_ = new uiSurveyGrp( tabparent );
+        tabstack_->addTab( surveygrp_ );
+    }
     
     if (SI().has2D()) {
         linesgrp_ = new ui2DLinesGrp( tabparent );
         tabstack_->addTab( linesgrp_ );
+    }
+    
+    if (SI().has3D()) {
+        CtxtIOObj ctio(RandomLineSetTranslatorGroup::ioContext());
+        const IODir iodir( ctio.ctxt_.getSelKey() );
+        if (iodir.size() > 1) {
+            randomgrp_ = new uiRandomLinesGrp( tabparent );
+            tabstack_->addTab( randomgrp_ );
+        }
     }
     
     BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
@@ -531,13 +548,24 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
 {
     if (strlen(filefld_->fileName())) {
         uiGeopackageWriter gpgWriter(filefld_->fileName(), modefld_->isChecked());
-        if( surveygrp_->doExport() )
-            gpgWriter.writeSurvey();
+        if (SI().has3D()) 
+            if( surveygrp_->doExport() )
+                gpgWriter.writeSurvey();
         if (SI().has2D() && linesgrp_!=nullptr) {
             TypeSet<Pos::GeomID> geomids;
             linesgrp_->getGeoMids( geomids );
-            if( linesgrp_->doLineExport() ) {
+            if ( linesgrp_->doLineExport() ) {
                 gpgWriter.write2DLines( geomids );
+            }
+            if (linesgrp_->doStationExport() ) {
+                gpgWriter.write2DStations( geomids );
+            }
+        }
+        if (randomgrp_!=nullptr) {
+            if (randomgrp_->doLineExport()) {
+                TypeSet<MultiID> lineids;
+                randomgrp_->getLineIds( lineids );
+                gpgWriter.writeRandomLines( lineids );
             }
         }
     }

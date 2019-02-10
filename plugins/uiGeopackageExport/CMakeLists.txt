@@ -5,7 +5,8 @@ SET(OD_MODULE_SOURCES
     uigeopackageexportpi.cc
     uigeopackagewriter.cc 
     uisurveygrp.cc 
-    ui2dlinesgrp.cc )
+    ui2dlinesgrp.cc 
+    uirandomlinesgrp.cc )
 
 find_package(GDAL)
 list( APPEND OD_MODULE_INCLUDESYSPATH ${GDAL_INCLUDE_DIR} )

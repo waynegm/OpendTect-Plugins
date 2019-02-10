@@ -8,6 +8,7 @@ class uiCheckBox;
 class uiTabStack;
 class uiSurveyGrp;
 class ui2DLinesGrp;
+class uiRandomLinesGrp;
 
 mClass(uiGeopackageExport) uiGeopackageExportMainWin : public uiDialog
 { mODTextTranslationClass(uiGeopackageExportMainWin);
@@ -18,11 +19,12 @@ public:
     bool            checkCRSdefined();
 protected:
 
-    uiFileInput*    filefld_;
-    uiTabStack*     tabstack_;
-    uiCheckBox*     modefld_;
-    uiSurveyGrp*    surveygrp_;
-    ui2DLinesGrp*   linesgrp_;
+    uiFileInput*        filefld_;
+    uiTabStack*         tabstack_;
+    uiCheckBox*         modefld_;
+    uiSurveyGrp*        surveygrp_;
+    ui2DLinesGrp*       linesgrp_;
+    uiRandomLinesGrp*   randomgrp_;
 
     void            tabSel(CallBacker*);
     
