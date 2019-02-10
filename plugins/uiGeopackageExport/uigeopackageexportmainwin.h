@@ -9,6 +9,7 @@ class uiTabStack;
 class uiSurveyGrp;
 class ui2DLinesGrp;
 class uiRandomLinesGrp;
+class uiWellsGrp;
 
 mClass(uiGeopackageExport) uiGeopackageExportMainWin : public uiDialog
 { mODTextTranslationClass(uiGeopackageExportMainWin);
@@ -25,6 +26,7 @@ protected:
     uiSurveyGrp*        surveygrp_;
     ui2DLinesGrp*       linesgrp_;
     uiRandomLinesGrp*   randomgrp_;
+    uiWellsGrp*         wellsgrp_;
 
     void            tabSel(CallBacker*);
     

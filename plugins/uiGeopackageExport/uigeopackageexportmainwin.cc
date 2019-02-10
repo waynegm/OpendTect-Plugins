@@ -15,18 +15,20 @@
 #include "uimsg.h"
 #include "ctxtioobj.h"
 #include "randomlinetr.h"
+#include "welltransl.h"
 #include "iodir.h"
 #include "bufstringset.h"
 
 #include "uisurveygrp.h"
 #include "ui2dlinesgrp.h"
 #include "uirandomlinesgrp.h"
+#include "uiwellsgrp.h"
 #include "uigeopackagewriter.h"
 
 
 uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","geopkg")).modal(false) ),
-    linesgrp_(nullptr), randomgrp_(nullptr)
+    linesgrp_(nullptr), randomgrp_(nullptr), wellsgrp_(nullptr)
 {
     setCtrlStyle( OkAndCancel );
     setOkText( uiStrings::sExport() );
@@ -53,6 +55,13 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
             randomgrp_ = new uiRandomLinesGrp( tabparent );
             tabstack_->addTab( randomgrp_ );
         }
+    }
+    
+    CtxtIOObj ctio(WellTranslatorGroup::ioContext());
+    const IODir iodir( ctio.ctxt_.getSelKey() );
+    if (iodir.size() > 1) {
+        wellsgrp_ = new uiWellsGrp( tabparent );
+        tabstack_->addTab( wellsgrp_ );
     }
     
     BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
@@ -566,6 +575,13 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
                 TypeSet<MultiID> lineids;
                 randomgrp_->getLineIds( lineids );
                 gpgWriter.writeRandomLines( lineids );
+            }
+        }
+        if (wellsgrp_!=nullptr) {
+            if (wellsgrp_->doWellExport()) {
+                TypeSet<MultiID> wellids;
+                wellsgrp_->getWellIds( wellids);
+                gpgWriter.writeWells( wellids );
             }
         }
     }

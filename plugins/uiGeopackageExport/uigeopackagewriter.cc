@@ -14,6 +14,8 @@
 #include "ctxtioobj.h"
 #include "ioman.h"
 #include "randomlinetr.h"
+#include "welldata.h"
+#include "wellman.h"
 #include "randomlinegeom.h"
 
 #include "ogrsf_frmts.h"
@@ -257,4 +259,55 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
             }
         }
     }    
+}
+
+void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
+{
+    if (gdalDS_ != nullptr) {
+        OGRLayer* poLayer = gdalDS_->CreateLayer( "Wells", poSRS_, wkbPoint, NULL );
+        if (poLayer == nullptr) {
+            ErrMsg("uiGeopackageWriter::writeWells - layer creation failed");
+            return;
+        }
+        
+        OGRFieldDefn oNameField( "WellName", OFTString );
+        oNameField.SetWidth(32);
+        if( poLayer->CreateField( &oNameField ) != OGRERR_NONE ) {
+            ErrMsg("uiGeopackageWriter::writeWells - creating WellName field failed" );
+            return;
+        }
+        OGRFieldDefn ouwidField( "UWID", OFTString );
+        ouwidField.SetWidth(32);
+        if( poLayer->CreateField( &ouwidField ) != OGRERR_NONE ) {
+            ErrMsg("uiGeopackageWriter::writeWells - creating UWID field failed" );
+            return;
+        }
+        OGRFieldDefn oStatusField( "Status", OFTInteger );
+        if( poLayer->CreateField( &oStatusField ) != OGRERR_NONE ) {
+            ErrMsg("uiGeopackageWriter::writeWells - creating Status field failed" );
+            return;
+        }
+        
+        for ( int idx=0; idx<wellids.size(); idx++ ) {
+            Well::Data* wd = Well::MGR().get(wellids[idx]);
+            if ( wd == nullptr ) {
+                ErrMsg("uiGeopackageWriter::writeWells - unable to read well data");
+                continue;
+            }
+            Well::Info& wdinfo = wd->info();
+            
+            OGRFeature feature( poLayer->GetLayerDefn() );
+            feature.SetField("WellName", wdinfo.name());
+            feature.SetField("UWID", wdinfo.uwid);
+            feature.SetField("Status", wdinfo.welltype_);
+            
+            OGRPoint pt;
+            pt.setX(wdinfo.surfacecoord.x);
+            pt.setY(wdinfo.surfacecoord.y);
+            feature.SetGeometry( &pt );
+            if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
+                ErrMsg("uiGeopackageWriter::writeWells - creating feature failed" );
+            
+        }
+    }
 }

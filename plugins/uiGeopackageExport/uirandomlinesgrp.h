@@ -19,11 +19,8 @@ public:
     void reset();
     
 protected:
-//    uiCheckBox* expRandomLinesfld_;
-    
     CtxtIOObj      ctio_;
     uiIOObjSelGrp* linesfld_;
-    
 };
 
 

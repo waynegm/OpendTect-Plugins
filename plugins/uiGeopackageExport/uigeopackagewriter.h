@@ -20,6 +20,7 @@ public:
     void    write2DLines( TypeSet<Pos::GeomID>& geomids );
     void    write2DStations( TypeSet<Pos::GeomID>& geomids );
     void    writeRandomLines( TypeSet<MultiID>& lineids );
+    void    writeWells( TypeSet<MultiID>& wellids );
     
 protected:
     GDALDataset*    gdalDS_;
