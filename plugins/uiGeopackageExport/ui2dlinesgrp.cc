@@ -38,7 +38,7 @@ ui2DLinesGrp::ui2DLinesGrp( uiParent* p )
         }
     }
     
-    lineselfld_ = new uiSeis2DLineSelGrp( this, OD::ChooseAtLeastOne, lnms, geomids );
+    lineselfld_ = new uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore, lnms, geomids );
     lineselfld_->attach( alignedBelow, exp2DStationsfld_ );
     
     setSpacing(10);

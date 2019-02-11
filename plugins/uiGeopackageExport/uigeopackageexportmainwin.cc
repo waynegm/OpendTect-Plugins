@@ -13,22 +13,26 @@
 #include "uibutton.h"
 #include "uitabstack.h"
 #include "uimsg.h"
+#include "seisioobjinfo.h"
 #include "ctxtioobj.h"
 #include "randomlinetr.h"
 #include "welltransl.h"
+#include "picksettr.h"
 #include "iodir.h"
+#include "iodirentry.h"
 #include "bufstringset.h"
 
 #include "uisurveygrp.h"
 #include "ui2dlinesgrp.h"
 #include "uirandomlinesgrp.h"
 #include "uiwellsgrp.h"
+#include "uipolylinesgrp.h"
 #include "uigeopackagewriter.h"
 
 
 uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","geopkg")).modal(false) ),
-    linesgrp_(nullptr), randomgrp_(nullptr), wellsgrp_(nullptr)
+    linesgrp_(nullptr), randomgrp_(nullptr), wellsgrp_(nullptr), polygrp_(nullptr)
 {
     setCtrlStyle( OkAndCancel );
     setOkText( uiStrings::sExport() );
@@ -44,24 +48,44 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     }
     
     if (SI().has2D()) {
-        linesgrp_ = new ui2DLinesGrp( tabparent );
-        tabstack_->addTab( linesgrp_ );
+        BufferStringSet lnms;
+        TypeSet<Pos::GeomID> geomids;
+        SeisIOObjInfo::getLinesWithData( lnms, geomids );
+        if (lnms.size() > 0 ) {
+            linesgrp_ = new ui2DLinesGrp( tabparent );
+            tabstack_->addTab( linesgrp_ );
+        }
     }
     
     if (SI().has3D()) {
         CtxtIOObj ctio(RandomLineSetTranslatorGroup::ioContext());
         const IODir iodir( ctio.ctxt_.getSelKey() );
-        if (iodir.size() > 1) {
+        const IODirEntryList entries( iodir, ctio.ctxt_ );
+        if (entries.size() > 0) {
             randomgrp_ = new uiRandomLinesGrp( tabparent );
             tabstack_->addTab( randomgrp_ );
         }
     }
     
-    CtxtIOObj ctio(WellTranslatorGroup::ioContext());
-    const IODir iodir( ctio.ctxt_.getSelKey() );
-    if (iodir.size() > 1) {
-        wellsgrp_ = new uiWellsGrp( tabparent );
-        tabstack_->addTab( wellsgrp_ );
+    {
+        CtxtIOObj ctio(WellTranslatorGroup::ioContext());
+        const IODir iodir( ctio.ctxt_.getSelKey() );
+        const IODirEntryList entries( iodir, ctio.ctxt_ );
+        if (entries.size() > 0) {
+            wellsgrp_ = new uiWellsGrp( tabparent );
+            tabstack_->addTab( wellsgrp_ );
+        }
+    }
+    
+    {
+        CtxtIOObj ctio(PickSetTranslatorGroup::ioContext());
+        ctio.ctxt_.toselect_.require_.set( sKey::Type(), sKey::Polygon() );
+        const IODir iodir( ctio.ctxt_.getSelKey()  );
+        const IODirEntryList entries( iodir, ctio.ctxt_ );
+        if (entries.size() > 0) {
+            polygrp_ = new uiPolyLinesGrp( tabparent );
+            tabstack_->addTab( polygrp_ );
+        }
     }
     
     BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
@@ -582,6 +606,13 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
                 TypeSet<MultiID> wellids;
                 wellsgrp_->getWellIds( wellids);
                 gpgWriter.writeWells( wellids );
+            }
+        }
+        if (polygrp_!=nullptr) {
+            if (polygrp_->doLineExport()) {
+                TypeSet<MultiID> lineids;
+                polygrp_->getLineIds( lineids );
+                gpgWriter.writePolyLines( lineids );
             }
         }
     }

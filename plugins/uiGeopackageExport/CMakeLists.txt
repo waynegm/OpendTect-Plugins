@@ -7,7 +7,8 @@ SET(OD_MODULE_SOURCES
     uisurveygrp.cc 
     ui2dlinesgrp.cc 
     uirandomlinesgrp.cc 
-    uiwellsgrp.cc )
+    uiwellsgrp.cc 
+    uipolylinesgrp.cc )
 
 find_package(GDAL)
 list( APPEND OD_MODULE_INCLUDESYSPATH ${GDAL_INCLUDE_DIR} )

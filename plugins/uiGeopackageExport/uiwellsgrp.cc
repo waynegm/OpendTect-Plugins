@@ -3,6 +3,7 @@
 #include "uibutton.h"
 #include "ctxtioobj.h"
 #include "uiioobjselgrp.h"
+#include "uiioobjmanip.h"
 #include "welltransl.h"
 #include "bufstringset.h"
 
@@ -10,13 +11,9 @@ uiWellsGrp::uiWellsGrp( uiParent* p )
 : uiDlgGroup(p, tr("Wells")), ctio_(WellTranslatorGroup::ioContext())
 {
     uiIOObjSelGrp::Setup stup; 
-    stup.choicemode_ = OD::ChooseAtLeastOne;
-    stup.allowreloc_ = false;
-    stup.allowremove_ = false;
-    stup.withinserters_ = false;
-    stup.withwriteopts_ = false;
-    stup.confirmoverwrite_ = false;
+    stup.choicemode_ = OD::ChooseZeroOrMore;
     wellsfld_ = new uiIOObjSelGrp( this, ctio_, "Well(s)", stup );
+    wellsfld_->getManipGroup()->display(false);
 }
 
 bool uiWellsGrp::doWellExport()

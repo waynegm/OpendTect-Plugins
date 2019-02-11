@@ -14,6 +14,8 @@
 #include "ctxtioobj.h"
 #include "ioman.h"
 #include "randomlinetr.h"
+#include "pickset.h"
+#include "picksettr.h"
 #include "welldata.h"
 #include "wellman.h"
 #include "randomlinegeom.h"
@@ -310,4 +312,82 @@ void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
             
         }
     }
+}
+
+void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
+{
+    if (gdalDS_ != nullptr) {
+        OGRLayer* poLayerLines = nullptr;
+        OGRLayer* poLayerPolygons = nullptr;
+
+        OGRFieldDefn oField( "Name", OFTString );
+        oField.SetWidth(32);
+        
+        for ( int idx=0; idx<lineids.size(); idx++ ) {
+            Pick::Set ps;
+            BufferString msg;
+            IOObj* ioobj = IOM().get(lineids[idx]);
+            if ( ioobj == nullptr ) {
+                ErrMsg("uiGeopackageWriter::writePolyLines - cannot get ioobj" );
+                continue;
+            }
+            if (!PickSetTranslator::retrieve( ps, ioobj, true, msg )) {
+                BufferString tmp("uiGeopackageWriter::writePolyLines - error reading polyline - ");
+                tmp += msg;
+                ErrMsg(tmp);
+                return;
+            }
+            if (ps.disp_.connect_ == Pick::Set::Disp::Close ) {
+                if (poLayerPolygons == nullptr) {
+                    poLayerPolygons = gdalDS_->CreateLayer( "Polygons", poSRS_, wkbPolygon, NULL );
+                    if (poLayerPolygons == nullptr) {
+                        ErrMsg("uiGeopackageWriter::writePolyLines - polygon layer creation failed");
+                        return;
+                    }
+                    if( poLayerPolygons->CreateField( &oField ) != OGRERR_NONE ) {
+                        ErrMsg("uiGeopackageWriter::writePolyLines - creating Name field in polygons layer failed" );
+                        return;
+                    }
+                }
+                OGRLinearRing ring;
+                OGRFeature feature( poLayerPolygons->GetLayerDefn() );
+                feature.SetField("Name", ps.name());
+                for (int rdx=0; rdx<ps.size(); rdx++) {
+                    const Coord3 pos = ps[rdx].pos();
+                    ring.addPoint( pos.x, pos.y );
+                }
+                ring.addPoint(ps[0].pos().x, ps[0].pos().y);
+                
+                OGRPolygon poly;
+                poly.addRing(&ring);
+                feature.SetGeometry( &poly );
+                if (poLayerPolygons->CreateFeature( &feature ) != OGRERR_NONE)
+                    ErrMsg("uiGeopackageWriter::writePolyLines - creating polygon feature failed" );
+                
+            } else {
+                if (poLayerLines == nullptr) {
+                    poLayerLines = gdalDS_->CreateLayer( "PolyLines", poSRS_, wkbLineString, NULL );
+                    if (poLayerLines == nullptr) {
+                        ErrMsg("uiGeopackageWriter::writePolyLines - polyline layer creation failed");
+                        return;
+                    }
+                    if( poLayerLines->CreateField( &oField ) != OGRERR_NONE ) {
+                        ErrMsg("uiGeopackageWriter::writePolyLines - creating Name field in polylines layer failed" );
+                        return;
+                    }
+                }
+                OGRLineString line;
+                OGRFeature feature( poLayerLines->GetLayerDefn() );
+                feature.SetField("Name", ps.name());
+                for (int rdx=0; rdx<ps.size(); rdx++) {
+                    const Coord3 pos = ps[rdx].pos();
+                    line.addPoint( pos.x, pos.y );
+                }
+                
+                feature.SetGeometry( &line );
+                if (poLayerLines->CreateFeature( &feature ) != OGRERR_NONE)
+                    ErrMsg("uiGeopackageWriter::writePolyLines - creating polyline feature failed" );
+            }
+        }
+    }    
 }
