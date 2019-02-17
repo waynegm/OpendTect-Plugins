@@ -11,6 +11,7 @@ class ui2DLinesGrp;
 class uiRandomLinesGrp;
 class uiWellsGrp;
 class uiPolyLinesGrp;
+class uiHorizonGrp;
 
 mClass(uiGeopackageExport) uiGeopackageExportMainWin : public uiDialog
 { mODTextTranslationClass(uiGeopackageExportMainWin);
@@ -23,59 +24,15 @@ protected:
 
     uiFileInput*        filefld_;
     uiTabStack*         tabstack_;
-    uiCheckBox*         modefld_;
+    uiCheckBox*         appendfld_;
     uiSurveyGrp*        surveygrp_;
     ui2DLinesGrp*       linesgrp_;
     uiRandomLinesGrp*   randomgrp_;
     uiWellsGrp*         wellsgrp_;
     uiPolyLinesGrp*     polygrp_;
+    uiHorizonGrp*       horgrp_;
 
     void            tabSel(CallBacker*);
-    
-
-    
-/*
-    CtxtIOObj&		ctio_;
-    uiGMTBaseMapGrp*	basemapgrp_;
-    uiGroup*		flowgrp_;
-    uiListBox*		flowfld_;
-    uiToolButton*	upbut_;
-    uiToolButton*	downbut_;
-    uiToolButton*	rmbut_;
-
-    uiFileInput*	filefld_;
-    uiPushButton*	createbut_;
-    uiPushButton*	viewbut_;
-
-    uiPushButton*	addbut_;
-    uiPushButton*	editbut_;
-    uiPushButton*	resetbut_;
-
-    uiTabStack*		tabstack_;
-    ObjectSet<uiGMTOverlayGrp> overlaygrps_;
-
-    ObjectSet<GMTPar>	pars_;
-    Timer*		tim_;
-    bool		needsave_;
-    uiBatchJobDispatcherSel*	batchfld_;
-
-    void		createPush(CallBacker*);
-    void		viewPush(CallBacker*);
-    void		butPush(CallBacker*);
-    void		setButStates(CallBacker*);
-    void		selChg(CallBacker*);
-    void		tabSel(CallBacker*);
-    void		addCB(CallBacker*);
-    void		editCB(CallBacker*);
-    void		resetCB(CallBacker*);
-    void		checkFileCB(CallBacker*);
-    void		newFlow(CallBacker*);
-    void		openFlow(CallBacker*);
-    void		saveFlow(CallBacker*);
-
-    bool		fillPar();
-    bool		usePar( const IOPar&);
-*/
     bool        acceptOK(CallBacker*);
 
 private:

@@ -4,7 +4,7 @@
 
 #include "uidlggroup.h"
 
-class uiCheckBox;
+class uiGenInput;
 
 class uiSurveyGrp : public uiDlgGroup
 { mODTextTranslationClass(uiSurveyGrp);
@@ -14,8 +14,9 @@ public:
     bool doExport();
     
 protected:
-    uiCheckBox* expSurveyfld_;
+    uiGenInput* expSurveyfld_;
     
+    bool    expsurvey_;
 };
 
 

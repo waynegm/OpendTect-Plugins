@@ -17,7 +17,7 @@ public:
     bool doLineExport();
     void getLineIds( TypeSet<MultiID>& lineids );
     void reset();
-    
+
 protected:
     CtxtIOObj      ctio_;
     uiIOObjSelGrp* linesfld_;

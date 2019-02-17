@@ -1,15 +1,17 @@
 #include "uisurveygrp.h"
 
-#include "uibutton.h"
+#include "uigeninput.h"
+#include "uilayout.h"
+
 
 uiSurveyGrp::uiSurveyGrp( uiParent* p )
 : uiDlgGroup(p, tr("Survey"))
 {
-    expSurveyfld_ = new uiCheckBox( this, tr("Export Survey Box"));
-    expSurveyfld_->setChecked(true);
+    expsurvey_ = true;
+    expSurveyfld_ = new uiGenInput( this, tr("Export Survey Box"), BoolInpSpec(expsurvey_));
 }
 
 bool uiSurveyGrp::doExport()
 {
-    return expSurveyfld_->isChecked();
+    return expsurvey_;
 }

@@ -8,6 +8,7 @@
 #include "crsproj.h"
 #include "bufstring.h"
 #include "bufstringset.h"
+#include "string2.h"
 #include "uistring.h"
 #include "uimsg.h"
 #include "errmsg.h"
@@ -24,13 +25,13 @@
 #include "ogr_spatialref.h"
 
 uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
-: gdalDS_(nullptr), poSRS_(nullptr)
+: gdalDS_(nullptr), poSRS_(nullptr), append_(append)
 {
     if (SI().getCoordSystem()->isProjection()) {
         const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
         poSRS_= new OGRSpatialReference();
         poSRS_->importFromEPSG(proj->getProjection()->authCode().id());
-        open(filename, append);
+        open(filename);
     } else {
         BufferString crsSummary("uiGeopackageWriter::uiGeopackageWriter - unrecognised CRS: ");
         crsSummary += SI().getCoordSystem()->summary();
@@ -45,13 +46,13 @@ uiGeopackageWriter::~uiGeopackageWriter()
         delete poSRS_;
 }
 
-bool uiGeopackageWriter::open( const char* filename, bool append )
+bool uiGeopackageWriter::open( const char* filename )
 {
     const char* papszAllowedDrivers[] = { "GPKG", NULL };
     
     GDALAllRegister();
     
-    if (append) {
+    if (append_) {
         gdalDS_ = GDALDataset::Open(filename, GDAL_OF_VECTOR || GDAL_OF_UPDATE, papszAllowedDrivers, nullptr, nullptr);
         if (gdalDS_ == nullptr) {
             ErrMsg("uiGeopackageWriter::open - cannot open output file for appending.");
@@ -83,17 +84,22 @@ void uiGeopackageWriter::writeSurvey()
     if (gdalDS_ != nullptr) {
         SurveyInfo* si = const_cast<SurveyInfo*>( &SI() );
     
-        OGRLayer* poLayer = gdalDS_->CreateLayer( "Survey", poSRS_, wkbPolygon, NULL );
+        OGRLayer* poLayer = nullptr;
+        if (append_)
+            poLayer = gdalDS_->GetLayerByName( "Survey" );
+
         if (poLayer == nullptr) {
-            ErrMsg("uiGeopackageWriter::writeSurvey - layer creation failed");
-            return;
-        }
-    
-        OGRFieldDefn oField( "Name", OFTString );
-        oField.SetWidth(32);
-        if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::writeSurvey - creating Name field failed" );
-            return;
+            poLayer = gdalDS_->CreateLayer( "Survey", poSRS_, wkbPolygon, NULL );
+            if (poLayer == nullptr) {
+                ErrMsg("uiGeopackageWriter::writeSurvey - creation of Survey layer failed");
+                return;
+            }
+            OGRFieldDefn oField( "Name", OFTString );
+            oField.SetWidth(32);
+            if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeSurvey - creating Name field failed" );
+                return;
+            }
         }
     
         OGRFeature feature( poLayer->GetLayerDefn() );
@@ -126,17 +132,22 @@ void uiGeopackageWriter::writeSurvey()
 void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
 {
     if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = gdalDS_->CreateLayer( "2DLines", poSRS_, wkbLineString, NULL );
-        if (poLayer == nullptr) {
-            ErrMsg("uiGeopackageWriter::write2DLines - layer creation failed");
-            return;
-        }
+        OGRLayer* poLayer = nullptr;
+        if (append_)
+            poLayer = gdalDS_->GetLayerByName( "2DLines" );
 
-        OGRFieldDefn oField( "LineName", OFTString );
-        oField.SetWidth(32);
-        if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::write2DLines - creating Line Name field failed" );
-            return;
+        if (poLayer == nullptr) {
+            poLayer = gdalDS_->CreateLayer( "2DLines", poSRS_, wkbLineString, NULL );
+            if (poLayer == nullptr) {
+                ErrMsg("uiGeopackageWriter::write2DLines - creation of 2DLines layer failed");
+                return;
+            }
+            OGRFieldDefn oField( "LineName", OFTString );
+            oField.SetWidth(32);
+            if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::write2DLines - creation of LineName field failed" );
+                return;
+            }
         }
         
         for ( int idx=0; idx<geomids.size(); idx++ ) {
@@ -165,33 +176,40 @@ void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
 void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
 {
     if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = gdalDS_->CreateLayer( "2DStations", poSRS_, wkbPoint, NULL );
-        if (poLayer == nullptr) {
-            ErrMsg("uiGeopackageWriter::write2DStations - layer creation failed");
-            return;
-        }
-        
-        OGRFieldDefn oLineField( "LineName", OFTString );
-        oLineField.SetWidth(32);
-        if( poLayer->CreateField( &oLineField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::write2DStations - creating Line Name field failed" );
-            return;
-        }
+        OGRLayer* poLayer = nullptr;
+        if (append_)
+            poLayer = gdalDS_->GetLayerByName( "2DStations" );
 
-        OGRFieldDefn oStationField( "Station", OFTInteger );
-        if( poLayer->CreateField( &oStationField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::write2DStations - creating Station field failed" );
-            return;
+        if (poLayer == nullptr) {
+            poLayer = gdalDS_->CreateLayer( "2DStations", poSRS_, wkbPoint, NULL );
+            if (poLayer == nullptr) {
+                ErrMsg("uiGeopackageWriter::write2DStations - creation of 2DStations layer failed");
+                return;
+            }
+            OGRFieldDefn oLineField( "LineName", OFTString );
+            oLineField.SetWidth(32);
+            if( poLayer->CreateField( &oLineField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::write2DStations - creating Line Name field failed" );
+                return;
+            }
+            OGRFieldDefn oStationField( "Station", OFTInteger );
+            if( poLayer->CreateField( &oStationField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::write2DStations - creating Station field failed" );
+                return;
+            }
         }
         
         for ( int idx=0; idx<geomids.size(); idx++ ) {
             mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
             if ( !geom2d )
                 continue;
-            
             const PosInfo::Line2DData& geom = geom2d->data();
             const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
             
+            if (gdalDS_->StartTransaction() == OGRERR_FAILURE) {
+                ErrMsg("uiGeopackageWriter::write2DStations - starting transaction for writing 2DStation layer failed" );
+                continue;
+            }
             for ( int tdx=0; tdx<posns.size(); tdx++ ) {
                 OGRFeature feature( poLayer->GetLayerDefn() );
                 feature.SetField("LineName", geom2d->getName());
@@ -202,8 +220,15 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
                 pt.setX(pos.x);
                 pt.setY(pos.y);
                 feature.SetGeometry( &pt );
-                if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
+                if (poLayer->CreateFeature( &feature ) != OGRERR_NONE) {
                     ErrMsg("uiGeopackageWriter::write2DStations - creating feature failed" );
+                    gdalDS_->RollbackTransaction();
+                    break;
+                }
+            }
+            if (gdalDS_->CommitTransaction() == OGRERR_FAILURE) {
+                ErrMsg("uiGeopackageWriter::write2DStations - transaction commit for 2DStations layer failed" );
+                return;
             }
         }
     }
@@ -212,17 +237,22 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
 void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
 {
     if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = gdalDS_->CreateLayer( "RandomLines", poSRS_, wkbLineString, NULL );
+        OGRLayer* poLayer = nullptr;
+        if (append_)
+            poLayer = gdalDS_->GetLayerByName( "RandomLines" );
+
         if (poLayer == nullptr) {
-            ErrMsg("uiGeopackageWriter::writeRandomLines - layer creation failed");
-            return;
-        }
-        
-        OGRFieldDefn oField( "LineName", OFTString );
-        oField.SetWidth(32);
-        if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::writeRandomLines - creating Line Name field failed" );
-            return;
+            poLayer = gdalDS_->CreateLayer( "RandomLines", poSRS_, wkbLineString, NULL );
+            if (poLayer == nullptr) {
+                ErrMsg("uiGeopackageWriter::writeRandomLines - creation of RandomLines layer failed");
+                return;
+            }
+            OGRFieldDefn oField( "LineName", OFTString );
+            oField.SetWidth(32);
+            if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeRandomLines - creating Line Name field failed" );
+                return;
+            }
         }
         
         for ( int idx=0; idx<lineids.size(); idx++ ) {
@@ -266,28 +296,33 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
 void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
 {
     if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = gdalDS_->CreateLayer( "Wells", poSRS_, wkbPoint, NULL );
-        if (poLayer == nullptr) {
-            ErrMsg("uiGeopackageWriter::writeWells - layer creation failed");
-            return;
-        }
+        OGRLayer* poLayer = nullptr;
+        if (append_)
+            poLayer = gdalDS_->GetLayerByName( "Wells" );
         
-        OGRFieldDefn oNameField( "WellName", OFTString );
-        oNameField.SetWidth(32);
-        if( poLayer->CreateField( &oNameField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::writeWells - creating WellName field failed" );
-            return;
-        }
-        OGRFieldDefn ouwidField( "UWID", OFTString );
-        ouwidField.SetWidth(32);
-        if( poLayer->CreateField( &ouwidField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::writeWells - creating UWID field failed" );
-            return;
-        }
-        OGRFieldDefn oStatusField( "Status", OFTInteger );
-        if( poLayer->CreateField( &oStatusField ) != OGRERR_NONE ) {
-            ErrMsg("uiGeopackageWriter::writeWells - creating Status field failed" );
-            return;
+        if (poLayer == nullptr) {
+            poLayer = gdalDS_->CreateLayer( "Wells", poSRS_, wkbPoint, NULL );
+            if (poLayer == nullptr) {
+                ErrMsg("uiGeopackageWriter::writeWells - creation of Wells layer failed");
+                return;
+            }
+            OGRFieldDefn oNameField( "WellName", OFTString );
+            oNameField.SetWidth(32);
+            if( poLayer->CreateField( &oNameField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeWells - creating WellName field failed" );
+                return;
+            }
+            OGRFieldDefn ouwidField( "UWID", OFTString );
+            ouwidField.SetWidth(32);
+            if( poLayer->CreateField( &ouwidField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeWells - creating UWID field failed" );
+                return;
+            }
+            OGRFieldDefn oStatusField( "Status", OFTInteger );
+            if( poLayer->CreateField( &oStatusField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeWells - creating Status field failed" );
+                return;
+            }
         }
         
         for ( int idx=0; idx<wellids.size(); idx++ ) {
@@ -319,7 +354,11 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
     if (gdalDS_ != nullptr) {
         OGRLayer* poLayerLines = nullptr;
         OGRLayer* poLayerPolygons = nullptr;
-
+        if (append_) {
+            poLayerLines = gdalDS_->GetLayerByName( "PolyLines" );
+            poLayerPolygons = gdalDS_->GetLayerByName( "Polygons" );
+        }
+            
         OGRFieldDefn oField( "Name", OFTString );
         oField.SetWidth(32);
         
@@ -341,11 +380,11 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
                 if (poLayerPolygons == nullptr) {
                     poLayerPolygons = gdalDS_->CreateLayer( "Polygons", poSRS_, wkbPolygon, NULL );
                     if (poLayerPolygons == nullptr) {
-                        ErrMsg("uiGeopackageWriter::writePolyLines - polygon layer creation failed");
+                        ErrMsg("uiGeopackageWriter::writePolyLines - creation of Polygons layer failed");
                         return;
                     }
                     if( poLayerPolygons->CreateField( &oField ) != OGRERR_NONE ) {
-                        ErrMsg("uiGeopackageWriter::writePolyLines - creating Name field in polygons layer failed" );
+                        ErrMsg("uiGeopackageWriter::writePolyLines - creating Name field in Polygons layer failed" );
                         return;
                     }
                 }
@@ -368,11 +407,11 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
                 if (poLayerLines == nullptr) {
                     poLayerLines = gdalDS_->CreateLayer( "PolyLines", poSRS_, wkbLineString, NULL );
                     if (poLayerLines == nullptr) {
-                        ErrMsg("uiGeopackageWriter::writePolyLines - polyline layer creation failed");
+                        ErrMsg("uiGeopackageWriter::writePolyLines - creation of PolyLines layer failed");
                         return;
                     }
                     if( poLayerLines->CreateField( &oField ) != OGRERR_NONE ) {
-                        ErrMsg("uiGeopackageWriter::writePolyLines - creating Name field in polylines layer failed" );
+                        ErrMsg("uiGeopackageWriter::writePolyLines - creating Name field in PolyLines layer failed" );
                         return;
                     }
                 }
@@ -390,4 +429,46 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
             }
         }
     }    
+}
+
+void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor2Dkey, const char* attrib2D, const TypeSet<Pos::GeomID>& geomids, 
+                                       const MultiID& hor3Dkey, const char* attrib3D, const TrcKeyZSampling& cs  )
+{
+    if (gdalDS_ != nullptr) {
+        OGRLayer* poLayer = nullptr;
+        if (append_)
+            poLayer = gdalDS_->GetLayerByName( layerName );
+        
+        if (poLayer == nullptr) {
+            poLayer = gdalDS_->CreateLayer( layerName, poSRS_, wkbPoint, NULL );
+            if (poLayer == nullptr) {
+                BufferString tmp("uiGeopackageWriter::writeHorizon - creation of ");
+                tmp += layerName;
+                tmp += " layer failed";
+                ErrMsg(tmp);
+                return;
+            }
+
+            BufferString attrib("Z Value");
+            if (!hor2Dkey.isUdf() && attrib2D != nullptr)
+                attrib = attrib2D;
+            if (!hor3Dkey.isUdf() && attrib3D != nullptr) {
+                if (attrib2D == nullptr)
+                    attrib = attrib3D;
+                else if (!caseInsensitiveEqual(attrib2D, attrib3D)) {
+                    attrib += "_";
+                    attrib += attrib3D;
+                }
+            }
+            OGRFieldDefn oZField( attrib, OFTReal );
+            if( poLayer->CreateField( &oZField ) != OGRERR_NONE ) {
+                BufferString tmp("uiGeopackageWriter::writeHorizon - creation of ");
+                tmp += attrib;
+                tmp += " field failed";
+                ErrMsg(tmp);
+                return;
+            }
+        }
+        
+    }
 }
