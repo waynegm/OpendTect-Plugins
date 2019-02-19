@@ -20,6 +20,12 @@
 #include "welldata.h"
 #include "wellman.h"
 #include "randomlinegeom.h"
+#include "emhorizon3d.h"
+#include "emhorizon2d.h"
+#include "emmanager.h"
+#include "emsurfaceiodata.h"
+#include "emsurfacetr.h"
+#include "emioobjinfo.h"
 
 #include "ogrsf_frmts.h"
 #include "ogr_spatialref.h"
@@ -435,6 +441,18 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
                                        const MultiID& hor3Dkey, const char* attrib3D, const TrcKeyZSampling& cs  )
 {
     if (gdalDS_ != nullptr) {
+        BufferString attrib("Z Values");
+        if (!hor2Dkey.isUdf() && attrib2D != nullptr)
+            attrib = attrib2D;
+        if (!hor3Dkey.isUdf() && attrib3D != nullptr) {
+            if (attrib2D == nullptr)
+                attrib = attrib3D;
+            else if (!caseInsensitiveEqual(attrib2D, attrib3D)) {
+                attrib += "_";
+                attrib += attrib3D;
+            }
+        }
+
         OGRLayer* poLayer = nullptr;
         if (append_)
             poLayer = gdalDS_->GetLayerByName( layerName );
@@ -449,17 +467,6 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
                 return;
             }
 
-            BufferString attrib("Z Value");
-            if (!hor2Dkey.isUdf() && attrib2D != nullptr)
-                attrib = attrib2D;
-            if (!hor3Dkey.isUdf() && attrib3D != nullptr) {
-                if (attrib2D == nullptr)
-                    attrib = attrib3D;
-                else if (!caseInsensitiveEqual(attrib2D, attrib3D)) {
-                    attrib += "_";
-                    attrib += attrib3D;
-                }
-            }
             OGRFieldDefn oZField( attrib, OFTReal );
             if( poLayer->CreateField( &oZField ) != OGRERR_NONE ) {
                 BufferString tmp("uiGeopackageWriter::writeHorizon - creation of ");
@@ -470,5 +477,114 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
             }
         }
         
+        const float zfac = SI().zIsTime() ? 1000 : 1;
+        
+        if (!hor2Dkey.isUdf() && geomids.size()>0) {
+            EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor2Dkey);
+            if (obj==nullptr) {
+                ErrMsg("uiGeopackageWriter::writeHorizon - loading 2D horizon failed");
+                return;
+            }
+            obj->ref();
+            mDynamicCastGet(EM::Horizon2D*,hor,obj);
+            if (hor==nullptr) {
+                ErrMsg("uiGeopackageWriter::writeHorizon - casting 2D horizon failed");
+                obj->unRef();
+                return;
+            }
+            for (int idx=0; idx<geomids.size(); idx++) {
+                const StepInterval<int> trcrg = hor->geometry().colRange( geomids[idx] );
+                mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids[idx]))
+                if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
+                    continue;
+                
+                TrcKey tk( geomids[idx], -1 );
+                Coord crd;
+                int spnr = mUdf(int);
+
+                if (gdalDS_->StartTransaction() == OGRERR_FAILURE) {
+                    ErrMsg("uiGeopackageWriter::writeHorizon - starting transaction for writing 2D horizon failed" );
+                    obj->unRef();
+                    continue;
+                }
+                for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step ) {
+                    tk.setTrcNr( trcnr );
+                    const float z = hor->getZ( tk );
+                    if (mIsUdf(z))
+                        continue;
+                    const float scaledZ = z*zfac;
+                    
+                    survgeom2d->getPosByTrcNr( trcnr, crd, spnr );
+                    
+                    OGRFeature feature( poLayer->GetLayerDefn() );
+                    feature.SetField(attrib, scaledZ);
+                    OGRPoint pt(crd.x, crd.y);
+                    feature.SetGeometry( &pt );
+                    if (poLayer->CreateFeature( &feature ) != OGRERR_NONE) {
+                        ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 2D horizon failed" );
+                        gdalDS_->RollbackTransaction();
+                        obj->unRef();
+                        break;
+                    }
+                }
+                if (gdalDS_->CommitTransaction() == OGRERR_FAILURE) {
+                    ErrMsg("uiGeopackageWriter::writeHorizon - transaction commit for 2D horizon failed" );
+                    obj->unRef();
+                    return;
+                }
+            }
+            obj->unRef();
+        }
+        
+        if (!hor3Dkey.isUdf()) {
+            EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3Dkey);
+            if (obj==nullptr) {
+                ErrMsg("uiGeopackageWriter::writeHorizon - loading 3D horizon failed");
+                return;
+            }
+            obj->ref();
+            mDynamicCastGet(EM::Horizon3D*,hor,obj);
+            if (hor==nullptr) {
+                ErrMsg("uiGeopackageWriter::writeHorizon - casting 3D horizon failed");
+                obj->unRef();
+                return;
+            }
+
+            if (gdalDS_->StartTransaction() == OGRERR_FAILURE) {
+                ErrMsg("uiGeopackageWriter::writeHorizon - starting transaction for writing 3D horizon failed" );
+                obj->unRef();
+                return;
+            }
+            TrcKeySampling expSel = cs.hsamp_;
+            for (int iln=expSel.start_.inl(); iln<=expSel.stop_.inl(); iln+=expSel.step_.inl()) {
+                for (int xln=expSel.start_.crl(); xln<=expSel.stop_.crl(); xln+=expSel.step_.crl()) {
+                    BinID bid(iln,xln);
+                    TrcKey tk(bid);
+                    const float z = hor->getZ( tk );
+                    if (mIsUdf(z))
+                        continue;
+                    const float scaledZ = z*zfac;
+                    
+                    Coord coord;
+                    coord = SI().transform(bid);
+                    OGRFeature feature( poLayer->GetLayerDefn() );
+                    feature.SetField(attrib, scaledZ);
+                    OGRPoint pt(coord.x, coord.y);
+                    feature.SetGeometry( &pt );
+                    if (poLayer->CreateFeature( &feature ) != OGRERR_NONE) {
+                        ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 3D horizon failed" );
+                        gdalDS_->RollbackTransaction();
+                        obj->unRef();
+                        break;
+                    }
+                }
+            }
+            if (gdalDS_->CommitTransaction() == OGRERR_FAILURE) {
+                ErrMsg("uiGeopackageWriter::writeHorizon - transaction commit for 3D horizon failed" );
+                obj->unRef();
+                return;
+            }
+            obj->unRef();
+        }
     }
 }

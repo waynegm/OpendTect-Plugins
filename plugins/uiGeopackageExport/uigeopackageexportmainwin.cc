@@ -39,9 +39,9 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
 {
     setCtrlStyle( OkAndCancel );
     setOkText( uiStrings::sExport() );
+    setShrinkAllowed(true);
 
-    uiGroup* topgrp = new uiGroup( this, "Top group" );
-    tabstack_ = new uiTabStack( topgrp, "Tab" );
+    tabstack_ = new uiTabStack( this, "Tab" );
     tabstack_->selChange().notify( mCB(this,uiGeopackageExportMainWin,tabSel) );
     tabstack_->attach(hCentered);
     
@@ -109,12 +109,12 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     }
     
     BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
-    filefld_ = new uiFileInput( topgrp, "Output file",
+    filefld_ = new uiFileInput( this, "Output file",
                                 uiFileInput::Setup(uiFileDialog::Gen)
                                 .forread(false).filter("*.gpkg").defseldir(defseldir).allowallextensions(false) );
     filefld_->attach( stretchedBelow, tabstack_ );
     
-    appendfld_ = new uiCheckBox( topgrp, tr("Append to Output") );
+    appendfld_ = new uiCheckBox( this, tr("Append to Output") );
     appendfld_->attach(alignedBelow, filefld_);
     appendfld_->setChecked(false);
     

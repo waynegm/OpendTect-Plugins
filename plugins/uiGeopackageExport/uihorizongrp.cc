@@ -32,12 +32,13 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         lines2Dfld_ = new uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
         lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
         
-        attrib2Dfld_ = new uiLabeledComboBox( this, uiStrings::s2D().append(uiStrings::sAttribute()) );
-        attrib2Dfld_->attach(alignedBelow, lines2Dfld_);
+//        attrib2Dfld_ = new uiLabeledComboBox( this, uiStrings::s2D().append(uiStrings::sAttribute()) );
+//        attrib2Dfld_->attach(alignedBelow, lines2Dfld_);
 
         hor2Dsel(0);
         exp2Dsel(0);
-        lastfld = (uiObject*) attrib2Dfld_;
+//        lastfld = (uiObject*) attrib2Dfld_;
+        lastfld = (uiObject*) lines2Dfld_;
     }
     if (has3Dhorizon) {
         exp3D_ = new uiCheckBox(this, "Export 3D horizon");
@@ -52,8 +53,8 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
         subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
-        attrib3Dfld_ = new uiLabeledComboBox( this, uiStrings::s3D().append(uiStrings::sAttribute()) );
-        attrib3Dfld_->attach(alignedBelow, subsel3Dfld_);
+//        attrib3Dfld_ = new uiLabeledComboBox( this, uiStrings::s3D().append(uiStrings::sAttribute()) );
+//        attrib3Dfld_->attach(alignedBelow, subsel3Dfld_);
         hor3Dsel(0);
         exp3Dsel(0);
     }
@@ -107,16 +108,22 @@ void uiHorizonGrp::get3Dsel( TrcKeyZSampling& envelope )
 
 const char* uiHorizonGrp::attrib2D()
 {
+/*
     if (attrib2Dfld_!=nullptr)
         return attrib2Dfld_->box()->text();
     return nullptr;
+*/
+    return "Z values";
 }
 
 const char* uiHorizonGrp::attrib3D()
 {
+/*
     if (attrib3Dfld_!=nullptr)
         return attrib3Dfld_->box()->text();
     return nullptr;
+*/
+return "Z values";
 }
 
 void uiHorizonGrp::update()
@@ -136,7 +143,7 @@ void uiHorizonGrp::hor2Dsel(CallBacker* )
     const IOObj* horObj = hor2Dfld_->ioobj(true);
     if (horObj==nullptr) {
         lines2Dfld_->clear();
-        attrib2Dfld_->setChildrenSensitive(false);
+//        attrib2Dfld_->setChildrenSensitive(false);
     } else {
         EM::IOObjInfo eminfo(horObj->key());
         if (!eminfo.isOK()) {
@@ -150,7 +157,7 @@ void uiHorizonGrp::hor2Dsel(CallBacker* )
         eminfo.getLineNames(lnms);
         eminfo.getGeomIDs(geomids);
         lines2Dfld_->setInput( lnms, geomids );
-        
+/*        
         uiString msg;
         EM::SurfaceIOData emdata;
         if (!eminfo.getSurfaceData( emdata, msg )) {
@@ -169,6 +176,7 @@ void uiHorizonGrp::hor2Dsel(CallBacker* )
             attrib2Dfld_->box()->addItems(emdata.valnames);
             attrib2Dfld_->setChildrenSensitive(true);
         }
+*/
     }
 }
 
@@ -176,7 +184,7 @@ void uiHorizonGrp::hor3Dsel(CallBacker*)
 {
     const IOObj* horObj = hor3Dfld_->ioobj(true);
     if (horObj==nullptr) {
-        attrib3Dfld_->setChildrenSensitive(false);
+//        attrib3Dfld_->setChildrenSensitive(false);
     } else {
         EM::IOObjInfo eminfo(horObj->key());
         if (!eminfo.isOK()) {
@@ -199,6 +207,7 @@ void uiHorizonGrp::hor3Dsel(CallBacker*)
         cs.hsamp_ = emdata.rg;
         subsel3Dfld_->setInput( cs );
         
+/*
         attrib3Dfld_->box()->setEmpty();
         attrib3Dfld_->box()->addItem( tr("Z values") );
         if (emdata.valnames.isEmpty() )
@@ -207,6 +216,7 @@ void uiHorizonGrp::hor3Dsel(CallBacker*)
             attrib3Dfld_->box()->addItems(emdata.valnames);
             attrib3Dfld_->setChildrenSensitive(true);
         }
+*/
     }
 }
 
@@ -214,13 +224,13 @@ void uiHorizonGrp::exp2Dsel(CallBacker*)
 {
     hor2Dfld_->setChildrenSensitive(exp2D_->isChecked());
     lines2Dfld_->setChildrenSensitive(exp2D_->isChecked());
-    attrib2Dfld_->setChildrenSensitive(exp2D_->isChecked());
+//    attrib2Dfld_->setChildrenSensitive(exp2D_->isChecked());
 }
 
 void uiHorizonGrp::exp3Dsel(CallBacker*)
 {
     hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
     subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-    attrib3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+//    attrib3Dfld_->setChildrenSensitive(exp3D_->isChecked());
     
 }

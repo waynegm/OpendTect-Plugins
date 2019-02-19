@@ -33,11 +33,11 @@ protected:
     uiCheckBox*         exp2D_;
     uiIOObjSel*         hor2Dfld_;
     uiSeis2DLineSelGrp* lines2Dfld_;
-    uiLabeledComboBox*  attrib2Dfld_;
+//    uiLabeledComboBox*  attrib2Dfld_;
     uiCheckBox*         exp3D_;
     uiIOObjSel*         hor3Dfld_;
     uiPosSubSel*        subsel3Dfld_;
-    uiLabeledComboBox*  attrib3Dfld_;
+//    uiLabeledComboBox*  attrib3Dfld_;
     
     void                hor2Dsel(CallBacker*);
     void                hor3Dsel(CallBacker*);
