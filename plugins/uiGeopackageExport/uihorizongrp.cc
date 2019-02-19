@@ -22,7 +22,7 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
     if (has2Dhorizon) {
         exp2D_ = new uiCheckBox(this, "Export 2D horizon");
         exp2D_->attach(alignedBelow, namefld_);
-        exp2D_->setChecked(true);
+        exp2D_->setChecked(false);
         exp2D_->activated.notify(mCB(this, uiHorizonGrp, exp2Dsel));
         
         hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), "2D Horizon");
@@ -43,7 +43,7 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
     if (has3Dhorizon) {
         exp3D_ = new uiCheckBox(this, "Export 3D horizon");
         exp3D_->attach(alignedBelow, lastfld);
-        exp3D_->setChecked(true);
+        exp3D_->setChecked(false);
         exp3D_->activated.notify(mCB(this, uiHorizonGrp, exp3Dsel));
 
         hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon");
