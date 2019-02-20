@@ -91,25 +91,5 @@ mDefODInitPlugin(uiGeopackageExport)
     if ( !theinst_ )
         return "Cannot instantiate Geopackage Export plugin";
     
- /*
-    IOMan::CustomDirData cdd( ODGMT::sKeyGMTSelKey(), ODGMT::sKeyGMT(),
-			      "GMT data" );
-    MultiID id = IOMan::addCustomDataDir( cdd );
-    if ( id != ODGMT::sKeyGMTSelKey() )
-	return "Cannot create 'GMT' directory in survey";
-
-    uiGMTContourGrp::initClass();
-    uiGMTFaultsGrp::initClass();
-    uiGMTWellsGrp::initClass();
-    uiGMTLocationsGrp::initClass();
-    uiGMTPolylineGrp::initClass();
-    uiGMTRandLinesGrp::initClass();
-    uiGMT2DLinesGrp::initClass();
-    uiGMTCoastlineGrp::initClass();
-    uiGMTClipGrp::initClass();
-    uiGMTAdvGrp::initClass();
-    uiGMTSurfaceGrid::initClass();
-    uiGMTNearNeighborGrid::initClass();
-*/
-    return 0;
+     return 0;
 }

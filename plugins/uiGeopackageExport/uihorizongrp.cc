@@ -80,12 +80,12 @@ void uiHorizonGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did )
 {
     hor2Did.setUdf();
     hor3Did.setUdf();
-    if (hor2Dfld_!=nullptr) {
+    if (hor2Dfld_!=nullptr && exp2D_->isChecked()) {
         const IOObj* horObj = hor2Dfld_->ioobj(true);
         if (horObj!=nullptr)
             hor2Did = horObj->key();
     }
-    if (hor3Dfld_!=nullptr) {
+    if (hor3Dfld_!=nullptr && exp2D_->isChecked()) {
         const IOObj* horObj = hor3Dfld_->ioobj(true);
         if (horObj!=nullptr)
             hor3Did = horObj->key();

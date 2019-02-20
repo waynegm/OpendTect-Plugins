@@ -2,7 +2,7 @@
 
 ## Release 6.4.2
 
-###  GeopackageExport
+###  GeopackageExport plugin
 - First release
 
 ## Release 6.4.1
