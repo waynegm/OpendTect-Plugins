@@ -36,7 +36,13 @@ uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
     if (SI().getCoordSystem()->isProjection()) {
         const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
         poSRS_= new OGRSpatialReference();
-        poSRS_->importFromEPSG(proj->getProjection()->authCode().id());
+        if (poSRS_->importFromProj4(proj->getProjection()->defStr()) != OGRERR_NONE) {
+            BufferString tmp("uiGeopackageWriter::uiGeopackageWriter - setting CRS in output file failed \n");
+            tmp += "Survey CRS: ";
+            tmp += SI().getCoordSystem()->summary();
+            tmp += "\n";
+            ErrMsg(tmp);
+        }
         open(filename);
     } else {
         BufferString crsSummary("uiGeopackageWriter::uiGeopackageWriter - unrecognised CRS: ");
