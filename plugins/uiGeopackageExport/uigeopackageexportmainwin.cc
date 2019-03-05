@@ -159,9 +159,10 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         
     uiGeopackageWriter gpgWriter(filefld_->fileName(), appendfld_->isChecked());
     if (SI().has3D()) 
-        if( surveygrp_->doExport() )
+        if( surveygrp_->doExport() ) {
             setCaption(tr("Exporting 3D Survey"));
             gpgWriter.writeSurvey();
+        }
 
     if (SI().has2D() && linesgrp_!=nullptr) {
         TypeSet<Pos::GeomID> geomids;

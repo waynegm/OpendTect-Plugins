@@ -7,11 +7,10 @@
 uiSurveyGrp::uiSurveyGrp( uiParent* p )
 : uiDlgGroup(p, tr("Survey"))
 {
-    expsurvey_ = true;
-    expSurveyfld_ = new uiGenInput( this, tr("Export Survey Box"), BoolInpSpec(expsurvey_));
+    expSurveyfld_ = new uiGenInput( this, tr("Export Survey Box"), BoolInpSpec(true));
 }
 
 bool uiSurveyGrp::doExport()
 {
-    return expsurvey_;
+    return expSurveyfld_->getBoolValue();
 }

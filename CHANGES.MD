@@ -4,6 +4,7 @@
 
 ### GeopackageExport plugin
 - GH-26: fix to ensure default file extension for output file is "gpkg"
+- GH-28: fix for survey box export toggle
 
  
 ## Release 6.4.2

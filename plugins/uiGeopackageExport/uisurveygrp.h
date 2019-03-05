@@ -16,7 +16,6 @@ public:
 protected:
     uiGenInput* expSurveyfld_;
     
-    bool    expsurvey_;
 };
 
 
