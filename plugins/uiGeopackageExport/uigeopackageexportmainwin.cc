@@ -112,6 +112,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     filefld_ = new uiFileInput( this, "Output file",
                                 uiFileInput::Setup(uiFileDialog::Gen)
                                 .forread(false).filter("*.gpkg").defseldir(defseldir).allowallextensions(false) );
+    filefld_->setDefaultExtension( "gpkg" );
     filefld_->attach( stretchedBelow, tabstack_ );
     
     appendfld_ = new uiCheckBox( this, tr("Append to Output") );

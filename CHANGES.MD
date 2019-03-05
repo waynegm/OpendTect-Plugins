@@ -1,5 +1,11 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.2.1
+
+### GeopackageExport plugin
+- GH-26: fix to ensure default file extension for output file is "gpkg"
+
+ 
 ## Release 6.4.2
 
 ###  GeopackageExport plugin
