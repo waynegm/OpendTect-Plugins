@@ -18,11 +18,12 @@ public:
     uiHorizonGrp(uiParent*, bool has2Dhorizon=false, bool has3Dhorizon=false );
     ~uiHorizonGrp() {}
     
-    bool doHorizonExport();
+    bool        doHorizonExport();
     const char* outputName();
-    void getHorIds( MultiID& hor2Did, MultiID& hor3Did );
-    void getGeoMids( TypeSet<Pos::GeomID>& geomids );
-    void get3Dsel( TrcKeyZSampling& envelope );
+    void        getHorIds( MultiID& hor2Did, MultiID& hor3Did );
+    int         num2DLinesChosen();
+    void        getGeoMids( TypeSet<Pos::GeomID>& geomids );
+    void        get3Dsel( TrcKeyZSampling& envelope );
     const char* attrib2D();
     const char* attrib3D();
     

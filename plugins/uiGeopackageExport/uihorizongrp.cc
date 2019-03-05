@@ -66,14 +66,14 @@ bool uiHorizonGrp::doHorizonExport()
     getHorIds(hor2Did, hor3Did);
     if (!hor3Did.isUdf() && exp3D_->isChecked())
         return true;
-    if (!hor2Did.isUdf() && exp2D_->isChecked() && lines2Dfld_!=nullptr)
-        return (lines2Dfld_->nrChosen() > 0);
+    if (!hor2Did.isUdf() && exp2D_->isChecked())
+        return true;
     return false;
 }
 
 const char* uiHorizonGrp::outputName()
 {
-    return namefld_->text();
+    return namefld_->text("");
 }
 
 void uiHorizonGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did )
@@ -85,11 +85,19 @@ void uiHorizonGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did )
         if (horObj!=nullptr)
             hor2Did = horObj->key();
     }
-    if (hor3Dfld_!=nullptr && exp2D_->isChecked()) {
+    if (hor3Dfld_!=nullptr && exp3D_->isChecked()) {
         const IOObj* horObj = hor3Dfld_->ioobj(true);
         if (horObj!=nullptr)
             hor3Did = horObj->key();
     }
+}
+
+int uiHorizonGrp::num2DLinesChosen()
+{
+    if (hor2Dfld_!=nullptr && exp2D_->isChecked() && lines2Dfld_!=nullptr)
+        return lines2Dfld_->nrChosen();
+    else
+        return 0;
 }
 
 void uiHorizonGrp::getGeoMids( TypeSet<Pos::GeomID>& geomids )

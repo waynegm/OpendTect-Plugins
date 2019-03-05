@@ -151,10 +151,19 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         uiMSG().error( tr("Please specify an output file") );
         return false;
     }
-    if (horgrp_!=nullptr && horgrp_->doHorizonExport() && !strlen(horgrp_->outputName())) {
-        tabstack_->setCurrentPage( horgrp_ );
-        uiMSG().error( tr("Please specify an output layer name for the horizon") );
-        return false;
+    if (horgrp_!=nullptr && horgrp_->doHorizonExport()) {
+        MultiID hor2Did, hor3Did;
+        horgrp_->getHorIds(hor2Did, hor3Did);
+        if (!hor2Did.isUdf() && horgrp_->num2DLinesChosen()==0) {
+            tabstack_->setCurrentPage( horgrp_ );
+            uiMSG().error( tr("Please select the 2D line(s) to export") );
+            return false;
+        }
+        if (strlen(horgrp_->outputName())==0) {
+            tabstack_->setCurrentPage( horgrp_ );
+            uiMSG().error( tr("Please specify an output layer name for the horizon") );
+            return false;
+        }
     }
         
     uiGeopackageWriter gpgWriter(filefld_->fileName(), appendfld_->isChecked());

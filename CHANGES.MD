@@ -4,8 +4,8 @@
 
 ### GeopackageExport plugin
 - GH-26: fix to ensure default file extension for output file is "gpkg"
+- GH-27: fix for failure to trap lack of Horizon output layer name on Windows
 - GH-28: fix for survey box export toggle
-
  
 ## Release 6.4.2
 
