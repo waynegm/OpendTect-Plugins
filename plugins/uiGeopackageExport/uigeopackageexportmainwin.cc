@@ -142,7 +142,7 @@ void uiGeopackageExportMainWin::tabSel( CallBacker* )
 bool uiGeopackageExportMainWin::checkCRSdefined()
 {
     SurveyInfo* si = const_cast<SurveyInfo*>( &SI() );
-    return Coords::uiCoordSystemDlg::ensureGeographicTransformOK(this,si);
+    return (si->getCoordSystem() && si->getCoordSystem()->isProjection());
 }
 
 bool uiGeopackageExportMainWin::acceptOK( CallBacker*)

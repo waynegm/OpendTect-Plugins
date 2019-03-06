@@ -6,6 +6,7 @@
 - GH-26: fix to ensure default file extension for output file is "gpkg"
 - GH-27: fix for failure to trap lack of Horizon output layer name on Windows
 - GH-28: fix for survey box export toggle
+- GH-29: fix detection of anchor point based x-y coordinate system - only support projected CRS
  
 ## Release 6.4.2
 

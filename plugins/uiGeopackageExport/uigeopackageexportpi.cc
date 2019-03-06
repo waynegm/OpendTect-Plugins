@@ -5,6 +5,9 @@
 #include "uitoolbar.h"
 #include "uistring.h"
 #include "odplugin.h"
+#include "survinfo.h"
+#include "uimsg.h"
+#include "coordsystem.h"
 
 #include "uigeopackageexportmainwin.h"
 
@@ -72,6 +75,11 @@ void uiGeopackageExportMgr::exportDialog( CallBacker* )
     if ( !dlg_ ) {
         dlg_ = new uiGeopackageExportMainWin( appl_ );
         if (!dlg_->checkCRSdefined()) {
+            SurveyInfo* si = const_cast<SurveyInfo*>( &SI() );
+            uiString msg( tr("Geopackage Export requires a projected Coordinate Reference System (CRS)."
+            " The survey '%1' currently has a CRS set to: '%2' which is not a projected CRS."
+            " You can set the survey CRS using the Survey-Select/Setup menu item.").arg(si->name()).arg(si->getCoordSystem()->factoryKeyword()) );
+            uiMSG().message(msg);
             dlg_->close();
             return;
         }
