@@ -7,6 +7,7 @@
 - GH-27: fix for failure to trap lack of Horizon output layer name on Windows
 - GH-28: fix for survey box export toggle
 - GH-29: fix detection of anchor point based x-y coordinate system - only support projected CRS
+- GH-30: fix spatial reference system table issues by adding EPSG code to CRS information 
  
 ## Release 6.4.2
 

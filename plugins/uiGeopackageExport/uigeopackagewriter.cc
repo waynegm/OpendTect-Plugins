@@ -36,14 +36,19 @@ uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
     if (SI().getCoordSystem()->isProjection()) {
         const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
         poSRS_= new OGRSpatialReference();
-        if (poSRS_->importFromProj4(proj->getProjection()->defStr()) != OGRERR_NONE) {
+        BufferString projstr(proj->getProjection()->defStr());
+        projstr += " +init=epsg:";
+        projstr += proj->getProjection()->authCode().id();
+        
+        if (poSRS_->importFromProj4(projstr) != OGRERR_NONE) {
             BufferString tmp("uiGeopackageWriter::uiGeopackageWriter - setting CRS in output file failed \n");
             tmp += "Survey CRS: ";
             tmp += SI().getCoordSystem()->summary();
             tmp += "\n";
             ErrMsg(tmp);
+        } else {
+            open(filename);
         }
-        open(filename);
     } else {
         BufferString crsSummary("uiGeopackageWriter::uiGeopackageWriter - unrecognised CRS: ");
         crsSummary += SI().getCoordSystem()->summary();
@@ -113,7 +118,7 @@ void uiGeopackageWriter::writeSurvey()
                 return;
             }
         }
-    
+        
         OGRFeature feature( poLayer->GetLayerDefn() );
         feature.SetField("Name", GetSurveyName());
     
