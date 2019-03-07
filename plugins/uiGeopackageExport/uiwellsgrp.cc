@@ -14,11 +14,30 @@ uiWellsGrp::uiWellsGrp( uiParent* p )
     stup.choicemode_ = OD::ChooseZeroOrMore;
     wellsfld_ = new uiIOObjSelGrp( this, ctio_, "Well(s)", stup );
     wellsfld_->getManipGroup()->display(false);
+    
+    expWellTracks_ = new uiCheckBox(this, tr("Export Well Tracks"));
+    expWellTracks_->setChecked(false);
+    expWellTracks_->attach( alignedBelow, wellsfld_ );
+
+    expMarkers_ = new uiCheckBox(this, tr("Export Markers"));
+    expMarkers_->setChecked(false);
+    expMarkers_->attach( alignedBelow, expWellTracks_ );
+    
 }
 
 bool uiWellsGrp::doWellExport()
 {
     return (wellsfld_->nrChosen() > 0);
+}
+
+bool uiWellsGrp::doWellTrackExport()
+{
+    return (doWellExport() && expWellTracks_->isChecked());
+}
+
+bool uiWellsGrp::doMarkerExport()
+{
+    return (doWellExport() && expMarkers_->isChecked());
 }
 
 void uiWellsGrp::reset()

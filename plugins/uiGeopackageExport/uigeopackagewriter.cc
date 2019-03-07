@@ -19,6 +19,8 @@
 #include "picksettr.h"
 #include "welldata.h"
 #include "wellman.h"
+#include "welltrack.h"
+#include "wellmarker.h"
 #include "randomlinegeom.h"
 #include "emhorizon3d.h"
 #include "emhorizon2d.h"
@@ -360,6 +362,121 @@ void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
             if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
                 ErrMsg("uiGeopackageWriter::writeWells - creating feature failed" );
             
+        }
+    }
+}
+
+void uiGeopackageWriter::writeWellTracks( TypeSet<MultiID>& wellids )
+{
+    if (gdalDS_ != nullptr) {
+        OGRLayer* poLayer = nullptr;
+        if (append_)
+            poLayer = gdalDS_->GetLayerByName( "WellTracks" );
+        
+        if (poLayer == nullptr) {
+            poLayer = gdalDS_->CreateLayer( "WellTracks", poSRS_, wkbLineString, NULL );
+            if (poLayer == nullptr) {
+                ErrMsg("uiGeopackageWriter::writeWellTracks - creation of WellTracks layer failed");
+                return;
+            }
+            OGRFieldDefn oNameField( "WellName", OFTString );
+            oNameField.SetWidth(32);
+            if( poLayer->CreateField( &oNameField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeWellTracks - creating WellName field failed" );
+                return;
+            }
+        }
+        
+        for ( int idx=0; idx<wellids.size(); idx++ ) {
+            Well::Data* wd = Well::MGR().get(wellids[idx]);
+            if ( wd == nullptr ) {
+                ErrMsg("uiGeopackageWriter::writeWellTracks - unable to read well data");
+                continue;
+            }
+            Well::Info& wdinfo = wd->info();
+            const Well::Track& wtrack = wd->track();
+            const TypeSet<Coord3>& wtrackpos = wtrack.getAllPos();
+            
+            OGRFeature feature( poLayer->GetLayerDefn() );
+            feature.SetField("WellName", wdinfo.name());
+            
+            OGRLineString track;
+            for (int tdx=0; tdx<wtrackpos.size(); tdx++) {
+                Coord3 pos = wtrackpos[tdx];
+                track.addPoint(pos.x, pos.y);
+            }
+            feature.SetGeometry( &track );
+            if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
+                ErrMsg("uiGeopackageWriter::writeWellTracks - creating feature failed" );
+            
+        }
+    }
+}
+
+void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids )
+{
+    if (gdalDS_ != nullptr) {
+        OGRLayer* poLayer = nullptr;
+        if (append_)
+            poLayer = gdalDS_->GetLayerByName( "WellMarkers" );
+        
+        if (poLayer == nullptr) {
+            poLayer = gdalDS_->CreateLayer( "WellMarkers", poSRS_, wkbPoint, NULL );
+            if (poLayer == nullptr) {
+                ErrMsg("uiGeopackageWriter::writeWellMarkers - creation of WellMarkers layer failed");
+                return;
+            }
+            OGRFieldDefn oNameField( "WellName", OFTString );
+            oNameField.SetWidth(32);
+            if( poLayer->CreateField( &oNameField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeWellMarkers - creating WellName field failed" );
+                return;
+            }
+            OGRFieldDefn oMarkerField( "Marker", OFTString );
+            oMarkerField.SetWidth(32);
+            if( poLayer->CreateField( &oMarkerField ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeWellMarkers - creating Marker field failed" );
+                return;
+            }
+            OGRFieldDefn oMD( "MD", OFTReal );
+            if( poLayer->CreateField( &oMD ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeWellMarkers - creating MD field failed" );
+                return;
+            }
+            OGRFieldDefn oTVDSS( "TVDSS", OFTReal );
+            if( poLayer->CreateField( &oTVDSS ) != OGRERR_NONE ) {
+                ErrMsg("uiGeopackageWriter::writeWellMarkers - creating TVDSS field failed" );
+                return;
+            }
+        }
+        
+        for ( int idx=0; idx<wellids.size(); idx++ ) {
+            Well::Data* wd = Well::MGR().get(wellids[idx]);
+            if ( wd == nullptr ) {
+                ErrMsg("uiGeopackageWriter::writeWellMarkers - unable to read well data");
+                continue;
+            }
+            Well::Info& wdinfo = wd->info();
+            const Well::Track& wtrack = wd->track();
+            const Well::MarkerSet& wmarkers = wd->markers();
+            
+            for (int tdx=0; tdx<wmarkers.size(); tdx++) {
+                OGRFeature feature( poLayer->GetLayerDefn() );
+            
+                feature.SetField("WellName", wdinfo.name());
+                feature.SetField("Marker", wmarkers[tdx]->name());
+                float md = wmarkers[tdx]->dah();
+                Coord3 pos = wtrack.getPos(md);
+                float tvdss = pos.z;
+                feature.SetField("MD", md);
+                feature.SetField("TVDSS", tvdss);
+                OGRPoint pt;
+                pt.setX(pos.x);
+                pt.setY(pos.y);
+                feature.SetGeometry( &pt );
+                if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
+                    ErrMsg("uiGeopackageWriter::writeWellMarkers - creating feature failed" );
+            }
         }
     }
 }

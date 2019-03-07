@@ -202,6 +202,18 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
             wellsgrp_->getWellIds( wellids);
             gpgWriter.writeWells( wellids );
         }
+        if (wellsgrp_->doWellTrackExport()) {
+            setCaption(tr("Exporting welltracks"));
+            TypeSet<MultiID> wellids;
+            wellsgrp_->getWellIds( wellids);
+            gpgWriter.writeWellTracks( wellids );
+        }
+        if (wellsgrp_->doMarkerExport()) {
+            setCaption(tr("Exporting markers"));
+            TypeSet<MultiID> wellids;
+            wellsgrp_->getWellIds( wellids);
+            gpgWriter.writeWellMarkers( wellids );
+        }
     }
 
     if (polygrp_!=nullptr) {

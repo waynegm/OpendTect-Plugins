@@ -15,12 +15,16 @@ public:
     ~uiWellsGrp() {}
     
     bool doWellExport();
+    bool doWellTrackExport();
+    bool doMarkerExport();
     void getWellIds( TypeSet<MultiID>& wellids );
     void reset();
     
 protected:
-    CtxtIOObj      ctio_;
-    uiIOObjSelGrp* wellsfld_;
+    CtxtIOObj       ctio_;
+    uiIOObjSelGrp*  wellsfld_;
+    uiCheckBox*     expWellTracks_;
+    uiCheckBox*     expMarkers_;
 };
 
 

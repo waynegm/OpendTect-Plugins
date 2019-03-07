@@ -7,7 +7,7 @@
 </head>
 <body>
 <h1>OpendTect Plugins Release Notes</h1>
-<h2>Release 6.4.2.1</h2>
+<h2>Release 6.4.3</h2>
 <h3>GeopackageExport plugin</h3>
 <ul>
 <li>GH-26: fix to ensure default file extension for output file is "gpkg"</li>
@@ -15,6 +15,8 @@
 <li>GH-28: fix for survey box export toggle</li>
 <li>GH-29: fix detection of anchor point based x-y coordinate system - only support projected CRS</li>
 <li>GH-30: fix spatial reference system table issues by adding EPSG code to CRS information </li>
+<li>GH-31: explicitly initialise pointers to nullptr for Windows to fix crash on Horizon tab</li>
+<li>GH-32: add export of well tracks and markers</li>
 </ul>
 <h2>Release 6.4.2</h2>
 <h3>GeopackageExport plugin</h3>
