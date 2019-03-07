@@ -59,8 +59,6 @@ uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
 uiGeopackageWriter::~uiGeopackageWriter()
 {
     close();
-    if (poSRS_ != nullptr)
-        delete poSRS_;
 }
 
 bool uiGeopackageWriter::open( const char* filename )

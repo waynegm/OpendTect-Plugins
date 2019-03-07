@@ -15,7 +15,8 @@
 #include "trckeyzsampling.h"
 
 uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
-: uiDlgGroup(p, tr("Horizon"))
+: uiDlgGroup(p, tr("Horizon")), exp2D_(nullptr), hor2Dfld_(nullptr), lines2Dfld_(nullptr),
+  exp3D_(nullptr), hor3Dfld_(nullptr), subsel3Dfld_(nullptr)
 {
     namefld_ = new uiGenInput(this, tr("Output Layer") );
     uiObject* lastfld = (uiObject*) namefld_;
