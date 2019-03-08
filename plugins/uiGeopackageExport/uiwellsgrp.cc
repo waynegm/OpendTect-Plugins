@@ -23,6 +23,10 @@ uiWellsGrp::uiWellsGrp( uiParent* p )
     expMarkers_->setChecked(false);
     expMarkers_->attach( alignedBelow, expWellTracks_ );
     
+    inFeet_ = new uiCheckBox(this, tr("Depths in Feet"));
+    inFeet_->setChecked(false);
+    inFeet_->attach( rightTo, expMarkers_ );
+    
 }
 
 bool uiWellsGrp::doWellExport()
@@ -38,6 +42,11 @@ bool uiWellsGrp::doWellTrackExport()
 bool uiWellsGrp::doMarkerExport()
 {
     return (doWellExport() && expMarkers_->isChecked());
+}
+
+bool uiWellsGrp::doInFeet()
+{
+    return (doWellExport() && inFeet_->isChecked());
 }
 
 void uiWellsGrp::reset()

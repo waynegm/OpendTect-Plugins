@@ -10,6 +10,7 @@
 - GH-30: fix spatial reference system table issues by adding EPSG code to CRS information 
 - GH-31: explicitly initialise pointers to nullptr for Windows to fix crash on Horizon tab
 - GH-32: add export of well tracks and markers
+- GH-33: add option to export well marker depths in feet
  
 ## Release 6.4.2
 

@@ -17,6 +17,7 @@ public:
     bool doWellExport();
     bool doWellTrackExport();
     bool doMarkerExport();
+    bool doInFeet();
     void getWellIds( TypeSet<MultiID>& wellids );
     void reset();
     
@@ -25,6 +26,7 @@ protected:
     uiIOObjSelGrp*  wellsfld_;
     uiCheckBox*     expWellTracks_;
     uiCheckBox*     expMarkers_;
+    uiCheckBox*     inFeet_;
 };
 
 

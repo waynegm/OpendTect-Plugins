@@ -212,7 +212,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
             setCaption(tr("Exporting markers"));
             TypeSet<MultiID> wellids;
             wellsgrp_->getWellIds( wellids);
-            gpgWriter.writeWellMarkers( wellids );
+            gpgWriter.writeWellMarkers( wellids, wellsgrp_->doInFeet() );
         }
     }
 

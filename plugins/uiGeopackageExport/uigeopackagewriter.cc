@@ -413,7 +413,7 @@ void uiGeopackageWriter::writeWellTracks( TypeSet<MultiID>& wellids )
     }
 }
 
-void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids )
+void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids, bool inFeet )
 {
     if (gdalDS_ != nullptr) {
         OGRLayer* poLayer = nullptr;
@@ -438,17 +438,21 @@ void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids )
                 ErrMsg("uiGeopackageWriter::writeWellMarkers - creating Marker field failed" );
                 return;
             }
-            OGRFieldDefn oMD( "MD", OFTReal );
+            OGRFieldDefn oMD( inFeet?"MD(ft)":"MD(m)", OFTReal );
             if( poLayer->CreateField( &oMD ) != OGRERR_NONE ) {
                 ErrMsg("uiGeopackageWriter::writeWellMarkers - creating MD field failed" );
                 return;
             }
-            OGRFieldDefn oTVDSS( "TVDSS", OFTReal );
+            OGRFieldDefn oTVDSS( inFeet?"TVDSS(ft)":"TVDSS(m)", OFTReal );
             if( poLayer->CreateField( &oTVDSS ) != OGRERR_NONE ) {
                 ErrMsg("uiGeopackageWriter::writeWellMarkers - creating TVDSS field failed" );
                 return;
             }
         }
+        if (poLayer->FindFieldIndex("MD(ft)", true) != -1)
+            inFeet = true;
+        else
+            inFeet = false;
         
         for ( int idx=0; idx<wellids.size(); idx++ ) {
             Well::Data* wd = Well::MGR().get(wellids[idx]);
@@ -468,8 +472,13 @@ void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids )
                 float md = wmarkers[tdx]->dah();
                 Coord3 pos = wtrack.getPos(md);
                 float tvdss = pos.z;
-                feature.SetField("MD", md);
-                feature.SetField("TVDSS", tvdss);
+                if (inFeet) {
+                    feature.SetField("MD(ft)", md*mToFeetFactorF);
+                    feature.SetField("TVDSS(ft)", tvdss*mToFeetFactorF);
+                } else {
+                    feature.SetField("MD(m)", md);
+                    feature.SetField("TVDSS(m)", tvdss);
+                }
                 OGRPoint pt;
                 pt.setX(pos.x);
                 pt.setY(pos.y);

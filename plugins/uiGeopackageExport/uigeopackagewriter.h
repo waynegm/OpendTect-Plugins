@@ -23,7 +23,7 @@ public:
     void    writeRandomLines( TypeSet<MultiID>& lineids );
     void    writeWells( TypeSet<MultiID>& wellids );
     void    writeWellTracks( TypeSet<MultiID>& wellids );
-    void    writeWellMarkers( TypeSet<MultiID>& wellids );
+    void    writeWellMarkers( TypeSet<MultiID>& wellids, bool inFeet=false );
     void    writePolyLines( TypeSet<MultiID>& lineids );
     void    writeHorizon( const char* layerName, const MultiID& hor2Dkey, const char* attrib2D, const TypeSet<Pos::GeomID>& geomids, 
                           const MultiID& hor3Dkey, const char* attrib3D, const TrcKeyZSampling& cs  );
