@@ -23,6 +23,7 @@ find_package( OpendTect )
 #Setup the modules
 set ( PLUGINS uiWGMHelp
             uiGeopackageExport
+            uiGrid2D3DHorizon
             AVOPolarAttrib uiAVOPolarAttrib
             RSpecAttrib uiRSpecAttrib 
             MLVFilterAttrib  uiMLVFilterAttrib 
