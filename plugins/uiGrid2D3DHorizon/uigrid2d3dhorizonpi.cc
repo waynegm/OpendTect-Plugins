@@ -41,6 +41,8 @@ uiGrid2D3DHorizonMgr::uiGrid2D3DHorizonMgr( uiODMain* a )
 	: appl_(a)
 	, dlg_(nullptr)
 {
+    uiMSG().message("In uiGrid2D3DHorizonMgr constructor");
+    
     mAttachCB( appl_->menuMgr().dTectTBChanged, uiGrid2D3DHorizonMgr::updateToolBar );
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiGrid2D3DHorizonMgr::updateMenu );
     updateToolBar(0);
@@ -87,7 +89,8 @@ mDefODInitPlugin(uiGrid2D3DHorizon)
 {
     mDefineStaticLocalObject( PtrMan<uiGrid2D3DHorizonMgr>, theinst_, = 0 );
     if ( theinst_ ) return 0;
-
+    uiMSG().message("In uiGrid2D3DHorizon InitPlugin");
+    
     theinst_ = new uiGrid2D3DHorizonMgr( ODMainWin() );
     if ( !theinst_ )
         return "Cannot instantiate Grid 2D-3D Horizon plugin";

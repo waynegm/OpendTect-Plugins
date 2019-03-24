@@ -4,9 +4,10 @@
 #include "uidialog.h"
 
 class uiGenInput;
-class uiIOObjSel;
-class uiSeis2DLineSelGrp;
-class uiPosSubSel;
+class uiTabStack;
+class uiInputGrp;
+class uiGridGrp;
+class uiHorSaveFieldGrp;
 
 mClass(uiGrid2D3DHorizon) uiGrid2D3DHorizonMainWin : public uiDialog
 { mODTextTranslationClass(uiGrid2D3DHorizonMainWin);
@@ -15,17 +16,13 @@ public:
     ~uiGrid2D3DHorizonMainWin();
 
 protected:
-    uiGenInput*         filltypefld_;
-    uiIOObjSel*         polyfld_;
-    uiGenInput*         stepfld_;
-    uiIOObjSel*         hor2Dfld_;
-    uiSeis2DLineSelGrp* lines2Dfld_;
-    uiIOObjSel*         hor3Dfld_;
-    uiPosSubSel*        subsel3Dfld_;
-
-    void                scopeChgCB(CallBacker*);
-    void                hor2DselCB(CallBacker*);
-    void                hor3DselCB(CallBacker*);
+    uiTabStack*         tabstack_;
+    uiGenInput*         scopefld_;
+    uiInputGrp*         inputgrp_;
+    uiGridGrp*          gridgrp_;
+    uiHorSaveFieldGrp*  savefldgrp_;
+    
+    void                tabSelCB(CallBacker*);
     bool                acceptOK(CallBacker*);
 
 private:
