@@ -9,7 +9,8 @@ typedef std::vector<std::size_t> TIds;
 const char* wmGridder2D::sKeyRowStep()      { return "RowStep"; }
 const char* wmGridder2D::sKeyColStep()      { return "ColStep"; }
 const char* wmGridder2D::sKeyMethod()       { return "Method"; }
-const char* wmGridder2D::sKeyPolyNode()     { return "PolyNode"; }
+const char* wmGridder2D::sKeyPolyScopeNodeNr()   { return "PolyScopeNodeNr"; }
+const char* wmGridder2D::sKeyPolyScopeNode()     { return "PolyScopeNode"; }
 const char* wmGridder2D::sKeySearchRadius() { return "SearchRadius"; }
 const char* wmGridder2D::sKeyScopeType()    { return "ScopeType"; }
 const char* wmGridder2D::sKeyFaultID()      { return "FaultID"; }
@@ -17,12 +18,45 @@ const char* wmGridder2D::sKeyFaultNr()      { return "FaultNr"; }
 
 const char* wmIDWGridder2D::sKeyPower()     { return "Power"; }
 
+const char* wmGridder2D::MethodNames[] =
+{
+    "Inverse Distance Weighted Interpolation",
+    0
+};
+
+const char* wmGridder2D::ScopeNames[] =
+{
+    "Bounding Box",
+    "Convex Hull",
+    "Polygon",
+    0
+};
+
+wmGridder2D* wmGridder2D::create( const char* methodName )
+{
+    BufferString tmp(methodName);
+    if (tmp == MethodNames[0])
+        return (wmGridder2D*) new wmIDWGridder2D();
+    else {
+        ErrMsg("wmGridder2D::create - unrecognised method name");
+        return nullptr;
+    }
+}
 
 wmGridder2D::wmGridder2D() 
     : kdtree_(10)
     , searchradius_(mUdf(float))
     , grid_(0,0)
-{}
+    , scopepoly_(nullptr)
+{
+    hs_ = SI().sampling( false ).hsamp_;
+}
+
+wmGridder2D::~wmGridder2D()
+{
+    if (scopepoly_!=nullptr)
+        delete scopepoly_;
+}
 
 void wmGridder2D::setPoint( const Coord& loc, const float val )
 {
@@ -33,6 +67,46 @@ void wmGridder2D::setPoint( const Coord& loc, const float val )
     vals_.push_back(val);
 }
 
+bool wmGridder2D::usePar(const IOPar& par)
+{
+    int scopetype;
+    par.get(sKeyScopeType(),scopetype);
+    scope_ = (ScopeType)scopetype;
+    
+    if (scopepoly_!=nullptr) {
+        delete scopepoly_;
+        scopepoly_ = nullptr;
+    }
+    if (scope_==Polygon) {
+        int nrnodes = 0;
+        par.get(sKeyPolyScopeNodeNr(), nrnodes);
+        if (nrnodes>0) {
+            scopepoly_ = new ODPolygon<double>();
+            for (int idx=0; idx<nrnodes; idx++) {
+                Coord node;
+                if (par.get(IOPar::compKey(sKeyPolyScopeNode(),idx), node))
+                    scopepoly_->add(node);
+            }
+            scopepoly_->setClosed(true);
+        }
+    }
+      
+    par.get(sKeySearchRadius(), searchradius_);
+    par.get(sKeyRowStep(), hs_.step_.first);
+    par.get(sKeyColStep(), hs_.step_.second);
+    
+    faultids_.erase();
+    int nrfaults = 0;
+    if (par.get(sKeyFaultNr(), nrfaults)) {
+        for (int idx=0; idx<nrfaults; idx++) {
+            MultiID fltid;
+            if (!par.get(IOPar::compKey(sKeyFaultID(),idx),fltid))
+                return false;
+            faultids_ += fltid;
+        }
+    }
+    return true;
+}
 
 void wmGridder2D::setTrcKeySampling()
 {
@@ -61,7 +135,7 @@ void wmGridder2D::setTrcKeySampling( const TrcKeySampling& hs )
     hs_ = hs;
 }
 
-bool wmGridder2D::grid( TaskRunner* tr )
+bool wmGridder2D::grid()
 {
     grid_.setSize( hs_.nrInl(), hs_.nrCrl() );
     grid_.setAll(mUdf(float));
@@ -75,13 +149,22 @@ bool wmGridder2D::grid( TaskRunner* tr )
         }
     }
     return true;
-//    applyPolyMasks();
 }
 
 wmIDWGridder2D::wmIDWGridder2D()
-    : pow_(2.0)
+    : wmGridder2D()
+    , pow_(2.0)
 {}
 
+bool wmIDWGridder2D::usePar(const IOPar& par)
+{
+    wmGridder2D::usePar(par);
+    par.get(sKeyPower(), pow_);
+    if (mIsUdf(pow_))
+        pow_=2.0;
+    return true;
+}
+  
 void wmIDWGridder2D::interpolate_( const int ix, const int iy )
 {
     const Pos::IdxPair2Coord& b2c = SI().binID2Coord();

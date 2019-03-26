@@ -19,7 +19,6 @@
 uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","grid2d3d")).modal(false) )
 {
-    uiMSG().message("In uiGrid2D3DHorizonMainWin constructor");
     setCtrlStyle( OkAndCancel );
     setOkText( tr("Grid") );
     setShrinkAllowed(true);
@@ -54,9 +53,6 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     savefldgrp_->attach( stretchedBelow, tabstack_ );
     
     tabSelCB(0);
-
-    uiMSG().message("Leaving uiGrid2D3DHorizonMainWin constructor");
-    
 }
 
 uiGrid2D3DHorizonMainWin::~uiGrid2D3DHorizonMainWin()
@@ -80,20 +76,19 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
     IOPar par;
     gridgrp_->fillPar( par );
     
-    BufferString tmp;
-    par.putTo(tmp);
-    uiMSG().message(tmp);
-    
     FixedString method = par.find( wmGridder2D::sKeyMethod() );
-    PtrMan<wmGridder2D> interpolator = wmGridder2D::factory().create( method );
+    PtrMan<wmGridder2D> interpolator = wmGridder2D::create( method );
     if ( !interpolator ) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - selected interpolation method not found.");
         return false;
     }
-//    if (!interpolator->usePar(par)) {
-//        ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error in interpolation parameters.");
-//        return false;
-//    }
+    if (!interpolator->usePar(par)) {
+        ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error in interpolation parameters.");
+        return false;
+    }
+    BufferString tmp;
+    par.putTo(tmp);
+    uiMSG().message(tmp);
         
     return true;
 }

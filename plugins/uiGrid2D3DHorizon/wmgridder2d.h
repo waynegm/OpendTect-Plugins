@@ -9,28 +9,30 @@
 #include "trckeysampling.h"
 #include "polygon.h"
 #include "arrayndimpl.h"
+#include "multiid.h"
 
 class TaskRunner;
 class TrcKeySampling;
-
 
 typedef std::pair<double, double> TPoint;
 
 class wmGridder2D
 { mODTextTranslationClass(wmGridder2D);
 public:
-    mDefineFactoryInClass(wmGridder2D,factory);
     enum ScopeType   { BoundingBox, ConvexHull, Polygon };
+    static const char*  ScopeNames[];
+    static const char*  MethodNames[];
+    static wmGridder2D* create(const char* methodName);
     
     virtual         ~wmGridder2D();
 
-    void            setSearchRadius(float);
+    void            setSearchRadius(float r) { searchradius_ = r; }
     float           getSearchRadius() const { return searchradius_; }
     
     virtual void    setPoint(const Coord& loc, const float val);
     uiString        infoMsg() const	{ return infomsg_; }
 //    virtual bool	fillPar(IOPar&) const;
-//    virtual bool	usePar(const IOPar&);
+    virtual bool    usePar(const IOPar&);
     
     virtual void    setTrcKeySampling(const TrcKeySampling&);
     virtual void    setTrcKeySampling(const ODPolygon<double>& polyROI); // real world polygon coords 
@@ -41,7 +43,7 @@ public:
     
     
     
-    virtual bool grid( TaskRunner* tr=0 );
+    virtual bool grid();
 //    void addPolyMask( ODPolygon poly, bool outside=true );
 //    void getConvexHull( ODPolygon& poly );
 //    void getConcaveHull( ODPolygon& poly );
@@ -50,7 +52,8 @@ public:
     static const char*  sKeyRowStep();
     static const char*  sKeyColStep();
     static const char*  sKeyMethod();
-    static const char*  sKeyPolyNode(); 
+    static const char*  sKeyPolyScopeNodeNr(); 
+    static const char*  sKeyPolyScopeNode(); 
     static const char*  sKeySearchRadius(); 
     static const char*  sKeyScopeType();
     static const char*  sKeyFaultID();
@@ -60,6 +63,9 @@ protected:
     
     wmGridder2D();
     
+    TypeSet<MultiID>        faultids_;
+    ScopeType               scope_;
+    ODPolygon<double>*      scopepoly_;
     std::vector<float>      vals_;
     std::vector<TPoint>     locs_; 
     kdbush::KDBush<TPoint, std::size_t>  kdtree_;
@@ -80,12 +86,12 @@ protected:
 class wmIDWGridder2D : public wmGridder2D
 { mODTextTranslationClass(wmIDWGridder2D);
 public:
-    mDefaultFactoryInstantiation( wmGridder2D, wmIDWGridder2D, "InverseDistance", tr("Inverse distance") );
-    
     wmIDWGridder2D();
     
-    void            setPower(float);
-    float           getPower() const { return pow_; }
+    void            setPower(float p ) { pow_ = p; }
+    float           getPower() const   { return pow_; }
+    
+    virtual bool    usePar(const IOPar&);
     
     static const char* sKeyPower();
     
