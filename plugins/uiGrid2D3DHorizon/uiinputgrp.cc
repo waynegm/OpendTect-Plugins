@@ -21,6 +21,7 @@
 
 #include "survgeom2d.h"
 #include "trckeyzsampling.h"
+#include "wmgridder2d.h"
 
 uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
 : uiDlgGroup(p, tr("Input Data")), hor2Dfld_(nullptr), lines2Dfld_(nullptr),
@@ -50,7 +51,30 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
     update();
 }
 
-void uiInputGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did )
+bool uiInputGrp::fillPar( IOPar& par ) const
+{
+    MultiID hor2Did, hor3Did;
+    getHorIds(hor2Did, hor3Did);
+    if (!hor2Did.isUdf()) {
+        TypeSet<Pos::GeomID> mids;
+        getGeoMids(mids);
+        if (mids.size()>0) {
+            par.set( wmGridder2D::sKey2DHorizonID(), hor2Did );
+            par.set( wmGridder2D::sKey2DLineIDNr(), mids.size() );
+            for (int idx=0; idx<mids.size(); idx++)
+                par.set(IOPar::compKey(wmGridder2D::sKey2DLineID(), idx), mids[idx]);
+        }
+    }
+    if (!hor3Did.isUdf()) {
+        par.set( wmGridder2D::sKey3DHorizonID(), hor3Did );
+        TrcKeyZSampling tkz;
+        get3Dsel(tkz);
+        tkz.hsamp_.fillPar(par);
+    }
+    return true;
+}
+
+void uiInputGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did ) const
 {
     hor2Did.setUdf();
     hor3Did.setUdf();
@@ -153,14 +177,14 @@ int uiInputGrp::num2DLinesChosen()
         return 0;
 }
 
-void uiInputGrp::getGeoMids( TypeSet<Pos::GeomID>& geomids )
+void uiInputGrp::getGeoMids( TypeSet<Pos::GeomID>& geomids ) const
 {
     geomids.erase();
     if (lines2Dfld_!=nullptr)
         lines2Dfld_->getChosen(geomids);
 }
 
-void uiInputGrp::get3Dsel( TrcKeyZSampling& envelope )
+void uiInputGrp::get3Dsel( TrcKeyZSampling& envelope ) const
 {
     envelope.setEmpty();
     if (subsel3Dfld_!=nullptr)

@@ -7,7 +7,8 @@ class uiGenInput;
 class uiTabStack;
 class uiInputGrp;
 class uiGridGrp;
-class uiHorSaveFieldGrp;
+//class uiwmHorSaveFieldGrp;
+class uiSurfaceWrite;
 
 mClass(uiGrid2D3DHorizon) uiGrid2D3DHorizonMainWin : public uiDialog
 { mODTextTranslationClass(uiGrid2D3DHorizonMainWin);
@@ -20,11 +21,14 @@ protected:
     uiGenInput*         scopefld_;
     uiInputGrp*         inputgrp_;
     uiGridGrp*          gridgrp_;
-    uiHorSaveFieldGrp*  savefldgrp_;
+    uiSurfaceWrite*     outfld_;
+//    uiwmHorSaveFieldGrp*  savefldgrp_;
     
     void                tabSelCB(CallBacker*);
     bool                acceptOK(CallBacker*);
 
+//    Notifier<uiGrid2D3DHorizonMainWin> finished;   
+    Notifier<uiGrid2D3DHorizonMainWin> ready;   
 private:
 
     uiString    getCaptionStr() const;

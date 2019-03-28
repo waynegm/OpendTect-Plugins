@@ -13,6 +13,7 @@
 
 class TaskRunner;
 class TrcKeySampling;
+namespace EM { class Horizon3D; }
 
 typedef std::pair<double, double> TPoint;
 
@@ -34,16 +35,12 @@ public:
 //    virtual bool	fillPar(IOPar&) const;
     virtual bool    usePar(const IOPar&);
     
-    virtual void    setTrcKeySampling(const TrcKeySampling&);
-    virtual void    setTrcKeySampling(const ODPolygon<double>& polyROI); // real world polygon coords 
-    virtual void    setTrcKeySampling(); // based on data extents and survey
-    
-//    static const char*	sKeyNrFaults();
-//    static const char*	sKeyFaultID();
-    
-    
-    
-    virtual bool grid();
+    TrcKeySampling  getTrcKeySampling() const;
+    bool            loadData();
+    bool            setScope();
+    void            getHorRange(Interval<int>&, Interval<int>&);
+    bool            saveGridTo(EM::Horizon3D*);
+    virtual bool    grid();
 //    void addPolyMask( ODPolygon poly, bool outside=true );
 //    void getConvexHull( ODPolygon& poly );
 //    void getConcaveHull( ODPolygon& poly );
@@ -58,11 +55,19 @@ public:
     static const char*  sKeyScopeType();
     static const char*  sKeyFaultID();
     static const char*  sKeyFaultNr();
+    static const char*  sKey2DHorizonID();
+    static const char*  sKey2DLineIDNr();
+    static const char*  sKey2DLineID();
+    static const char*  sKey3DHorizonID();
     
 protected:
     
     wmGridder2D();
     
+    MultiID                 hor2DID_;
+    TypeSet<Pos::GeomID>    geomids_;
+    MultiID                 hor3DID_;
+    TrcKeySampling          hor3Dsubsel_;
     TypeSet<MultiID>        faultids_;
     ScopeType               scope_;
     ODPolygon<double>*      scopepoly_;
@@ -78,7 +83,7 @@ protected:
     
     uiString                infomsg_;
     
-    virtual void        interpolate_( const int idx, const int idy ) {}
+    virtual void            interpolate_( const int idx, const int idy ) {}
     
 };
 
