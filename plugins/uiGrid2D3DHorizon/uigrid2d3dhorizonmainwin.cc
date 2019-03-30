@@ -9,6 +9,7 @@
 #include "uimsg.h"
 #include "ptrman.h"
 #include "emhorizon3d.h"
+#include "emioobjinfo.h"
 #include "uiiosurface.h"
 #include "uitaskrunner.h"
 
@@ -21,9 +22,6 @@
 
 uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","grid2d3d")).modal(false))
-    , ready(this)
-//    , horReadyForDisplay(this)
-//    , finished(this)
 {
     setCtrlStyle( OkAndCancel );
     setOkText( tr("Grid") );
@@ -58,11 +56,8 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     swsu.withsubsel(false);
     outfld_ = new uiSurfaceWrite(this, swsu);
     outfld_->attach(stretchedBelow, tabstack_);
-    enableSaveButton(tr("Display after create"));
-//    savefldgrp_ = new uiwmHorSaveFieldGrp( this );
-//    savefldgrp_->setSaveFieldName( "Save gridded horizon" );
-//    savefldgrp_->attach( stretchedBelow, tabstack_ );
-    
+//    enableSaveButton(tr("Display after create"));
+
     tabSelCB(0);
 }
 
@@ -98,55 +93,55 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error in interpolation parameters.");
         return false;
     }
-//    if (!savefldgrp_->createNewHorizon())
-//        return false;
-//    EM::Horizon* hor = savefldgrp_->getNewHorizon();
-//    mDynamicCastGet(EM::Horizon3D*,hor3d,hor)
-//    if (!hor3d) {
-//        ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error creating output horizon");
-//        return false;
-//    }
     
-    MouseCursorManager::setOverride(MouseCursor::Wait);
-    if (!interpolator->grid()) {
-        ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error during gridding");
-        MouseCursorManager::restoreOverride();
-        return false;
+    EM::IOObjInfo eminfo( outfld_->selIOObj()->key() );
+    if (eminfo.isOK()) {
+        uiString msg = tr("Horizon: %1\nalready exists."
+                      "\nDo you wish to overwrite it?").arg(eminfo.name());
+        if ( !uiMSG().askOverwrite(msg) )
+            return false;
+    }
+    
+    {
+        uiTaskRunner uitr(this); 
+        MouseCursorManager::setOverride(MouseCursor::Wait);
+        if (!interpolator->prepareForGridding())
+            return false;
+        if (!TaskRunner::execute(&uitr, *interpolator)) {
+            ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error during gridding");
+            MouseCursorManager::restoreOverride();
+            return false;
+        }
     }
 
-//    Interval<int> inlrg, crlrg;
-//    interpolator->getHorRange(inlrg,crlrg);
-//    if (!savefldgrp_->setHorRange(inlrg, crlrg)) {
-//        ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - setting output horizon extent failed.");
-//        return false;
-//    }
     RefMan<EM::Horizon3D> hor3d = EM::Horizon3D::createWithConstZ(0.0, interpolator->getTrcKeySampling());
     if (!hor3d) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - creation of output horizon failed");
         return false;
     }
-    hor3d->setMultiID(outfld_->selIOObj()->key());
     if (!interpolator->saveGridTo(hor3d)) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error converting grid to horizon");
         return false;
     }
     MouseCursorManager::restoreOverride();
     
-//    if (savefldgrp_->displayNewHorizon())
-//        horReadyForDisplay.trigger();
-//    if (!savefldgrp_->saveHorizon()) {
-//        ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error during horizon save");
-//        return false;
-//    }
-//    finished.trigger();
-//    uiMSG().message(tr("Horizon successfully gridded"));
-      uiTaskRunner uitr(this);
-      PtrMan<Executor> saver = hor3d->saver();
-      if (!saver || !uitr.execute(*saver)) {
-          ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - saving output horizon failed");
-          return false;
-      }
-      ready.trigger();
+    {
+        BinID bid(1326,1006);
+        TrcKey tk(bid);
+        BufferString str;
+        str+="In hor3D Inl: ";str+=bid.inl(); str+="  Crl: ";str+=bid.crl();str+=" Z:  ";str+=hor3d->getZ(tk);
+        ErrMsg(str);
+    }
+    {
+        uiTaskRunner uitr(this);
+        hor3d->setMultiID(outfld_->selIOObj()->key());
+        PtrMan<Executor> saver = hor3d->saver();
+        if (!saver || !uitr.execute(*saver)) {
+            ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - saving output horizon failed");
+            return false;
+        }
+    }
+    
     return true;
 }
 

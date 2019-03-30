@@ -10,6 +10,7 @@
 #include "polygon.h"
 #include "arrayndimpl.h"
 #include "multiid.h"
+#include "executor.h"
 
 class TaskRunner;
 class TrcKeySampling;
@@ -17,7 +18,7 @@ namespace EM { class Horizon3D; }
 
 typedef std::pair<double, double> TPoint;
 
-class wmGridder2D
+class wmGridder2D : public ::Executor
 { mODTextTranslationClass(wmGridder2D);
 public:
     enum ScopeType   { BoundingBox, ConvexHull, Polygon };
@@ -31,16 +32,21 @@ public:
     float           getSearchRadius() const { return searchradius_; }
     
     virtual void    setPoint(const Coord& loc, const float val);
-    uiString        infoMsg() const	{ return infomsg_; }
 //    virtual bool	fillPar(IOPar&) const;
     virtual bool    usePar(const IOPar&);
+ 
+    uiString        uiMessage() const   { return msg_; }
+    uiString        uiNrDoneText() const    { return "Gridded"; }
+    od_int64        nrDone() const  { return nrdone_; }
+    od_int64        totalNr() const { return totalnr_; }
     
     TrcKeySampling  getTrcKeySampling() const;
     bool            loadData();
     bool            setScope();
     void            getHorRange(Interval<int>&, Interval<int>&);
     bool            saveGridTo(EM::Horizon3D*);
-    virtual bool    grid();
+    bool            prepareForGridding();
+    virtual int     nextStep();
 //    void addPolyMask( ODPolygon poly, bool outside=true );
 //    void getConvexHull( ODPolygon& poly );
 //    void getConcaveHull( ODPolygon& poly );
@@ -81,9 +87,12 @@ protected:
     Array2DImpl<float>      grid_;
     TrcKeySampling          hs_;
     
-    uiString                infomsg_;
+    uiString                msg_;
+    od_int64                nrdone_;
+    od_int64                totalnr_;
+    int                     idx_, idy_;
     
-    virtual void            interpolate_( const int idx, const int idy ) {}
+    virtual void            interpolate_( int idx, int idy ) {}
     
 };
 
@@ -104,7 +113,7 @@ public:
 protected:
     float   pow_;
     
-    void    interpolate_( const int idx, const int idy );
+    void    interpolate_( int idx, int idy );
     
 };
 #endif

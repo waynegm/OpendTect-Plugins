@@ -22,13 +22,10 @@ protected:
     uiInputGrp*         inputgrp_;
     uiGridGrp*          gridgrp_;
     uiSurfaceWrite*     outfld_;
-//    uiwmHorSaveFieldGrp*  savefldgrp_;
     
     void                tabSelCB(CallBacker*);
     bool                acceptOK(CallBacker*);
 
-//    Notifier<uiGrid2D3DHorizonMainWin> finished;   
-    Notifier<uiGrid2D3DHorizonMainWin> ready;   
 private:
 
     uiString    getCaptionStr() const;
