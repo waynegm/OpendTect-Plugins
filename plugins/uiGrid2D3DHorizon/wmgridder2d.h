@@ -84,7 +84,7 @@ protected:
     Interval<float>         crlrg_;
     float                   searchradius_;
     
-    Array2DImpl<float>      grid_;
+    Array2DImpl<float>*     grid_;
     TrcKeySampling          hs_;
     
     uiString                msg_;

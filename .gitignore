@@ -33,3 +33,16 @@ __pycache__
 *.alo
 *mod.h
 bin
+#Windows
+x64
+*.vcxproj*
+*.tlog
+*.log
+*.lastbuildstate
+*.ipch
+*.sln
+*.ini
+*deps.h
+*.db
+*.suo
+

@@ -136,7 +136,8 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         uiTaskRunner uitr(this);
         hor3d->setMultiID(outfld_->selIOObj()->key());
         PtrMan<Executor> saver = hor3d->saver();
-        if (!saver || !uitr.execute(*saver)) {
+//        if (!saver || !uitr.execute(*saver)) {
+		if (!saver || !TaskRunner::execute(&uitr, *saver)) {
             ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - saving output horizon failed");
             return false;
         }

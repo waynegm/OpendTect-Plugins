@@ -62,7 +62,7 @@ wmGridder2D::wmGridder2D()
     , totalnr_(-1)
     , kdtree_(10)
     , searchradius_(mUdf(float))
-    , grid_(0,0)
+    , grid_(0)
     , scopepoly_(nullptr)
 {
     hs_ = SI().sampling( false ).hsamp_;
@@ -159,18 +159,20 @@ void wmGridder2D::getHorRange(Interval<int>& inlrg, Interval<int>& crlrg)
 
 bool wmGridder2D::saveGridTo(EM::Horizon3D* hor3d)
 {
-    for( int idx=0; idx<grid_.info().getSize(0); idx++ ) {
-        for (int idy=0; idy < grid_.info().getSize(1); idy++ ) {
-            BinID bid = hs_.atIndex(idx,idy);
-            TrcKey tk(bid);
+//    for( int idx=0; idx<grid_.info().getSize(0); idx++ ) {
+//        for (int idy=0; idy < grid_.info().getSize(1); idy++ ) {
+//            BinID bid = hs_.atIndex(idx,idy);
+//            TrcKey tk(bid);
 //                if (bid.inl()==1326 && bid.crl()==1006) {
 //                    BufferString str("idx: ");
 //                    str+=idx; str+="  idy: ";str+=idy;str+=" old:  ";str+=hor3d->getZ(tk);
 //                    ErrMsg(str);
 //                }
-            hor3d->setZ(tk, grid_.get(idx,idy), false);
-        }
-    }
+//            hor3d->setZ(tk, grid_.get(idx,idy), false);
+//        }
+//    }
+//	hor3d->geometry().sectionGeometry(0)->trimUndefParts();
+	hor3d->geometry().sectionGeometry(0)->setArray(hs_.start_, hs_.step_, grid_, true);
     return true;
 }
 
@@ -244,10 +246,12 @@ bool wmGridder2D::loadData()
 bool wmGridder2D::setScope()
 {
     if (scope_==BoundingBox) {
-        Interval<int> inlrg((int)Math::Floor(inlrg_.start), (int)Math::Ceil(inlrg_.stop));
-        Interval<int> crlrg((int)Math::Floor(crlrg_.start), (int)Math::Ceil(crlrg_.stop));
-        hs_.setInlRange(inlrg);
-        hs_.setCrlRange(crlrg);
+        StepInterval<int> inlrg((int)Math::Floor(inlrg_.start), (int)Math::Ceil(inlrg_.stop), hs_.step_.first);
+		inlrg.stop = inlrg.atIndex(inlrg.indexOnOrAfter(Math::Ceil(inlrg_.stop), mDefEps));
+        StepInterval<int> crlrg((int)Math::Floor(crlrg_.start), (int)Math::Ceil(crlrg_.stop), hs_.step_.second);
+		crlrg.stop = crlrg.atIndex(crlrg.indexOnOrAfter(Math::Ceil(crlrg_.stop), mDefEps));
+        hs_.setInlRange(Interval<int>(inlrg.start,inlrg.stop));
+        hs_.setCrlRange(Interval<int>(crlrg.start, crlrg.stop));
     } else if (scope_==Polygon && scopepoly_!=nullptr) {
         ODPolygon<float> tmp;
         for (int idx=0; idx<scopepoly_->size(); idx++) {
@@ -280,11 +284,18 @@ bool wmGridder2D::prepareForGridding()
     if (!setScope())
         return false;
 
-    grid_.setSize( hs_.nrInl(), hs_.nrCrl() );
-    grid_.setAll(mUdf(float));
+	grid_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
+	if (!grid_) {
+		ErrMsg("wmGridder2D::prepareForGridding - allocation of array for grid failed");
+		return false;
+	}
+//    grid_.setSize( hs_.nrInl(), hs_.nrCrl() );
+//    grid_.setAll(mUdf(float));
+    grid_->setAll(mUdf(float));
 
-    totalnr_ = grid_.info().getTotalSz();
-    
+//    totalnr_ = grid_.info().getTotalSz();
+	totalnr_ = grid_->info().getTotalSz();
+
     if (!mIsUdf(searchradius_)) {
         kdtree_.fill(locs_);
     }
@@ -299,14 +310,15 @@ int wmGridder2D::nextStep()
 {
     interpolate_(idx_, idy_);
     nrdone_++;
-    if (idy_ < grid_.info().getSize(1))
-        idy_++;
-    else {
-        idx_++;
+    idy_++;
+//    if (idy_ == grid_.info().getSize(1)) {
+	if (idy_ == grid_->info().getSize(1)) {
+			idx_++;
         idy_=0;
     }
-    return idx_ < grid_.info().getSize(0) ? MoreToDo() : Finished(); 
-}  
+//    return idx_ < grid_.info().getSize(0) ? MoreToDo() : Finished(); 
+	return idx_ < grid_->info().getSize(0) ? MoreToDo() : Finished();
+}
   
 wmIDWGridder2D::wmIDWGridder2D()
     : wmGridder2D()
@@ -341,8 +353,9 @@ void wmIDWGridder2D::interpolate_( int ix, int iy )
             double vals = vals_[result[idx]];
             double d = (locs.first-pos.x)*(locs.first-pos.x)+(locs.second-pos.y)*(locs.second-pos.y);
             if ( mIsZero(d,mDefEpsF)) {
-                grid_.set(ix, iy, (float) vals);
-                return;
+//                grid_.set(ix, iy, (float) vals);
+				grid_->set(ix, iy, (float)vals);
+				return;
             }
             if (d<=r2) {
                 double wgt = Math::PowerOf(d, -0.5*pow_);
@@ -366,8 +379,9 @@ void wmIDWGridder2D::interpolate_( int ix, int iy )
         for (int idx=0; idx<locs_.size(); idx++) {
             double d = (locs_[idx].first-pos.x)*(locs_[idx].first-pos.x)+(locs_[idx].second-pos.y)*(locs_[idx].second-pos.y);
             if ( mIsZero(d,mDefEpsF)) {
-                grid_.set(ix, iy, vals_[idx]);
-                return;
+//                grid_.set(ix, iy, vals_[idx]);
+				grid_->set(ix, iy, vals_[idx]);
+				return;
             }
             double wgt = Math::PowerOf(d, -0.5*pow_);
             val += vals_[idx] * wgt;
@@ -375,5 +389,6 @@ void wmIDWGridder2D::interpolate_( int ix, int iy )
         }
         val /= wgtsum;
     }
-    grid_.set(ix, iy, (float) val);
+//    grid_.set(ix, iy, (float) val);
+	grid_->set(ix, iy, (float)val);
 }
