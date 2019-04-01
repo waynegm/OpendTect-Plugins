@@ -1,5 +1,7 @@
 #include "uigrid2d3dhorizonmainwin.h"
 
+#include "uiodmain.h"
+#include "uiodscenemgr.h"
 #include "survinfo.h"
 #include "uigeninput.h"
 #include "ctxtioobj.h"
@@ -8,6 +10,7 @@
 #include "iodirentry.h"
 #include "uimsg.h"
 #include "ptrman.h"
+#include "emmanager.h"
 #include "emhorizon3d.h"
 #include "emioobjinfo.h"
 #include "uiiosurface.h"
@@ -56,7 +59,7 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     swsu.withsubsel(false);
     outfld_ = new uiSurfaceWrite(this, swsu);
     outfld_->attach(stretchedBelow, tabstack_);
-//    enableSaveButton(tr("Display after create"));
+    enableSaveButton(tr("Display after create"));
 
     tabSelCB(0);
 }
@@ -104,12 +107,10 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
     
     {
         uiTaskRunner uitr(this); 
-        MouseCursorManager::setOverride(MouseCursor::Wait);
         if (!interpolator->prepareForGridding())
             return false;
         if (!TaskRunner::execute(&uitr, *interpolator)) {
             ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error during gridding");
-            MouseCursorManager::restoreOverride();
             return false;
         }
     }
@@ -123,26 +124,20 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error converting grid to horizon");
         return false;
     }
-    MouseCursorManager::restoreOverride();
     
-    {
-        BinID bid(1326,1006);
-        TrcKey tk(bid);
-        BufferString str;
-        str+="In hor3D Inl: ";str+=bid.inl(); str+="  Crl: ";str+=bid.crl();str+=" Z:  ";str+=hor3d->getZ(tk);
-        ErrMsg(str);
-    }
     {
         uiTaskRunner uitr(this);
         hor3d->setMultiID(outfld_->selIOObj()->key());
         PtrMan<Executor> saver = hor3d->saver();
-//        if (!saver || !uitr.execute(*saver)) {
-		if (!saver || !TaskRunner::execute(&uitr, *saver)) {
+        if (!saver || !TaskRunner::execute(&uitr, *saver)) {
             ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - saving output horizon failed");
             return false;
         }
     }
-    
+    if (saveButtonChecked()) {
+        ODMainWin()->sceneMgr().addEMItem(EM::EMM().getObjectID(hor3d->multiID()));
+        ODMainWin()->sceneMgr().updateTrees();
+    }
     return true;
 }
 
