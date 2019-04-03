@@ -8,9 +8,12 @@
 #include "uilistboxchoiceio.h"
 #include "seisioobjinfo.h"
 #include "uiobjbody.h"
+#include "uimsg.h"
 
-uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm )
-: uiGroup(p, "Linechooser"), lbchoiceio_(nullptr)
+WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm )
+    : uiGroup(p, "Linechooser")
+    , lbchoiceio_(nullptr)
+    , selectionDone(this)
 {
     init(cm);
     listfld_->setName("Line(s)");
@@ -18,22 +21,27 @@ uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm )
     TypeSet<Pos::GeomID> geomid;
     SeisIOObjInfo::getLinesWithData( lnms, geomid );
     setInput(lnms, geomid);
+    listfld_->selectionChanged.notify(mCB(this, uiSeis2DLineSelGrp, selChgCB));
 }
 
-uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm, const BufferStringSet& lnms,const TypeSet<Pos::GeomID>& geomids)
-: uiGroup( p, "Line chooser" ), lbchoiceio_(nullptr)
+WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm, const BufferStringSet& lnms,const TypeSet<Pos::GeomID>& geomids)
+    : uiGroup( p, "Line chooser" )
+    , lbchoiceio_(nullptr)
+    , selectionDone(this)
 {
     init(cm);
     listfld_->setName("Line(s)");
     setInput( lnms, geomids );
+    listfld_->selectionChanged.notify(mCB(this, uiSeis2DLineSelGrp, selChgCB));
 }
 
-uiSeis2DLineSelGrp::~uiSeis2DLineSelGrp()
+WMLib::uiSeis2DLineSelGrp::~uiSeis2DLineSelGrp()
 {
+    detachAllNotifiers();
     delete lbchoiceio_;
 }
 
-void uiSeis2DLineSelGrp::init( OD::ChoiceMode cm )
+void WMLib::uiSeis2DLineSelGrp::init( OD::ChoiceMode cm )
 {
     listfld_ = new uiListBox(this, "Lines", cm);
     listfld_->setHSzPol(uiObject::MedVar);
@@ -47,7 +55,7 @@ void uiSeis2DLineSelGrp::init( OD::ChoiceMode cm )
     setHAlignObj( listfld_ );
 }
     
-void uiSeis2DLineSelGrp::setInput( const BufferStringSet& lnms, const TypeSet<Pos::GeomID>& geomid )
+void WMLib::uiSeis2DLineSelGrp::setInput( const BufferStringSet& lnms, const TypeSet<Pos::GeomID>& geomid )
 {
     clear();
     const int* idxs = lnms.getSortIndexes( false );
@@ -64,14 +72,14 @@ void uiSeis2DLineSelGrp::setInput( const BufferStringSet& lnms, const TypeSet<Po
     filtfld_->setItems(lnms_);
 }
 
-int uiSeis2DLineSelGrp::nrChosen() const
+int WMLib::uiSeis2DLineSelGrp::nrChosen() const
 {
     TypeSet<int> chidxs;
     filtfld_->getChosen(chidxs);
     return chidxs.size();
 }
 
-void uiSeis2DLineSelGrp::getChosen( TypeSet<Pos::GeomID>& chids ) const
+void WMLib::uiSeis2DLineSelGrp::getChosen( TypeSet<Pos::GeomID>& chids ) const
 {
     chids.setEmpty();
     TypeSet<int> chidxs; 
@@ -80,7 +88,7 @@ void uiSeis2DLineSelGrp::getChosen( TypeSet<Pos::GeomID>& chids ) const
         chids += geomids_[ chidxs[idx] ];
 }
 
-void uiSeis2DLineSelGrp::getChosen( BufferStringSet& chnms ) const
+void WMLib::uiSeis2DLineSelGrp::getChosen( BufferStringSet& chnms ) const
 {
     chnms.setEmpty();
     TypeSet<int> chidxs;
@@ -89,7 +97,7 @@ void uiSeis2DLineSelGrp::getChosen( BufferStringSet& chnms ) const
         chnms.add( lnms_.get(chidxs[idx]) );
 }
 
-void    uiSeis2DLineSelGrp::setChosen(const TypeSet<Pos::GeomID>& geomid)
+void WMLib::uiSeis2DLineSelGrp::setChosen(const TypeSet<Pos::GeomID>& geomid)
 {
     filtfld_->setFilter(0);
     listfld_->chooseAll(false);
@@ -100,7 +108,7 @@ void    uiSeis2DLineSelGrp::setChosen(const TypeSet<Pos::GeomID>& geomid)
     }
 }
 
-void    uiSeis2DLineSelGrp::setChosen(const BufferStringSet& nms)
+void WMLib::uiSeis2DLineSelGrp::setChosen(const BufferStringSet& nms)
 {
     filtfld_->setFilter( 0 );
     listfld_->chooseAll( false );
@@ -111,7 +119,7 @@ void    uiSeis2DLineSelGrp::setChosen(const BufferStringSet& nms)
     }
 }
 
-void   uiSeis2DLineSelGrp::chooseAll(bool yn)
+void WMLib::uiSeis2DLineSelGrp::chooseAll(bool yn)
 {
     if ( yn )
         filtfld_->setFilter( 0 );
@@ -120,7 +128,7 @@ void   uiSeis2DLineSelGrp::chooseAll(bool yn)
 
 
 
-void uiSeis2DLineSelGrp::clear()
+void WMLib::uiSeis2DLineSelGrp::clear()
 {
     lnms_.erase();
     geomids_.erase();
@@ -128,7 +136,12 @@ void uiSeis2DLineSelGrp::clear()
     filtfld_->setItems(lnms_);
 }
 
-void uiSeis2DLineSelGrp::readChoiceDone( CallBacker* )
+void WMLib::uiSeis2DLineSelGrp::selChgCB(CallBacker*)
+{
+    selectionDone.trigger();
+}
+
+void WMLib::uiSeis2DLineSelGrp::readChoiceDone( CallBacker* )
 {
     TypeSet<Pos::GeomID> gids;
     for ( int idx=0; idx<lbchoiceio_->chosenKeys().size(); idx++ )
@@ -136,12 +149,11 @@ void uiSeis2DLineSelGrp::readChoiceDone( CallBacker* )
         const MultiID mid = lbchoiceio_->chosenKeys().get(idx).buf();
         gids += Pos::GeomID( mid.ID(1) );
     }
-    
     setChosen( gids );
 }
 
 
-void uiSeis2DLineSelGrp::writeChoiceReq( CallBacker* )
+void WMLib::uiSeis2DLineSelGrp::writeChoiceReq( CallBacker* )
 {
     MultiID mid = IOObjContext::getStdDirData(IOObjContext::Geom)->id_;
     mid.add( 0 );

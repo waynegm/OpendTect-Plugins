@@ -5,7 +5,9 @@
 #include "uidlggroup.h"
 
 class uiCheckBox;
-class uiSeis2DLineSelGrp;
+namespace WMLib {
+    class uiSeis2DLineSelGrp;
+};
 
 class ui2DLinesGrp : public uiDlgGroup
 { mODTextTranslationClass(ui2DLinesGrp);
@@ -18,8 +20,8 @@ public:
     void reset();
     
 protected:
-    uiCheckBox* exp2DStationsfld_;
-    uiSeis2DLineSelGrp* lineselfld_;
+    uiCheckBox*                 exp2DStationsfld_;
+    WMLib::uiSeis2DLineSelGrp*  lineselfld_;
 };
 
 #endif

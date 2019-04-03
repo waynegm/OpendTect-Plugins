@@ -14,7 +14,7 @@ ui2DLinesGrp::ui2DLinesGrp( uiParent* p )
     exp2DStationsfld_ = new uiCheckBox( this, tr("Export 2D Stations"));
     exp2DStationsfld_->setChecked(false);
 
-    lineselfld_ = new uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
+    lineselfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
     lineselfld_->attach( alignedBelow, exp2DStationsfld_ );
 }
 

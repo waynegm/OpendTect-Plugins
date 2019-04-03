@@ -19,7 +19,6 @@
 #include "wmgridder2d.h"
 #include "uiinputgrp.h"
 #include "uigridgrp.h"
-#include "uiwmhorsavefieldgrp.h"
 
 
 

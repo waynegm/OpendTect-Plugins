@@ -1,24 +1,26 @@
 #include "uidehmainwin.h"
 
+
+#include "uigeninput.h"
+#include "uiseparator.h"
+#include "uilabel.h"
 #include "bufstringset.h"
-#include "uiodmain.h"
-#include "uiodscenemgr.h"
 #include "survinfo.h"
 #include "seisioobjinfo.h"
 #include "uibutton.h"
-#include "ctxtioobj.h"
-#include "emsurfacetr.h"
-#include "iodir.h"
-#include "iodirentry.h"
 #include "uimsg.h"
-#include "ptrman.h"
+#include "ioobj.h"
 #include "emmanager.h"
-#include "emhorizon3d.h"
 #include "emioobjinfo.h"
+#include "emhorizon3d.h"
 #include "uiiosurface.h"
+#include "survgeom2d.h"
 #include "uitaskrunner.h"
+#include "uiodmain.h"
+#include "uiodscenemgr.h"
 
 #include "uiseis2dlineselgrp.h"
+#include "ui3drangegrp.h"
 
 
 
@@ -31,39 +33,119 @@ uidehMainWin::uidehMainWin( uiParent* p )
     setOkText( tr("Create") );
     setShrinkAllowed(true);
     
-    uiObject* lastfld = nullptr;
+    uiString lbl = tr("Z Value ");
+    lbl.append( SI().getUiZUnitString() );
+    zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start*SI().zDomain().userFactor()) );
+    
+    uiObject* lastfld = (uiObject*) zfld_;
+    uiSeparator* horsepxt = new uiSeparator(this, "Hor Sep Data Extent");
+    horsepxt->attach(stretchedBelow, zfld_);
+    uiLabel* lblxt = new uiLabel(this, tr("Data Extent"));
+    lblxt->attach(leftBorder);
+    lblxt->attach(ensureBelow, horsepxt);
+    
     if (SI().has2D()) {
         BufferStringSet lnms;
         TypeSet<Pos::GeomID> geomids;
         SeisIOObjInfo::getLinesWithData(lnms, geomids);
         if (lnms.size() > 0 ) {
-            lineselfld_ = new uiSeis2DLineSelGrp(this, OD::ChooseZeroOrMore);
+            lineselfld_ = new WMLib::uiSeis2DLineSelGrp(this, OD::ChooseZeroOrMore);
+            lineselfld_->attach( alignedBelow, zfld_ );
+            lineselfld_->attach(ensureBelow, lblxt);
             lastfld = (uiObject*) lineselfld_;
+            mAttachCB(lineselfld_->selectionDone, uidehMainWin::lineselCB);
         }
     }
     
     if (SI().has3D()) {
         include3Dfld_ = new uiCheckBox(this, tr("Include 3D survey area"));
-        if (lastfld!=nullptr)
-            include3Dfld_->attach(alignedBelow, lastfld);
+        include3Dfld_->attach(alignedBelow, lastfld);
+        include3Dfld_->attach(ensureBelow, lblxt);
         include3Dfld_->setChecked(true);
         lastfld = (uiObject*) include3Dfld_;
+        include3Dfld_->activated.notify(mCB(this, uidehMainWin, include3DCB));
     }
             
+    uiSeparator* outsep = new uiSeparator(this, "Output");
+    outsep->attach(stretchedBelow, lastfld);
+    uiLabel* outlbl = new uiLabel(this, tr("Output Horizon"));
+    outlbl->attach(leftBorder);
+    outlbl->attach(ensureBelow, outsep);
     uiSurfaceWrite::Setup swsu(EM::Horizon3D::typeStr(), EM::Horizon3D::userTypeStr());
     swsu.withsubsel(false);
     outfld_ = new uiSurfaceWrite(this, swsu);
     outfld_->attach(stretchedBelow, lastfld);
+    outfld_->attach(ensureBelow, outlbl);
     enableSaveButton(tr("Display after create"));
+    
+    rangefld_ = new WMLib::ui3DRangeGrp(this, tr("Area Selection"), true);
+    rangefld_->attach(alignedBelow, outfld_);
+    
+    include3DCB(0);
 }
 
 uidehMainWin::~uidehMainWin()
 {
-    
+    detachAllNotifiers();
+}
+
+void uidehMainWin::lineselCB(Callbacker*)
+{
+    if (lineselfld_==nullptr)
+        return;
+    TypeSet<Pos::GeomID> geomids;
+    lineselfld_->getChosen(geomids);
+    if (geomids.size()==0) {
+        TrcKeySampling hs;
+        rangefld_->setTrcKeySampling(hs);
+        include3DCB(0);
+        return;
+    }
+    Interval<float> inlrg, crlrg;
+    inlrg.setUdf();
+    crlrg.setUdf();
+    for (int idx=0; idx<geomids.size(); idx++) {
+        mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+        if (!geom2d)
+            continue;
+        const PosInfo::Line2DData& geom = geom2d->data();
+        const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
+        Coord pos = SI().binID2Coord().transformBackNoSnap(posns[0].coord_);
+        inlrg.isUdf()? inlrg.set(pos.x,pos.x) : inlrg.include(pos.x);
+        crlrg.isUdf()? crlrg.set(pos.y,pos.y) : crlrg.include(pos.y);
+        pos = SI().binID2Coord().transformBackNoSnap(posns[posns.size()-1].coord_);
+        inlrg.include(pos.x);
+        crlrg.include(pos.y);
+    }
+    TrcKeySampling hs = rangefld_->getTrcKeySampling();
+    hs.setInlRange(Interval<int>(Math::Floor(inlrg.start), Math::Ceil(inlrg.stop)));
+    hs.setCrlRange(Interval<int>(Math::Floor(crlrg.start), Math::Ceil(crlrg.stop)));
+    rangefld_->setTrcKeySampling(hs);
+}
+
+void uidehMainWin::include3DCB(Callbacker*)
+{
+    if (include3Dfld_!=nullptr && include3Dfld_->isChecked()) {
+        TrcKeySampling hs = rangefld_->getTrcKeySampling();
+        hs.include(SI().sampling(false).hsamp_, false);
+        rangefld_->setTrcKeySampling(hs);
+    }
 }
 
 bool uidehMainWin::acceptOK( CallBacker*)
 {
+    float zval = zfld_->getFValue();
+    if (mIsUdf(zval)) {
+        uiMSG().error( tr("Z value is undefined. Please enter a valid value") );
+        return false;
+    }
+    
+    zval /= SI().zDomain().userFactor();
+    if (!SI().zRange(false).includes(zval,false)) {
+        const bool res = uiMSG().askContinue( tr("Z Value is outside survey Z range") );
+        if ( !res ) return false;
+    }
+    
     EM::IOObjInfo eminfo( outfld_->selIOObj()->key() );
     if (eminfo.isOK()) {
         uiString msg = tr("Horizon: %1\nalready exists."
@@ -72,11 +154,9 @@ bool uidehMainWin::acceptOK( CallBacker*)
             return false;
     }
     
- /*   {
-
-    RefMan<EM::Horizon3D> hor3d = EM::Horizon3D::createWithConstZ(0.0, interpolator->getTrcKeySampling());
+    RefMan<EM::Horizon3D> hor3d = EM::Horizon3D::createWithConstZ(zval, rangefld_->getTrcKeySampling());
     if (!hor3d) {
-        ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - creation of output horizon failed");
+        ErrMsg("uidehMainWin::acceptOK - creation of output horizon failed");
         return false;
     }
     
@@ -85,7 +165,7 @@ bool uidehMainWin::acceptOK( CallBacker*)
         hor3d->setMultiID(outfld_->selIOObj()->key());
         PtrMan<Executor> saver = hor3d->saver();
         if (!saver || !TaskRunner::execute(&uitr, *saver)) {
-            ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - saving output horizon failed");
+            ErrMsg("uidehMainWin::acceptOK - saving output horizon failed");
             return false;
         }
     }
@@ -93,7 +173,7 @@ bool uidehMainWin::acceptOK( CallBacker*)
         ODMainWin()->sceneMgr().addEMItem(EM::EMM().getObjectID(hor3d->multiID()));
         ODMainWin()->sceneMgr().updateTrees();
     }
-*/
+
     return true;
 }
 

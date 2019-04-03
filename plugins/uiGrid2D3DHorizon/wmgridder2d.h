@@ -21,7 +21,7 @@ typedef std::pair<double, double> TPoint;
 class wmGridder2D : public ::Executor
 { mODTextTranslationClass(wmGridder2D);
 public:
-    enum ScopeType   { BoundingBox, ConvexHull, Polygon };
+    enum ScopeType   { BoundingBox, Horizon };
     static const char*  ScopeNames[];
     static const char*  MethodNames[];
     static wmGridder2D* create(const char* methodName);
@@ -102,17 +102,9 @@ class wmIDWGridder2D : public wmGridder2D
 public:
     wmIDWGridder2D();
     
-    void            setPower(float p ) { pow_ = p; }
-    float           getPower() const   { return pow_; }
-    
     virtual bool    usePar(const IOPar&);
     
-    static const char* sKeyPower();
-    
-    
 protected:
-    float   pow_;
-    
     void    interpolate_( int idx, int idy );
     
 };

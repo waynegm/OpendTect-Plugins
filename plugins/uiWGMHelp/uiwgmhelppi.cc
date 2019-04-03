@@ -11,6 +11,7 @@ typedef struct keyholder {
 keyholder keys[] = {
     {"avo", "AVOAttrib.html"},
     {"avop","AVOPolarAttrib.html"},
+    {"deh", "DataExtentHorizon.tml"},
     {"ext", "ExternalAttrib.html"},
     {"geopkg", "GeopackageExport.html"},
     {"grad", "GradientAttrib.html"},

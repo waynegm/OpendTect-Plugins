@@ -7,10 +7,12 @@ class uiGenInput;
 class uiCheckBox;
 class uiLabeledComboBox;
 class uiIOObjSel;
-class uiSeis2DLineSelGrp;
 class uiPosSubSel;
 class MultiID;
 class TrcKeyZSampling;
+namespace WMLib {
+    class uiSeis2DLineSelGrp;
+};
 
 class uiHorizonGrp : public uiDlgGroup
 { mODTextTranslationClass(uiHorizonGrp);
@@ -30,14 +32,14 @@ public:
     void update();
 
 protected:
-    uiGenInput*         namefld_;
-    uiCheckBox*         exp2D_;
-    uiIOObjSel*         hor2Dfld_;
-    uiSeis2DLineSelGrp* lines2Dfld_;
+    uiGenInput*                 namefld_;
+    uiCheckBox*                 exp2D_;
+    uiIOObjSel*                 hor2Dfld_;
+    WMLib::uiSeis2DLineSelGrp*  lines2Dfld_;
 //    uiLabeledComboBox*  attrib2Dfld_;
-    uiCheckBox*         exp3D_;
-    uiIOObjSel*         hor3Dfld_;
-    uiPosSubSel*        subsel3Dfld_;
+    uiCheckBox*                 exp3D_;
+    uiIOObjSel*                 hor3Dfld_;
+    uiPosSubSel*                subsel3Dfld_;
 //    uiLabeledComboBox*  attrib3Dfld_;
     
     void                hor2Dsel(CallBacker*);

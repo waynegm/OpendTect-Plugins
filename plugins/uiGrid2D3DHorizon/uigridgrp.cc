@@ -10,6 +10,7 @@
 #include "picksettr.h"
 #include "bufstringset.h"
 #include "uimsg.h"
+#include "emhorizon3d.h"
 #include "wmgridder2d.h"
 
 ui2D3DInterpol* ui2D3DInterpol::create( const char* methodName, uiParent* p )
@@ -26,18 +27,16 @@ ui2D3DInterpol* ui2D3DInterpol::create( const char* methodName, uiParent* p )
 uiGridGrp::uiGridGrp( uiParent* p )
 : uiDlgGroup(p, tr("Gridding Parameters"))
 {
-    scopefld_ = new uiGenInput(this, tr("Scope"), StringListInpSpec(wmGridder2D::ScopeNames));
-    scopefld_->setValue( wmGridder2D::ConvexHull );
+    scopefld_ = new uiGenInput(this, tr("Grid Extent"), StringListInpSpec(wmGridder2D::ScopeNames));
+    scopefld_->setValue( wmGridder2D::BoundingBox );
     scopefld_->valuechanged.notify( mCB(this,uiGridGrp,scopeChgCB));
     
-    {
-        CtxtIOObj ctio(PickSetTranslatorGroup::ioContext());
-        ctio.ctxt_.toselect_.require_.set( sKey::Type(), sKey::Polygon() );
-        polyfld_ = new uiIOObjSel( this,ctio.ctxt_,uiIOObjSel::Setup(uiStrings::sEmptyString()) );
-        polyfld_->setCaption( uiStrings::sEmptyString() );
-        polyfld_->attach( rightOf, scopefld_ );
-        polyfld_->setHSzPol( uiObject::SmallVar );
-    }
+    uiSurfaceRead::Setup swsu(EM::Horizon3D::typeStr());
+    swsu.withsubsel(false).withattribfld(false).withsectionfld(false);
+    horfld_ = new uiSurfaceRead(this, swsu);
+    horfld_->getObjSel()->setLabelText(uiString::emptyString());
+    horfld_->attach( rightOf, scopefld_ );
+//    horfld_->setHSzPol( uiObject::SmallVar );
     
     PositionInpSpec::Setup setup;
     PositionInpSpec spec( setup );
@@ -45,8 +44,18 @@ uiGridGrp::uiGridGrp( uiParent* p )
     stepfld_->setValue( BinID(SI().inlStep(),SI().crlStep()) );
     stepfld_->attach( alignedBelow, scopefld_ );
 
+    {
+        CtxtIOObj ctio(PickSetTranslatorGroup::ioContext());
+        ctio.ctxt_.toselect_.require_.set( sKey::Type(), sKey::Polygon() );
+        uiIOObjSel::Setup pssu(uiStrings::sEmptyString());
+        pssu.optional(true);
+        polycropfld_ = new uiIOObjSel( this,ctio.ctxt_, pssu );
+        polycropfld_->setLabelText( tr("Cropping Polygon") );
+        polycropfld_->attach( alignedBelow, stepfld_ );
+    }
+    
     methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
-    methodfld_->attach( alignedBelow, stepfld_ );
+    methodfld_->attach( alignedBelow, polycropfld_ );
     methodfld_->valuechanged.notify( mCB(this,uiGridGrp,methodChgCB) );
     
     for ( int idx=0; wmGridder2D::MethodNames[idx]; idx++ )
@@ -64,7 +73,7 @@ uiGridGrp::uiGridGrp( uiParent* p )
 
 void uiGridGrp::scopeChgCB(CallBacker* )
 {
-    polyfld_->display(scopefld_->getIntValue() == wmGridder2D::Polygon);
+    horfld_->display(scopefld_->getIntValue() == wmGridder2D::Horizon);
 }
 
 void uiGridGrp::methodChgCB(CallBacker* )
@@ -82,8 +91,8 @@ bool uiGridGrp::fillPar( IOPar& par ) const
     const int scope = scopefld_->getIntValue();
     par.set (wmGridder2D::sKeyScopeType(), scope );
 
-    if ( scope == wmGridder2D::Polygon ) {
-        Pick::Set ps;
+    if ( scope == wmGridder2D::Horizon ) {
+/*        Pick::Set ps;
         BufferString msg;
         const IOObj* ioobj = polyfld_->ioobj();
         if (!PickSetTranslator::retrieve( ps, ioobj, true, msg )) {
@@ -99,7 +108,7 @@ bool uiGridGrp::fillPar( IOPar& par ) const
             const Coord bid = SI().binID2Coord().transformBackNoSnap( pl.pos_ );
             par.set( IOPar::compKey(wmGridder2D::sKeyPolyScopeNode(),idx), bid );
         }
-    }
+*/    }
         
     const BinID step = stepfld_->getBinID();
     if ( step.inl() <= 0 || step.crl() <= 0 )
@@ -131,11 +140,6 @@ uiIDW::uiIDW( uiParent* p )
     radiusfld_->setChecked( false );
     radiusfld_->attach( alignedBelow, fltselfld_ );
         
-    powfld_ = new uiGenInput( this, tr("Power"), FloatInpSpec(2.0f) );
-    powfld_->setWithCheck( true );
-    powfld_->setChecked( false );
-    powfld_->attach( alignedBelow, radiusfld_ );
-    
     setHAlignObj( fltselfld_ );
 }
 
@@ -148,14 +152,6 @@ bool uiIDW::fillPar( IOPar& par ) const
         return false;
     }
     par.set( wmIDWGridder2D::sKeySearchRadius(), radius );
-    
-    const float power = powfld_->isChecked() ? powfld_->getFValue(0) : 2.0f;
-    if ( power<0 )
-    {
-        uiMSG().error( "Power must be positive" );
-        return false;
-    }
-    par.set( wmIDWGridder2D::sKeyPower(), power );
     
     const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
     par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );

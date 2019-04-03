@@ -30,7 +30,7 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         hor2Dfld_->attach(alignedBelow, exp2D_);
         hor2Dfld_->selectionDone.notify( mCB(this, uiHorizonGrp, hor2Dsel));
         
-        lines2Dfld_ = new uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
+        lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
         lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
         
 //        attrib2Dfld_ = new uiLabeledComboBox( this, uiStrings::s2D().append(uiStrings::sAttribute()) );

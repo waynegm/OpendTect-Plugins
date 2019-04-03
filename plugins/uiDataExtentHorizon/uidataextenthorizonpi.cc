@@ -57,8 +57,6 @@ uiDataExtentHorizonMgr::uiDataExtentHorizonMgr( uiODMain* a )
 
 uiDataExtentHorizonMgr::~uiDataExtentHorizonMgr()
 {
-    if (dlg_!=nullptr)
-        delete dlg_;
     detachAllNotifiers();
 }
 

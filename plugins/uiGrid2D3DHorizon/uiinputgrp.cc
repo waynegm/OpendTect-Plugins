@@ -33,7 +33,7 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), "2D Horizon");
         hor2Dfld_->selectionDone.notify( mCB(this, uiInputGrp, hor2DselCB));
         
-        lines2Dfld_ = new uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
+        lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
         lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
 
         lastfld = (uiObject*) lines2Dfld_;

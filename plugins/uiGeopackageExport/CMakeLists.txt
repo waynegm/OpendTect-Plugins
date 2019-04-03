@@ -15,7 +15,6 @@ SET(OD_MODULE_SOURCES
     uigeopackageexportpi.cc
     uigeopackagewriter.cc 
     uisurveygrp.cc 
-    uiseis2dlineselgrp.cc
     ui2dlinesgrp.cc 
     uirandomlinesgrp.cc 
     uiwellsgrp.cc 

@@ -7,10 +7,12 @@ class uiGenInput;
 class uiCheckBox;
 class uiLabeledComboBox;
 class uiIOObjSel;
-class uiSeis2DLineSelGrp;
 class uiPosSubSel;
 class MultiID;
 class TrcKeyZSampling;
+namespace WMLib {
+    class uiSeis2DLineSelGrp;
+};
 
 class uiInputGrp : public uiDlgGroup
 { mODTextTranslationClass(uiHorizonGrp);
@@ -27,10 +29,10 @@ public:
     bool        fillPar(IOPar&) const;
     
 protected:
-    uiIOObjSel*         hor2Dfld_;
-    uiSeis2DLineSelGrp* lines2Dfld_;
-    uiIOObjSel*         hor3Dfld_;
-    uiPosSubSel*        subsel3Dfld_;
+    uiIOObjSel*                 hor2Dfld_;
+    WMLib::uiSeis2DLineSelGrp*  lines2Dfld_;
+    uiIOObjSel*                 hor3Dfld_;
+    uiPosSubSel*                subsel3Dfld_;
     
     void                hor2DselCB(CallBacker*);
     void                hor3DselCB(CallBacker*);

@@ -7,7 +7,6 @@ class uiGenInput;
 class uiTabStack;
 class uiInputGrp;
 class uiGridGrp;
-//class uiwmHorSaveFieldGrp;
 class uiSurfaceWrite;
 
 mClass(uiGrid2D3DHorizon) uiGrid2D3DHorizonMainWin : public uiDialog

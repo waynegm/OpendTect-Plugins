@@ -1,15 +1,20 @@
 #ifndef uiseis2dlineselgrp_h
 #define uiseis2dlineselgrp_h
 
+#include "uiwgmhelpmod.h"
 #include "bufstringset.h"
 #include "posinfo2dsurv.h"
 #include "uigroup.h"
+#include "callback.h"
 
 class uiListBox;
 class uiListBoxFilter;
 class uiListBoxChoiceIO;
 
-class uiSeis2DLineSelGrp: public uiGroup
+namespace WMLib
+{
+    
+mExpClass(uiWGMHelp) uiSeis2DLineSelGrp: public uiGroup
 {
 public:
     uiSeis2DLineSelGrp(uiParent*, OD::ChoiceMode);
@@ -27,6 +32,8 @@ public:
     
     void    clear();
     
+    Notifier<uiSeis2DLineSelGrp> selectionDone;
+    
 protected:
     BufferStringSet lnms_;
     TypeSet<Pos::GeomID> geomids_;
@@ -38,7 +45,9 @@ protected:
     void                    init(OD::ChoiceMode);
     void                    readChoiceDone(CallBacker*);
     void                    writeChoiceReq(CallBacker*);
+    void                    selChgCB(CallBacker*);
     
-};      
+};
+}; //namespace
 
 #endif

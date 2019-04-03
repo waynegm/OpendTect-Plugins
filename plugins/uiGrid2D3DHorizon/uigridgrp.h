@@ -5,6 +5,7 @@
 
 class uiGenInput;
 class uiIOObjSel;
+class uiSurfaceRead;
 class ui2D3DInterpol;
 class uiFaultParSel;
 class IOPar;
@@ -20,7 +21,8 @@ public:
     
 protected:
     uiGenInput*         scopefld_;
-    uiIOObjSel*         polyfld_;
+    uiSurfaceRead*      horfld_;
+    uiIOObjSel*         polycropfld_;
     uiGenInput*         stepfld_;
     uiGenInput*         methodfld_;
     ObjectSet<ui2D3DInterpol>  methodgrps_;
@@ -57,7 +59,6 @@ public:
 
 protected:
     uiGenInput*     radiusfld_;
-    uiGenInput*     powfld_;
     uiFaultParSel*  fltselfld_;
 };
 

@@ -29,19 +29,16 @@ const char* wmGridder2D::sKey2DLineIDNr()   { return "2DLineIDNr"; }
 const char* wmGridder2D::sKey2DLineID()     { return "2DLineID"; }
 const char* wmGridder2D::sKey3DHorizonID()  { return "3DHorizonID"; }
 
-const char* wmIDWGridder2D::sKeyPower()     { return "Power"; }
-
 const char* wmGridder2D::MethodNames[] =
 {
-    "Inverse Distance Weighted Interpolation",
+    "Inverse Distance Squared Interpolation",
     0
 };
 
 const char* wmGridder2D::ScopeNames[] =
 {
     "Bounding Box",
-    "Convex Hull",
-    "Polygon",
+    "Horizon",
     0
 };
 
@@ -111,7 +108,7 @@ bool wmGridder2D::usePar(const IOPar& par)
     par.get(sKeyScopeType(),scopetype);
     scope_ = (ScopeType)scopetype;
     
-    if (scopepoly_!=nullptr) {
+/*    if (scopepoly_!=nullptr) {
         delete scopepoly_;
         scopepoly_ = nullptr;
     }
@@ -128,7 +125,7 @@ bool wmGridder2D::usePar(const IOPar& par)
             scopepoly_->setClosed(true);
         }
     }
-      
+*/      
     par.get(sKeySearchRadius(), searchradius_);
     par.get(sKeyRowStep(), hs_.step_.first);
     par.get(sKeyColStep(), hs_.step_.second);
@@ -239,8 +236,8 @@ bool wmGridder2D::setScope()
 		crlrg.stop = crlrg.atIndex(crlrg.indexOnOrAfter(Math::Ceil(crlrg_.stop), mDefEps));
         hs_.setInlRange(Interval<int>(inlrg.start,inlrg.stop));
         hs_.setCrlRange(Interval<int>(crlrg.start, crlrg.stop));
-    } else if (scope_==Polygon && scopepoly_!=nullptr) {
-        ODPolygon<float> tmp;
+    } else if (scope_==Horizon) {
+/*        ODPolygon<float> tmp;
         for (int idx=0; idx<scopepoly_->size(); idx++) {
             Coord pos = SI().binID2Coord().transformBackNoSnap(Coord(scopepoly_->getVertex(idx)));
             tmp.add(Geom::Point2D<float>(pos.x,pos.y));
@@ -261,7 +258,7 @@ bool wmGridder2D::setScope()
         crlrg.stop = crlrg.atIndex(crlrg.indexOnOrAfter(Math::Ceil(crlrg_.stop), mDefEps));
         hs_.setInlRange(Interval<int>(inlrg.start,inlrg.stop));
         hs_.setCrlRange(Interval<int>(crlrg.start, crlrg.stop));
-    } else
+*/    } else
         return false;
 
     return true;
@@ -307,15 +304,11 @@ int wmGridder2D::nextStep()
   
 wmIDWGridder2D::wmIDWGridder2D()
     : wmGridder2D()
-    , pow_(2.0)
 {}
 
 bool wmIDWGridder2D::usePar(const IOPar& par)
 {
     wmGridder2D::usePar(par);
-    par.get(sKeyPower(), pow_);
-    if (mIsUdf(pow_))
-        pow_=2.0;
     return true;
 }
   
@@ -340,12 +333,14 @@ void wmIDWGridder2D::interpolate_( int ix, int iy )
 				grid_->set(ix, iy, (float)vals);
 				return;
             }
-//            if (d<=r2) {
-                double wgt = Math::PowerOf(d, -0.5*pow_);
+            if (d<=r2) {
+                double wgt = 1.0 / d;
                 val += vals * wgt;
                 wgtsum += wgt;
-//            }
+            }
         }
+        if (mIsZero(wgtsum, mDefEpsD))
+            return;
         val /= wgtsum;
     } else {
         for (int idx=0; idx<locs_.size(); idx++) {
@@ -354,10 +349,12 @@ void wmIDWGridder2D::interpolate_( int ix, int iy )
 				grid_->set(ix, iy, vals_[idx]);
 				return;
             }
-            double wgt = Math::PowerOf(d, -0.5*pow_);
+            double wgt = 1.0 / d;
             val += vals_[idx] * wgt;
             wgtsum += wgt;
         }
+        if (mIsZero(wgtsum, mDefEpsD))
+            return;
         val /= wgtsum;
     }
 	grid_->set(ix, iy, (float)val);
