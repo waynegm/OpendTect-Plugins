@@ -15,6 +15,7 @@
 #include "emioobjinfo.h"
 #include "uiiosurface.h"
 #include "uitaskrunner.h"
+#include "paralleltask.h"
 
 #include "wmgridder2d.h"
 #include "uiinputgrp.h"

@@ -12,11 +12,15 @@
 #include "uimsg.h"
 #include "emhorizon3d.h"
 #include "wmgridder2d.h"
+#include "uipolygonparsel.h"
+#include "uicompoundparsel.h"
 
 ui2D3DInterpol* ui2D3DInterpol::create( const char* methodName, uiParent* p )
 {
     BufferString tmp(methodName);
-    if (tmp == wmGridder2D::MethodNames[0])
+    if (tmp == wmGridder2D::MethodNames[wmGridder2D::LocalCCTS])
+        return (ui2D3DInterpol*) new uiCCTS(p);
+    else if (tmp == wmGridder2D::MethodNames[wmGridder2D::IDW])
         return (ui2D3DInterpol*) new uiIDW(p);
     else {
         ErrMsg("ui2D3DInterpol::create - unrecognised method name");
@@ -36,7 +40,6 @@ uiGridGrp::uiGridGrp( uiParent* p )
     horfld_ = new uiSurfaceRead(this, swsu);
     horfld_->getObjSel()->setLabelText(uiString::emptyString());
     horfld_->attach( rightOf, scopefld_ );
-//    horfld_->setHSzPol( uiObject::SmallVar );
     
     PositionInpSpec::Setup setup;
     PositionInpSpec spec( setup );
@@ -44,18 +47,14 @@ uiGridGrp::uiGridGrp( uiParent* p )
     stepfld_->setValue( BinID(SI().inlStep(),SI().crlStep()) );
     stepfld_->attach( alignedBelow, scopefld_ );
 
-    {
-        CtxtIOObj ctio(PickSetTranslatorGroup::ioContext());
-        ctio.ctxt_.toselect_.require_.set( sKey::Type(), sKey::Polygon() );
-        uiIOObjSel::Setup pssu(uiStrings::sEmptyString());
-        pssu.optional(true);
-        polycropfld_ = new uiIOObjSel( this,ctio.ctxt_, pssu );
-        polycropfld_->setLabelText( tr("Cropping Polygon") );
-        polycropfld_->attach( alignedBelow, stepfld_ );
-    }
+    polycropfld_ = new WMLib::uiPolygonParSel(this, tr("Cropping Polygon"), false);
+    polycropfld_->attach( alignedBelow, stepfld_ );
     
+    faultpolyfld_ = new WMLib::uiPolygonParSel(this, tr("Fault Polygons"), true);
+    faultpolyfld_->attach( alignedBelow, polycropfld_ );
+
     methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
-    methodfld_->attach( alignedBelow, polycropfld_ );
+    methodfld_->attach( alignedBelow, faultpolyfld_ );
     methodfld_->valuechanged.notify( mCB(this,uiGridGrp,methodChgCB) );
     
     for ( int idx=0; wmGridder2D::MethodNames[idx]; idx++ )
@@ -84,6 +83,7 @@ void uiGridGrp::methodChgCB(CallBacker* )
         if ( methodgrps_[idx] )
             methodgrps_[idx]->display( idx==selidx );
     }
+    faultpolyfld_->display(methodgrps_[selidx]->canHandleFaultPolygons());
 }
 
 bool uiGridGrp::fillPar( IOPar& par ) const
@@ -92,24 +92,20 @@ bool uiGridGrp::fillPar( IOPar& par ) const
     par.set (wmGridder2D::sKeyScopeType(), scope );
 
     if ( scope == wmGridder2D::Horizon ) {
-/*        Pick::Set ps;
-        BufferString msg;
-        const IOObj* ioobj = polyfld_->ioobj();
-        if (!PickSetTranslator::retrieve( ps, ioobj, true, msg )) {
-            BufferString tmp("uiGridGrp::fillPar - error reading polyline - ");
-            tmp += msg;
-            ErrMsg(tmp);
-            return false;
-        }
-        par.set(wmGridder2D::sKeyPolyScopeNodeNr(), ps.size());
-        for ( int idx=0; idx<ps.size(); idx++ )
-        {
-            const Pick::Location& pl = ps[idx];
-            const Coord bid = SI().binID2Coord().transformBackNoSnap( pl.pos_ );
-            par.set( IOPar::compKey(wmGridder2D::sKeyPolyScopeNode(),idx), bid );
-        }
-*/    }
-        
+        const IOObj* horObj = horfld_->selIOObj();
+        if (horObj)
+            par.set( wmGridder2D::sKeyScopeHorID(), horObj->key() ); 
+    }
+    
+    const TypeSet<MultiID>& croppolytids = polycropfld_->selPolygonIDs(); 
+    if (croppolytids.size()==1)
+        par.set( wmGridder2D::sKeyClipPolyID(), croppolytids[0] );
+
+    const TypeSet<MultiID>& selpolytids = faultpolyfld_->selPolygonIDs();
+    par.set( wmGridder2D::sKeyFaultPolyNr(), selpolytids.size() );
+    for ( int idx=0; idx<selpolytids.size(); idx++ )
+        par.set( IOPar::compKey(wmGridder2D::sKeyFaultPolyID(),idx), selpolytids[idx] );
+    
     const BinID step = stepfld_->getBinID();
     if ( step.inl() <= 0 || step.crl() <= 0 )
     {
@@ -132,15 +128,12 @@ ui2D3DInterpol::ui2D3DInterpol( uiParent* p )
 uiIDW::uiIDW( uiParent* p )
     : ui2D3DInterpol(p)
 {
-    fltselfld_ = new uiFaultParSel( this, false );
+//    fltselfld_ = new uiFaultParSel( this, false );
 
     uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
-    radiusfld_ = new uiGenInput( this, titletext, FloatInpSpec() );
+    radiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(5000.0) );
     radiusfld_->setWithCheck( true );
-    radiusfld_->setChecked( false );
-    radiusfld_->attach( alignedBelow, fltselfld_ );
-        
-    setHAlignObj( fltselfld_ );
+    radiusfld_->setChecked( true );
 }
 
 bool uiIDW::fillPar( IOPar& par ) const
@@ -152,11 +145,106 @@ bool uiIDW::fillPar( IOPar& par ) const
         return false;
     }
     par.set( wmIDWGridder2D::sKeySearchRadius(), radius );
+
     
-    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
-    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
-    for ( int idx=0; idx<selfaultids.size(); idx++ )
-        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
+//    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
+//    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
+//    for ( int idx=0; idx<selfaultids.size(); idx++ )
+//        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
         
     return true;
 }
+
+uiCCTS::uiCCTS( uiParent* p )
+: ui2D3DInterpol(p)
+{
+    //    fltselfld_ = new uiFaultParSel( this, false );
+    
+    uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
+    radiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(5000.0) );
+    radiusfld_->setWithCheck( false );
+    
+    tensionfld_ = new uiGenInput( this, tr("Tension"), FloatInpSpec(0.25) );
+    tensionfld_->setWithCheck( false );
+    tensionfld_->attach( alignedBelow, radiusfld_ );
+}
+
+bool uiCCTS::fillPar( IOPar& par ) const
+{
+    const float radius = radiusfld_->getFValue(0);
+    if ( radius<=0 )
+    {
+        uiMSG().error( "Search radius must be positive" );
+        return false;
+    }
+    par.set( wmGridder2D::sKeySearchRadius(), radius );
+    
+    const float tension = tensionfld_->getFValue(0);
+    if ( tension<0 || tension>1 )
+    {
+        uiMSG().error( "Tension must be between 0 and 1" );
+        return false;
+    }
+    par.set( wmGridder2D::sKeyTension(), tension );
+    
+    //    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
+    //    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
+    //    for ( int idx=0; idx<selfaultids.size(); idx++ )
+    //        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
+    
+    return true;
+}
+/*
+uiLTPS::uiLTPS( uiParent* p )
+: ui2D3DInterpol(p)
+{
+    //    fltselfld_ = new uiFaultParSel( this, false );
+    
+    uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
+    radiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(5000.0) );
+    radiusfld_->setWithCheck( false );
+
+    regfld_ = new uiGenInput( this, tr("Regularization"), FloatInpSpec(0.0001) );
+    regfld_->setWithCheck( false );
+    regfld_->attach( alignedBelow, radiusfld_ );
+}
+
+bool uiLTPS::fillPar( IOPar& par ) const
+{
+    const float radius = radiusfld_->getFValue(0);
+    if ( radius<=0 )
+    {
+        uiMSG().error( "Search radius must be positive" );
+        return false;
+    }
+    par.set( wmIDWGridder2D::sKeySearchRadius(), radius );
+    
+    const float reg = regfld_->getFValue(0);
+    if ( reg<0 )
+    {
+        uiMSG().error( "Regularization must be positive" );
+        return false;
+    }
+    par.set( wmIDWGridder2D::sKeyRegularization(), reg );
+    
+    //    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
+    //    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
+    //    for ( int idx=0; idx<selfaultids.size(); idx++ )
+    //        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
+    
+    return true;
+}
+*/
+/*
+uiIter::uiIter( uiParent* p )
+    : ui2D3DInterpol(p)
+{ }
+
+bool uiIter::fillPar( IOPar& par ) const
+{
+    return true;
+}
+*/
+
+        
+    

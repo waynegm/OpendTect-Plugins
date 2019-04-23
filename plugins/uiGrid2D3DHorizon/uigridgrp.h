@@ -4,12 +4,15 @@
 #include "uidlggroup.h"
 
 class uiGenInput;
-class uiIOObjSel;
+class uiPolygonParSel;
 class uiSurfaceRead;
 class ui2D3DInterpol;
 class uiFaultParSel;
 class IOPar;
 class BufferStringSet;
+namespace WMLib {
+    class uiPolygonParSel;
+};
 
 class uiGridGrp : public uiDlgGroup
 { mODTextTranslationClass(uiGridGrp);
@@ -20,12 +23,13 @@ public:
     bool                fillPar( IOPar& par ) const;
     
 protected:
-    uiGenInput*         scopefld_;
-    uiSurfaceRead*      horfld_;
-    uiIOObjSel*         polycropfld_;
-    uiGenInput*         stepfld_;
-    uiGenInput*         methodfld_;
-    ObjectSet<ui2D3DInterpol>  methodgrps_;
+    uiGenInput*                 scopefld_;
+    uiSurfaceRead*              horfld_;
+    WMLib::uiPolygonParSel*     polycropfld_;
+    uiGenInput*                 stepfld_;
+    uiGenInput*                 methodfld_;
+    WMLib::uiPolygonParSel*     faultpolyfld_;
+    ObjectSet<ui2D3DInterpol>   methodgrps_;
     
     void                scopeChgCB(CallBacker*);
     void                methodChgCB(CallBacker*);
@@ -41,7 +45,8 @@ public:
     virtual bool        fillPar(IOPar&) const	{ return false; }
     virtual bool        usePar(const IOPar&)	{ return false; }
     
-    virtual bool        canHandleFaults() const { return false; }
+    virtual bool        canHandleFaultSurfaces() const { return false; }
+    virtual bool        canHandleFaultPolygons() const { return false; }
     
 protected:
     ui2D3DInterpol(uiParent*);
@@ -55,12 +60,63 @@ public:
     virtual bool    fillPar(IOPar&) const;
 //    virtual bool    usePar(const IOPar&);
     
-    virtual bool    canHandleFaults() const { return true; }
+    virtual bool    canHandleFaultSurfaces() const { return false; }
+    virtual bool    canHandleFaultPolygons() const { return true; }
 
 protected:
-    uiGenInput*     radiusfld_;
-    uiFaultParSel*  fltselfld_;
+    uiGenInput*         radiusfld_;
+    
+//    uiFaultParSel*  fltselfld_;
 };
 
+class uiCCTS : public ui2D3DInterpol
+{ mODTextTranslationClass(uiCCTS);
+public:
+    uiCCTS(uiParent*);
+    
+    virtual bool    fillPar(IOPar&) const;
+    //    virtual bool    usePar(const IOPar&);
+    
+    virtual bool    canHandleFaultSurfaces() const { return false; }
+    virtual bool    canHandleFaultPolygons() const { return true; }
+    
+protected:
+    uiGenInput*         radiusfld_;
+    uiGenInput*         tensionfld_;
+    
+    //    uiFaultParSel*  fltselfld_;
+};
+/*
+class uiLTPS : public ui2D3DInterpol
+{ mODTextTranslationClass(uiLTPS);
+public:
+    uiLTPS(uiParent*);
+    
+    virtual bool    fillPar(IOPar&) const;
+    //    virtual bool    usePar(const IOPar&);
+    
+    virtual bool    canHandleFaultSurfaces() const { return false; }
+    virtual bool    canHandleFaultPolygons() const { return true; }
+    
+protected:
+    uiGenInput*         radiusfld_;
+    uiGenInput*         regfld_;
+    
+    //    uiFaultParSel*  fltselfld_;
+};
+*/
+/*
+class uiIter : public ui2D3DInterpol
+{ mODTextTranslationClass(uiIter);
+public:
+    uiIter(uiParent*);
+    
+    virtual bool    fillPar(IOPar&) const;
+    virtual bool    canHandleFaultSurfaces() const { return false; }
+    virtual bool    canHandleFaultPolygons() const { return true; }
+    
+protected:
 
+};    
+*/
 #endif

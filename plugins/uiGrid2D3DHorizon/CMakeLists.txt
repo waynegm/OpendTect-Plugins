@@ -7,6 +7,10 @@ SET(OD_MODULE_SOURCES
     uigrid2d3dhorizonpi.cc
     uiinputgrp.cc
     uigridgrp.cc )
+    
+find_package(Eigen3)
+list( APPEND OD_MODULE_INCLUDESYSPATH ${EIGEN3_INCLUDE_DIR} )
+add_definitions( -DNDEBUG )
 
 SET( OD_PLUGIN_ALO_EXEC ${OD_MAIN_EXEC} )
 OD_INIT_MODULE()
