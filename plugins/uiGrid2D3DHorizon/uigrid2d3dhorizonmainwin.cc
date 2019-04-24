@@ -137,6 +137,9 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         }
     }
     if (saveButtonChecked()) {
+        int displayid = ODMainWin()->sceneMgr().getIDFromName(hor3d->name());
+        if (displayid != -1)
+            ODMainWin()->sceneMgr().removeTreeItem(displayid);
         ODMainWin()->sceneMgr().addEMItem(EM::EMM().getObjectID(hor3d->multiID()));
         ODMainWin()->sceneMgr().updateTrees();
     }
