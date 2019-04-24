@@ -78,6 +78,8 @@ void uiGrid2D3DHorizonMainWin::tabSelCB( CallBacker* )
     if ( !grp ) return;
     if (grp->name() == "Input Data")
         inputgrp_->update();
+    else
+        gridgrp_->update();
 }
 
 bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)

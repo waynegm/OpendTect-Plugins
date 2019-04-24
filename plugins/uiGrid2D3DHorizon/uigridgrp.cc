@@ -1,4 +1,5 @@
 #include "uigridgrp.h"
+#include "ui3drangegrp.h"
 
 #include "survinfo.h"
 #include "uigeninput.h"
@@ -10,6 +11,7 @@
 #include "picksettr.h"
 #include "bufstringset.h"
 #include "uimsg.h"
+#include "emioobjinfo.h"
 #include "emhorizon3d.h"
 #include "wmgridder2d.h"
 #include "uipolygonparsel.h"
@@ -40,15 +42,14 @@ uiGridGrp::uiGridGrp( uiParent* p )
     horfld_ = new uiSurfaceRead(this, swsu);
     horfld_->getObjSel()->setLabelText(uiString::emptyString());
     horfld_->attach( rightOf, scopefld_ );
+    horfld_->inpChange.notify( mCB(this,uiGridGrp,horChgCB));
     
-    PositionInpSpec::Setup setup;
-    PositionInpSpec spec( setup );
-    stepfld_ = new uiGenInput( this, tr("Inl/Crl Step"), spec );
-    stepfld_->setValue( BinID(SI().inlStep(),SI().crlStep()) );
-    stepfld_->attach( alignedBelow, scopefld_ );
-
+    gridfld_ = new WMLib::ui3DRangeGrp(this, tr("Grid Area"), false);
+    gridfld_->setSensitive(false, true);
+    gridfld_->attach(alignedBelow, scopefld_);
+    
     polycropfld_ = new WMLib::uiPolygonParSel(this, tr("Cropping Polygon"), false);
-    polycropfld_->attach( alignedBelow, stepfld_ );
+    polycropfld_->attach( alignedBelow, gridfld_ );
     
     faultpolyfld_ = new WMLib::uiPolygonParSel(this, tr("Fault Polygons"), true);
     faultpolyfld_->attach( alignedBelow, polycropfld_ );
@@ -66,13 +67,42 @@ uiGridGrp::uiGridGrp( uiParent* p )
     }
     
     setHAlignObj( methodfld_ );
-    methodChgCB( 0 );
+    update();
+}
+
+void uiGridGrp::update()
+{
+    methodChgCB(0);
     scopeChgCB(0);
 }
 
 void uiGridGrp::scopeChgCB(CallBacker* )
 {
-    horfld_->display(scopefld_->getIntValue() == wmGridder2D::Horizon);
+    if (scopefld_->getIntValue() == wmGridder2D::BoundingBox) {
+        horfld_->display(false);
+        gridfld_->displayFields(false, true);
+        gridfld_->setSensitive(false, true);
+    } else if (scopefld_->getIntValue() == wmGridder2D::Horizon) {
+        horfld_->display(true);
+        gridfld_->setSensitive(false, false);
+        gridfld_->displayFields(true, true);
+        horChgCB(0);
+    } else {
+        horfld_->display(false);
+        gridfld_->setSensitive(true, true);
+        gridfld_->displayFields(true, true);
+    }
+}
+
+void uiGridGrp::horChgCB(CallBacker*)
+{
+    const IOObj* horObj = horfld_->selIOObj();
+    if (horObj && scopefld_->getIntValue() == wmGridder2D::Horizon) {
+        EM::IOObjInfo eminfo(horObj->key());
+        TrcKeySampling hs;
+        hs.set(eminfo.getInlRange(), eminfo.getCrlRange());
+        gridfld_->setTrcKeySampling( hs );
+    }
 }
 
 void uiGridGrp::methodChgCB(CallBacker* )
@@ -106,7 +136,7 @@ bool uiGridGrp::fillPar( IOPar& par ) const
     for ( int idx=0; idx<selpolytids.size(); idx++ )
         par.set( IOPar::compKey(wmGridder2D::sKeyFaultPolyID(),idx), selpolytids[idx] );
     
-    const BinID step = stepfld_->getBinID();
+    const BinID step = gridfld_->getTrcKeySampling().step_;
     if ( step.inl() <= 0 || step.crl() <= 0 )
     {
         uiMSG().error(
@@ -180,7 +210,7 @@ bool uiCCTS::fillPar( IOPar& par ) const
     par.set( wmGridder2D::sKeySearchRadius(), radius );
     
     const float tension = tensionfld_->getFValue(0);
-    if ( tension<0 || tension>1 )
+    if ( tension<=0.0 || tension>=1.0 )
     {
         uiMSG().error( "Tension must be between 0 and 1" );
         return false;

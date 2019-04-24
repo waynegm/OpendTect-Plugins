@@ -56,6 +56,38 @@ void WMLib::ui3DRangeGrp::setTrcKeySampling(const TrcKeySampling& hs)
     rangeChg(0);
 }
 
+void WMLib::ui3DRangeGrp::displayFields(bool yn)
+{
+    inlfld_->displayField(yn);
+    crlfld_->displayField(yn);
+}
+
+void WMLib::ui3DRangeGrp::displayFields(bool ranges, bool steps)
+{
+    inlfld_->displayField(ranges, 0, 0);
+    inlfld_->displayField(ranges, 1, 0);
+    inlfld_->displayField(steps, 2, 0);
+    crlfld_->displayField(ranges, 0, 0);
+    crlfld_->displayField(ranges, 1, 0);
+    crlfld_->displayField(steps, 2, 0);
+}
+
+void WMLib::ui3DRangeGrp::setSensitive(bool yn)
+{
+    inlfld_->setSensitive(yn);
+    crlfld_->setSensitive(yn);
+}
+
+void WMLib::ui3DRangeGrp::setSensitive(bool ranges, bool steps)
+{
+    inlfld_->setSensitive(ranges, 0, 0);
+    inlfld_->setSensitive(ranges, 1, 0);
+    inlfld_->setSensitive(steps, 2, 0);
+    crlfld_->setSensitive(ranges, 0, 0);
+    crlfld_->setSensitive(ranges, 1, 0);
+    crlfld_->setSensitive(steps, 2, 0);
+}
+
 void WMLib::ui3DRangeGrp::rangeChg(Callbacker* cb)
 {
     if (stepSnap_) {

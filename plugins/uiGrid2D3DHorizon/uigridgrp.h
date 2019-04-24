@@ -12,6 +12,7 @@ class IOPar;
 class BufferStringSet;
 namespace WMLib {
     class uiPolygonParSel;
+    class ui3DRangeGrp;
 };
 
 class uiGridGrp : public uiDlgGroup
@@ -21,17 +22,19 @@ public:
     ~uiGridGrp() {}
     
     bool                fillPar( IOPar& par ) const;
+    void                update();
     
 protected:
     uiGenInput*                 scopefld_;
     uiSurfaceRead*              horfld_;
     WMLib::uiPolygonParSel*     polycropfld_;
-    uiGenInput*                 stepfld_;
+    WMLib::ui3DRangeGrp*        gridfld_;
     uiGenInput*                 methodfld_;
     WMLib::uiPolygonParSel*     faultpolyfld_;
     ObjectSet<ui2D3DInterpol>   methodgrps_;
     
     void                scopeChgCB(CallBacker*);
+    void                horChgCB(CallBacker*);
     void                methodChgCB(CallBacker*);
 };
 

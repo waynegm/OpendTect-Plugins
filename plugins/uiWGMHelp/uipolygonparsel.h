@@ -1,5 +1,5 @@
-#ifndef ui3drangegrp_h
-#define ui3drangegrp_h
+#ifndef uipolygonparsel_h
+#define uipolygonparsel_h
 
 #include "uiwgmhelpmod.h"
 #include "uicompoundparsel.h"

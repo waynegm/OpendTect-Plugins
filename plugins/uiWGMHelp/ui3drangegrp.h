@@ -20,6 +20,10 @@ public:
     bool                fillPar( IOPar& par ) const;
     TrcKeySampling      getTrcKeySampling() const;
     void                setTrcKeySampling( const TrcKeySampling& );
+    void                displayFields(bool yn=true);
+    void                displayFields(bool ranges, bool steps);
+    void                setSensitive(bool yn=true);
+    void                setSensitive(bool ranges, bool steps);
     
 protected:
     uiGenInput*         inlfld_;
