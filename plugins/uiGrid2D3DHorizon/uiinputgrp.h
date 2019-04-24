@@ -31,11 +31,13 @@ public:
 protected:
     uiIOObjSel*                 hor2Dfld_;
     WMLib::uiSeis2DLineSelGrp*  lines2Dfld_;
+    uiCheckBox*                 exp3D_;
     uiIOObjSel*                 hor3Dfld_;
     uiPosSubSel*                subsel3Dfld_;
     
     void                hor2DselCB(CallBacker*);
     void                hor3DselCB(CallBacker*);
+    void                exp3DselCB(CallBacker*);
 };
 
 

@@ -39,9 +39,14 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         lastfld = (uiObject*) lines2Dfld_;
     }
     if (has3Dhorizon) {
-        hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon");
+        exp3D_ = new uiCheckBox(this, "Include 3D horizon");
         if (lastfld!=nullptr)
-            hor3Dfld_->attach(alignedBelow, lastfld);
+            exp3D_->attach(alignedBelow, lastfld);
+        exp3D_->setChecked(true);
+        exp3D_->activated.notify(mCB(this, uiInputGrp, exp3DselCB));
+        
+        hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon");
+        hor3Dfld_->attach(alignedBelow, exp3D_);
         hor3Dfld_->selectionDone.notify( mCB(this, uiInputGrp, hor3DselCB));
         
         subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
@@ -49,6 +54,12 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
 
     }
     update();
+}
+
+void uiInputGrp::exp3DselCB(CallBacker*)
+{
+    hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+    subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
 }
 
 bool uiInputGrp::fillPar( IOPar& par ) const
@@ -243,6 +254,8 @@ void uiInputGrp::update()
 {
     if (hor2Dfld_!=nullptr)
         hor2DselCB(0);
-    if (hor3Dfld_!=nullptr)
+    if (hor3Dfld_!=nullptr) {
         hor3DselCB(0);
+        exp3DselCB(0);
+    }
 }
