@@ -98,7 +98,6 @@ protected:
     Interval<float>         inlrg_;
     Interval<float>         crlrg_;
     float                   searchradius_;
-    float                   regularization_;
     
     Array2DImpl<float>*     grid_;
     Array2DImpl<float>*     carr_;
@@ -124,19 +123,7 @@ protected:
     void    interpolate_( int idx, int idy, Coord pos );
     
 };
-/*
-class wmLTPSGridder2D : public wmGridder2D
-{ mODTextTranslationClass(wmLTPSGridder2D);
-public:
-    wmLTPSGridder2D();
-    
-    virtual bool    usePar(const IOPar&);
-    virtual bool    prepareForGridding(bool);
-    
-protected:
-    void    interpolate_( int idx, int idy, Coord pos );
-};
-*/
+
 class wmLCCTSGridder2D : public wmGridder2D
 { mODTextTranslationClass(wmLCCTSGridder2D);
 public:

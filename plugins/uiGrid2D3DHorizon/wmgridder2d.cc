@@ -93,6 +93,10 @@ wmGridder2D::wmGridder2D()
 
 wmGridder2D::~wmGridder2D()
 {
+    if (carr_) {
+        delete carr_;
+        carr_ = 0;
+    }
 }
 
 void wmGridder2D::setPoint( const Coord& loc, const float val )
@@ -146,7 +150,6 @@ bool wmGridder2D::usePar(const IOPar& par)
     }
     
     par.get(sKeySearchRadius(), searchradius_);
-    par.get(sKeyRegularization(), regularization_);
     
     par.get(sKeyRowStep(), hs_.step_.first);
     par.get(sKeyColStep(), hs_.step_.second);
@@ -458,38 +461,6 @@ void wmGridder2D::localInterp()
     Threads::Lock lock;
     LocalInterpolator interp( locs_.size(), this, lock);
     interp.execute();
-/*    
-    for (int idx=0; idx<locs_.size(); idx++) {
-        const Coord pos(locs_[idx].first, locs_[idx].second);
-        Coord bid = SI().binID2Coord().transformBackNoSnap(pos);
-        BinID bidSnap = SI().binID2Coord().transformBack(pos, hs_.start_, hs_.step_);
-        if (mIsEqual(bid.x, bidSnap.inl(), mDefEps) && mIsEqual(bid.y, bidSnap.crl(), mDefEps)) {
-            int ix = hs_.inlIdx(bidSnap.inl());
-            int iy = hs_.crlIdx(bidSnap.crl());
-            double prev = mIsUdf(grid_->get(ix,iy)) ? 0.0 : grid_->get(ix,iy);
-            grid_->set(ix, iy, prev + vals_[idx]);
-            carr_->set(ix, iy, carr_->get(ix, iy) + 1.0);
-        } else {
-            BinID r[4];
-            r[0] = bid.x<bidSnap.inl() ? bidSnap-BinID(hs_.step_.inl(),0) : bidSnap;
-            r[1] = r[0] + BinID(hs_.step_.inl(),0);
-            r[2] = bid.y<bidSnap.crl() ? r[0]-BinID(0,hs_.step_.crl()) : r[0];
-            r[3] = r[2] + BinID(hs_.step_.inl(),0);
-            for (int ir=0; ir<4; ir++) {
-                Coord rpos = SI().binID2Coord().transform(r[ir]);
-                if (!faultBetween(pos, rpos)) {
-                    int ix = hs_.inlIdx(r[ir].inl());
-                    int iy = hs_.crlIdx(r[ir].crl());
-                    double dist = rpos.sqHorDistTo(pos);
-                    double wgt = tanh(dist)/dist;
-                    double prev = mIsUdf(grid_->get(ix,iy)) ? 0.0 : grid_->get(ix,iy);
-                    grid_->set(ix, iy, prev + wgt*vals_[idx]);
-                    carr_->set(ix, iy, carr_->get(ix, iy) + wgt);
-                }
-            }
-        }
-    }
-*/
 }
 
 bool wmGridder2D::doWork( od_int64 start, od_int64 stop, int threadid )
@@ -602,7 +573,7 @@ double wmLCCTSGridder2D::basis_(const double r) const
 {
     double g = 0.0;
     double y, z, t, cx;
-    if (r!=0.0) {
+    if (!mIsZero(r, mDefEps)) {
         cx = p0_*r;
         if (r <= p1_) {
             y = 0.25 * (t = cx*cx);
@@ -646,22 +617,19 @@ void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
         
         Eigen::MatrixXd M = Eigen::MatrixXd::Zero(num+3, num+3);
         Eigen::ArrayXd d(num);
-        double a = 0.0;
         for (int idx=0; idx<num; idx++) {
             Coord loc(locs_[result[idx]].first, locs_[result[idx]].second);
             d[idx] = pos.horDistTo(loc);
             for (int idy=idx+1; idy<num; idy++) {
                 Coord q(locs_[result[idy]].first, locs_[result[idy]].second);
                 double dist = loc.horDistTo(q);
-                a += dist * 2.0;
                 M(idx,idy) = basis_(dist);
                 M(idy,idx) = M(idx,idy);
             }
         }
-        a /= (double)(num*num);
         
         for (int idx=0; idx<num; idx++) {
-            M(idx,idx) = regularization_*a*a;
+            M(idx,idx) = 0.0;
             M(idx, num) = 1.0;
             M(idx, num+1) = locs_[result[idx]].first;
             M(idx, num+2) = locs_[result[idx]].second;
@@ -688,89 +656,8 @@ void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
         grid_->set(ix, iy, (float)val);
     }
 }
+
 /*
-wmLTPSGridder2D::wmLTPSGridder2D()
-: wmGridder2D()
-{}
-
-bool wmLTPSGridder2D::usePar(const IOPar& par)
-{
-    wmGridder2D::usePar(par);
-    
-    return true;
-}
-
-bool wmLTPSGridder2D::prepareForGridding(bool doLocalInterp)
-{
-    return wmGridder2D::prepareForGridding( true );
-}
-
-void wmLTPSGridder2D::interpolate_( int ix, int iy, Coord pos )
-{
-    if (!mIsUdf(searchradius_) && carr_->get(ix,iy)==0.0) {
-            TIds result;
-        kdtree_.range( pos.x-searchradius_, pos.y-searchradius_, 
-                       pos.x+searchradius_, pos.y+searchradius_, [&result](const std::size_t id) { result.push_back(id); });
-        if (result.size() == 0)
-            return;
-        // Prune points across faults
-        for (auto it=result.begin(); it!=result.end();) {
-            Coord loc(locs_[*it].first, locs_[*it].second);
-            if (faultBetween(pos, loc)) {
-                result.erase(it);
-                continue;
-            } else {
-                it++;
-            }
-        }
-        int num = result.size();
-        if (num < 7) {
-            return;
-        }
-        
-        Eigen::MatrixXd M = Eigen::MatrixXd::Zero(num+3, num+3);
-        Eigen::ArrayXd d(num);
-        double a = 0.0;
-        for (int idx=0; idx<num; idx++) {
-            Coord loc(locs_[result[idx]].first, locs_[result[idx]].second);
-            d[idx] = pos.horDistTo(loc);
-            for (int idy=idx+1; idy<num; idy++) {
-                Coord q(locs_[result[idy]].first, locs_[result[idy]].second);
-                double dist = loc.horDistTo(q);
-                a += dist * 2.0;
-                M(idx,idy) = dist*dist*log(dist);
-                M(idy,idx) = M(idx,idy);
-            }
-        }
-        a /= (double)(num*num);
-        
-        for (int idx=0; idx<num; idx++) {
-            M(idx,idx) = regularization_*a*a;
-            M(idx, num) = 1.0;
-            M(idx, num+1) = locs_[result[idx]].first;
-            M(idx, num+2) = locs_[result[idx]].second;
-            M(num, idx) = 1.0;
-            M(num+1, idx) = locs_[result[idx]].first;
-            M(num+2, idx) = locs_[result[idx]].second;
-        }
-        
-        for (int idx=num; idx<num+3; idx++)
-            for (int idy=num; idy<num+3;idy++)
-                M(idx, idy) = 0.0;
-        
-        Eigen::VectorXd V = Eigen::VectorXd::Zero(num+3);
-        for (int idx=0; idx<num; idx++)
-            V(idx) = vals_[result[idx]];
-        
-        Eigen::VectorXd W =  M.colPivHouseholderQr().solve(V);
-        
-        double val = W(num) + W(num+1)*pos.x + W(num+2)*pos.y;
-        val += (W.head(num).array() * d.square() * d.log()).sum();
-        
-        grid_->set(ix, iy, (float)val);
-    }
-}
-
 wmIterGridder2D::wmIterGridder2D()
     : wmGridder2D()
 { }

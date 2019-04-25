@@ -89,25 +89,7 @@ protected:
     
     //    uiFaultParSel*  fltselfld_;
 };
-/*
-class uiLTPS : public ui2D3DInterpol
-{ mODTextTranslationClass(uiLTPS);
-public:
-    uiLTPS(uiParent*);
-    
-    virtual bool    fillPar(IOPar&) const;
-    //    virtual bool    usePar(const IOPar&);
-    
-    virtual bool    canHandleFaultSurfaces() const { return false; }
-    virtual bool    canHandleFaultPolygons() const { return true; }
-    
-protected:
-    uiGenInput*         radiusfld_;
-    uiGenInput*         regfld_;
-    
-    //    uiFaultParSel*  fltselfld_;
-};
-*/
+
 /*
 class uiIter : public ui2D3DInterpol
 { mODTextTranslationClass(uiIter);

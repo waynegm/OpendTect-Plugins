@@ -224,47 +224,7 @@ bool uiCCTS::fillPar( IOPar& par ) const
     
     return true;
 }
-/*
-uiLTPS::uiLTPS( uiParent* p )
-: ui2D3DInterpol(p)
-{
-    //    fltselfld_ = new uiFaultParSel( this, false );
-    
-    uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
-    radiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(5000.0) );
-    radiusfld_->setWithCheck( false );
 
-    regfld_ = new uiGenInput( this, tr("Regularization"), FloatInpSpec(0.0001) );
-    regfld_->setWithCheck( false );
-    regfld_->attach( alignedBelow, radiusfld_ );
-}
-
-bool uiLTPS::fillPar( IOPar& par ) const
-{
-    const float radius = radiusfld_->getFValue(0);
-    if ( radius<=0 )
-    {
-        uiMSG().error( "Search radius must be positive" );
-        return false;
-    }
-    par.set( wmIDWGridder2D::sKeySearchRadius(), radius );
-    
-    const float reg = regfld_->getFValue(0);
-    if ( reg<0 )
-    {
-        uiMSG().error( "Regularization must be positive" );
-        return false;
-    }
-    par.set( wmIDWGridder2D::sKeyRegularization(), reg );
-    
-    //    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
-    //    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
-    //    for ( int idx=0; idx<selfaultids.size(); idx++ )
-    //        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
-    
-    return true;
-}
-*/
 /*
 uiIter::uiIter( uiParent* p )
     : ui2D3DInterpol(p)
