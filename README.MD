@@ -10,17 +10,19 @@ For details please see the [documentation](http://waynegm.github.io/OpendTect-Pl
 
 | PLUGIN | DESCRIPTION |
 |--------|-------------|
-| [AVOAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/AVOAttrib/) | Six attributes derived from reflection intercept and gradient |
+| [AVOAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/AVOAttrib.html) | Six attributes derived from reflection intercept and gradient |
 | [AVOPolarAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/AVOPolarAttrib.html) |Six attributes derived from AVO Polarization in the AVO Intercept-Gradient crossplot |
-| [ExternalAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/) | Calculate attribute using an external process such as a python script |
+| [DataExtentHorizon](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/DataExtentHorizon.html) |Create a constant Z value 3D horizon which covers the extent of 2D and 3D seismic data. |
+| [ExternalAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/ExternalAttrib.html) | Calculate attribute using an external process such as a python script |
 | [GeopackageExport](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/GeopackageExport.html) | Export OpendTect data to a [GeoPackage](https://www.geopackage.org/) database |
-| [GradientAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/GradientAttrib/) | Calculate inline, crossline or z gradient using rotationally invariant operators |
-| [LTFAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/LTFAttrib/) | Local time-frequency decomposition |
-| [MLVFilter](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/MLVFilter/) | Structure preserving filtering |
-| [RSpecAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/RSpecAttrib/) | Recursive time-frequency decomposition |
+| [GradientAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/GradientAttrib.html) | Calculate inline, crossline or z gradient using rotationally invariant operators |
+| [Grid2D3DHorizon](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/Grid2D-3D.html) | Grid 2D and 3D horizon interpretation |
+| [LTFAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/LTFAttrib.html) | Local time-frequency decomposition |
+| [MLVFilter](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/MLVFilter.html) | Structure preserving filtering |
+| [RSpecAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/RSpecAttrib.html) | Recursive time-frequency decomposition |
 
 ## Building and Installation
 
-* [Build from Source](http://waynegm.github.io/OpendTect-Plugin-Docs/Installation/building-from-source/)
+* [Build from Source](http://waynegm.github.io/OpendTect-Plugin-Docs/installation/building-from-source.html)
 
-* [Installation](http://waynegm.github.io/OpendTect-Plugin-Docs/Installation/installation/)
+* [Installation](http://waynegm.github.io/OpendTect-Plugin-Docs/installation/installation.html)
