@@ -15,7 +15,7 @@ keyholder keys[] = {
     {"ext", "ExternalAttrib.html"},
     {"geopkg", "GeopackageExport.html"},
     {"grad", "GradientAttrib.html"},
-    {"grid2d3d","Grid2D3DHorizon.html"},
+    {"grid2d3d","Grid2D-3D.html"},
     {"ltf", "LTFAttrib.html"},
     {"mlv", "MLVFilter.html"},
     {"rspec","RSpecAttrib.html"},
