@@ -1,5 +1,13 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.4
+
+### Grid2D3D Horizon plugin
+- First release
+
+### DataExtentHorizon plugin
+- First release
+
 ## Release 6.4.3
 
 ### GeopackageExport plugin
