@@ -27,6 +27,7 @@ public:
     void        get3Dsel( TrcKeyZSampling& envelope ) const;
     void        update();
     bool        fillPar(IOPar&) const;
+    void        usePar(const IOPar&);
     
 protected:
     uiIOObjSel*                 hor2Dfld_;

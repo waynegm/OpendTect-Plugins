@@ -7,6 +7,7 @@
 #include "ctxtioobj.h"
 #include "emsurfacetr.h"
 #include "iodir.h"
+#include "filepath.h"
 #include "iodirentry.h"
 #include "uimsg.h"
 #include "ptrman.h"
@@ -20,7 +21,6 @@
 #include "wmgridder2d.h"
 #include "uiinputgrp.h"
 #include "uigridgrp.h"
-
 
 
 uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
@@ -61,12 +61,23 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     outfld_->attach(stretchedBelow, tabstack_);
     enableSaveButton(tr("Display after create"));
 
+    IOPar par;
+    if (par.read(getParFileName(),0)) {
+        inputgrp_->usePar( par );
+        gridgrp_->usePar( par );
+    }
     tabSelCB(0);
 }
 
 uiGrid2D3DHorizonMainWin::~uiGrid2D3DHorizonMainWin()
 {
     
+}
+
+BufferString uiGrid2D3DHorizonMainWin::getParFileName()
+{
+    FilePath fp(SI().getDirName(), "Misc", "grid2d3d.par");
+    return fp.fullPath();
 }
 
 void uiGrid2D3DHorizonMainWin::tabSelCB( CallBacker* )
@@ -87,6 +98,7 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
     IOPar par;
     inputgrp_->fillPar( par );
     gridgrp_->fillPar( par );
+    par.write(getParFileName(), 0);
     
     FixedString method = par.find( wmGridder2D::sKeyMethod() );
     PtrMan<wmGridder2D> interpolator = wmGridder2D::create( method );

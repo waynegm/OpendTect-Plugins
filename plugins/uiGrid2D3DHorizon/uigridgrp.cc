@@ -151,6 +151,52 @@ bool uiGridGrp::fillPar( IOPar& par ) const
     return methodgrps_[methodidx]->fillPar( par );
 }
 
+void uiGridGrp::usePar( const IOPar& par )
+{
+    int scope = 0;
+    if (par.get(wmGridder2D::sKeyScopeType(), scope))
+        scopefld_->setValue(scope);
+    
+    MultiID horID;
+    if (par.get(wmGridder2D::sKeyScopeHorID(), horID))
+        horfld_->setInput(horID);
+    
+    MultiID clipPolyID;
+    polycropfld_->setEmpty();
+    if (par.get(wmGridder2D::sKeyClipPolyID(), clipPolyID)) {
+        TypeSet<MultiID> polyIDs;
+        polyIDs += clipPolyID;
+        polycropfld_->setSelectedPolygons(polyIDs);
+    }
+    
+    int nrfaultpoly = 0;
+    faultpolyfld_->setEmpty();
+    if (par.get(wmGridder2D::sKeyFaultPolyNr(), nrfaultpoly)) {
+        if (nrfaultpoly>0) {
+            TypeSet<MultiID> polyIDs;
+            for (int idx=0; idx<nrfaultpoly; idx++) {
+                MultiID id;
+                if (!par.get(IOPar::compKey(wmGridder2D::sKeyFaultPolyID(), idx), id))
+                    return;
+                polyIDs += id;
+            }
+            faultpolyfld_->setSelectedPolygons(polyIDs);
+        }
+    }
+    
+    TrcKeySampling tks;
+    par.get(wmGridder2D::sKeyRowStep(), tks.step_.first);
+    par.get(wmGridder2D::sKeyColStep(), tks.step_.second);
+    gridfld_->setTrcKeySampling( tks );
+    
+    BufferStringSet strs( wmGridder2D::MethodNames );
+    int methodidx = strs.indexOf(par.find(wmGridder2D::sKeyMethod()));
+    methodfld_->setValue( methodidx );
+    methodgrps_[methodidx]->usePar( par );
+            
+    update();
+}
+
 ui2D3DInterpol::ui2D3DInterpol( uiParent* p )
 : uiGroup(p)
 {}
@@ -183,6 +229,16 @@ bool uiIDW::fillPar( IOPar& par ) const
 //        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
         
     return true;
+}
+
+void uiIDW::usePar( const IOPar& par )
+{
+    float radius;
+    if (par.get(wmGridder2D::sKeySearchRadius(), radius)) {
+        radiusfld_->setValue(radius);
+        radiusfld_->setChecked(true);
+    } else
+        radiusfld_->setChecked(false);
 }
 
 uiCCTS::uiCCTS( uiParent* p )
@@ -225,6 +281,16 @@ bool uiCCTS::fillPar( IOPar& par ) const
     return true;
 }
 
+void uiCCTS::usePar( const IOPar& par )
+{
+    float radius;
+    if (par.get(wmGridder2D::sKeySearchRadius(), radius))
+        radiusfld_->setValue(radius);
+    
+    float tension;
+    if (par.get(wmGridder2D::sKeyTension(), tension))
+        tensionfld_->setValue(tension);
+}
 /*
 uiIter::uiIter( uiParent* p )
     : ui2D3DInterpol(p)

@@ -2,6 +2,7 @@
 #define uigrid2d3dhorizonmainwin_h
 
 #include "uidialog.h"
+#include "bufstring.h"
 
 class uiGenInput;
 class uiTabStack;
@@ -27,7 +28,8 @@ protected:
 
 private:
 
-    uiString    getCaptionStr() const;
+    uiString        getCaptionStr() const;
+    BufferString    getParFileName();
 };
 
 #endif

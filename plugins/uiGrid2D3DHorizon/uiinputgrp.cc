@@ -53,7 +53,9 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
     }
-    update();
+    hor2DselCB(0);
+    hor3DselCB(0);
+    exp3DselCB(0);
 }
 
 void uiInputGrp::exp3DselCB(CallBacker*)
@@ -83,6 +85,37 @@ bool uiInputGrp::fillPar( IOPar& par ) const
         tkz.hsamp_.fillPar(par);
     }
     return true;
+}
+
+void uiInputGrp::usePar( const IOPar& par )
+{
+    MultiID hor2Did, hor3Did;
+    
+    hor3Did.setUdf();
+    if (par.get(wmGridder2D::sKey3DHorizonID(), hor3Did))
+        if (hor3Dfld_!=nullptr && subsel3Dfld_!=nullptr) {
+            hor3Dfld_->setInput(hor3Did);
+            TrcKeyZSampling tkz;
+            tkz.usePar(par);
+            subsel3Dfld_->setInput(tkz);
+        }
+        
+    hor2Did.setUdf();
+    if (par.get(wmGridder2D::sKey2DHorizonID(), hor2Did)) {
+        if (hor2Dfld_!=nullptr) {
+            int nlines = 0;
+            par.get(wmGridder2D::sKey2DLineIDNr(), nlines);
+            if (nlines>0) {
+                TypeSet<Pos::GeomID> mids;
+                for (int idx=0; idx<nlines; idx++) {
+                    Pos::GeomID id;
+                    if (par.get(IOPar::compKey(wmGridder2D::sKey2DLineID(),idx), id))
+                        mids += id;
+                }
+                lines2Dfld_->setChosen(mids);
+            }
+        }
+    }
 }
 
 void uiInputGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did ) const
@@ -205,7 +238,7 @@ void uiInputGrp::get3Dsel( TrcKeyZSampling& envelope ) const
 void uiInputGrp::hor2DselCB(CallBacker* )
 {
     const IOObj* horObj = hor2Dfld_->ioobj(true);
-    if (horObj==nullptr) {
+    if (!horObj) {
         lines2Dfld_->clear();
     } else {
         EM::IOObjInfo eminfo(horObj->key());
@@ -215,18 +248,23 @@ void uiInputGrp::hor2DselCB(CallBacker* )
             ErrMsg( tmp );
             return;
         }
+        TypeSet<Pos::GeomID> mids;
+        getGeoMids(mids);
+        
         BufferStringSet lnms;
         TypeSet<Pos::GeomID> geomids; 
         eminfo.getLineNames(lnms);
         eminfo.getGeomIDs(geomids);
         lines2Dfld_->setInput( lnms, geomids );
+        
+        lines2Dfld_->setChosen(mids);
     }
 }
 
 void uiInputGrp::hor3DselCB(CallBacker*)
 {
     const IOObj* horObj = hor3Dfld_->ioobj(true);
-    if (horObj!=nullptr) {
+    if (horObj) {
         EM::IOObjInfo eminfo(horObj->key());
         if (!eminfo.isOK()) {
             BufferString tmp("uiInputGrp::hor3DselCB - cannot read ");

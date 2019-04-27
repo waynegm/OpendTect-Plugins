@@ -22,6 +22,7 @@ public:
     ~uiGridGrp() {}
     
     bool                fillPar( IOPar& par ) const;
+    void                usePar( const IOPar& par );
     void                update();
     
 protected:
@@ -46,7 +47,7 @@ public:
     virtual             ~ui2D3DInterpol()	{}
     
     virtual bool        fillPar(IOPar&) const	{ return false; }
-    virtual bool        usePar(const IOPar&)	{ return false; }
+    virtual void        usePar(const IOPar&)	{ }
     
     virtual bool        canHandleFaultSurfaces() const { return false; }
     virtual bool        canHandleFaultPolygons() const { return false; }
@@ -61,7 +62,7 @@ public:
     uiIDW(uiParent*);
     
     virtual bool    fillPar(IOPar&) const;
-//    virtual bool    usePar(const IOPar&);
+    virtual void    usePar(const IOPar&);
     
     virtual bool    canHandleFaultSurfaces() const { return false; }
     virtual bool    canHandleFaultPolygons() const { return true; }
@@ -78,7 +79,7 @@ public:
     uiCCTS(uiParent*);
     
     virtual bool    fillPar(IOPar&) const;
-    //    virtual bool    usePar(const IOPar&);
+    virtual void    usePar(const IOPar&);
     
     virtual bool    canHandleFaultSurfaces() const { return false; }
     virtual bool    canHandleFaultPolygons() const { return true; }
