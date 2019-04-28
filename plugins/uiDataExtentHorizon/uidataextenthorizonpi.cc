@@ -48,6 +48,7 @@ uiDataExtentHorizonMgr::uiDataExtentHorizonMgr( uiODMain* a )
 	, dlg_(nullptr)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiDataExtentHorizonMgr::updateMenu );
+    updateMenu(0);
 }
 
 
