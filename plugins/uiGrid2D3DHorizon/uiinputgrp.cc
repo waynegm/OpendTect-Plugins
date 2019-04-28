@@ -53,9 +53,7 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
     }
-    hor2DselCB(0);
-    hor3DselCB(0);
-    exp3DselCB(0);
+    update();
 }
 
 void uiInputGrp::exp3DselCB(CallBacker*)
