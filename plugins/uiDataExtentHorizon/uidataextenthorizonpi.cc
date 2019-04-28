@@ -38,20 +38,16 @@ public:
     uiODMain*		appl_;
     uidehMainWin*	dlg_;
 
-    void        handleMenuCB(CallBacker*);
-    void		updateTreeMenu(CallBacker*);
-    void		dehDialog();
-    
-    MenuItem    dehItem_;
+    void		updateMenu(CallBacker*);
+    void		dehDialog(CallBacker*);
 };
 
 
 uiDataExtentHorizonMgr::uiDataExtentHorizonMgr( uiODMain* a )
 	: appl_(a)
-    , dehItem_(m3Dots(tr("Covering 2D-3D Data Extent")))
 	, dlg_(nullptr)
 {
-    mAttachCB( appl_->justBeforeGo, uiDataExtentHorizonMgr::updateTreeMenu );
+    mAttachCB( appl_->menuMgr().dTectMnuChanged, uiDataExtentHorizonMgr::updateMenu );
 }
 
 
@@ -60,37 +56,22 @@ uiDataExtentHorizonMgr::~uiDataExtentHorizonMgr()
     detachAllNotifiers();
 }
 
-
-void uiDataExtentHorizonMgr::handleMenuCB(CallBacker* cb)
-{
-    mCBCapsuleUnpack(int, mnuid, cb);
-    if (mnuid==dehItem_.id)
-        dehDialog();
- }
-
-void uiDataExtentHorizonMgr::updateTreeMenu( CallBacker* )
+void uiDataExtentHorizonMgr::updateMenu( CallBacker* )
 {
     if (dlg_!=nullptr) {
         delete dlg_;
         dlg_ = nullptr;
     }
+
+    uiODMenuMgr& mnumgr = appl_->menuMgr();
+    uiActionSeparString dehprocstr( "Create Horizon Output" );
+    uiAction* itm = mnumgr.procMnu()->findAction( dehprocstr );
+    if ( !itm || !itm->getMenu() ) return;
     
-    uiODTreeTop* sceneTT = appl_->sceneMgr().getTreeItemMgr(appl_->sceneMgr().getActiveSceneID());
-    if (!sceneTT) {
-        uiMSG().message("Bad Scene TreeTop pointer");
-        return;
-    }    
-    uiTreeItem* tree3D = sceneTT->findChild("3D Horizon");
-    if (!tree3D) {
-        uiMSG().message("Bad TreeItem pointer");
-        return;
-    }
-    mDynamicCastGet(uiODHorizonParentTreeItem*, horParentTI, tree3D);
-    horParentTI->newmenu_.addItem(&dehItem_, false);
-    mAttachCB(horParentTI->handleMenu, uiDataExtentHorizonMgr::handleMenuCB);
+    itm->getMenu()->insertItem( new uiAction(m3Dots(tr("Create Data Extent Horizon")),mCB(this,uiDataExtentHorizonMgr,dehDialog)) );
 }    
 
-void uiDataExtentHorizonMgr::dehDialog()
+void uiDataExtentHorizonMgr::dehDialog(CallBacker*)
 {
     if ( dlg_==nullptr ) {
         dlg_ = new uidehMainWin( appl_ );
