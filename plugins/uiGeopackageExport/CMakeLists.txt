@@ -11,6 +11,8 @@ SET(OD_MODULE_DEPS uiODMain uiWGMHelp)
 
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
+    uigeotiffexportmainwin.cc
+    uigeotiffwriter.cc
     uigeopackageexportmainwin.cc
     uigeopackageexportpi.cc
     uigeopackagewriter.cc 

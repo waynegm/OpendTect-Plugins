@@ -1,5 +1,10 @@
 # OpendTect Plugins Release Notes
 
+## Next Release
+
+### GeopackageExport plugin
+- GH-36: add export of 3D horizons and attributes to geotif image
+
 ## Release 6.4.4
 
 ### Grid2D3D Horizon plugin
