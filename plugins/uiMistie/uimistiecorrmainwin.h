@@ -13,6 +13,12 @@ class uiTable;
 mClass(uiMistie) uiMistieCorrMainWin : public uiMainWin
 { mODTextTranslationClass(uiMistieCorrMainWin);
 public:
+    enum Columns {
+        lineCol,
+        shiftCol,
+        phaseCol,
+        ampCol
+    };
     uiMistieCorrMainWin(uiParent*);
     ~uiMistieCorrMainWin();
 

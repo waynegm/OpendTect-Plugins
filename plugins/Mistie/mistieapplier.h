@@ -4,12 +4,13 @@
 #include "mistiemod.h"
 #include "attribprovider.h"
 #include "arrayndimpl.h"
-#include "iopar.h"
+
+#include "mistiecordata.h"
 
 namespace Attrib {
     
 mClass(Mistie) MistieApplier : public Provider
-{ mODTextTranslationClass(ST_MAI_SAO);
+{ mODTextTranslationClass(MistieApplier);
 public:
     static void     initClass();
                     MistieApplier(Desc&);
@@ -33,7 +34,7 @@ protected:
     
     
     BufferString        mistiefile_;
-    IOPar               corrections_;
+    MistieCorrectionData corrections_;
     bool                applyshift_;
     bool                applyphase_;
     bool                applyamp_;

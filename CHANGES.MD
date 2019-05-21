@@ -2,8 +2,12 @@
 
 ## Next Release
 
+### Mistie plugin
+- First release
+
 ### GeopackageExport plugin
 - GH-36: add export of 3D horizons and attributes to geotif image
+- Fix help key for Geotiff export dialog
 
 ## Release 6.4.4
 

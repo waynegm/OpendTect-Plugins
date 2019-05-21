@@ -1,5 +1,6 @@
 #include "uimistieapplier.h"
 #include "mistieapplier.h"
+#include "mistiecordata.h"
 
 #include "attribdesc.h"
 #include "attribdescset.h"
@@ -22,17 +23,17 @@ uiMistieApplier::uiMistieApplier( uiParent* p, bool is2d )
 {
     inpfld_ = createInpFld( is2d );
     
-    BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
+    BufferString defseldir = FilePath(GetDataDir()).add(MistieCorrectionData::defDirStr()).fullPath();
     mistiefilefld_ = new uiFileInput( this, tr("Mistie Database"), uiFileInput::Setup(uiFileDialog::Gen)
                                                                     .forread(true)
                                                                     .defseldir(defseldir)
-                                                                    .filter("mtd") );
+                                                                    .filter(MistieCorrectionData::filtStr()) );
     mistiefilefld_->attach(alignedBelow, inpfld_ );
     
     actiongrp_ = new uiButtonGroup( this, "", OD::Horizontal );
     actiongrp_->setExclusive( false );
     actiongrp_->attach( alignedBelow, mistiefilefld_ );
-    shiftbut_ = new uiCheckBox( actiongrp_, tr("Timeshift") );
+    shiftbut_ = new uiCheckBox( actiongrp_, tr("Z shift") );
     phasebut_ = new uiCheckBox( actiongrp_, tr("Phase") );
     ampbut_ = new uiCheckBox( actiongrp_, tr("Amplitude") );
     uiLabel* lbl = new uiLabel( this, tr("Apply Corrections for") );

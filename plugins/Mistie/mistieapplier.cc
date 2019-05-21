@@ -60,7 +60,7 @@ MistieApplier::MistieApplier( Desc& desc )
     
     zmargin_ = Interval<int>( -30, 30 );
     
-    if (!corrections_.read( mistiefile_, 0 )) {
+    if (!corrections_.read( mistiefile_ )) {
         ErrMsg("MistieApplier::MistieApplier - error reading mistie correction file");
     }
 }

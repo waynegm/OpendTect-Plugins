@@ -18,7 +18,7 @@ keyholder keys[] = {
     {"grad", "GradientAttrib.html"},
     {"grid2d3d","Grid2D-3D.html"},
     {"ltf", "LTFAttrib.html"},
-    {"mistie", "index.html"},
+    {"mistie", "Mistie.html"},
     {"mlv", "MLVFilter.html"},
     {"rspec","RSpecAttrib.html"},
     { 0, 0}

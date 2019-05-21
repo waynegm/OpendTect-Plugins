@@ -12,7 +12,8 @@
 #include "uifiledlg.h"
 #include "filepath.h"
 #include "oddirs.h"
-#include "iopar.h"
+
+#include "mistiecordata.h"
 
 static int sMnuID = 0;
 
@@ -73,7 +74,6 @@ void uiMistieCorrMainWin::helpCB( CallBacker* cb )
 
 void uiMistieCorrMainWin::newrowCB( CallBacker* )
 {
-    table_->setValue(RowCol(table_->currentRow(), 1), 10.5);
 }
 
 void uiMistieCorrMainWin::newCB( CallBacker* )
@@ -86,44 +86,37 @@ void uiMistieCorrMainWin::newCB( CallBacker* )
         SeisIOObjInfo::getLinesWithData(lnms, geomids);
         table_->setNrRows(lnms.size());
         for (int idx=0; idx<lnms.size(); idx++) {
-            table_->setText(RowCol(idx,0), lnms.get(idx));
-            table_->setValue(RowCol(idx,1), 0.0);
-            table_->setValue(RowCol(idx,2), 0.0);
-            table_->setValue(RowCol(idx,3), 1.0);
+            table_->setText(RowCol(idx, lineCol), lnms.get(idx));
+            table_->setValue(RowCol(idx, shiftCol), 0.0);
+            table_->setValue(RowCol(idx, phaseCol), 0.0);
+            table_->setValue(RowCol(idx, ampCol), 1.0);
         }
     }
 }
 
 void uiMistieCorrMainWin::openCB( CallBacker* )
 {
-    BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
-    uiFileDialog dlg( this, true, 0, "*.mst", tr("Load Mistie Corrections") );
+    BufferString defseldir = FilePath(GetDataDir()).add(MistieCorrectionData::defDirStr()).fullPath();
+    uiFileDialog dlg( this, true, 0, MistieCorrectionData::filtStr(), tr("Load Mistie Corrections") );
     dlg.setDirectory(defseldir);
     if (!dlg.go())
         return;
 
     filename_ = dlg.fileName();
-    IOPar misties;
-    if (!misties.read( filename_, 0 )) {
+    MistieCorrectionData misties;
+    if (!misties.read( filename_ )) {
         filename_.setEmpty();
         ErrMsg("uiMistieCorrMainWin::openCB - error reading mistie correction file");
         return;
     }
-    
+
     table_->clearTable();
-    table_->setNrRows(misties.size()-1);
-    int irow = 0;
+    table_->setNrRows(misties.size());
     for (int idx=0; idx<misties.size(); idx++) {
-        BufferString lnm = misties.getKey(idx);
-        float shift, phase, amp;
-        if (!lnm.isEmpty()) {
-            misties.get(lnm, shift, phase, amp);
-            table_->setText(RowCol(irow,0), lnm);
-            table_->setValue(RowCol(irow,1), shift);
-            table_->setValue(RowCol(irow,2), phase);
-            table_->setValue(RowCol(irow,3), amp);
-            irow++;
-        }
+        table_->setText(RowCol(idx, lineCol), misties.getDataName(idx));
+        table_->setValue(RowCol(idx, shiftCol), misties.getZCor(idx));
+        table_->setValue(RowCol(idx, phaseCol), misties.getPhaseCor(idx));
+        table_->setValue(RowCol(idx, ampCol), misties.getAmpCor(idx));
     }
     raise();
 }
@@ -133,25 +126,25 @@ void uiMistieCorrMainWin::saveCB( CallBacker* )
     if (filename_.isEmpty())
         saveasCB(0);
     
-    IOPar misties;
+    MistieCorrectionData misties;
     for (int idx=0; idx<table_->nrRows(); idx++) {
-        BufferString lnm(table_->text(RowCol(idx,0)));
+        BufferString lnm(table_->text(RowCol(idx, lineCol)));
         if (!lnm.isEmpty()) 
-            misties.set( lnm, table_->getFValue(RowCol(idx,1)), table_->getFValue(RowCol(idx,2)),  table_->getFValue(RowCol(idx,3)) );
+            misties.set( lnm, table_->getFValue(RowCol(idx,shiftCol)), table_->getFValue(RowCol(idx, phaseCol)),  table_->getFValue(RowCol(idx, ampCol)) );
     }
-    if (!misties.write( filename_, 0))
+    if (!misties.write( filename_))
         ErrMsg("uiMistieCorrMainWin::saveCB - error saving mistie corrections to file");
 }
 
 void uiMistieCorrMainWin::saveasCB( CallBacker* )
 {
-    BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
-    uiFileDialog dlg( this, false, 0, "*.mst", tr("Save Mistie Corrections") );
+    BufferString defseldir = FilePath(GetDataDir()).add(MistieCorrectionData::defDirStr()).fullPath();
+    uiFileDialog dlg( this, false, 0, MistieCorrectionData::filtStr(), tr("Save Mistie Corrections") );
     dlg.setMode(uiFileDialog::AnyFile);
     dlg.setDirectory(defseldir);
-    dlg.setDefaultExtension("mst");
+    dlg.setDefaultExtension(MistieCorrectionData::extStr());
     dlg.setConfirmOverwrite(true);
-    dlg.setSelectedFilter("*.mst");
+    dlg.setSelectedFilter(MistieCorrectionData::filtStr());
     if (!dlg.go())
         return;
     
