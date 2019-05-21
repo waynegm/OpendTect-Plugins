@@ -25,7 +25,7 @@
 #include "uigeotiffwriter.h"
 
 uiGeotiffExportMainWin::uiGeotiffExportMainWin( uiParent* p )
-    : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","geopkg")).modal(false) )
+    : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","geotiff")).modal(false) )
     , hor3Dfld_(0)
 {
     setCtrlStyle( OkAndCancel );
