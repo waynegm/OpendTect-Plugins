@@ -25,6 +25,7 @@ set ( PLUGINS uiWGMHelp
             uiDataExtentHorizon
             uiGeopackageExport
             uiGrid2D3DHorizon
+            Mistie uiMistie
             AVOPolarAttrib uiAVOPolarAttrib
             RSpecAttrib uiRSpecAttrib 
             MLVFilterAttrib  uiMLVFilterAttrib 
