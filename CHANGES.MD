@@ -1,12 +1,12 @@
 # OpendTect Plugins Release Notes
 
-## Next Release
+## Release 6.4.5
 
 ### Mistie plugin
 - First release
 
 ### GeopackageExport plugin
-- GH-36: add export of 3D horizons and attributes to geotif image
+- GH-36: add export of 3D horizons and attributes to Geotiff image
 - Fix help key for Geotiff export dialog
 
 ## Release 6.4.4
