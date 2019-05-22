@@ -3,6 +3,7 @@
 #include "uimain.h"
 #include "uimenu.h"
 #include "uimsg.h"
+#include "uistrings.h"
 #include "uitoolbar.h"
 #include "helpview.h"
 #include "uitable.h"
@@ -12,6 +13,13 @@
 #include "uifiledlg.h"
 #include "filepath.h"
 #include "oddirs.h"
+#include "uibuttongroup.h"
+#include "uibutton.h"
+#include "uifileinput.h"
+#include "uilabel.h"
+#include "uidialog.h"
+#include "string.h"
+#include "uistrings.h"
 
 #include "mistiecordata.h"
 
@@ -26,12 +34,57 @@ static const char* ColumnLabels[] =
     0
 };
 
+class uiMergeCorDlg : public uiDialog
+{ mODTextTranslationClass(uiMergeCorDlg);
+public:
+    uiMergeCorDlg( uiParent *p )
+    : uiDialog(p,Setup(tr("Merge Other Correction File"),mNoDlgTitle,mTODOHelpKey))
+    {
+        BufferString defseldir = FilePath(GetDataDir()).add(MistieCorrectionData::defDirStr()).fullPath();
+        filefld_ = new uiFileInput( this, tr("Mistie Correction File"), uiFileInput::Setup(uiFileDialog::Gen)
+                                                                    .forread(true)
+                                                                    .defseldir(defseldir)
+                                                                    .filter(MistieCorrectionData::filtStr()) );
+        filefld_->setElemSzPol(uiObject::WideVar);
+        
+        actiongrp_ = new uiButtonGroup( this, "", OD::Horizontal );
+        actiongrp_->setExclusive( true );
+        actiongrp_->attach( alignedBelow, filefld_ );
+        keepbut_ = new uiCheckBox( actiongrp_, tr("Keep") );
+        keepbut_->setChecked(true);
+        replacebut_ = new uiCheckBox( actiongrp_, tr("Replace existing") );
+        uiLabel* lbl = new uiLabel( this, tr("Merge and ") );
+        lbl->attach( centeredLeftOf, actiongrp_ );
+        
+        setOkText(uiStrings::sMerge());
+    }
+    
+    BufferString    fileName() const { return filefld_->fileName(); }
+    bool            replace() const { return replacebut_->isChecked(); }
+    
+protected:
+    bool acceptOK( CallBacker* )
+    {
+        if (!strlen(filefld_->fileName())) {
+            uiMSG().error( tr("Please specify an output file") );
+            return false;
+        }
+        return true;
+    }
+    
+    uiFileInput*    filefld_;
+    uiButtonGroup*  actiongrp_;
+    uiCheckBox*     keepbut_;
+    uiCheckBox*     replacebut_;
+};
+
 uiMistieCorrMainWin::uiMistieCorrMainWin( uiParent* p )
     : uiMainWin(p, getCaptionStr() )
     , newitem_(uiStrings::sNew(), "new", "", mCB(this,uiMistieCorrMainWin,newCB), sMnuID++) 
     , openitem_(uiStrings::sOpen(), "open", "", mCB(this,uiMistieCorrMainWin,openCB), sMnuID++) 
     , saveitem_(uiStrings::sSave(), "save", "", mCB(this,uiMistieCorrMainWin,saveCB), sMnuID++) 
     , saveasitem_(uiStrings::sSaveAs(), "saveas", "", mCB(this,uiMistieCorrMainWin,saveasCB), sMnuID++)
+    , mergeitem_(uiStrings::sMerge(), "plus", "", mCB(this,uiMistieCorrMainWin,mergeCB), sMnuID++)
     , helpitem_(tr("Help"), "contexthelp", "", mCB(this,uiMistieCorrMainWin,helpCB), sMnuID++) 
     
 {
@@ -45,9 +98,11 @@ uiMistieCorrMainWin::uiMistieCorrMainWin( uiParent* p )
     table_->setColumnLabels( lbls);
     table_->showGrid( true );
     table_->setLeftHeaderHidden( true );
+    table_->setPrefWidthInChars(50);
+    table_->setPrefHeightInRows(50);
     
     table_->rowInserted.notify( mCB(this,uiMistieCorrMainWin,newrowCB) );
-
+    
     newCB(0);
 }
 
@@ -64,6 +119,8 @@ void uiMistieCorrMainWin::createToolBar()
     tb_->addButton( saveitem_ );
     tb_->addButton( saveasitem_ );
     tb_->addSeparator();
+    tb_->addButton( mergeitem_ );
+    tb_->addSeparator();
     tb_->addButton( helpitem_ );
 }
 
@@ -74,6 +131,45 @@ void uiMistieCorrMainWin::helpCB( CallBacker* cb )
 
 void uiMistieCorrMainWin::newrowCB( CallBacker* )
 {
+}
+
+void uiMistieCorrMainWin::mergeCB( CallBacker* )
+{
+    uiMergeCorDlg dlg(this);
+    if (!dlg.go())
+        return;
+    
+    MistieCorrectionData merge;
+    if (!merge.read(dlg.fileName())) {
+        ErrMsg("uiMistieCorrMainWin::mergeCB - error reading misite correction file");
+        return;
+    }
+    
+    BufferStringSet existing;
+    TypeSet<int> row;
+    for (int idx=0; idx<table_->nrRows(); idx++) {
+        BufferString lnm(table_->text(RowCol(idx, lineCol)));
+        if (!lnm.isEmpty()) {
+            existing.add(lnm);
+            row += idx;
+        }
+    }
+    for (int idx=0; idx<merge.size(); idx++) {
+        int irow = existing.indexOf(merge.getDataName(idx));
+        if (irow>=0 && dlg.replace()) {
+            table_->setValue(RowCol(row[irow], shiftCol), merge.getZCor(idx));
+            table_->setValue(RowCol(row[irow], phaseCol), merge.getPhaseCor(idx));
+            table_->setValue(RowCol(row[irow], ampCol), merge.getAmpCor(idx));
+        } else {
+            int newRow = table_->nrRows();
+            table_->insertRows(newRow, 1);
+            table_->setText(RowCol(newRow, lineCol), merge.getDataName(idx));
+            table_->setValue(RowCol(newRow, shiftCol), merge.getZCor(idx));
+            table_->setValue(RowCol(newRow, phaseCol), merge.getPhaseCor(idx));
+            table_->setValue(RowCol(newRow, ampCol), merge.getAmpCor(idx));
+        }
+    }
+    raise();
 }
 
 void uiMistieCorrMainWin::newCB( CallBacker* )

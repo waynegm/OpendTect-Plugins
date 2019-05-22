@@ -32,6 +32,7 @@ protected:
     MenuItem        openitem_;
     MenuItem        saveitem_;
     MenuItem        saveasitem_;
+    MenuItem        mergeitem_;
     MenuItem        helpitem_;
     
     void            createToolBar();
@@ -41,6 +42,7 @@ protected:
     void            openCB(CallBacker*);
     void            saveCB(CallBacker*);
     void            saveasCB(CallBacker*);
+    void            mergeCB(CallBacker*);
     void            newrowCB(CallBacker*);
 private:
 
