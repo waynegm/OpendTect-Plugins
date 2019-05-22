@@ -82,7 +82,7 @@ void MistieApplier::prepareForComputeData()
         mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomid) );
         dname = geom2d->getName();
     } else {
-        ErrMsg("3D data");
+        dname = "3D_"; dname += getDesc().getInput(0)->userRef();
     }
     if (!corrections_.get(dname, shift_, phase_, amp_)) {
         shift_ = 0.0;
