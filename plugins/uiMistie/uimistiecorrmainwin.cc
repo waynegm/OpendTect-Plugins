@@ -100,10 +100,15 @@ uiMistieCorrMainWin::uiMistieCorrMainWin( uiParent* p )
     table_->setLeftHeaderHidden( true );
     table_->setPrefWidthInChars(50);
     table_->setPrefHeightInRows(50);
-    
     table_->rowInserted.notify( mCB(this,uiMistieCorrMainWin,newrowCB) );
+
+    locknames_ = new uiCheckBox(this, tr("Lock line/dataset column"));
+    locknames_->attach(alignedBelow, table_);
+    locknames_->setChecked(true);
+    locknames_->activated.notify(mCB(this, uiMistieCorrMainWin, locknamesCB));
     
     newCB(0);
+    locknamesCB(0);
 }
 
 uiMistieCorrMainWin::~uiMistieCorrMainWin()
@@ -131,6 +136,11 @@ void uiMistieCorrMainWin::helpCB( CallBacker* cb )
 
 void uiMistieCorrMainWin::newrowCB( CallBacker* )
 {
+}
+
+void uiMistieCorrMainWin::locknamesCB( CallBacker* )
+{
+    table_->setColumnReadOnly(lineCol, locknames_->isChecked());
 }
 
 void uiMistieCorrMainWin::mergeCB( CallBacker* )

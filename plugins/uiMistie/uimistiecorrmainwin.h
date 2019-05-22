@@ -9,6 +9,7 @@
 #include "uimistiemod.h"
 
 class uiTable;
+class uiCheckBox;
 
 mClass(uiMistie) uiMistieCorrMainWin : public uiMainWin
 { mODTextTranslationClass(uiMistieCorrMainWin);
@@ -26,6 +27,7 @@ protected:
 
     uiToolBar*      tb_;
     uiTable*        table_;
+    uiCheckBox*     locknames_;
     BufferString    filename_;
 
     MenuItem        newitem_;
@@ -44,6 +46,7 @@ protected:
     void            saveasCB(CallBacker*);
     void            mergeCB(CallBacker*);
     void            newrowCB(CallBacker*);
+    void            locknamesCB(CallBacker*);
 private:
 
     uiString    getCaptionStr() const;
