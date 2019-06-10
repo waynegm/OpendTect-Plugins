@@ -7,6 +7,7 @@
 
 #include "uimistieapplier.h"
 #include "uimistiecorrmainwin.h"
+#include "uimistieanalysismainwin.h"
 
 mDefODPluginInfo(uiMistie)
 {
@@ -65,7 +66,9 @@ void uiMistieMgr::doCorrectionEdit( CallBacker* )
 
 void uiMistieMgr::doMistieAnalysis( CallBacker* )
 {
-    uiMSG().message("Mistie Analysis - to be implemented");
+    uiMistieAnalysisMainWin* dlg = new uiMistieAnalysisMainWin( appl_ );
+    dlg->show();
+    dlg->raise();
 }
 
 mDefODInitPlugin(uiMistie)
