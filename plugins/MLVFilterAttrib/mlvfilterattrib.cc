@@ -44,9 +44,15 @@ void MLVFilter::initClass()
     sizepar->setDefaultValue( 3 );
     desc->addParam( sizepar );
 
+    FloatParam* sdevs = new FloatParam( sdevsStr() );
+    sdevs->setLimits( StepInterval<float>(0.5, 6.0, 0.5) );
+    sdevs->setDefaultValue(3);
+    desc->addParam( sdevs );
+    
     EnumParam* out_type = new EnumParam( outputStr() );
     out_type->addEnum( "Average" );
     out_type->addEnum( "Median" );
+    out_type->addEnum( "Trimmed Mean" );
     out_type->addEnum( "Element" );
     out_type->setDefaultValue( MLVFilter::Average );
     desc->addParam( out_type );
@@ -70,6 +76,7 @@ MLVFilter::MLVFilter( Desc& desc )
 
     mGetEnum( outtype_, outputStr() );
     mGetInt( size_, sizeStr() );
+    mGetFloat(sdevs_, sdevsStr());
 
     if ( size_%2 == 0 )
       size_++;
@@ -188,7 +195,9 @@ int MLVFilter::findLeastVarianceElement( int idx, int z0, float* result,  wmStat
 					*result = float(elemStats.average());
 				} else if (outtype_ == Median ) {
 					*result = float(elemStats.median());
-				}
+				} else if (outtype_ == TrimmedMean ) {
+                    *result = float(elemStats.trimmedMean(sdevs_));
+                }
 			}
 			if (mIsZero(variance,mDefEpsF)) break;
 		}

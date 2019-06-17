@@ -38,6 +38,7 @@ static const char* outstr[] =
 {
     "Average",
     "Median",
+    "Trimmed Mean",
     "Element",
     0
 };
@@ -59,19 +60,37 @@ uiMLVFilterAttrib::uiMLVFilterAttrib( uiParent* p, bool is2d )
     outfld_ = new uiGenInput( this, tr("Output statistic"),
 	    			   StringListInpSpec(outstr) );
     outfld_->attach( alignedBelow, sizefld_ );
+    outfld_->valuechanged.notify(mCB(this,uiMLVFilterAttrib,outChgCB));
+    
+    sdevsfld_ = new uiGenInput( this, tr("Trim to"), FloatInpSpec(3.0) );
+    sdevsfld_->attach( alignedBelow, outfld_  );
+    sdevsfld_->valuechanged.notify(mCB(this,uiMLVFilterAttrib,sdevsChgCB));
+    
     setHAlignObj( outfld_ );
+    outChgCB(0);
 }
 
+void uiMLVFilterAttrib::outChgCB(CallBacker*)
+{
+    sdevsfld_->display( outfld_->getIntValue()==2 );
+}
 
-
+void uiMLVFilterAttrib::sdevsChgCB(CallBacker*)
+{
+    if (sdevsfld_->getfValue()<0.5)
+        sdevsfld_->setValue(0.5);
+    if (sdevsfld_->getfValue()>6.0)
+        sdevsfld_->setValue(6.0);
+}
 
 bool uiMLVFilterAttrib::setParameters( const Attrib::Desc& desc )
 {
     if ( desc.attribName() != MLVFilter::attribName() )
 	return false;
 
-    mIfGetInt(MLVFilter::sizeStr(),size, sizefld_->box()->setValue(size) )
-    mIfGetEnum(MLVFilter::outputStr(), output, outfld_->setValue(output))
+    mIfGetInt(MLVFilter::sizeStr(),size, sizefld_->box()->setValue(size) );
+    mIfGetEnum(MLVFilter::outputStr(), output, outfld_->setValue(output));
+    mIfGetFloat(MLVFilter::sdevsStr(), sdevs, sdevsfld_->setValue(sdevs));
     return true;
 }
 
@@ -90,6 +109,7 @@ bool uiMLVFilterAttrib::getParameters( Attrib::Desc& desc )
 
     mSetInt( MLVFilter::sizeStr(), sizefld_->box()->getValue() );
     mSetEnum(MLVFilter::outputStr(),outfld_->getIntValue());
+    mSetFloat( MLVFilter::sdevsStr(), sdevsfld_->getfValue() );
     
     return true;
 }

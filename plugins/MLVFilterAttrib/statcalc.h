@@ -38,6 +38,7 @@ class StatCalc
     inline T		min() const;
     inline T		max() const;
     inline T		iqr();
+    inline T        trimmedMean(T);
 
 protected:
 
@@ -112,6 +113,27 @@ inline T StatCalc<T>::iqr()
   return Q3-Q1;
 }
 
+template <class T>
+inline T StatCalc<T>::trimmedMean(T sdevs)
+{
+    const int sz = vals_.size();
+    
+    if ( sz < 2 )
+        return sz < 1 ? mUdf(T) : vals_[0];
+    
+    T result=0.0;
+    int count = 0;
+    T stdev = sqrt(variance ());
+    T vmin = mean_ - sdevs * stdev;
+    T vmax = mean_ + sdevs * stdev;
+    for (int idx=0; idx<sz; idx++) {
+        if (vals_[idx]>=vmin && vals_[idx]<=vmax) {
+            result += vals_[idx];
+            count++;
+        }
+    }
+    return result/count;
+}
 
 template <class T>
 inline T StatCalc<T>::median()

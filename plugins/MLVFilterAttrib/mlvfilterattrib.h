@@ -50,8 +50,9 @@ public:
 
 	static const char*		sizeStr()	{ return "size"; }
 	static const char*		outputStr()	{ return "output"; }
+	static const char*      sdevsStr() { return "sdevs"; }
 
-	enum OutputType			{ Average, Median, Element };
+	enum OutputType			{ Average, Median, TrimmedMean, Element };
 
 protected:
 							~MLVFilter() {}
@@ -78,6 +79,7 @@ protected:
 	int						centertrcidx_;
 	int						outtype_;
 	int						size_;
+    float                   sdevs_;
 
 	int						dataidx_;
 

@@ -46,11 +46,15 @@ protected:
     uiAttrSel*		inpfld_;
     uiLabeledSpinBox*	sizefld_;
     uiGenInput*		outfld_;
+    uiGenInput*     sdevsfld_;
 
     bool		setParameters(const Attrib::Desc&);
     bool		setInput(const Attrib::Desc&);
     bool		getParameters(Attrib::Desc&);
     bool		getInput(Attrib::Desc&);
+    
+    void        outChgCB(CallBacker*);
+    void        sdevsChgCB(CallBacker*);
 
     			mDeclReqAttribUIFns
 };
