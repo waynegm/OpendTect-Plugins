@@ -58,15 +58,6 @@ uiMistieEstimateMainWin::uiMistieEstimateMainWin( uiParent* p )
     gatefld_->setValue(ZGate(zr.start*zfac, zr.stop*zfac));
     gatefld_->valuechanged.notify(mCB(this,uiMistieEstimateMainWin,gatefldchangeCB));
     
-    
-/*    BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
-    filefld_ = new uiFileInput( this, "Output file",
-                                uiFileInput::Setup(uiFileDialog::Gen)
-                                .forread(false).filter("*.mta").defseldir(defseldir).allowallextensions(false) );
-    filefld_->setDefaultExtension( "mta" );
-    filefld_->attach( hCentered );
-    filefld_->attach( ensureBelow, lagfld_ );
-*/    
     postFinalise().notify(mCB(this,uiMistieEstimateMainWin,seisselCB));
 }
 
@@ -75,11 +66,6 @@ uiMistieEstimateMainWin::~uiMistieEstimateMainWin()
 
 bool uiMistieEstimateMainWin::acceptOK(CallBacker*)
 {
-/*    if (!strlen(filefld_->fileName())) {
-        uiMSG().error( tr("Please specify an output file") );
-        return false;
-    }
-*/    
     if (lineselfld_->nrChosen()==0) {
         uiMSG().error( tr("Please select the 2D line(s) to analyse") );
         return false;
@@ -106,11 +92,6 @@ bool uiMistieEstimateMainWin::acceptOK(CallBacker*)
     
     misties_ = misties.getMisties();
     
-/*    if (!misties.getMisties().write(filefld_->fileName())) {
-        ErrMsg("uiMistieEstimateMainWin::acceptOK - error writing misties to file");
-        return false;
-    }
-*/    
     return true;
 }
 

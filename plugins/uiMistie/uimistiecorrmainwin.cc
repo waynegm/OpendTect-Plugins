@@ -66,7 +66,7 @@ protected:
     bool acceptOK( CallBacker* )
     {
         if (!strlen(filefld_->fileName())) {
-            uiMSG().error( tr("Please specify an output file") );
+            uiMSG().error( tr("Please specify an input file to merge") );
             return false;
         }
         return true;
@@ -167,16 +167,16 @@ void uiMistieCorrMainWin::mergeCB( CallBacker* )
     for (int idx=0; idx<merge.size(); idx++) {
         int irow = existing.indexOf(merge.getDataName(idx));
         if (irow>=0 && dlg.replace()) {
-            table_->setValue(RowCol(row[irow], shiftCol), merge.getZCor(idx));
-            table_->setValue(RowCol(row[irow], phaseCol), merge.getPhaseCor(idx));
-            table_->setValue(RowCol(row[irow], ampCol), merge.getAmpCor(idx));
+            table_->setValue(RowCol(row[irow], shiftCol), merge.getZCor(idx), 2);
+            table_->setValue(RowCol(row[irow], phaseCol), merge.getPhaseCor(idx), 2);
+            table_->setValue(RowCol(row[irow], ampCol), merge.getAmpCor(idx), 2);
         } else {
             int newRow = table_->nrRows();
             table_->insertRows(newRow, 1);
             table_->setText(RowCol(newRow, lineCol), merge.getDataName(idx));
-            table_->setValue(RowCol(newRow, shiftCol), merge.getZCor(idx));
-            table_->setValue(RowCol(newRow, phaseCol), merge.getPhaseCor(idx));
-            table_->setValue(RowCol(newRow, ampCol), merge.getAmpCor(idx));
+            table_->setValue(RowCol(newRow, shiftCol), merge.getZCor(idx), 2);
+            table_->setValue(RowCol(newRow, phaseCol), merge.getPhaseCor(idx), 2);
+            table_->setValue(RowCol(newRow, ampCol), merge.getAmpCor(idx), 2);
         }
     }
     raise();
@@ -193,9 +193,9 @@ void uiMistieCorrMainWin::newCB( CallBacker* )
         table_->setNrRows(lnms.size());
         for (int idx=0; idx<lnms.size(); idx++) {
             table_->setText(RowCol(idx, lineCol), lnms.get(idx));
-            table_->setValue(RowCol(idx, shiftCol), 0.0);
-            table_->setValue(RowCol(idx, phaseCol), 0.0);
-            table_->setValue(RowCol(idx, ampCol), 1.0);
+            table_->setValue(RowCol(idx, shiftCol), 0.0, 2);
+            table_->setValue(RowCol(idx, phaseCol), 0.0, 2);
+            table_->setValue(RowCol(idx, ampCol), 1.0, 2);
         }
     }
 }
@@ -220,9 +220,9 @@ void uiMistieCorrMainWin::openCB( CallBacker* )
     table_->setNrRows(misties.size());
     for (int idx=0; idx<misties.size(); idx++) {
         table_->setText(RowCol(idx, lineCol), misties.getDataName(idx));
-        table_->setValue(RowCol(idx, shiftCol), misties.getZCor(idx));
-        table_->setValue(RowCol(idx, phaseCol), misties.getPhaseCor(idx));
-        table_->setValue(RowCol(idx, ampCol), misties.getAmpCor(idx));
+        table_->setValue(RowCol(idx, shiftCol), misties.getZCor(idx), 2);
+        table_->setValue(RowCol(idx, phaseCol), misties.getPhaseCor(idx), 2);
+        table_->setValue(RowCol(idx, ampCol), misties.getAmpCor(idx), 2);
     }
     raise();
 }

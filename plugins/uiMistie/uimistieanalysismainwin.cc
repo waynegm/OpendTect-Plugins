@@ -20,8 +20,12 @@
 #include "uidialog.h"
 #include "string.h"
 #include "uistrings.h"
+#include "uispinbox.h"
 
 #include "uimistieestimatemainwin.h"
+#include "mistiecordata.h"
+#include "uibufferstringsetselgrp.h"
+#include "uicorrviewer.h"
 
 static int sMnuID = 0;
 
@@ -38,6 +42,134 @@ static const char* ColumnLabels[] =
     "Amplitude\nScalar",
     "Quality",
     0
+};
+
+class uiMergeEstDlg : public uiDialog
+{ mODTextTranslationClass(uiMergeEstDlg);
+public:
+    uiMergeEstDlg( uiParent *p )
+    : uiDialog(p,Setup(tr("Merge Other Mistie File"),mNoDlgTitle,mTODOHelpKey))
+    {
+        BufferString defseldir = FilePath(GetDataDir()).add(MistieData::defDirStr()).fullPath();
+        filefld_ = new uiFileInput( this, tr("Mistie File"), uiFileInput::Setup(uiFileDialog::Gen)
+        .forread(true)
+        .defseldir(defseldir)
+        .filter(MistieData::filtStr()) );
+        filefld_->setElemSzPol(uiObject::WideVar);
+        
+        actiongrp_ = new uiButtonGroup( this, "", OD::Horizontal );
+        actiongrp_->setExclusive( true );
+        actiongrp_->attach( alignedBelow, filefld_ );
+        keepbut_ = new uiCheckBox( actiongrp_, tr("Keep") );
+        keepbut_->setChecked(true);
+        replacebut_ = new uiCheckBox( actiongrp_, tr("Replace existing") );
+        uiLabel* lbl = new uiLabel( this, tr("Merge and ") );
+        lbl->attach( centeredLeftOf, actiongrp_ );
+        
+        setOkText(uiStrings::sMerge());
+    }
+    
+    BufferString    fileName() const { return filefld_->fileName(); }
+    bool            replace() const { return replacebut_->isChecked(); }
+    
+protected:
+    bool acceptOK( CallBacker* )
+    {
+        if (!strlen(filefld_->fileName())) {
+            uiMSG().error( tr("Please specify an input file to merge") );
+            return false;
+        }
+        return true;
+    }
+    
+    uiFileInput*    filefld_;
+    uiButtonGroup*  actiongrp_;
+    uiCheckBox*     keepbut_;
+    uiCheckBox*     replacebut_;
+};
+
+class uiCorrCalcDlg : public uiDialog
+{ mODTextTranslationClass(uiCorrCalcDlg);
+public:
+    uiCorrCalcDlg( uiParent* p, const MistieData& misties, MistieCorrectionData& corrs )
+    : uiDialog(p,Setup(tr("Calculate Mistie Corrections"),mNoDlgTitle,mTODOHelpKey))
+    , misties_(misties)
+    , corrs_(corrs)
+    {
+        
+        lineselfld_ = new WMLib::uiBufferStringSetSelGrp( this, OD::ChooseZeroOrMore );
+        BufferStringSet lines;
+        misties_.getAllLines(lines);
+        lineselfld_->setInput(lines);
+
+        uiLabel* lbl = new uiLabel( this, tr("Reference Line(s)") );
+        lbl->attach(leftOf, lineselfld_);
+        
+        minqualfld_ = new uiGenInput(this, tr("Minimum Tie Quality"), FloatInpSpec(0.5));
+        minqualfld_->attach(alignedBelow, lineselfld_);
+        minqualfld_->valuechanged.notify(mCB(this,uiCorrCalcDlg,minqualCB));
+        
+        maxiterfld_ = new uiLabeledSpinBox(this, tr("Maximum Iterations"));
+        maxiterfld_->box()->setInterval(1, 100, 1);
+        maxiterfld_->box()->setValue( 20 );
+        maxiterfld_->attach(alignedBelow, minqualfld_);
+        
+        uiString minzchglbl(tr("Minimum RMS Z Mistie Change "));
+        minzchglbl.append(SI().zDomain().uiUnitStr(true));
+        minzchgfld_ = new uiGenInput(this, minzchglbl, FloatInpSpec(0.01));
+        minzchgfld_->attach(alignedBelow, maxiterfld_);
+        minzchgfld_->valuechanged.notify(mCB(this,uiCorrCalcDlg,minchgCB));
+
+        minphasechgfld_ = new uiGenInput(this, tr("Minimum RMS Phase Change (deg)"), FloatInpSpec(0.01));
+        minphasechgfld_->attach(alignedBelow, minzchgfld_);
+        minphasechgfld_->valuechanged.notify(mCB(this,uiCorrCalcDlg,minchgCB));
+        
+        minampchgfld_ = new uiGenInput(this, tr("Minimum RMS Amplitude Change"), FloatInpSpec(0.001));
+        minampchgfld_->attach(alignedBelow, minphasechgfld_);
+        minampchgfld_->valuechanged.notify(mCB(this,uiCorrCalcDlg,minchgCB));
+
+        setOkText(uiStrings::sCalculate());
+    }
+    
+protected:
+    const MistieData&           misties_;
+    MistieCorrectionData&       corrs_;
+    
+    WMLib::uiBufferStringSetSelGrp*  lineselfld_;
+    uiGenInput*                 minqualfld_;
+    uiLabeledSpinBox*           maxiterfld_;
+    uiGenInput*                 minzchgfld_;
+    uiGenInput*                 minampchgfld_;
+    uiGenInput*                 minphasechgfld_;
+    
+    void minqualCB(CallBacker*)
+    {
+        if (minqualfld_->getfValue()<0)
+            minqualfld_->setValue(0.0);
+        if (minqualfld_->getfValue()>1.0)
+            minqualfld_->setValue(1.0);
+    }
+    
+    void minchgCB(CallBacker*)
+    {
+        if (minzchgfld_->getfValue()<0.0)
+            minzchgfld_->setValue(0.0);
+        if (minphasechgfld_->getfValue()<0.0)
+            minphasechgfld_->setValue(0.0);
+        if (minampchgfld_->getfValue()<0.0)
+            minampchgfld_->setValue(0.0);
+    }
+    
+    bool acceptOK( CallBacker* )
+    {
+        BufferStringSet lnms;
+        lineselfld_->getChosen(lnms);
+        corrs_.erase();
+        corrs_.computeZCor(misties_, lnms, minqualfld_->getfValue(), maxiterfld_->box()->getValue(), 0.75, minzchgfld_->getfValue());
+        corrs_.computeAmpCor(misties_, lnms, minqualfld_->getfValue(), maxiterfld_->box()->getValue(), 0.75, minampchgfld_->getfValue());
+        
+        return true;
+    }
 };
 
 uiMistieAnalysisMainWin::uiMistieAnalysisMainWin( uiParent* p )
@@ -64,6 +196,8 @@ uiMistieAnalysisMainWin::uiMistieAnalysisMainWin( uiParent* p )
     table_->setPrefWidthInChars(80);
     table_->setPrefHeightInRows(10);
     table_->setTableReadOnly(true);
+    
+    windowClosed.notify(mCB(this,uiMistieAnalysisMainWin,closeCB));
 }
 
 uiMistieAnalysisMainWin::~uiMistieAnalysisMainWin()
@@ -86,6 +220,12 @@ void uiMistieAnalysisMainWin::createToolBar()
     tb_->addButton( helpitem_ );
 }
 
+void uiMistieAnalysisMainWin::closeCB(CallBacker*)
+{
+    if (corrviewer_)
+        corrviewer_->close();
+}
+
 void uiMistieAnalysisMainWin::helpCB( CallBacker* cb )
 {
     HelpProvider::provideHelp( HelpKey("wgm","mistie") );
@@ -93,51 +233,35 @@ void uiMistieAnalysisMainWin::helpCB( CallBacker* cb )
 
 void uiMistieAnalysisMainWin::calcCB( CallBacker* cb )
 {
-    uiMSG().message("Calculate");
+    uiCorrCalcDlg dlg(this, misties_, corrs_);
+    if (!dlg.go())
+        return;
+    
+    if (!corrviewer_)
+        corrviewer_ = new uiCorrViewer(this, corrs_);
+    corrviewer_->show();
+    corrviewer_->raise();
 }
 
 void uiMistieAnalysisMainWin::mergeCB( CallBacker* )
 {
-/*    uiMergeCorDlg dlg(this);
+    uiMergeEstDlg dlg(this);
     if (!dlg.go())
         return;
     
-    MistieCorrectionData merge;
-    if (!merge.read(dlg.fileName())) {
-        ErrMsg("uiMistieCorrMainWin::mergeCB - error reading misite correction file");
+    corrs_.erase();
+    if (!misties_.read(dlg.fileName(), true, dlg.replace())) {
+        ErrMsg("uiMistieAnalysisMainWin::mergeCB - error reading mistie file");
         return;
     }
     
-    BufferStringSet existing;
-    TypeSet<int> row;
-    for (int idx=0; idx<table_->nrRows(); idx++) {
-        BufferString lnm(table_->text(RowCol(idx, lineCol)));
-        if (!lnm.isEmpty()) {
-            existing.add(lnm);
-            row += idx;
-        }
-    }
-    for (int idx=0; idx<merge.size(); idx++) {
-        int irow = existing.indexOf(merge.getDataName(idx));
-        if (irow>=0 && dlg.replace()) {
-            table_->setValue(RowCol(row[irow], shiftCol), merge.getZCor(idx));
-            table_->setValue(RowCol(row[irow], phaseCol), merge.getPhaseCor(idx));
-            table_->setValue(RowCol(row[irow], ampCol), merge.getAmpCor(idx));
-        } else {
-            int newRow = table_->nrRows();
-            table_->insertRows(newRow, 1);
-            table_->setText(RowCol(newRow, lineCol), merge.getDataName(idx));
-            table_->setValue(RowCol(newRow, shiftCol), merge.getZCor(idx));
-            table_->setValue(RowCol(newRow, phaseCol), merge.getPhaseCor(idx));
-            table_->setValue(RowCol(newRow, ampCol), merge.getAmpCor(idx));
-        }
-    }
-    raise();*/
+    fillTable();
 }
 
 void uiMistieAnalysisMainWin::newCB( CallBacker* )
 {
     filename_.setEmpty();
+    corrs_.erase();
     
     uiMistieEstimateMainWin* dlg = new uiMistieEstimateMainWin(this);
     if (!dlg->go())
@@ -162,12 +286,12 @@ void uiMistieAnalysisMainWin::fillTable()
         table_->setText(RowCol(idx, lineBCol), lineB);
         table_->setValue(RowCol(idx, trcACol), trcA);
         table_->setValue(RowCol(idx, trcBCol), trcB);
-        table_->setValue(RowCol(idx, xCol), pos.x);
-        table_->setValue(RowCol(idx, yCol), pos.y);
-        table_->setValue(RowCol(idx, zCol), zdiff);
-        table_->setValue(RowCol(idx, phaseCol), phasediff);
-        table_->setValue(RowCol(idx, ampCol), ampdiff);
-        table_->setValue(RowCol(idx, qualCol), quality);
+        table_->setValue(RowCol(idx, xCol), pos.x, 1);
+        table_->setValue(RowCol(idx, yCol), pos.y, 1);
+        table_->setValue(RowCol(idx, zCol), zdiff, 2);
+        table_->setValue(RowCol(idx, phaseCol), phasediff, 2);
+        table_->setValue(RowCol(idx, ampCol), ampdiff, 2);
+        table_->setValue(RowCol(idx, qualCol), quality, 3);
     }
     table_->setPrefHeightInRows(50);
 }
@@ -179,7 +303,8 @@ void uiMistieAnalysisMainWin::openCB( CallBacker* )
     dlg.setDirectory(defseldir);
     if (!dlg.go())
         return;
-
+    
+    corrs_.erase();
     filename_ = dlg.fileName();
     if (!misties_.read( filename_ )) {
         filename_.setEmpty();
@@ -195,25 +320,28 @@ void uiMistieAnalysisMainWin::saveCB( CallBacker* )
     if (filename_.isEmpty())
         saveasCB(0);
     
-    if (!misties_.write( filename_))
-        ErrMsg("uiMistieAnalysisMainWin::saveCB - error saving misties to file");
+    if (misties_.size()>0)
+        if (!misties_.write( filename_))
+            ErrMsg("uiMistieAnalysisMainWin::saveCB - error saving misties to file");
 }
 
 void uiMistieAnalysisMainWin::saveasCB( CallBacker* )
 {
-    BufferString defseldir = FilePath(GetDataDir()).add(MistieData::defDirStr()).fullPath();
-    uiFileDialog dlg( this, false, 0, MistieData::filtStr(), tr("Save Misties") );
-    dlg.setMode(uiFileDialog::AnyFile);
-    dlg.setDirectory(defseldir);
-    dlg.setDefaultExtension(MistieData::extStr());
-    dlg.setConfirmOverwrite(true);
-    dlg.setSelectedFilter(MistieData::filtStr());
-    if (!dlg.go())
-        return;
+    if (misties_.size()>0) {
+        BufferString defseldir = FilePath(GetDataDir()).add(MistieData::defDirStr()).fullPath();
+        uiFileDialog dlg( this, false, 0, MistieData::filtStr(), tr("Save Misties") );
+        dlg.setMode(uiFileDialog::AnyFile);
+        dlg.setDirectory(defseldir);
+        dlg.setDefaultExtension(MistieData::extStr());
+        dlg.setConfirmOverwrite(true);
+        dlg.setSelectedFilter(MistieData::filtStr());
+        if (!dlg.go())
+            return;
     
-    filename_ = dlg.fileName();
-    raise();
-    saveCB(0);
+        filename_ = dlg.fileName();
+        raise();
+        saveCB(0);
+    }
 }
 
 uiString uiMistieAnalysisMainWin::getCaptionStr() const

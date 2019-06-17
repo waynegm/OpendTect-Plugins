@@ -8,6 +8,7 @@
 
 #include "uimistiemod.h"
 #include "mistiedata.h"
+#include "mistiecordata.h"
 
 class uiTable;
 class uiCheckBox;
@@ -34,8 +35,10 @@ protected:
 
     uiToolBar*      tb_;
     uiTable*        table_;
+    uiDialog*       corrviewer_;
     BufferString    filename_;
     MistieData      misties_;
+    MistieCorrectionData corrs_;
 
     MenuItem        newitem_;
     MenuItem        openitem_;
@@ -55,6 +58,8 @@ protected:
     void            saveasCB(CallBacker*);
     void            mergeCB(CallBacker*);
     void            calcCB(CallBacker*);
+    void            closeCB(CallBacker*);
+    
 private:
 
     uiString    getCaptionStr() const;

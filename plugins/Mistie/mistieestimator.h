@@ -6,7 +6,7 @@
 #include "ranges.h"
 
 
-#include "uimistiemod.h"
+#include "mistiemod.h"
 #include "mistiedata.h"
 
 class Line2DInterSectionSet;

@@ -69,7 +69,7 @@ bool MistieEstimator::doWork( od_int64 start, od_int64 stop, int threadid )
         float zdiff = 0.0;
         float phasediff = 0.0;
         float ampdiff = 1.0;
-        float quality = 1.0;
+        float quality = 0.0;
         
         if (!misties_.get(idx, lineA, trcnrA, lineB, trcnrB)) {
             BufferString tmp("MistieEstimator::doWork - could not get intersection details at index: ");
@@ -133,14 +133,6 @@ bool MistieEstimator::doWork( od_int64 start, od_int64 stop, int threadid )
             float p1 = cp>=0.0 ? std::arg(AS(ir)) : std::arg(AS(il));
             p1 = p1-p0>M_PI ? p1-M_2PI : p1-p0<-M_PI ? p1+M_2PI : p1;
             phasediff = Math::toDegrees(cp>=0.0 ? (p1-p0)*cp+p0 :(p0-p1)*cp+p0) ;
-            BufferString tmp;
-            tmp += lineA; tmp += " "; tmp += lineB; tmp += "\n";
-            tmp += il; tmp += " "; tmp += maxIndex; tmp += " "; tmp += ir;  tmp += "\n";
-            tmp += CC(il)/(sumAA*sumBB); tmp += " "; tmp += CC(maxIndex)/(sumAA*sumBB); tmp += " "; tmp += CC(ir)/(sumAA*sumBB);  tmp += "\n";
-            tmp += cp; tmp += " zdiff: "; tmp += zdiff; tmp += " quality: "; tmp += quality;  tmp += "\n";
-            tmp += std::arg(AS(il)); tmp += " "; tmp += p0; tmp += " "; tmp += std::arg(AS(ir)); tmp += "\n";
-            tmp += "p1: "; tmp += p1; tmp += " phasediff: "; tmp += phasediff; tmp += "\n";
-            ErrMsg(tmp);
         } else {
             BufferString tmp("MistieEstimator::doWork - could not get trace data for: ");
             tmp += lineA; tmp+= " "; tmp += lineB;

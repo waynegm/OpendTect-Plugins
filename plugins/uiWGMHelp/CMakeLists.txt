@@ -4,6 +4,7 @@ set(OD_MODULE_SOURCES
 	uiwgmhelppi.cc
 	ui3drangegrp.cc 
 	uiseis2dlineselgrp.cc 
-	uipolygonparsel.cc )
+	uipolygonparsel.cc 
+	uibufferstringsetselgrp.cc )
 SET( OD_PLUGIN_ALO_EXEC ${OD_MAIN_EXEC} )
 OD_INIT_MODULE()
