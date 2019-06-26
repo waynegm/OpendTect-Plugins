@@ -1,5 +1,13 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.6
+
+### Mistie plugin
+- Add Mistie Analysis, Estimation and Correction computation tools
+
+### MLVFilterAttrib
+- Add trimmed mean output option
+
 ## Release 6.4.5
 
 ### Mistie plugin
