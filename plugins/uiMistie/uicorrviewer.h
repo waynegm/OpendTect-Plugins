@@ -24,6 +24,9 @@ public:
     uiCorrViewer(uiParent* p, const MistieCorrectionData& corrs);
     ~uiCorrViewer();
 
+    void            newCorrData();
+    bool            checkSave();
+    
 protected:
 
     uiToolBar*      tb_;
@@ -39,6 +42,7 @@ protected:
     
     void            saveCB(CallBacker*);
     void            saveasCB(CallBacker*);
+    void            closeCB(CallBacker*);
 private:
 
     uiString    getCaptionStr() const;

@@ -12,6 +12,7 @@ __pycache__
 *.lo
 *.o
 *.obj
+*.inc
 
 # Compiled Dynamic libraries
 *.so

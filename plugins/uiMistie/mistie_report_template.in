@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mistie Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.6/nv.d3.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+</head>
+<body>
+<h1>MISTIE REPORT</h1>
+
+<table id="mistie_table" class="display" width="100%"> </table>
+<br/>
+<table style="width: 100%; border: 2px solid black;">
+    <caption>MISTIE HISTOGRAMS</caption>
+    <tr>
+        <td style="width: 30%;"><div id="zmistie" ></div></td>
+        <td style="width: 30%;"><div id="phasemistie"></div></td>
+        <td style="width: 30%;"><div id="ampmistie"></div></td>
+    </tr>
+</table>
+<br/>
+<table style="width: 100%; height: 800px; border: 2px solid black;">
+    <caption>MISTIE CROSSPLOT</caption>
+    <tr>
+        <td><div id="xplot" style= "width: 100%; height: 800px;"></div>
+    </tr>
+</table>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+<script>
+    function arrayColumn(arr, n) {
+        return arr.map(x=> x[n]);
+    }
+    $(document).ready(function() {
+        var coltitles = [];
+        labels.forEach(function(item) { var v= {}; v.title = item; coltitles.push(v); });
+        var ralTargets = [];
+        if (labels.length>10) 
+            ralTargets = [ 4, 5, 6, 7, 8, 9, 10, 11, 12 ];
+        else
+            ralTargets = [ 4, 5, 6, 7, 8, 9 ];
+            
+        var intsecs = [];
+        misties.forEach(function(item) { intsecs.push(item[0]+"/"+item[2]); });
+        
+        $('#mistie_table').DataTable( {
+            data: misties,
+            render: $.fn.dataTable.render.number( '', '.', 2, '' ),
+            columns: coltitles,
+            columnDefs: [{
+                targets: ralTargets,
+                className: 'dt-body-right',
+                render: $.fn.dataTable.render.number( '', '.', 2, '' )
+            }]
+        } );
+        
+        var zHistLayout= {
+           barmode: "overlay",
+           xaxis: {title: labels[6]},
+           yaxis: {title: "Count"},
+           legend: { x: 0.5, y: 1.2 }
+        };
+        var zdata;
+        var zraw = { x: arrayColumn(misties,6), name: 'Before Correction', autobinx: false, xbins:{ size: 1.0 }, type: 'histogram', opacity: 0.5 };
+        if (labels.length>10) { 
+            var zcor = { x: arrayColumn(misties,10), name: 'After Correction', autobinx: false, xbins:{ size: 1.0 }, type: 'histogram', opacity: 0.5 };
+            zdata = [zraw, zcor];
+        } else
+            zdata = [zraw];
+        Plotly.newPlot('zmistie', zdata, zHistLayout);
+        
+        var pHistLayout= {
+           barmode: "overlay",
+           xaxis: {title: labels[7]},
+           yaxis: {title: "Count"},
+           legend: { x: 0.5, y: 1.2 }
+        };
+        var pdata;
+        var praw = { x: arrayColumn(misties,7), name: 'Before Correction', autobinx: false, xbins:{ size: 10.0 }, type: 'histogram', opacity: 0.5 };
+        if (labels.length>10) { 
+            var pcor = { x: arrayColumn(misties,11), name: 'After Correction', autobinx: false, xbins:{ size: 10.0 }, type: 'histogram', opacity: 0.5 };
+            pdata = [praw, pcor];
+        } else
+            pdata = [praw];
+        Plotly.newPlot('phasemistie', pdata, pHistLayout);
+        
+        var aHistLayout= {
+           barmode: "overlay",
+           xaxis: {title: labels[8]},
+           yaxis: {title: "Count"},
+           legend: { x: 0.5, y: 1.2 }
+        };
+        var adata;
+        var araw = { x: arrayColumn(misties,8), name: 'Before Correction', autobinx: false, xbins:{ size: 0.1 }, type: 'histogram', opacity: 0.5 };
+        if (labels.length>10) { 
+            var acor = { x: arrayColumn(misties,12), name: 'After Correction', autobinx: false, xbins:{ size: 0.1 }, type: 'histogram', opacity: 0.5 };
+            adata = [araw, acor];
+        } else
+            adata = [araw];
+        Plotly.newPlot('ampmistie', adata, aHistLayout);
+        
+        var xplot_data;
+        var xplot_raw = {
+            name: 'Before Correction',
+            x: arrayColumn(misties,6), y: arrayColumn(misties,7), z: arrayColumn(misties,8),
+            text: intsecs,
+            mode: 'markers',
+            marker: { size: 4 },
+            type: 'scatter3d',
+            hoverinfo: "text"
+        };
+        var xplot_layout = {
+            scene: { xaxis: {title: labels[6]}, yaxis: {title: labels[7]}, zaxis: {title: labels[8]} },
+            margin: { l: 0, r: 0, b: 0, t: 0 },
+            legend: { x: 0.5, y: 1.0 }
+        };
+        if (labels.length>10) {
+                var xplot_cor = {
+                    name: 'After Correction',
+                    x: arrayColumn(misties,10), y: arrayColumn(misties,11), z: arrayColumn(misties,12),
+                    mode: 'markers',
+                    marker: { size: 4 },
+                    type: 'scatter3d',
+                    text: intsecs,
+                    hoverinfo: "text"
+                };
+                xplot_data = [xplot_raw, xplot_cor];
+            } else
+                xplot_data = [xplot_raw];
+        
+        Plotly.newPlot('xplot', xplot_data, xplot_layout);
+    } );
+</script>

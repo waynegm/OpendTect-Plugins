@@ -12,6 +12,7 @@
 
 class uiTable;
 class uiCheckBox;
+class uiCorrViewer;
 
 mClass(uiMistie) uiMistieAnalysisMainWin : public uiDialog
 { mODTextTranslationClass(uiMistieAnalysisMainWin);
@@ -35,7 +36,7 @@ protected:
 
     uiToolBar*      tb_;
     uiTable*        table_;
-    uiDialog*       corrviewer_;
+    uiCorrViewer*   corrviewer_;
     BufferString    filename_;
     MistieData      misties_;
     MistieCorrectionData corrs_;
@@ -46,6 +47,7 @@ protected:
     MenuItem        saveasitem_;
     MenuItem        mergeitem_;
     MenuItem        calcitem_;
+    MenuItem        xplotitem_;
     MenuItem        helpitem_;
     
     void            createToolBar();
@@ -58,7 +60,10 @@ protected:
     void            saveasCB(CallBacker*);
     void            mergeCB(CallBacker*);
     void            calcCB(CallBacker*);
+    void            xplotCB(CallBacker*);
     void            closeCB(CallBacker*);
+    
+    bool            checkMistieSave();
     
 private:
 

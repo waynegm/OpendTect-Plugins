@@ -54,11 +54,18 @@ uiCorrViewer::uiCorrViewer( uiParent* p, const MistieCorrectionData& corrs )
     fillTable();
     setCtrlStyle(CloseOnly);
     setModal(false);
+    windowClosed.notify(mCB(this,uiCorrViewer,closeCB));
 }
 
 uiCorrViewer::~uiCorrViewer()
 {
     
+}
+
+void uiCorrViewer::newCorrData()
+{
+    filename_.setEmpty();
+    fillTable();
 }
 
 void uiCorrViewer::createToolBar()
@@ -85,6 +92,25 @@ void uiCorrViewer::fillTable()
         table_->setValue(RowCol(idx, phaseCol), phasecor, 2);
         table_->setValue(RowCol(idx, ampCol), ampcor, 2);
     }
+}
+
+bool uiCorrViewer::checkSave()
+{
+    if (corrs_.size()>0 && filename_.isEmpty()) {
+        uiString msg = tr("The latest mistie corrections have not been saved.\nDo you want to save them?");
+        int result = uiMSG().askSave(msg);
+        if (result == 1)
+            saveasCB(0);
+        else if (result == -1)
+            return false;
+    }
+    return true;
+}
+
+void uiCorrViewer::closeCB( CallBacker* )
+{
+    if (!checkSave())
+        return;
 }
 
 void uiCorrViewer::saveCB( CallBacker* )

@@ -17,8 +17,8 @@ public:
     
     MistieData& operator=(const MistieData&);
     
-    static const char* extStr()     { return "misties"; }
-    static const char* filtStr()    { return "*.misties"; }
+    static const char* extStr()     { return "mistie"; }
+    static const char* filtStr()    { return "*.mistie"; }
     static const char* defDirStr()  { return "Misc"; }
     
     bool            read( const char* filename, bool merge=false, bool replace=false );
@@ -37,6 +37,7 @@ public:
     float           getAmpMistie( int idx ) const;
     float           getAmpMistieWith( const MistieCorrectionData& corrections, int idx ) const;
     float           getQuality( int idx ) const;
+    Coord           getPos( int idx ) const;
 
     void            getAllLines( BufferStringSet& lnms ) const;
     bool            get( int idx, BufferString& dataA, int& trcA, BufferString& dataB, int& trcB ) const;
@@ -47,6 +48,7 @@ public:
     bool            getWith( const MistieCorrectionData& corrections, int idx, 
                                           float& zdiff, float& phasediff, float& ampdiff ) const;
     
+    bool            setPhaseMistie(int idx, float phasediff);
     bool            set( int idx, const char* dataA, int trcA, const char* dataB, int trcB, Coord pos, 
                          float zdiff, float phasediff, float ampdiff , float quality );
     bool            set( int idx, float zdiff, float phasediff, float ampdiff, float quality );

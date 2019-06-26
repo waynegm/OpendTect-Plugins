@@ -3,7 +3,6 @@
 #include "od_iostream.h"
 
 #include "mistiecordata.h"
-#include "phaseangle.h"
 
 MistieData::MistieData()
 {}
@@ -118,7 +117,7 @@ bool MistieData::add( const char* dataA, int trcA, const char* dataB, int trcB, 
 
 bool MistieData::add( const char* dataA, int trcA, const char* dataB, int trcB, Coord pos )
 {
-    return add( dataA, trcA, dataB, trcB, pos, mUdf(float), mUdf(float), mUdf(float), mUdf(float));
+    return add( dataA, trcA, dataB, trcB, pos, 0.0, 0.0, 1.0, 1.0);
 }
 
 float MistieData::getZMistie( int idx ) const
@@ -135,7 +134,7 @@ float MistieData::getZMistieWith(const MistieCorrectionData& corrections, int id
     if (idxA>=0 && idxB>=0)
         return getZMistie(idx) - corrections.getZCor(idxA) + corrections.getZCor(idxB);
     else
-        return mUdf(float);
+        return getZMistie(idx);
 }
 
 float MistieData::getPhaseMistie( int idx ) const
@@ -150,12 +149,9 @@ float MistieData::getPhaseMistieWith(const MistieCorrectionData& corrections, in
     int idxA = corrections.getIndex(lineA);
     int idxB = corrections.getIndex(lineB);
     if (idxA>=0 && idxB>=0) {
-        WMLib::PhaseAngle pa = WMLib::PhaseAngle::degrees(getPhaseMistie(idx));
-        WMLib::PhaseAngle pA = WMLib::PhaseAngle::degrees(corrections.getPhaseCor(idxA));
-        WMLib::PhaseAngle pB = WMLib::PhaseAngle::degrees(corrections.getPhaseCor(idxB));
-        return ( pa + pA - pB ).degrees();
+        return getPhaseMistie(idx) - corrections.getPhaseCor(idxA) + corrections.getPhaseCor(idxB) ;
     } else
-        return mUdf(float);
+        return getPhaseMistie(idx);
 }
 
 float MistieData::getAmpMistie( int idx ) const
@@ -172,12 +168,17 @@ float MistieData::getAmpMistieWith(const MistieCorrectionData& corrections, int 
     if (idxA>=0 && idxB>=0)
         return getAmpMistie(idx) / corrections.getAmpCor(idxA) * corrections.getAmpCor(idxB);
     else
-        return mUdf(float);
+        return getAmpMistie(idx);
 }
 
 float MistieData::getQuality( int idx ) const
 {
     return quality_[idx];
+}
+
+Coord MistieData::getPos( int idx ) const
+{
+    return pos_[idx];
 }
 
 void MistieData::getAllLines( BufferStringSet& lnms ) const
@@ -251,14 +252,20 @@ bool MistieData::getWith(const MistieCorrectionData& corrections, int idx, float
         int idxB = corrections.getIndex(lineB);
         if (idxA>=0 && idxB>=0) {
             zdiff += corrections.getZCor(idxB) - corrections.getZCor(idxA);
-            WMLib::PhaseAngle pa = WMLib::PhaseAngle::degrees(phasediff);
-            WMLib::PhaseAngle pA = WMLib::PhaseAngle::degrees(corrections.getPhaseCor(idxA));
-            WMLib::PhaseAngle pB = WMLib::PhaseAngle::degrees(corrections.getPhaseCor(idxB));
-            phasediff = ( pa + pA - pB ).degrees();
+            phasediff += corrections.getPhaseCor(idxB) - corrections.getPhaseCor(idxA);
             ampdiff *= corrections.getAmpCor(idxB) / corrections.getAmpCor(idxA);
         } else
             return false;
         
+        return true;
+    }
+    return false;
+}
+
+bool MistieData::setPhaseMistie( int idx, float phasediff )
+{
+    if (idx>=0 && idx<size()) {
+        phasediff_[idx] = phasediff;
         return true;
     }
     return false;
