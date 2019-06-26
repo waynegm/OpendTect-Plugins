@@ -31,9 +31,8 @@
 
 static int sMnuID = 0;
 
-static const char* mistie_report = 
-#include "mistie_report.inc"
-;
+#include "mistie_report.h" 
+
 
 static const char* ColumnLabels[] =
 {

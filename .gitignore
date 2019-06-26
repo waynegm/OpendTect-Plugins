@@ -5,6 +5,7 @@ CMakeModules
 Makefile
 cmake_install.cmake
 install_manifest.txt
+mistie_report.h
 .directory
 __pycache__
 # Compiled Object files
