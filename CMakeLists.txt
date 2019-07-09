@@ -22,6 +22,7 @@ find_package( OpendTect )
 
 #Setup the modules
 set ( PLUGINS uiWGMHelp
+            uiWMTools
             uiDataExtentHorizon
             uiGeopackageExport
             uiGrid2D3DHorizon

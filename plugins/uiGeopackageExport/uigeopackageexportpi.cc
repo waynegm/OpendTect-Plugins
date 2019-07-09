@@ -1,5 +1,6 @@
 #include "uigeopackageexportmod.h"
 
+#include "ioman.h"
 #include "uimenu.h"
 #include "uiodmenumgr.h"
 #include "uitoolbar.h"
@@ -7,14 +8,22 @@
 #include "odplugin.h"
 #include "survinfo.h"
 #include "uimsg.h"
+#include "uistring.h"
 #include "coordsystem.h"
 #include "ctxtioobj.h"
+#include "emmanager.h"
 #include "emsurfacetr.h"
+#include "emhorizon3d.h"
 #include "iodir.h"
 #include "iodirentry.h"
+#include "vishorizondisplay.h"
+#include "uivismenuitemhandler.h"
+#include "uivispartserv.h"
+#include "uiodscenemgr.h"
 
 #include "uigeopackageexportmainwin.h"
 #include "uigeotiffexportmainwin.h"
+#include "uigeopackagetreeitem.h"
 
 
 mDefODPluginInfo(uiGeopackageExport)
@@ -37,11 +46,13 @@ public:
     uiODMain*		appl_;
     uiGeopackageExportMainWin*	gpxdlg_;
     uiGeotiffExportMainWin*     gtifdlg_;
+    uiVisMenuItemHandler        geopmnuitemhndlr_;
 
     void		updateToolBar(CallBacker*);
     void		updateMenu(CallBacker*);
     void		gpxDialog(CallBacker*);
     void		gtifDialog(CallBacker*);
+    void        doDisplayCB(CallBacker*);
     
     bool        hasCRSdefined();
     bool        has3DHorizons();
@@ -52,8 +63,10 @@ uiGeopackageExportMgr::uiGeopackageExportMgr( uiODMain* a )
 	: appl_(a)
 	, gpxdlg_(0)
     , gtifdlg_(0)
+    , geopmnuitemhndlr_(visSurvey::HorizonDisplay::sFactoryKeyword(), *a->applMgr().visServer(), tr("Geopackage Display"), mCB(this, uiGeopackageExportMgr, doDisplayCB), "Add", 994)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiGeopackageExportMgr::updateMenu );
+    mAttachCB( IOM().applicationClosing, uiGeopackageExportMgr::updateMenu );
     updateMenu(0);
 }
 
@@ -93,6 +106,8 @@ void uiGeopackageExportMgr::updateMenu( CallBacker* )
     }
     newitem = new uiAction( tr("Geotiff Export"), mCB(this,uiGeopackageExportMgr,gtifDialog));
     appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertItem( newitem );
+    
+    
 }
 
 void uiGeopackageExportMgr::gpxDialog( CallBacker* )
@@ -128,6 +143,33 @@ void uiGeopackageExportMgr::gtifDialog( CallBacker* )
     gtifdlg_->raise();
 }
 
+void uiGeopackageExportMgr::doDisplayCB( CallBacker* )
+{
+    const int displayid = geopmnuitemhndlr_.getDisplayID();
+    uiVisPartServer* visserv = appl_->applMgr().visServer();
+    mDynamicCastGet(visSurvey::HorizonDisplay*,hd,visserv->getObject(displayid))
+    if ( !hd ) return;
+    
+    EM::EMObject* emobj = EM::EMM().getObject( hd->getObjectID() );
+    mDynamicCastGet(EM::Horizon3D*,hor,emobj)
+    if ( !hor ) { uiMSG().error("Internal: cannot find horizon"); return; }
+    
+    uiTreeItem* parent = appl_->sceneMgr().findItem( displayid );
+    if ( !parent )
+        return;
+
+    const int attrib = visserv->addAttrib( displayid );
+    Attrib::SelSpec spec( "Geopackage", Attrib::SelSpec::cAttribNotSel(), false, 0 );
+    spec.setDefString( uiGeopackageTreeItem::sKeyGeopackageDefString() );
+    visserv->setSelSpec( displayid, attrib, spec );
+    
+    uiGeopackageTreeItem* newitem = new uiGeopackageTreeItem(typeid(*parent).name());
+    if (newitem) {
+        parent->addChild(newitem, false);
+        newitem->showPropertyDlg();
+    }
+}
+
 mDefODInitPlugin(uiGeopackageExport)
 {
     mDefineStaticLocalObject( PtrMan<uiGeopackageExportMgr>, theinst_, = 0 );
@@ -136,6 +178,8 @@ mDefODInitPlugin(uiGeopackageExport)
     theinst_ = new uiGeopackageExportMgr( ODMainWin() );
     if ( !theinst_ )
         return "Cannot instantiate Geopackage Export plugin";
+ 
+    uiGeopackageTreeItem::initClass();
     
-     return 0;
+    return 0;
 }
