@@ -101,7 +101,7 @@ bool uiGeopackageReader::getNextFeature(ManagedObjectSet<ODPolygon<Pos::Ordinate
     if (gdalLayer_) {
         OGRFeature* poFeature = gdalLayer_->GetNextFeature();
         if (poFeature) {
-/*            OGRGeometry* poGeom = poFeature->GetGeometryRef();
+            OGRGeometry* poGeom = poFeature->GetGeometryRef();
             if (poGeom) {
                 OGRwkbGeometryType wkbType = wkbFlatten(poGeom->getGeometryType());
                 if (wkbType == wkbLineString) {
@@ -145,7 +145,7 @@ bool uiGeopackageReader::getNextFeature(ManagedObjectSet<ODPolygon<Pos::Ordinate
                     res = false;
                 }
             }
-*/      }
+      }
         OGRFeature::DestroyFeature(poFeature);
     }
     return res;

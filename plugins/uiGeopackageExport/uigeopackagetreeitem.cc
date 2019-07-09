@@ -62,7 +62,11 @@ bool makeLine( const Coord& start, const Coord& stop, const Coord& step, TypeSet
     float gridX = floor(start.x/step.x);
     float gridY = floor(start.y/step.y);
     float dgridX, dgridY, dtX, dtY;
-    if (dir.x>0) {
+	if (mIsZero(dir.x*dir.x, mDefEpsF))
+		dir.x = dir.x < 0 ? -mDefEpsF : mDefEpsF;
+	if (mIsZero(dir.y*dir.y, mDefEpsF))
+		dir.y = dir.y < 0 ? -mDefEpsF : mDefEpsF;
+	if (dir.x>0) {
         dgridX = 1;
         dtX = (gridX*step.x-start.x)/dir.x;
     } else {
@@ -80,15 +84,16 @@ bool makeLine( const Coord& start, const Coord& stop, const Coord& step, TypeSet
     float ddtY = dgridY*step.y/dir.y;
     
     float t = 0.0;
+	float tlast = 1.0;
     while (t<1.0) {
-        output += start + dir * t;
+		if (t!=tlast)
+			output += start + dir * t;
+		tlast = t;
         if (dtX<dtY) {
-            gridX += dgridX;
             t += dtX;
-            dtX = ddtX;
-            dtY -= dtX;
+			dtY -= dtX;
+			dtX = ddtX;
         } else {
-            gridY +=dgridY;
             t += dtY;
             dtX -= dtY;
             dtY = ddtY;
@@ -440,7 +445,7 @@ void uiGeopackageTreeItem::showPropertyDlg()
         drawstyle_ = new visBase::DrawStyle;
         drawstyle_->ref();
     }
-    drawstyle_->setLineStyle( ls );
+    drawstyle_->setLineStyle( nls );
     if (!material_) {
         material_ = new visBase::Material;
         material_->ref();
@@ -472,16 +477,15 @@ bool uiGeopackageTreeItem::createPolyLines()
     if ( !drawstyle_ ) {
         drawstyle_ = new visBase::DrawStyle;
         drawstyle_->ref();
-        lines_->addNodeState( drawstyle_ );
     }
-    
+	lines_->addNodeState(drawstyle_);
     if ( !material_ ) {
         material_ = new visBase::Material;
         material_->ref();
         material_->setColor( color_ );
-        lines_->setMaterial( material_ );
     }
-    
+	lines_->setMaterial(material_);
+
     return true;
 }
 
@@ -515,13 +519,14 @@ void uiGeopackageTreeItem::showLayer()
                 int start = lines_->size();
                 for (int iv=0; iv<seg.size();iv++) {
                     Coord3 vrtxcoord = seg[iv];
-                    visBase::Transformation::transform( displaytrans, vrtxcoord, vrtxcoord );
+					vrtxcoord.coord() = SI().binID2Coord().transform(seg[iv].coord());
                     lines_->addPoint(vrtxcoord);
                 }
                 ps->setRange(Interval<int>(start,lines_->size()-1));
                 lines_->addPrimitiveSet(ps);
             }
         }
+		lines_->dirtyCoordinates();
     }
 }
 
