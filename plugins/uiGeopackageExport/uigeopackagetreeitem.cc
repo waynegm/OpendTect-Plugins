@@ -84,9 +84,9 @@ bool makeLine( const Coord& start, const Coord& stop, const Coord& step, TypeSet
     float ddtY = dgridY*step.y/dir.y;
     
     float t = 0.0;
-	float tlast = 1.0;
+	float tlast = -1.0;
     while (t<1.0) {
-		if (t!=tlast)
+		if (t>tlast)
 			output += start + dir * t;
 		tlast = t;
         if (dtX<dtY) {
@@ -142,12 +142,12 @@ float Hor3DTool::interpZat( float inl, float crl, bool applyZtransform ) const
     
     if (inlrg_.includes(inl, false) && crlrg_.includes(crl, false)) {
         Interpolate::LinearReg2D<float> interp;
-        float fx = floor(inl);
-        float fy = floor(crl);
+        float fx = floor(inl/inlrg_.step)*inlrg_.step;
+        float fy = floor(crl/crlrg_.step)*crlrg_.step;
         BinID b00(fx, fy);
-        BinID b10 = b00+BinID(1,0);
-        BinID b01 = b00+BinID(0,1);
-        BinID b11 = b00+BinID(1,1);
+        BinID b10 = b00+BinID(inlrg_.step,0);
+        BinID b01 = b00+BinID(0,crlrg_.step);
+        BinID b11 = b00+BinID(inlrg_.step,crlrg_.step);
         float z00 = hor_->getZ(b00);
         if (mIsUdf(z00))
             return mUdf(float);
@@ -166,8 +166,8 @@ float Hor3DTool::interpZat( float inl, float crl, bool applyZtransform ) const
             ztrans_->transform(b01, SamplingData<float>(z01,1), 1, &z01);
             ztrans_->transform(b11, SamplingData<float>(z11,1), 1, &z11);
         }
-        interp.set(hor_->getZ(b00), hor_->getZ(b00+BinID(1,0)), hor_->getZ(b00+BinID(0,1)), hor_->getZ(b00+BinID(1,1)));
-        return interp.apply(inl-fx, crl-fy);
+        interp.set(z00, z01, z10, z11);
+        return interp.apply((inl-fx)/inlrg_.step, (crl-fy)/crlrg_.step);
     } else
         return mUdf(float);
 }
