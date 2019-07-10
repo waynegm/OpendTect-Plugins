@@ -68,6 +68,7 @@ private:
     visSurvey::HorizonDisplay*  getHorDisp();
     
     uiGeopackageReader*     reader_;
+	int						zshift_;
     Color                   color_;
     int                     linewidth_;
     visBase::PolyLine*      lines_;

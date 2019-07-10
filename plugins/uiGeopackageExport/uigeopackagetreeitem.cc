@@ -25,7 +25,8 @@
 #include "uisellinest.h"
 #include "uicombobox.h"
 #include "uifileinput.h"
-#include "uigeninput.h"
+#include "uispinbox.h"
+#include "uilabel.h"
 #include "uidialog.h"
 #include "uistrings.h"
 #include "uiodmain.h"
@@ -200,7 +201,7 @@ void Hor3DTool::profile( const ODPolygon<Pos::Ordinate_Type> path, ManagedObject
 class uiGeopackageParsDlg : public uiDialog
 { mODTextTranslationClass(uiGeopackageParsDlg);
 public:
-    uiGeopackageParsDlg( uiParent* p, uiGeopackageReader& reader, const OD::LineStyle& ls )
+    uiGeopackageParsDlg( uiParent* p, uiGeopackageReader& reader, const OD::LineStyle& ls, const int shift=0 )
         : uiDialog(p, Setup(tr("Geopackage Display Options"),mNoDlgTitle,mTODOHelpKey))
         , reader_(reader)
     {
@@ -218,24 +219,25 @@ public:
         layerfld_->setReadOnly(true);
         layerfld_->selectionChanged.notify(mCB(this, uiGeopackageParsDlg, layerChgCB));
         
-//        fieldfld_ = new uiComboBox(this, "Filter Field");
-//        fieldfld_->attach (alignedBelow, layerfld_);
-//        fieldfld_->setReadOnly(true);
-//        fieldfld_->selectionChanged.notify(mCB(this, uiGeopackageParsDlg, fieldChgCB));
-        
-//        itemsfld_ = new WMLib::uiBufferStringSelGrp(this, OD::ChooseAtLeastOne);
-//        itemsfld_->attach(alignedBelow, layerfld_);
+		shiftfld_ = new uiLabeledSpinBox(this, tr("Float layer above by"));
+		shiftfld_->box()->setInterval(-10, 10, 1);
+		shiftfld_->box()->setValue(shift);
+		shiftfld_->attach(alignedBelow, layerfld_);
+
+		uiLabel* lbl = new uiLabel(this, SI().zDomain().uiUnitStr(true));
+		lbl->attach(rightOf, shiftfld_);
 
         uiSelLineStyle::Setup lssu; 
         lssu.drawstyle(false);
         lsfld_ = new uiSelLineStyle( this, ls, lssu );
-        lsfld_->attach(alignedBelow, layerfld_);
+        lsfld_->attach(alignedBelow, shiftfld_);
         
         setOkCancelText( uiStrings::sApply(), uiStrings::sClose() );
         fileChgCB(0);
     }
 
     const OD::LineStyle& getLineStyle() const { return lsfld_->getStyle(); }
+	int		getShift() const { return shiftfld_->box()->getIntValue();  }
 
 protected:
     bool acceptOK( CallBacker* )
@@ -269,27 +271,12 @@ protected:
     void layerChgCB( CallBacker* )
     {
         reader_.setLayer(layerfld_->text());
-        fieldChgCB(0);
-    }
-
-    void fieldChgCB( CallBacker* )
-    {
-//        if (layerfld_->text()) {
-//            BufferStringSet items;
-// Fill itemsfld_            
-//            
-//            itemsfld_->setInput(items);
-//        } else { 
-//            fieldfld_->setEmpty();
-//            itemsfld_->clear();
-//        }
     }
     
     uiFileInput*                    filefld_;
     uiComboBox*                     layerfld_;
-//    uiComboBox*                     fieldfld_;
-//    WMLib::uiBufferStringSelGrp*    itemsfld_;
-    uiSelLineStyle*                 lsfld_;
+	uiLabeledSpinBox*				shiftfld_;
+	uiSelLineStyle*                 lsfld_;
     uiGeopackageReader&             reader_;
 };
     
@@ -308,6 +295,7 @@ uiGeopackageTreeItem::uiGeopackageTreeItem( const char* parenttype )
     , material_(0)
     , drawstyle_(0)
     , lines_(0)
+	, zshift_(0)
 {
     reader_ = new uiGeopackageReader();
     optionsmenuitem_.iconfnm = "disppars";
@@ -436,10 +424,11 @@ void uiGeopackageTreeItem::handleMenuCB( CallBacker* cb )
 void uiGeopackageTreeItem::showPropertyDlg()
 {
     OD::LineStyle ls( OD::LineStyle::Solid, linewidth_, color_ );
-    uiGeopackageParsDlg propdlg( ODMainWin(), *reader_, ls );
+    uiGeopackageParsDlg propdlg( ODMainWin(), *reader_, ls, zshift_ );
     if (!propdlg.go())
         return;
     
+	zshift_ = propdlg.getShift();
     OD::LineStyle nls = propdlg.getLineStyle();
     if (!drawstyle_) {
         drawstyle_ = new visBase::DrawStyle;
@@ -502,13 +491,13 @@ void uiGeopackageTreeItem::showLayer()
             return;
         mDynamicCastGet(visSurvey::Scene*,scene, visserv->getObject(sceneID()));
         ZAxisTransform* ztransform = scene ? scene->getZAxisTransform() : 0;
-        float zfactor = mCast( float, scene->zDomainInfo().userFactor() );
-        const mVisTrans* displaytrans = lines_->getCoordinates()->getDisplayTransformation();
+
+		float zshift = zshift_ / (float) scene->zDomainUserFactor();
         
         Hor3DTool h3t(hor3d, ztransform);
         ManagedObjectSet<ODPolygon<Pos::Ordinate_Type>> polys;
         removeOldLinesFromScene();
-        if (reader_->getNextFeature(polys)) {
+        while (reader_->getNextFeature(polys)) {
             ManagedObjectSet<TypeSet<Coord3>> profs;
             for (int ip=0; ip<polys.size(); ip++) {
                 h3t.profile(*polys[ip], profs, (ztransform!=0));
@@ -520,6 +509,7 @@ void uiGeopackageTreeItem::showLayer()
                 for (int iv=0; iv<seg.size();iv++) {
                     Coord3 vrtxcoord = seg[iv];
 					vrtxcoord.coord() = SI().binID2Coord().transform(seg[iv].coord());
+					vrtxcoord.z -= zshift;
                     lines_->addPoint(vrtxcoord);
                 }
                 ps->setRange(Interval<int>(start,lines_->size()-1));
