@@ -87,7 +87,7 @@ bool makeLine( const Coord& start, const Coord& stop, const Coord& step, TypeSet
     float t = 0.0;
 	float tlast = -1.0;
     while (t<1.0) {
-		if (t>tlast)
+		if (t>=0 && t>tlast)
 			output += start + dir * t;
 		tlast = t;
         if (dtX<dtY) {
@@ -250,6 +250,7 @@ protected:
         if (layerfld_) {
             BufferStringSet layerNames;
             reader_.getLayers(layerNames);
+			layerfld_->setEmpty();
             layerfld_->addItems(layerNames);
         }
     }

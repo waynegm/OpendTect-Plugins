@@ -110,6 +110,7 @@ bool uiGeopackageReader::getNextFeature(ManagedObjectSet<ODPolygon<Pos::Ordinate
                     for (int ip=0; ip<poLine->getNumPoints(); ip++)
                         tmp->add(Coord(poLine->getX(ip), poLine->getY(ip)));
                     tmp->setClosed(false);
+					tmp->keepBendPoints(1.0);
                     poly += tmp;
                     res = true;
                 } else if (wkbType == wkbMultiLineString) {
@@ -120,6 +121,7 @@ bool uiGeopackageReader::getNextFeature(ManagedObjectSet<ODPolygon<Pos::Ordinate
                         for (int ip=0; ip<poLine->getNumPoints(); ip++)
                             tmp->add(Coord(poLine->getX(ip), poLine->getY(ip)));
                         tmp->setClosed(false);
+						tmp->keepBendPoints(1.0);
                         poly += tmp;
                     }
                     res = true;
