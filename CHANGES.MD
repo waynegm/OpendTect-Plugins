@@ -1,5 +1,13 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.7
+
+### AVOPolarAttrib
+- move gradient intput field below intercept field to reduce width of UI
+
+### GeopackageExport plugin
+- add display of Geopackage lines and polylines on 3D horizons
+
 ## Release 6.4.6
 
 ### Mistie plugin

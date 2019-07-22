@@ -29,12 +29,12 @@ uiAVOPolarAttrib::uiAVOPolarAttrib( uiParent* p, bool is2d )
 {
     interceptfld_ = createInpFld( is2d, "Intercept" );
     gradientfld_ = createInpFld( is2d, "Gradient" );
-    gradientfld_->attach( rightTo, interceptfld_ );
+    gradientfld_->attach( alignedBelow, interceptfld_ );
     
     outputfld_ = new uiGenInput( this, uiStrings::sOutput(), StringListInpSpec(OutputNames) );
     CallBack cboutsel = mCB(this, uiAVOPolarAttrib, outSel);
     outputfld_->valuechanged.notify(cboutsel);
-    outputfld_->attach( alignedBelow, interceptfld_ );
+    outputfld_->attach( alignedBelow, gradientfld_ );
     
     gateBGfld_ = new uiGenInput( this, zDepLabel(tr("Background "), tr("gate")), FloatInpIntervalSpec().setName("Z start",0).setName("Z stop",1) );
     gateBGfld_->attach( alignedBelow, outputfld_ );
