@@ -4,6 +4,7 @@
 #include "uimsg.h"
 #include "uimenu.h"
 #include "uiodmenumgr.h"
+#include "ioman.h"
 
 #include "uimistieapplier.h"
 #include "uimistiecorrmainwin.h"
@@ -29,17 +30,21 @@ public:
     void updateMenu(CallBacker*);
     void doCorrectionEdit(CallBacker*);
     void doMistieAnalysis(CallBacker*);
+    void surveyChgCB(CallBacker*);
     
 protected:
     uiODMain*   appl_;
+    uiMistieAnalysisMainWin*    mistiedlg_;
     
     
 };
 
 uiMistieMgr::uiMistieMgr( uiODMain* a )
     : appl_(a)
+    , mistiedlg_(0)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiMistieMgr::updateMenu );
+    mAttachCB(IOM().surveyChanged, uiMistieMgr::surveyChgCB);
     updateMenu(0);
 }
 
@@ -66,9 +71,18 @@ void uiMistieMgr::doCorrectionEdit( CallBacker* )
 
 void uiMistieMgr::doMistieAnalysis( CallBacker* )
 {
-    uiMistieAnalysisMainWin* dlg = new uiMistieAnalysisMainWin( appl_ );
-    dlg->show();
-    dlg->raise();
+    mistiedlg_ = new uiMistieAnalysisMainWin( appl_ );
+    mistiedlg_->show();
+    mistiedlg_->raise();
+}
+
+void uiMistieMgr::surveyChgCB( CallBacker* )
+{
+    if (mistiedlg_) {
+        mistiedlg_->close();
+        delete mistiedlg_;
+        mistiedlg_ = 0;
+    }
 }
 
 mDefODInitPlugin(uiMistie)

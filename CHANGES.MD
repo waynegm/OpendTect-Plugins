@@ -8,6 +8,9 @@
 ### GeopackageExport plugin
 - add display of Geopackage lines and polylines on 3D horizons
 
+### Mistie plugin
+- close dialogs when survey/project is changed
+
 ## Release 6.4.6
 
 ### Mistie plugin
