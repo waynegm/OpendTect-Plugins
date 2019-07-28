@@ -115,8 +115,8 @@ public:
         minqualfld_->valuechanged.notify(mCB(this,uiCorrCalcDlg,minqualCB));
         
         maxiterfld_ = new uiLabeledSpinBox(this, tr("Maximum Iterations"));
-        maxiterfld_->box()->setInterval(1, 100, 1);
-        maxiterfld_->box()->setValue( 20 );
+        maxiterfld_->box()->setInterval(1, 500, 1);
+        maxiterfld_->box()->setValue( 200 );
         maxiterfld_->attach(alignedBelow, minqualfld_);
         
         uiString minzchglbl(tr("Minimum RMS Z Mistie Change "));
@@ -231,11 +231,9 @@ bool uiMistieAnalysisMainWin::checkMistieSave()
 {
     if (misties_.size()>0 && filename_.isEmpty()) {
         uiString msg = tr("The latest misties have not been saved.\nDo you want to save them?");
-        int result = uiMSG().askSave(msg);
+        int result = uiMSG().askSave(msg, false);
         if (result == 1)
-            saveasCB(0);
-        else if (result == -1)
-            return false;
+            saveCB(0);
     }
     return true;
 }
@@ -247,6 +245,10 @@ void uiMistieAnalysisMainWin::closeCB(CallBacker*)
 
     if (corrviewer_)
         corrviewer_->close();
+    
+    misties_.erase();
+    corrs_.erase();
+    filename_.setEmpty();
 }
 
 void uiMistieAnalysisMainWin::helpCB( CallBacker* cb )

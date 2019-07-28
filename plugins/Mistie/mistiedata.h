@@ -26,6 +26,7 @@ public:
     int             size() const;
     void            erase();
     
+    void            add( const MistieData& other );
     bool            add( const char* dataA, int trcA, const char* dataB, int trcB, Coord pos, 
                          float zdiff, float phasediff, float ampdiff , float quality, bool replace=false );
     bool            add( const char* dataA, int trcA, const char* dataB, int trcB, Coord pos );

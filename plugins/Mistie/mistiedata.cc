@@ -90,6 +90,21 @@ void MistieData::erase()
     quality_.erase();
 }
 
+void MistieData::add( const MistieData& other )
+{
+    for (int idx=0; idx<other.size(); idx++) {
+        dataA_.add(other.dataA_.get(idx));
+        trcA_ += other.trcA_[idx];
+        dataB_.add(other.dataB_.get(idx));
+        trcB_ += other.trcB_[idx];
+        pos_ += other.pos_[idx];
+        zdiff_ += other.zdiff_[idx];
+        phasediff_ += other.phasediff_[idx];
+        ampdiff_ += other.ampdiff_[idx];
+        quality_ += other.quality_[idx];
+    }
+}
+    
 bool MistieData::add( const char* dataA, int trcA, const char* dataB, int trcB, Coord pos, float zdiff, float phasediff, float ampdiff, float quality, bool replace )
 {
     for (int idx=0; idx<size(); idx++) {

@@ -9,6 +9,7 @@
 
 class uiFileInput;
 class uiGenInput;
+class uiCheckBox;
 class uiLabeledSpinBox;
 class uiSeisSel;
 namespace WMLib {
@@ -28,12 +29,16 @@ public:
 protected:
     uiSeisSel*                  seisselfld_;
     WMLib::uiSeis2DLineSelGrp*  lineselfld_;
+    uiCheckBox*                 use3dfld_;
+    uiSeisSel*                  data3dfld_;
+    uiGenInput*                 trcstepfld_;
     uiGenInput*                 gatefld_;
     uiLabeledSpinBox*           lagfld_;
     
     MistieData                  misties_;
     
     bool            acceptOK(CallBacker*);
+    void            use3DCB(CallBacker*);
     
 private:
 

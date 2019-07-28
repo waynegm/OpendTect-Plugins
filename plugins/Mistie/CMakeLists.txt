@@ -6,6 +6,8 @@ SET(OD_MODULE_SOURCES
     mistiecordata.cc
     mistiedata.cc
     mistieestimator.cc
+    trcanalysis.cc
+    mistieestimator2d3d.cc
 )
 
 find_package(Eigen3)

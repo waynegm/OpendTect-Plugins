@@ -37,8 +37,6 @@ protected:
     bool        doFinish(bool success);
     
     bool        get2DTrc( BufferString line, int trcnr, SeisTrc& trc );
-    float       calcAmpScalar( SeisTrc& trcA, SeisTrc& trcB );
-    void        calcZandPhase( SeisTrc& trcA, SeisTrc& trcB, float& zdiff, float& phasediff, float& quality );
 };
 
 #endif

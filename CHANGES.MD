@@ -9,6 +9,7 @@
 - add display of Geopackage lines and polylines on 3D horizons
 
 ### Mistie plugin
+- include a 3D volume in the mistie analysis
 - close dialogs when survey/project is changed
 
 ## Release 6.4.6

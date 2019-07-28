@@ -337,16 +337,39 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
     BufferString lineA, lineB;
     float ampdiff, errLast, err;
     
+    ampdiff = 0.0;
+    int count = 0;
     for (int idx=0; idx<misties.size(); idx++) {
         misties.getLines(idx, lineA, lineB);
-        setAmpCor(lineA, 1.0);
-        setAmpCor(lineB, 1.0);
+        if (reference.isPresent(lineA)) {
+            ampdiff += log10(misties.getAmpMistie(idx));
+            count++;
+        } else if (reference.isPresent(lineB)) {
+            ampdiff -= log10(misties.getAmpMistie(idx));
+            count++;
+        }
     }
+    if (count) 
+        ampdiff = pow(10, -ampdiff/count);
+    else
+        ampdiff = 1.0;
+        
+    for (int idx=0; idx<misties.size(); idx++) {
+        misties.getLines(idx, lineA, lineB);
+        if (reference.isPresent(lineA) || reference.isPresent(lineB)) {
+            setAmpCor(lineA, 1.0);
+            setAmpCor(lineB, 1.0);
+        } else {
+            setAmpCor(lineA, ampdiff);
+            setAmpCor(lineB, ampdiff);
+        }
+    }
+        
     errLast = 0.0;
     int nrGood = 0;
     for (int idx=0; idx<misties.size(); idx++) {
         if (misties.getQuality(idx)>=minQuality) {
-            ampdiff = misties.getAmpMistieWith( *this, idx );
+            ampdiff = misties.getAmpMistieWith( *this, idx )-1.0;
             errLast += ampdiff*ampdiff;
             nrGood++;
         }
@@ -382,7 +405,7 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
         err=0.0;
         for (int idx=0; idx<misties.size(); idx++) {
             if (misties.getQuality(idx)>=minQuality) {
-                ampdiff = misties.getAmpMistieWith( *this, idx );
+                ampdiff = misties.getAmpMistieWith( *this, idx ) - 1.0;
                 err += ampdiff*ampdiff;
             }
         }
