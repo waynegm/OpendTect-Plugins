@@ -98,11 +98,9 @@ bool uiCorrViewer::checkSave()
 {
     if (corrs_.size()>0 && filename_.isEmpty()) {
         uiString msg = tr("The latest mistie corrections have not been saved.\nDo you want to save them?");
-        int result = uiMSG().askSave(msg);
+        int result = uiMSG().askSave(msg,false);
         if (result == 1)
             saveasCB(0);
-        else if (result == -1)
-            return false;
     }
     return true;
 }
