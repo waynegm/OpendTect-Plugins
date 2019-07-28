@@ -2,35 +2,17 @@
 
 #include "bufstringset.h"
 #include "errmsg.h"
+#include "survinfo.h"
+#include "coordsystem.h"
+#include "crssystem.h"
+#include "crsproj.h"
 
 #include "ogrsf_frmts.h"
 #include "ogr_spatialref.h"
 
 uiGeopackageReader::uiGeopackageReader()
-: gdalDS_(nullptr), gdalLayer_(0), poSRS_(nullptr)
+: gdalDS_(nullptr), gdalLayer_(0)
 {
-/*    if (SI().getCoordSystem()->isProjection()) {
-        const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
-        poSRS_= new OGRSpatialReference();
-        BufferString projstr(proj->getProjection()->defStr());
-        projstr += " +init=epsg:";
-        projstr += proj->getProjection()->authCode().id();
-        
-        if (poSRS_->importFromProj4(projstr) != OGRERR_NONE) {
-            BufferString tmp("uiGeopackageWriter::uiGeopackageWriter - setting CRS in output file failed \n");
-            tmp += "Survey CRS: ";
-            tmp += SI().getCoordSystem()->summary();
-            tmp += "\n";
-            ErrMsg(tmp);
-        } else {
-            open(filename);
-        }
-    } else {
-        BufferString crsSummary("uiGeopackageWriter::uiGeopackageWriter - unrecognised CRS: ");
-        crsSummary += SI().getCoordSystem()->summary();
-        ErrMsg(crsSummary);
-    }
-*/
 }
 
 uiGeopackageReader::~uiGeopackageReader()
@@ -89,9 +71,27 @@ bool uiGeopackageReader::setLayer(const char* name)
     return false;
 }
 
-bool uiGeopackageReader::isSameCRS()
+bool uiGeopackageReader::isSameCRS(BufferString& errmsg)
 {
-    return true;
+    if (gdalLayer_) {
+        const OGRSpatialReference* poFileSRS = gdalLayer_->GetSpatialRef();
+        if (!poFileSRS) {
+            errmsg += "Retrieving CRS from Geopackage file failed \n";
+            return false;
+        }
+        if (poFileSRS->IsProjected() && SI().getCoordSystem()->isProjection()) {
+            const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
+            BufferString odtAuthCode;
+            odtAuthCode += proj->getProjection()->authCode().id();
+            BufferString fileAuthCode = poFileSRS->GetAuthorityCode("PROJCS");
+            errmsg += "Geopackage SRS: ";
+            errmsg += fileAuthCode;
+            errmsg += " ODT SRS: ";
+            errmsg += odtAuthCode;
+            return odtAuthCode == fileAuthCode;
+        }
+    }
+    return false;
 }
 
 bool uiGeopackageReader::getNextFeature(ManagedObjectSet<ODPolygon<Pos::Ordinate_Type>>& poly)

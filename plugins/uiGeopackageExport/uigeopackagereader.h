@@ -9,6 +9,7 @@ class GDALDataset;
 class OGRSpatialReference;
 class OGRLayer;
 class BufferStringSet;
+class BufferString;
 
 class uiGeopackageReader
 {
@@ -23,7 +24,7 @@ public:
     const char*     layerName() const { return layername_; }
     bool            setLayer(const char* name);
     
-    bool            isSameCRS();
+    bool            isSameCRS(BufferString& errmsg);
     void            getLayers(BufferStringSet&);
     
     bool            getNextFeature(ManagedObjectSet<ODPolygon<Pos::Ordinate_Type>>& poly);
@@ -32,7 +33,6 @@ public:
 protected:
     GDALDataset*            gdalDS_;
     OGRLayer*               gdalLayer_;
-    OGRSpatialReference*    poSRS_;
     
     BufferString            filename_;
     BufferString            layername_;

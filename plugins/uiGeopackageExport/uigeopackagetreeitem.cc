@@ -483,7 +483,13 @@ void uiGeopackageTreeItem::showLayer()
 {
     if (!createPolyLines())
         return;
-    
+    BufferString errmsg;
+    if (reader_ && !reader_->isSameCRS(errmsg)) {
+        ErrMsg(errmsg);
+        if (!uiMSG().askGoOn(tr("Mismatch in project and file CRS, results may be unpredictable, proceed?")))
+            return;
+    }
+
     if (reader_) {
         uiVisPartServer* visserv = applMgr()->visServer();
         EM::ObjectID emid = getHorDisp()->getObjectID();
