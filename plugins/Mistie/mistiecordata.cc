@@ -205,7 +205,7 @@ float MistieCorrectionData::computeZCor( const MistieData& misties, const Buffer
             nrGood++;
         }
     }
-    errLast = sqrt(errLast/nrGood);
+    errLast = sqrt(errLast/(float)nrGood);
     BufferString logmsg("Mistie Z Correction Calculation - Initial RMS mistie: "); logmsg += errLast;
     int iter = 0;
     float chg = 0.0;
@@ -231,7 +231,7 @@ float MistieCorrectionData::computeZCor( const MistieData& misties, const Buffer
             if (reference.isPresent(getDataName(idx)))
                 setZCor(idx, 0.0);
             else if (estcount[idx]!=0)
-                setZCor(idx, getZCor(idx)+damping*est[idx]/estcount[idx]);
+                setZCor(idx, getZCor(idx)+damping*est[idx]/(float)estcount[idx]);
         }
         err=0.0;
         for (int idx=0; idx<misties.size(); idx++) {
@@ -240,8 +240,8 @@ float MistieCorrectionData::computeZCor( const MistieData& misties, const Buffer
                 err += zdiff*zdiff;
             }
         }
-        err = sqrt(err/nrGood);
-        chg = abs(errLast-err);
+        err = sqrt(err/(float)nrGood);
+        chg = fabs(errLast-err);
         iter++;
         errLast = err;
     } while (chg > delta && iter < maxIter);
@@ -272,7 +272,7 @@ float MistieCorrectionData::computePhaseCor( const MistieData& misties, const Bu
             nrGood++;
         }
     }
-    errLast = sqrt(errLast/nrGood);
+    errLast = sqrt(errLast/(float)nrGood);
     BufferString logmsg("Mistie Phase Correction Calculation - Initial RMS mistie: "); logmsg += errLast;
     int iter = 0;
     float chg = 0.0;
@@ -298,7 +298,7 @@ float MistieCorrectionData::computePhaseCor( const MistieData& misties, const Bu
             if (reference.isPresent(getDataName(idx)))
                 setPhaseCor(idx, 0.0);
             else if (estcount[idx]!=0)
-                setPhaseCor(idx, getPhaseCor(idx) + damping*est[idx]/estcount[idx]);
+                setPhaseCor(idx, getPhaseCor(idx) + damping*est[idx]/(float)estcount[idx]);
         }
         err=0.0;
         for (int idx=0; idx<work.size(); idx++) {
@@ -315,12 +315,12 @@ float MistieCorrectionData::computePhaseCor( const MistieData& misties, const Bu
                 int ilA = getIndex(lineA);
                 int ilB = getIndex(lineB);
                 float diff = phasediff - (getPhaseCor(ilA)-getPhaseCor(ilB));
-                if (abs(diff + 360)<abs(diff) || abs(diff-360)<abs(diff))
-                    work.setPhaseMistie( idx, abs(diff+360)<abs(diff-360) ? phasediff+360 : phasediff-360 );
+                if (fabs(diff + 360)<fabs(diff) || fabs(diff-360)<fabs(diff))
+                    work.setPhaseMistie( idx, fabs(diff+360)<fabs(diff-360) ? phasediff+360 : phasediff-360 );
             }
         }
-        err = sqrt(err/nrGood);
-        chg = abs(errLast-err);
+        err = sqrt(err/(float)nrGood);
+        chg = fabs(errLast-err);
         iter++;
         errLast = err;
     } while (chg > delta && iter < maxIter);
@@ -350,7 +350,7 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
         }
     }
     if (count) 
-        ampdiff = pow(10, -ampdiff/count);
+        ampdiff = pow(10, -ampdiff/(float)count);
     else
         ampdiff = 1.0;
         
@@ -374,7 +374,7 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
             nrGood++;
         }
     }
-    errLast = sqrt(errLast/nrGood);
+    errLast = sqrt(errLast/(float)nrGood);
     BufferString logmsg("Mistie Amplitude Correction Calculation - Initial RMS mistie: "); logmsg += errLast;
     int iter = 0;
     float chg = 0.0;
@@ -400,7 +400,7 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
             if (reference.isPresent(getDataName(idx)))
                 setAmpCor(idx, 1.0);
             else if (estcount[idx]!=0)
-                setAmpCor(idx, getAmpCor(idx)*pow(10,damping*est[idx]/estcount[idx]));
+                setAmpCor(idx, getAmpCor(idx)*pow(10,damping*est[idx]/(float)estcount[idx]));
         }
         err=0.0;
         for (int idx=0; idx<misties.size(); idx++) {
@@ -409,8 +409,8 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
                 err += ampdiff*ampdiff;
             }
         }
-        err = sqrt(err/nrGood);
-        chg = abs(errLast-err);
+        err = sqrt(err/(float)nrGood);
+        chg = fabs(errLast-err);
         iter++;
         errLast = err;
     } while (chg > delta && iter < maxIter);

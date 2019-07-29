@@ -111,7 +111,7 @@ public:
     ~Hor3DTool();
 
     float interpZat( float inl, float crl, bool applZtransform=true ) const;
-    void profile( const ODPolygon<Pos::Ordinate_Type> path, ManagedObjectSet<TypeSet<Coord3>>& profile, bool applZtransform=true );
+    void profile( const ODPolygon<Pos::Ordinate_Type> path, ManagedObjectSet<TypeSet<Coord3>>& prof, bool applZtransform=true );
     
 protected:
     const EM::Horizon3D*    hor_;
@@ -173,9 +173,9 @@ float Hor3DTool::interpZat( float inl, float crl, bool applyZtransform ) const
         return mUdf(float);
 }
 
-void Hor3DTool::profile( const ODPolygon<Pos::Ordinate_Type> path, ManagedObjectSet<TypeSet<Coord3>>& profile, bool applyZtransform )
+void Hor3DTool::profile( const ODPolygon<Pos::Ordinate_Type> path, ManagedObjectSet<TypeSet<Coord3>>& prof, bool applyZtransform )
 {
-    profile.erase();
+    prof.erase();
     TypeSet<Coord> line;
     TypeSet<Coord3>* seg = 0;
     for (int iv=(path.isClosed()?0:1); iv<path.size(); iv++) {
@@ -189,7 +189,7 @@ void Hor3DTool::profile( const ODPolygon<Pos::Ordinate_Type> path, ManagedObject
                 } else {
                     if (!seg) {
                         seg = new TypeSet<Coord3>;
-                        profile.add(seg);
+                        prof.add(seg);
                     }
                     *seg += Coord3(line[il], zval);
                 }
