@@ -1,26 +1,24 @@
 #ifndef ltfattrib_h
 #define ltfattrib_h
+/*
+ *   LocalAttrib Plugin
+ *   Copyright (C) 2019  Wayne Mogg
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-/*Copyright (C) 2014 Wayne Mogg All rights reserved.
- 
- This file may be used either under the terms of:
- 
- 1. The GNU General Public License version 3 or higher, as published by
- the Free Software Foundation, or
- 
- This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
- WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-*/
-/*+
- ________________________________________________________________________
- 
- Author:        Wayne Mogg
- Date:          April 2014
- ________________________________________________________________________
- 
--*/
-
-#include "ltfattribmod.h"
+#include "localattribmod.h"
 #include "attribprovider.h"
 
 /*!\brief Local Time-Frequency Attribute
@@ -33,7 +31,7 @@
 namespace Attrib
 {
 
-mExpClass(LTFAttrib) LTFAttrib : public Provider
+mExpClass(LocalAttrib) LTFAttrib : public Provider
 {
 public:
     static void			initClass();

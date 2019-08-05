@@ -1,23 +1,21 @@
-/*Copyright (C) 2014 Wayne Mogg. All rights reserved.
- * 
- * This file may be used either under the terms of:
- * 
- * 1. The GNU General Public License version 3 or higher, as published by
- * the Free Software Foundation, or
- * 
- * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
- * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+/*
+ *   uiLocalAttrib Plugin
+ *   Copyright (C) 2019  Wayne Mogg
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*+
- * ________________________________________________________________________
- * 
- * Author:        Wayne Mogg
- * Date:          Apr 2014
- * ________________________________________________________________________
- * 
- * 
--*/
 #include "uiltfattrib.h"
 #include "ltfattrib.h"
 
@@ -32,7 +30,7 @@
 
 using namespace Attrib;
 
-mInitAttribUI(uiLTFAttrib,LTFAttrib,"Local Time-Frequency",sKeyFreqGrp())
+mInitAttribUI(uiLTFAttrib,LTFAttrib,"Spectral Decomposition by Local Attribute",sKeyFreqGrp())
 
 
 uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
@@ -48,7 +46,7 @@ uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
 	freqfld_->attach( alignedBelow, inpfld_ );
 	freqfld_->box()->doSnap( true );
 	
-	smoothfld_ = new uiLabeledSpinBox( this, tr("Smoothing Radius") );
+	smoothfld_ = new uiLabeledSpinBox( this, tr("Smoothing Radius (samples)") );
 	smoothfld_->box()->setMinValue( 2 );
 	smoothfld_->box()->setStep( 1, true );
 	smoothfld_->attach( alignedBelow, freqfld_ );
@@ -58,7 +56,7 @@ uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
 	niterfld_->box()->setStep( 10, true );
 	niterfld_->attach( alignedBelow, smoothfld_ );
 	
-	marginfld_ = new uiLabeledSpinBox( this, tr("Margin") );
+	marginfld_ = new uiLabeledSpinBox( this, tr("Margin (samples)") );
 	marginfld_->box()->setMinValue( 0 );
 	marginfld_->box()->setStep( 1, true );
 	marginfld_->attach( alignedBelow, niterfld_ );

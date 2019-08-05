@@ -1,21 +1,20 @@
-/*Copyright (C) 2014 Wayne Mogg All rights reserved.
- * 
- * This file may be used either under the terms of:
- * 
- * 1. The GNU General Public License version 3 or higher, as published by
- * the Free Software Foundation, or
- * 
- * This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
- * WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+/*
+ *   LocalAttrib Plugin
+ *   Copyright (C) 2019  Wayne Mogg
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-/*+
- * ________________________________________________________________________
- * 
- * Author:        Wayne Mogg
- * Date:          April 2014
- * ________________________________________________________________________
- * 
- * -*/
 
 
 #include "ltfattrib.h"
@@ -26,14 +25,8 @@
 
 #include "arrayndimpl.h"
 #include "math2.h"
-#ifdef __cplusplus
-extern "C" {
-	#endif
-	#include "rsf.h"
-	#ifdef __cplusplus
-}
-#endif
 
+#include "rsflib.h"
 namespace Attrib
 {
 
@@ -101,7 +94,8 @@ bool LTFAttrib::computeData( const DataHolder& output, const BinID& relpos,
 	int ns = dessamp_.width() + nrsamples;
 	Array1DImpl<float> ss(ns), bs(ns), bc(ns), trc(ns), cc(ns);
 	int smooth = smooth_;
-	sf_divn_init(1,ns,&ns,&smooth,niter_,false);
+//	sf_divn_init(1,ns,&ns,&smooth,niter_,false);
+    sf::Divn sfdivn(1,ns,&ns,&smooth,niter_);
 	
 	float w = freq_ * 2.0 * M_PIf;
 	
@@ -116,15 +110,18 @@ bool LTFAttrib::computeData( const DataHolder& output, const BinID& relpos,
 			ss.set(idx, 0.0);
 			bc.set(idx, 0.5);
 		}
-		sf_divn( trc.arr(), bc.arr(), cc.arr() );
+//		sf_divn( trc.arr(), bc.arr(), cc.arr() );
+        sfdivn.doDiv(trc.arr(), bc.arr(), cc.arr());
 	} else {
 		for (int idx=0; idx<ns; idx++) {
 			float t = (z0 + dessamp_.start + idx) * refstep_;
 			bs.set(idx, sinf(w*t));
 			bc.set(idx, cosf(w*t));
 		}
-		sf_divn(trc.arr(),bs.arr(),ss.arr());
-		sf_divn(trc.arr(),bc.arr(),cc.arr());
+//		sf_divn(trc.arr(),bs.arr(),ss.arr());
+        sfdivn.doDiv(trc.arr(),bs.arr(),ss.arr());
+//		sf_divn(trc.arr(),bc.arr(),cc.arr());
+        sfdivn.doDiv(trc.arr(),bc.arr(),cc.arr());
 	}
 	for (int idx=0; idx<nrsamples; idx++) {
 		float outVal = mUdf(float);
@@ -132,7 +129,7 @@ bool LTFAttrib::computeData( const DataHolder& output, const BinID& relpos,
 		setOutputValue( output, 0, idx, z0, outVal );
 	}
 	
-	sf_divn_close();
+//	sf_divn_close();
     return true;
 }
 

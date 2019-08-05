@@ -33,7 +33,7 @@ set ( PLUGINS uiWGMHelp
             AVOAttrib uiAVOAttrib
             ExternalAttrib uiExternalAttrib
             GradientAttrib uiGradientAttrib
-            LTFAttrib uiLTFAttrib )
+            LocalAttrib uiLocalAttrib )
 OD_ADD_MODULES( plugins ${PLUGINS} )
 
 #Add the plugins

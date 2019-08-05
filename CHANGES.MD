@@ -1,5 +1,14 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.8
+
+### LocalAttrib
+- port code to support Madagascar style local attributes in OpendTect under both Windows and Linux
+- LTFAttrib moved into this plugin
+
+### LTFAttrib
+- plugin removed and code moved to LocalAttrib plugin 
+
 ## Release 6.4.7
 
 ### AVOPolarAttrib
