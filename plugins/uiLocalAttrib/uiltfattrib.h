@@ -32,25 +32,36 @@ mExpClass(uiLocalAttrib) uiLTFAttrib : public uiAttrDescEd
 { mODTextTranslationClass(uiLTFAttrib);
 public:
 
-			uiLTFAttrib(uiParent*,bool);
-
+    uiLTFAttrib(uiParent*,bool);
+    
+    void		getEvalParams(TypeSet<EvalParam>&) const;
+    int			getOutputIdx(float) const;
+    float		getOutputValue(int) const;
+            
 protected:
 
     uiAttrSel*			inpfld_;
+    uiGenInput*			gatefld_;
 	uiLabeledSpinBox*	freqfld_;
-	uiLabeledSpinBox*	smoothfld_;
-	uiLabeledSpinBox*	marginfld_;
+    uiLabeledSpinBox*	stepfld_;
+//    uiLabeledSpinBox*	smoothfld_;
+//	uiLabeledSpinBox*	marginfld_;
 	uiLabeledSpinBox*	niterfld_;
 	
 	void		inputSel(CallBacker*);
+    void        stepChg(CallBacker*);
 	
 	
     bool		setParameters(const Attrib::Desc&);
     bool		setInput(const Attrib::Desc&);
-
+    bool		setOutput(const Attrib::Desc&);
+    
     bool		getParameters(Attrib::Desc&);
     bool		getInput(Attrib::Desc&);
-
+    bool		getOutput(Attrib::Desc&);
+    
+    void		checkOutValSnapped() const;
+    
     			mDeclReqAttribUIFns
 };
 

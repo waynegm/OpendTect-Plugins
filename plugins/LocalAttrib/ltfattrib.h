@@ -37,24 +37,36 @@ public:
     static void			initClass();
 						LTFAttrib(Desc&);
     static const char*	attribName()			{ return "LTFAttrib"; }
-    static const char*	freqStr()				{ return "freq"; }
-    static const char*	smoothStr()				{ return "smooth"; }
+    static const char*	stepStr()				{ return "step"; }
+    static const char*	gateStr()				{ return "gate"; }
+//    static const char*	freqStr()				{ return "freq"; }
+//    static const char*	smoothStr()				{ return "smooth"; }
     static const char*	niterStr()				{ return "niter"; }
-    static const char*	marginStr()				{ return "margin"; }
-    
+//    static const char*	marginStr()				{ return "margin"; }
+
+void				getCompNames(BufferStringSet&) const;
+bool				prepPriorToOutputSetup();
+
 protected:
 
 							~LTFAttrib() {}
     static Provider*		createInstance(Desc&);
 	static void				updateDesc(Desc&);
-	
+    static void				updateDefaults(Desc&);
+    
     bool					allowParallelComputation() const { return false; }
 
-    const Interval<int>*	desZSampMargin(int,int) const { return &dessamp_; }
+    const Interval<int>*	desZSampMargin(int,int) const { return &zsampMargin_; }
 
     bool					getInputData(const BinID&,int zintv);
     bool					computeData(const DataHolder&,const BinID& relpos, int z0,int nrsamples,int threadid) const;
 
+    bool					areAllOutputsEnabled() const;
+    
+    Interval<float>		gate_;
+    float				window_; // effective time window
+    float				step_; // frequency spacing
+    
     float		freq_;
 	int			smooth_;
     int			niter_;
@@ -62,7 +74,7 @@ protected:
 
 	const DataHolder*	indata_;
 	int					indataidx_;
-	Interval<int>		dessamp_;
+    Interval<int>		zsampMargin_;
 	
 };
 
