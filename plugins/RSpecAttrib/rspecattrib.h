@@ -1,36 +1,32 @@
 #ifndef rspecattrib_h
 #define rspecattrib_h
 
-/*Copyright (C) 2014 Wayne Mogg All rights reserved.
- 
- This file may be used either under the terms of:
- 
- 1. The GNU General Public License version 3 or higher, as published by
- the Free Software Foundation, or
- 
- This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
- WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-*/
-/*+
- ________________________________________________________________________
- 
- Author:        Wayne Mogg
- Date:          August 2014
- ________________________________________________________________________
- 
--*/
+/*
+ *   RSpecAttrib Plugin
+ *   Copyright (C) 2019  Wayne Mogg
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "rspecattribmod.h"
 #include "attribprovider.h"
-#include "odcomplex.h"
-#include "arrayndimpl.h"
 
 /*!\brief Recursive spectral decomposition attribute
 
 	Spectral decomposition using a recursive filter approximation to a special case of the short time fourier transform (STFT)
 
 */
-    
 
 namespace Attrib
 {
@@ -43,6 +39,7 @@ public:
     static const char*	attribName()			{ return "RSpecAttrib"; }
     static const char*	stepStr()				{ return "step"; }
     static const char*	gateStr()				{ return "gate"; }
+    static const char*  reassignStr()           { return "reassign"; }
     
     void				getCompNames(BufferStringSet&) const;
 	bool				prepPriorToOutputSetup();
@@ -58,9 +55,6 @@ protected:
 
     const Interval<int>*	desZSampMargin(int,int) const { return &zsampMargin_; }
     
-    void 					computeFilterTaps(float freq, Array1DImpl<float_complex>& num, Array1DImpl<float_complex>& den ) const;
-	void 					computeFrequency(Array1DImpl<float_complex>& num, Array1DImpl<float_complex>& den,
-											 int nrsamples, Array1DImpl<float>& trc, Array1DImpl<float>& spec ) const;
     bool					getInputData(const BinID&,int zintv);
     bool					computeData(const DataHolder&,const BinID& relpos, int z0,int nrsamples,int threadid) const;
 
@@ -69,7 +63,7 @@ protected:
 	Interval<float>		gate_;
 	float				window_; // effective time window
 	float				step_; // frequency spacing
-	int					order_; // recursive filter order
+	bool               reassign_;
 
 	const DataHolder*	indata_;
 	int					indataidx_;

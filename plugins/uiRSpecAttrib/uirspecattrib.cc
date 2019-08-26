@@ -31,6 +31,7 @@
 #include "uimsg.h"
 #include "uispinbox.h"
 #include "uistrings.h"
+#include "uibutton.h"
 
 using namespace Attrib;
 
@@ -55,6 +56,10 @@ uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )
 	stepfld_ = new uiLabeledSpinBox( this, uiStrings::sStep(), 1 );
 	stepfld_->attach( rightTo, freqfld_ );
 	stepfld_->box()->valueChanged.notify(mCB(this,uiRSpecAttrib,stepChg));
+    
+    reassignbut_ = new uiCheckBox(this, tr("With Reassignment"));
+    reassignbut_->attach(alignedBelow, freqfld_);
+    reassignbut_->setChecked(false);
 	
 	stepChg(0);
 	
@@ -75,7 +80,7 @@ void uiRSpecAttrib::inputSel( CallBacker* )
 	const float scalednyqfreq = nyqfreq * freqscale;
 	stepfld_->box()->setInterval( (float)0.5, scalednyqfreq/2 );
 	stepfld_->box()->setStep( (float)0.5, true );
-	freqfld_->box()->setMinValue( 0.0f );
+	freqfld_->box()->setMinValue( stepfld_->box()->getFValue() );
 	freqfld_->box()->setMaxValue( scalednyqfreq );
 }
 
@@ -114,6 +119,7 @@ bool uiRSpecAttrib::setParameters( const Attrib::Desc& desc )
 
 	const float freqscale = zIsTime() ? 1.f : 1000.f;
 	mIfGetFloat(RSpecAttrib::stepStr(), step, stepfld_->box()->setValue(step*freqscale) );
+    mIfGetBool(RSpecAttrib::reassignStr(), reassign, reassignbut_->setChecked(reassign));
 	
 	stepChg(0);
 	return true;
@@ -143,6 +149,7 @@ bool uiRSpecAttrib::getParameters( Attrib::Desc& desc )
 	
 	const float freqscale = zIsTime() ? 1.f : 1000.f;
 	mSetFloat( RSpecAttrib::stepStr(), stepfld_->box()->getFValue()/freqscale );
+    mSetBool(RSpecAttrib::reassignStr(), reassignbut_->isChecked());
 	
 	return true;
 }

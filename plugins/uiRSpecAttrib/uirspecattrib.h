@@ -28,6 +28,7 @@ namespace Attrib { class Desc; }
 class uiAttrSel;
 class uiGenInput;
 class uiLabeledSpinBox;
+class uiCheckBox;
 
 mExpClass(uiRSpecAttrib) uiRSpecAttrib : public uiAttrDescEd
 { mODTextTranslationClass(uiRSpecAttrib);
@@ -44,6 +45,7 @@ protected:
 	uiGenInput*			gatefld_;
 	uiLabeledSpinBox*	freqfld_;
 	uiLabeledSpinBox*	stepfld_;
+    uiCheckBox*         reassignbut_;
 	
 	void		inputSel(CallBacker*);
 	void		stepChg(CallBacker*);
