@@ -93,7 +93,7 @@ RSpecAttrib::RSpecAttrib( Desc& desc )
 	window_ = gate_.stop - gate_.start;
 	float refstep = getRefStep();
 //    zsampMargin_ = Interval<int>(mNINT32((gate_.start-window_/2.0)/refstep)-1, mNINT32((gate_.stop+window_/2.0)/refstep)+1);
-    zsampMargin_ = Interval<int>(mNINT32(((gate_.start+gate_.stop)/2.0-2.0*window_)/refstep)-1, mNINT32(((gate_.start+gate_.stop)/2.0+2.0*window_)/refstep)+1);
+    zsampMargin_ = Interval<int>(mNINT32(((gate_.start+gate_.stop)/2.0-4.0*window_)/refstep)-1, mNINT32(((gate_.start+gate_.stop)/2.0+4.0*window_)/refstep)+1);
 }
 
 bool RSpecAttrib::getInputData( const BinID& relpos, int zintv )

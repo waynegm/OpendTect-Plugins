@@ -2,9 +2,14 @@
 
 ## Release 6.4.8
 
+### RSpecAttrib
+- add option to perform time-frequency reassignment
+- fix issues with offset gates
+
 ### LocalAttrib
 - port code to support Madagascar style local attributes in OpendTect under both Windows and Linux
 - LTFAttrib moved into this plugin
+- fix issues with offset gates
 
 ### LTFAttrib
 - plugin removed and code moved to LocalAttrib plugin 
