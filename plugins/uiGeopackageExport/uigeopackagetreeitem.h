@@ -45,18 +45,26 @@ public:
     void                        showPropertyDlg();
     
     static const char*          sKeyGeopackageDefString();
+    static const char*          sKeyGeopkg();
+    static const char*          sKeyGeopkgNr();
+    static const char*          sKeyGeopkgStart();
     
+    bool			fillPar(IOPar& par) const;
+    void			usePar(IOPar& par);
     
 private:
-    virtual bool            init();
-    virtual uiString        createDisplayName() const;
-    virtual void            checkCB(CallBacker*);
-    virtual bool            doubleClick(uiTreeViewItem*);    
-    virtual void            createMenu(MenuHandler*,bool istb);
-    virtual void            handleMenuCB(CallBacker*);
+    virtual bool            	init();
+    virtual uiString        	createDisplayName() const;
+    virtual void            	checkCB(CallBacker*);
+    virtual bool            	doubleClick(uiTreeViewItem*);    
+    virtual void            	createMenu(MenuHandler*,bool istb);
+    virtual void            	handleMenuCB(CallBacker*);
+    virtual bool		hasTransparencyMenu() const { return false; }
     
-    void                    prepareForShutdown();
-    void                    removeAll();
+    void                    	prepareForShutdown();
+    void                    	removeAll();
+    void			sessionSaveCB(CallBacker*);
+    void			sessionRestoreCB(CallBacker*);
     
     void                    visClosingCB(CallBacker*);
     
@@ -65,7 +73,7 @@ private:
     bool                    createPolyLines();
     void                    removeOldLinesFromScene();
     
-    visSurvey::HorizonDisplay*  getHorDisp();
+    visSurvey::HorizonDisplay*  getHorDisp() const;
     
     uiGeopackageReader*     reader_;
 	int						zshift_;

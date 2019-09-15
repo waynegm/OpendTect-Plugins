@@ -282,6 +282,9 @@ protected:
 };
     
 const char* uiGeopackageTreeItem::sKeyGeopackageDefString(){ return "Geopackage Display";}
+const char* uiGeopackageTreeItem::sKeyGeopkg() { return "Geopkg";}
+const char* uiGeopackageTreeItem::sKeyGeopkgNr() { return "Nr Geopkg";}
+const char* uiGeopackageTreeItem::sKeyGeopkgStart() { return "Start";}
 
 void uiGeopackageTreeItem::initClass()
 {
@@ -296,10 +299,13 @@ uiGeopackageTreeItem::uiGeopackageTreeItem( const char* parenttype )
     , material_(0)
     , drawstyle_(0)
     , lines_(0)
-	, zshift_(0)
+    , zshift_(0)
 {
     reader_ = new uiGeopackageReader();
     optionsmenuitem_.iconfnm = "disppars";
+    
+    mAttachCB( ODMainWin()->sessionSave, uiGeopackageTreeItem::sessionSaveCB );
+    mAttachCB( ODMainWin()->sessionRestore, uiGeopackageTreeItem::sessionRestoreCB );
 }
 
 uiGeopackageTreeItem::~uiGeopackageTreeItem()
@@ -317,6 +323,7 @@ uiGeopackageTreeItem::~uiGeopackageTreeItem()
             return;
         
     parent_->checkStatusChange()->remove(mCB(this,uiGeopackageTreeItem,checkCB));
+    detachAllNotifiers();
 }
 
 void uiGeopackageTreeItem::prepareForShutdown()
@@ -350,7 +357,13 @@ bool uiGeopackageTreeItem::init()
 
 uiODDataTreeItem* uiGeopackageTreeItem::create( const Attrib::SelSpec& as, const char* parenttype )
 {
-    return 0;
+    BufferString defstr = as.defString();
+    if ( defstr != sKeyGeopackageDefString() )
+	return 0;
+
+    
+    uiGeopackageTreeItem* gpitem = new uiGeopackageTreeItem(parenttype);
+    return gpitem ? (uiODDataTreeItem*) gpitem : 0;
 }
 
 void uiGeopackageTreeItem::checkCB( CallBacker* )
@@ -464,11 +477,13 @@ bool uiGeopackageTreeItem::createPolyLines()
     lines_->setPickable( false, false );
     applMgr()->visServer()->addObject( lines_, sceneID(), false );
     
+    OD::LineStyle ls( OD::LineStyle::Solid, linewidth_, color_ );
     if ( !drawstyle_ ) {
         drawstyle_ = new visBase::DrawStyle;
         drawstyle_->ref();
     }
-	lines_->addNodeState(drawstyle_);
+    drawstyle_->setLineStyle( ls );
+    lines_->addNodeState(drawstyle_);
     if ( !material_ ) {
         material_ = new visBase::Material;
         material_->ref();
@@ -499,7 +514,7 @@ void uiGeopackageTreeItem::showLayer()
         mDynamicCastGet(visSurvey::Scene*,scene, visserv->getObject(sceneID()));
         ZAxisTransform* ztransform = scene ? scene->getZAxisTransform() : 0;
 
-		float zshift = zshift_ / (float) scene->zDomainUserFactor();
+	float zshift = zshift_ / (float) scene->zDomainUserFactor();
         
         Hor3DTool h3t(hor3d, ztransform);
         ManagedObjectSet<ODPolygon<Pos::Ordinate_Type>> polys;
@@ -533,7 +548,7 @@ void uiGeopackageTreeItem::removeOldLinesFromScene()
         lines_->removeAllPrimitiveSets();
 }
 
-visSurvey::HorizonDisplay* uiGeopackageTreeItem::getHorDisp()
+visSurvey::HorizonDisplay* uiGeopackageTreeItem::getHorDisp() const
 {
     uiVisPartServer* visserv = applMgr()->visServer();
     mDynamicCastGet(visSurvey::HorizonDisplay*,hordisp,visserv->getObject(displayID()))
@@ -542,9 +557,10 @@ visSurvey::HorizonDisplay* uiGeopackageTreeItem::getHorDisp()
 
 void uiGeopackageTreeItem::updateColumnText( int col )
 {
-    uiODDataTreeItem::updateColumnText( col );
     if (col == uiODSceneMgr::cColorColumn())
         uitreeviewitem_->setPixmap(uiODSceneMgr::cColorColumn(), color_);
+    else if (col == uiODSceneMgr::cNameColumn())
+	uiODDataTreeItem::updateColumnText( col );
     
     uiVisPartServer* visserv = applMgr()->visServer();
     visSurvey::HorizonDisplay* hordisp = getHorDisp();
@@ -554,5 +570,88 @@ void uiGeopackageTreeItem::updateColumnText( int col )
         const bool solomode = visserv->isSoloMode();
         const bool turnon = !hordisp->displayedOnlyAtSections() && ( (solomode && hordisp->isOn()) || (!solomode && hordisp->isOn() && isChecked()) );
         lines_->turnOn( turnon );
+    }
+}
+
+void uiGeopackageTreeItem::sessionRestoreCB( CallBacker* )
+{
+    IOPar& iop = ODMainWin()->sessionPars();
+    usePar(iop);
+}
+
+void uiGeopackageTreeItem::sessionSaveCB( CallBacker* )
+{
+    IOPar& iop = ODMainWin()->sessionPars();
+    fillPar(iop);
+}
+
+bool uiGeopackageTreeItem::fillPar(IOPar& par) const
+{
+    int nrGP = 1;
+    const MultiID mid = getHorDisp()->getMultiID();
+    BufferString nrkey = sKeyGeopkg();
+    BufferString id;
+    id.add(mid.buf()).replace(".","_");
+    nrkey.add(".").add(id).add(".");
+    BufferString startkey = nrkey;
+    startkey.add(sKeyGeopkgStart());
+    nrkey.add(sKeyGeopkgNr());
+    if (par.get(nrkey, nrGP))
+	nrGP++;
+    IOPar gppar;
+    gppar.set(sKey::FileName(), reader_->fileName());
+    gppar.set(sKey::Target(), reader_->layerName());
+    gppar.set(sKey::Color(), color_);
+    gppar.set(sKey::Weight(), linewidth_);
+    
+    BufferString key = sKeyGeopkg();
+    key.add(".").add(id).add(".").add(nrGP);
+    par.set(nrkey, nrGP);
+    par.set(startkey, 1);
+    par.mergeComp(gppar, key);
+    return true;
+}
+
+void uiGeopackageTreeItem::usePar(IOPar& par)
+{
+    visSurvey::HorizonDisplay* hdisp = getHorDisp();
+    int nrGP = 0;
+    if ( hdisp )
+    {
+	const MultiID mid = hdisp->getMultiID();
+	BufferString nrkey = sKeyGeopkg();
+	BufferString id;
+	id.add(mid.buf()).replace(".","_");
+	nrkey.add(".").add(id).add(".");
+	BufferString startkey = nrkey;
+	startkey.add(sKeyGeopkgStart());
+	nrkey.add(sKeyGeopkgNr());
+	int idx;
+	if ( par.get(nrkey, nrGP) && par.get(startkey, idx) && nrGP>0) {
+	    BufferString key = sKeyGeopkg();
+	    key.add(".").add(id).add(".").add(idx);
+	    IOPar* gpar = par.subselect(key);
+	    if (gpar) {
+		BufferString filename, layername;
+		gpar->get(sKey::FileName(), filename);
+		gpar->get(sKey::Target(), layername);
+		gpar->get(sKey::Color(), color_);
+		gpar->get(sKey::Weight(), linewidth_);
+		if ( reader_->open(filename) ) {
+		    reader_->setLayer(layername);
+		    showLayer();
+		}
+	    }
+	    par.removeSubSelection(key);
+	    nrGP--;
+	    idx++;
+	    if ( nrGP > 0 ) {
+		par.set(nrkey, nrGP);
+		par.set(startkey, idx);
+	    } else {
+		par.removeSubSelection(nrkey);
+		par.removeSubSelection(startkey);
+	    }
+	}
     }
 }

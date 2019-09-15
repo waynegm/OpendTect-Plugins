@@ -157,7 +157,14 @@ void uiGeopackageExportMgr::doDisplayCB( CallBacker* )
     uiTreeItem* parent = appl_->sceneMgr().findItem( displayid );
     if ( !parent )
         return;
-
+    
+    const uiTreeItem* item = parent->findChild("Geopackage");
+    if (item) {
+	mDynamicCastGet(const uiGeopackageTreeItem*,gpitm,item);
+	if ( gpitm )
+	    return;
+    }
+    
     const int attrib = visserv->addAttrib( displayid );
     Attrib::SelSpec spec( "Geopackage", Attrib::SelSpec::cAttribNotSel(), false, 0 );
     spec.setDefString( uiGeopackageTreeItem::sKeyGeopackageDefString() );
