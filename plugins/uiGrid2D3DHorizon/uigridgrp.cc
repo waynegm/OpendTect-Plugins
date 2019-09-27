@@ -20,10 +20,12 @@
 ui2D3DInterpol* ui2D3DInterpol::create( const char* methodName, uiParent* p )
 {
     BufferString tmp(methodName);
-    if (tmp == wmGridder2D::MethodNames[wmGridder2D::LocalCCTS])
-        return (ui2D3DInterpol*) new uiCCTS(p);
+    if (tmp == wmGridder2D::MethodNames[wmGridder2D::LocalRBF])
+        return (ui2D3DInterpol*) new uiRBF(p);
     else if (tmp == wmGridder2D::MethodNames[wmGridder2D::IDW])
         return (ui2D3DInterpol*) new uiIDW(p);
+    else if (tmp == wmGridder2D::MethodNames[wmGridder2D::MBA])
+	return (ui2D3DInterpol*) new uiMBA(p);
     else {
         ErrMsg("ui2D3DInterpol::create - unrecognised method name");
         return nullptr;
@@ -48,26 +50,35 @@ uiGridGrp::uiGridGrp( uiParent* p )
     gridfld_->setSensitive(false, true);
     gridfld_->attach(alignedBelow, scopefld_);
     
+    methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
+    methodfld_->attach( alignedBelow, gridfld_ );
+    methodfld_->valuechanged.notify( mCB(this,uiGridGrp,methodChgCB) );
+    methodfld_->setValue(wmGridder2D::LocalRBF);
+    
     polycropfld_ = new WMLib::uiPolygonParSel(this, tr("Cropping Polygon"), false);
-    polycropfld_->attach( alignedBelow, gridfld_ );
+    polycropfld_->attach( alignedBelow, methodfld_ );
     
     faultpolyfld_ = new WMLib::uiPolygonParSel(this, tr("Fault Polygons"), true);
     faultpolyfld_->attach( alignedBelow, polycropfld_ );
 
-    methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
-    methodfld_->attach( alignedBelow, faultpolyfld_ );
-    methodfld_->valuechanged.notify( mCB(this,uiGridGrp,methodChgCB) );
+//	faultsurffld_ = new uiFaultParSel( this, false );
+//	faultsurffld_->attach( alignedBelow, faultpolyfld_);
     
     for ( int idx=0; wmGridder2D::MethodNames[idx]; idx++ )
     {
-        ui2D3DInterpol* methodgrp = ui2D3DInterpol::create( wmGridder2D::MethodNames[idx], this );
-        if ( methodgrp )
-            methodgrp->attach( alignedBelow, methodfld_ );
-        methodgrps_ += methodgrp;
+	ui2D3DInterpol* methodgrp = ui2D3DInterpol::create( wmGridder2D::MethodNames[idx], this );
+	if ( methodgrp )
+	    methodgrp->attach( alignedBelow, faultpolyfld_ );
+	methodgrps_ += methodgrp;
     }
-    
+
     setHAlignObj( methodfld_ );
     update();
+}
+
+uiGridGrp::~uiGridGrp()
+{
+    detachAllNotifiers();
 }
 
 void uiGridGrp::update()
@@ -113,7 +124,8 @@ void uiGridGrp::methodChgCB(CallBacker* )
         if ( methodgrps_[idx] )
             methodgrps_[idx]->display( idx==selidx );
     }
-    faultpolyfld_->display(methodgrps_[selidx]->canHandleFaultPolygons());
+    faultpolyfld_->display(wmGridder2D::canHandleFaultPolygons( wmGridder2D::MethodNames[selidx]));
+//    faultsurffld_->display(wmGridder2D::canHandleFaultSurfaces( wmGridder2D::MethodNames[selidx]));
 }
 
 bool uiGridGrp::fillPar( IOPar& par ) const
@@ -136,6 +148,11 @@ bool uiGridGrp::fillPar( IOPar& par ) const
     for ( int idx=0; idx<selpolytids.size(); idx++ )
         par.set( IOPar::compKey(wmGridder2D::sKeyFaultPolyID(),idx), selpolytids[idx] );
     
+//    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
+//    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
+//    for ( int idx=0; idx<selfaultids.size(); idx++ )
+//        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
+
     const BinID step = gridfld_->getTrcKeySampling().step_;
     if ( step.inl() <= 0 || step.crl() <= 0 )
     {
@@ -204,43 +221,39 @@ ui2D3DInterpol::ui2D3DInterpol( uiParent* p )
 uiIDW::uiIDW( uiParent* p )
     : ui2D3DInterpol(p)
 {
-//    fltselfld_ = new uiFaultParSel( this, false );
-
-    uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
-    radiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(5000.0) );
-    radiusfld_->setWithCheck( true );
-    radiusfld_->setChecked( true );
+    uiString titletext( tr("Block size %1").arg(SI().getUiXYUnitString()) );
+    blocksizefld_ = new uiGenInput( this, titletext, FloatInpSpec(8000.0) );
+    blocksizefld_->setWithCheck( true );
+    blocksizefld_->setChecked( true );
 }
 
 bool uiIDW::fillPar( IOPar& par ) const
 {
-    const float radius = radiusfld_->isChecked() ? radiusfld_->getFValue(0) : mUdf(float);
-    if ( radius<=0 )
-    {
-        uiMSG().error( "Search radius must be positive" );
-        return false;
+    if ( blocksizefld_->isChecked() ) {
+	const float blocksize = blocksizefld_->getFValue(0);
+	if ( blocksize<=0 )
+	{
+	    uiMSG().error( "Block size must be positive" );
+	    return false;
+	}
+	par.set( wmGridder2D::sKeyBlockSize(), blocksize );
     }
-    par.set( wmIDWGridder2D::sKeySearchRadius(), radius );
-
-    
-//    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
-//    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
-//    for ( int idx=0; idx<selfaultids.size(); idx++ )
-//        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
         
     return true;
 }
 
 void uiIDW::usePar( const IOPar& par )
 {
-    float radius;
-    if (par.get(wmGridder2D::sKeySearchRadius(), radius)) {
-        radiusfld_->setValue(radius);
-        radiusfld_->setChecked(true);
-    } else
-        radiusfld_->setChecked(false);
+    float blocksize;
+    if (par.get(wmGridder2D::sKeyBlockSize(), blocksize)) {
+        blocksizefld_->setValue(blocksize);
+        blocksizefld_->setChecked(true);
+    } else {
+        blocksizefld_->setChecked(false);
+	blocksizefld_->setValue(8000);
+    }
 }
-
+/*
 uiCCTS::uiCCTS( uiParent* p )
 : ui2D3DInterpol(p)
 {
@@ -253,6 +266,10 @@ uiCCTS::uiCCTS( uiParent* p )
     tensionfld_ = new uiGenInput( this, tr("Tension"), FloatInpSpec(0.25) );
     tensionfld_->setWithCheck( false );
     tensionfld_->attach( alignedBelow, radiusfld_ );
+    
+    maxvalsfld_ = new uiGenInput(this, tr("Maximum Points"), IntInpSpec(20));
+    maxvalsfld_->setWithCheck(false);
+    maxvalsfld_->attach(alignedBelow, tensionfld_);
 }
 
 bool uiCCTS::fillPar( IOPar& par ) const
@@ -273,6 +290,13 @@ bool uiCCTS::fillPar( IOPar& par ) const
     }
     par.set( wmGridder2D::sKeyTension(), tension );
     
+    const int maxvals = maxvalsfld_->getIntValue(0);
+    if ( maxvals<=0 )
+    {
+	uiMSG().error( tr("Maximum Points must be greater than 0") );
+	return false;
+    }
+    
     //    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
     //    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
     //    for ( int idx=0; idx<selfaultids.size(); idx++ )
@@ -291,7 +315,7 @@ void uiCCTS::usePar( const IOPar& par )
     if (par.get(wmGridder2D::sKeyTension(), tension))
         tensionfld_->setValue(tension);
 }
-/*
+
 uiIter::uiIter( uiParent* p )
     : ui2D3DInterpol(p)
 { }
@@ -301,6 +325,69 @@ bool uiIter::fillPar( IOPar& par ) const
     return true;
 }
 */
-
-        
+uiRBF::uiRBF(uiParent* p)
+    : ui2D3DInterpol(p)
+{
+    uiString titletext( tr("Block size %1").arg(SI().getUiXYUnitString()) );
+    blocksizefld_ = new uiGenInput( this, titletext, FloatInpSpec(8000.0) );
+    blocksizefld_->setWithCheck( false );
     
+    percoverlapfld_ = new uiGenInput(this, tr("Percentage overlap"), IntInpSpec(20));
+    percoverlapfld_->setWithCheck(false);
+    percoverlapfld_->attach(alignedBelow, blocksizefld_);
+    
+    tensionfld_ = new uiGenInput( this, tr("Tension"), FloatInpSpec(0.25) );
+    tensionfld_->setWithCheck( false );
+    tensionfld_->attach( alignedBelow, blocksizefld_ );
+}
+
+bool uiRBF::fillPar(IOPar& par) const
+{
+    const float blocksize = blocksizefld_->getFValue(0);
+    if ( blocksize<=0 )
+    {
+	uiMSG().error( "Block size must be positive" );
+	return false;
+    }
+    par.set( wmGridder2D::sKeyBlockSize(), blocksize );
+    
+    const int percoverlap = percoverlapfld_->getIntValue(0);
+    if ( percoverlap<=0 || percoverlap>=100 )
+    {
+	uiMSG().error( tr("Percent overlap must be between 0 and 100") );
+	return false;
+    }
+    par.set( wmGridder2D::sKeyOverlap(), percoverlap );
+    
+    const float tension = tensionfld_->getFValue(0);
+    if ( tension<=0.0 || tension>=1.0 )
+    {
+	uiMSG().error( "Tension must be between 0 and 1" );
+	return false;
+    }
+    par.set( wmGridder2D::sKeyTension(), tension );
+    
+    return true;    
+}
+
+void uiRBF::usePar(const IOPar& par)
+{
+    float blocksize;
+    if (par.get(wmGridder2D::sKeyBlockSize(), blocksize))
+	blocksizefld_->setValue(blocksize);
+    
+    float percoverlap;
+    if (par.get(wmGridder2D::sKeyOverlap(), percoverlap))
+	percoverlapfld_->setValue(percoverlap);
+    
+    float tension;
+    if (par.get(wmGridder2D::sKeyTension(), tension))
+	tensionfld_->setValue(tension);
+}
+
+uiMBA::uiMBA(uiParent* p)
+    : ui2D3DInterpol(p)
+{}
+
+
+  

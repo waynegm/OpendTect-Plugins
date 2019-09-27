@@ -60,18 +60,20 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     outfld_ = new uiSurfaceWrite(this, swsu);
     outfld_->attach(stretchedBelow, tabstack_);
     enableSaveButton(tr("Display after create"));
-
+    
     IOPar par;
     if (par.read(getParFileName(),0)) {
-        inputgrp_->usePar( par );
-        gridgrp_->usePar( par );
+        if (inputgrp_)
+	    inputgrp_->usePar( par );
+        if (gridgrp_)
+	    gridgrp_->usePar( par );
     }
     tabSelCB(0);
 }
 
 uiGrid2D3DHorizonMainWin::~uiGrid2D3DHorizonMainWin()
 {
-    
+    detachAllNotifiers();
 }
 
 BufferString uiGrid2D3DHorizonMainWin::getParFileName()
@@ -102,7 +104,7 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
     
     FixedString method = par.find( wmGridder2D::sKeyMethod() );
     PtrMan<wmGridder2D> interpolator = wmGridder2D::create( method );
-    if ( interpolator==nullptr ) {
+    if ( !interpolator ) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - selected interpolation method not found.");
         return false;
     }
@@ -120,15 +122,13 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
     }
     
     {
-        uiTaskRunner uitr(this); 
         if (!interpolator->prepareForGridding())
             return false;
-        if (!TaskRunner::execute(&uitr, *interpolator)) {
-            ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error during gridding");
-            return false;
-        }
+	uiTaskRunner uitr(this); 
+	uitr.setCaption(tr("Gridding"));
+	interpolator->executeGridding(&uitr);
     }
-
+    
     RefMan<EM::Horizon3D> hor3d = EM::Horizon3D::createWithConstZ(0.0, interpolator->getTrcKeySampling());
     if (!hor3d) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - creation of output horizon failed");

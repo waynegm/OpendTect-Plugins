@@ -19,7 +19,7 @@ class uiGridGrp : public uiDlgGroup
 { mODTextTranslationClass(uiGridGrp);
 public:
     uiGridGrp(uiParent*);
-    ~uiGridGrp() {}
+    ~uiGridGrp();
     
     bool                fillPar( IOPar& par ) const;
     void                usePar( const IOPar& par );
@@ -64,45 +64,30 @@ public:
     virtual bool    fillPar(IOPar&) const;
     virtual void    usePar(const IOPar&);
     
-    virtual bool    canHandleFaultSurfaces() const { return false; }
-    virtual bool    canHandleFaultPolygons() const { return true; }
-
 protected:
-    uiGenInput*         radiusfld_;
-    
-//    uiFaultParSel*  fltselfld_;
+    uiGenInput*         blocksizefld_;
 };
 
-class uiCCTS : public ui2D3DInterpol
-{ mODTextTranslationClass(uiCCTS);
+class uiRBF : public ui2D3DInterpol
+{ mODTextTranslationClass(uiRBF);
 public:
-    uiCCTS(uiParent*);
+    uiRBF(uiParent*);
     
     virtual bool    fillPar(IOPar&) const;
     virtual void    usePar(const IOPar&);
-    
-    virtual bool    canHandleFaultSurfaces() const { return false; }
-    virtual bool    canHandleFaultPolygons() const { return true; }
+
+protected:
+    uiGenInput*         blocksizefld_;
+    uiGenInput*		percoverlapfld_;
+    uiGenInput*         tensionfld_;
+};    
+
+class uiMBA : public ui2D3DInterpol
+{ mODTextTranslationClass(uiMBA);
+public:
+    uiMBA(uiParent*);
     
 protected:
-    uiGenInput*         radiusfld_;
-    uiGenInput*         tensionfld_;
-    
-    //    uiFaultParSel*  fltselfld_;
 };
 
-/*
-class uiIter : public ui2D3DInterpol
-{ mODTextTranslationClass(uiIter);
-public:
-    uiIter(uiParent*);
-    
-    virtual bool    fillPar(IOPar&) const;
-    virtual bool    canHandleFaultSurfaces() const { return false; }
-    virtual bool    canHandleFaultPolygons() const { return true; }
-    
-protected:
-
-};    
-*/
 #endif

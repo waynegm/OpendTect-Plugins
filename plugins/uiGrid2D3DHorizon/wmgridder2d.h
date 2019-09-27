@@ -19,45 +19,52 @@ namespace EM { class Horizon3D; }
 
 
 typedef std::pair<double, double> TPoint;
+typedef kdbush::KDBush<TPoint, std::size_t> KDTree;
 
-class wmGridder2D : public ParallelTask
+class wmGridder2D
 { mODTextTranslationClass(wmGridder2D);
 public:
     friend class LocalInterpolator;
     enum ScopeType   { BoundingBox, Horizon };
-    enum Method { LocalCCTS, IDW }; 
-    static const char*  ScopeNames[];
-    static const char*  MethodNames[];
-    static wmGridder2D* create(const char* methodName);
+    enum Method { LocalRBF, MBA, IDW }; 
+    static const char*	ScopeNames[];
+    static const char*	MethodNames[];
+    static wmGridder2D*	create(const char* methodName);
+    static bool		canHandleFaultPolygons(const char* methodName);
     
-    virtual         ~wmGridder2D();
+    virtual		~wmGridder2D();
 
-    void            setSearchRadius(float r) { searchradius_ = r; }
-    float           getSearchRadius() const { return searchradius_; }
+    void		setBlockSize(float bs) { blocksize_ = bs; }
+    float		getBlockSize() const { return blocksize_; }
+
+    void		setPercOverlap(int polp) { percoverlap_ = polp; }
+    int			getPercOverlap() const { return percoverlap_; }
     
-    virtual void    setPoint(const Coord& loc, const float val);
-//    virtual bool	fillPar(IOPar&) const;
-    virtual bool    usePar(const IOPar&);
- 
-    uiString        uiNrDoneText() const    { return "Gridded"; }
-    od_int64        totalNr() const { return totalnr_; }
+    virtual void	setPoint(const Coord& binLoc, const float val);
+    void		includeInRange(const Coord& binLoc);
     
-    TrcKeySampling  getTrcKeySampling() const;
-    bool            loadData();
-    bool            setScope();
-    bool            isUncropped( Coord ) const;
-    bool            inFaultHeave( Coord ) const;
-    static bool     segmentsIntersect(Coord, Coord, Coord, Coord);
-    bool            faultBetween( Coord, Coord) const;
-    void            getHorRange(Interval<int>&, Interval<int>&);
-    bool            saveGridTo(EM::Horizon3D*);
+    virtual bool	prepareForGridding();
+    virtual bool	executeGridding(TaskRunner*) = 0;
+    
+    virtual bool	usePar(const IOPar&);
+    
+    TrcKeySampling	getTrcKeySampling() const;
+    bool		loadData();
+    bool		setScope();
+    bool		isUncropped( Coord ) const;
+    bool		inFaultHeave( Coord ) const;
+    static bool		segmentsIntersect(Coord, Coord, Coord, Coord);
+    bool		faultBetween( Coord, Coord) const;
+    void		getHorRange(Interval<int>&, Interval<int>&);
+    bool		saveGridTo(EM::Horizon3D*);
     
     static const char*  sKeyScopeHorID();
     static const char*  sKeyRowStep();
     static const char*  sKeyColStep();
     static const char*  sKeyMethod();
     static const char*  sKeyClipPolyID(); 
-    static const char*  sKeySearchRadius(); 
+    static const char*  sKeyBlockSize(); 
+    static const char*  sKeyOverlap(); 
     static const char*  sKeyScopeType();
     static const char*  sKeyFaultPolyID();
     static const char*  sKeyFaultPolyNr();
@@ -69,10 +76,6 @@ public:
     static const char*  sKey3DHorizonID();
     static const char*  sKeyRegularization();
     static const char*  sKeyTension();
-    
-    od_int64            nrIterations() const { return totalnr_; }
-    virtual bool        doWork( od_int64 start, od_int64 stop, int threadid );
-    virtual bool        prepareForGridding( bool localInterp=false );
     
 protected:
     
@@ -93,63 +96,21 @@ protected:
     ScopeType               scope_;
     MultiID                 horScopeID_;
     std::vector<float>      vals_;
-    std::vector<TPoint>     locs_; 
-    kdbush::KDBush<TPoint, std::size_t>  kdtree_;
+    std::vector<TPoint>     binLocs_; 
+    KDTree		    kdtree_;
     Interval<float>         inlrg_;
     Interval<float>         crlrg_;
-    float                   searchradius_;
+    float                   blocksize_;
+    int		    	    percoverlap_;
     
     Array2DImpl<float>*     grid_;
     Array2DImpl<float>*     carr_;
+    TypeSet<od_int64>	    interpidx_;
     TrcKeySampling          hs_;
     
-    od_int64                totalnr_;
+    const TaskRunner*	    tr_;
     
-    virtual void            interpolate_( int idx, int idy, Coord pos ) {}
     void                    localInterp();
-    
 };
 
-
-class wmIDWGridder2D : public wmGridder2D
-{ mODTextTranslationClass(wmIDWGridder2D);
-public:
-    wmIDWGridder2D();
-    
-    virtual bool    usePar(const IOPar&);
-    virtual bool    prepareForGridding(bool);
-    
-protected:
-    void    interpolate_( int idx, int idy, Coord pos );
-    
-};
-
-class wmLCCTSGridder2D : public wmGridder2D
-{ mODTextTranslationClass(wmLCCTSGridder2D);
-public:
-    wmLCCTSGridder2D();
-    
-    virtual bool    usePar(const IOPar&);
-    virtual bool    prepareForGridding(bool);
-    
-protected:
-    void    interpolate_( int idx, int idy, Coord pos );
-    double  basis_( const double r ) const;
-    float   tension_;
-    double  p0_, p1_;
-    
-};
-/*
-class wmIterGridder2D: public wmGridder2D
-{ mODTextTranslationClass(wmIterGridder2D);
-public:
-    wmIterGridder2D();
-    
-    virtual bool    usePar(const IOPar&);
-    virtual bool    prepareForGridding(bool);
-    virtual bool    doWork( od_int64 start, od_int64 stop, int threadid );
-protected:
-    
-};
-*/
 #endif

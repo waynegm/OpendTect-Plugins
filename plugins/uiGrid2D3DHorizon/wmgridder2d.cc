@@ -1,4 +1,7 @@
 #include "wmgridder2d.h"
+#include "mbagridder2d.h"
+#include "rbfgridder2d.h"
+#include "idwgridder2d.h"
 
 #include "uimsg.h"
 #include "bufstring.h"
@@ -19,8 +22,6 @@
 #include "picksettr.h"
 
 
-#include "Eigen/Dense"
-
 #ifndef M_LOG_2
 #define M_LOG_2 0.69314718055994530942
 #endif
@@ -35,7 +36,8 @@ const char* wmGridder2D::sKeyRowStep()      { return "RowStep"; }
 const char* wmGridder2D::sKeyColStep()      { return "ColStep"; }
 const char* wmGridder2D::sKeyMethod()       { return "Method"; }
 const char* wmGridder2D::sKeyClipPolyID()   { return "ClipPolyID"; }
-const char* wmGridder2D::sKeySearchRadius() { return "SearchRadius"; }
+const char* wmGridder2D::sKeyBlockSize()    { return "BlockSize"; }
+const char* wmGridder2D::sKeyOverlap()      { return "PercentOverlap"; }
 const char* wmGridder2D::sKeyScopeType()    { return "ScopeType"; }
 const char* wmGridder2D::sKeyFaultPolyID()  { return "FaultPolyID"; }
 const char* wmGridder2D::sKeyFaultPolyNr()  { return "FaultPolyNr"; }
@@ -50,8 +52,9 @@ const char* wmGridder2D::sKeyTension()      { return "Tension"; }
 
 const char* wmGridder2D::MethodNames[] =
 {
-    "Local Continuous Curvature Tension Spline",
-    "Inverse Distance Squared Interpolation",
+    "Local Radial Basis Functions",
+    "Multilevel B-Splines",
+    "Inverse Distance Weighted",
     0
 };
 
@@ -65,22 +68,39 @@ const char* wmGridder2D::ScopeNames[] =
 wmGridder2D* wmGridder2D::create( const char* methodName )
 {
     BufferString tmp(methodName);
-    if (tmp == MethodNames[LocalCCTS])
-        return (wmGridder2D*) new wmLCCTSGridder2D();
+    if (tmp == MethodNames[LocalRBF])
+        return (wmGridder2D*) new wmRBFGridder2D();
     else if (tmp == MethodNames[IDW])
-        return (wmGridder2D*) new wmIDWGridder2D();
+	return (wmGridder2D*) new wmIDWGridder2D();
+    else if (tmp == MethodNames[MBA])
+	return (wmGridder2D*) new wmMBAGridder2D();
     else {
         ErrMsg("wmGridder2D::create - unrecognised method name");
         return nullptr;
     }
 }
 
+bool wmGridder2D::canHandleFaultPolygons( const char* methodName )
+{
+    BufferString tmp(methodName);
+    if (tmp == MethodNames[LocalRBF])
+	return true;
+    else if (tmp == MethodNames[IDW])
+	return true;
+    else if (tmp == MethodNames[MBA])
+	return false;
+    else {
+	ErrMsg("wmGridder2D::canHandleFaultPolygons - unrecognised method name");
+	return false;
+    }
+}
+
 wmGridder2D::wmGridder2D() 
-    : totalnr_(-1)
-    , kdtree_(10)
-    , searchradius_(mUdf(float))
+    : kdtree_(10)
+    , blocksize_(mUdf(float))
     , grid_(0)
     , carr_(0)
+    , tr_(nullptr)
 {
     hs_ = SI().sampling( false ).hsamp_;
     hor2DID_.setUdf();
@@ -99,13 +119,23 @@ wmGridder2D::~wmGridder2D()
     }
 }
 
-void wmGridder2D::setPoint( const Coord& loc, const float val )
+// loc is in survey grid coordinates
+void wmGridder2D::setPoint( const Coord& binLoc, const float val )
 {
-    Coord pos = SI().binID2Coord().transformBackNoSnap(loc);
-    locs_.push_back(TPoint(loc.x, loc.y));
-    inlrg_.isUdf()? inlrg_.set(pos.x,pos.x) : inlrg_.include(pos.x);
-    crlrg_.isUdf()? crlrg_.set(pos.y,pos.y) : crlrg_.include( pos.y );
+    binLocs_.push_back(TPoint(binLoc.x, binLoc.y));
     vals_.push_back(val);
+    includeInRange(binLoc);
+}
+
+void wmGridder2D::includeInRange(const Coord& pos)
+{
+    if (inlrg_.isUdf()) {
+	inlrg_.set(pos.x,pos.x);
+	crlrg_.set(pos.y,pos.y);
+    } else {
+	inlrg_.include(pos.x);
+	crlrg_.include( pos.y );
+    }
 }
 
 bool wmGridder2D::usePar(const IOPar& par)
@@ -149,7 +179,8 @@ bool wmGridder2D::usePar(const IOPar& par)
         }
     }
     
-    par.get(sKeySearchRadius(), searchradius_);
+    par.get(sKeyBlockSize(), blocksize_);
+    par.get(sKeyOverlap(), percoverlap_);
     
     par.get(sKeyRowStep(), hs_.step_.first);
     par.get(sKeyColStep(), hs_.step_.second);
@@ -206,7 +237,7 @@ bool wmGridder2D::loadData()
                 const float z = hor->getZ( tk );
                 if (mIsUdf(z))
                     continue;
-                Coord coord = SI().transform(bid);
+                Coord coord(iln, xln);
                 setPoint(coord, z);
             }
         }
@@ -242,7 +273,8 @@ bool wmGridder2D::loadData()
 
                 Coord coord;
                 survgeom2d->getPosByTrcNr( trcnr, coord, spnr );
-                setPoint(coord, z);
+		Coord binLoc = SI().binID2Coord().transformBackNoSnap(coord);
+                setPoint(binLoc, z);
             }
         }
         obj->unRef();
@@ -265,7 +297,8 @@ bool wmGridder2D::loadData()
         }
         for (int idx=0; idx<ps.size(); idx++) {
             const Pick::Location& pl = ps[idx];
-            croppoly_.add(pl.pos_.coord());
+	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos_.coord());
+            croppoly_.add(binLoc);
         }
         croppoly_.setClosed(true);
     }
@@ -288,7 +321,8 @@ bool wmGridder2D::loadData()
         }
         for (int idp=0; idp<ps.size(); idp++) {
             const Pick::Location& pl = ps[idp];
-            fault->add(pl.pos_.coord());
+	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos_.coord());
+	    fault->add(binLoc);
         }
         faultpoly_ += fault;
     }
@@ -362,206 +396,128 @@ bool wmGridder2D::faultBetween(Coord s1p1, Coord s1p2) const
     return false;
 }
 
-bool wmGridder2D::prepareForGridding(bool doLocalInterp)
+bool wmGridder2D::prepareForGridding()
 {
     if (!loadData())
-        return false;
+	return false;
     if (!setScope())
-        return false;
-
+	return false;
+    if (!grid_) {
 	grid_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
 	if (!grid_) {
-		ErrMsg("wmGridder2D::prepareForGridding - allocation of array for grid failed");
-		return false;
+	    ErrMsg("wmGridder2D::prepareForGridding - allocation of array for grid failed");
+	    return false;
 	}
-    grid_->setAll(mUdf(float));
-
-	totalnr_ = grid_->info().getTotalSz();
-
-    if (doLocalInterp) {
-        carr_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
-        if (!carr_) {
-            ErrMsg("wmGridder2D::prepareForGridding - allocation of array for confidence grid failed");
-            return false;
-        }
-        carr_->setAll(0.0);
-        localInterp();
-        locs_.clear();
-        vals_.clear();
-        for (int idx=0; idx<grid_->info().getSize(0); idx++) {
-            for (int idy=0; idy<grid_->info().getSize(1);idy++) {
-                float carr = carr_->get(idx,idy);
-                if (carr!=0.0) {
-                    Coord gridPos = hs_.toCoord(hs_.atIndex(idx,idy));
-                    if (isUncropped(gridPos) && !inFaultHeave(gridPos)) {
-                        grid_->set(idx,idy,grid_->get(idx,idy)/carr);
-                        setPoint(gridPos, grid_->get(idx,idy));
-                    } else {
-                        carr_->set(idx,idy, 0.0);
-                        grid_->set(idx, idy, mUdf(float));
-                    }
-                }
-            }
-        }
-    }
+    } else
+	grid_->setSize(hs_.nrInl(), hs_.nrCrl());
     
-    if (!mIsUdf(searchradius_)) {
-        kdtree_.fill(locs_);
-    }
+    grid_->setAll(mUdf(float));
+    
     return true;
 }
 
 mDefParallelCalc2Pars( LocalInterpolator, od_static_tr("LocalInterpolator","Interpolate nearest grid points"),
-                       const wmGridder2D*, interp, Threads::Lock, lock )
+		       const wmGridder2D*, interp, Threads::Lock, lock )
 mDefParallelCalcBody( 
-                      const std::vector<TPoint>& locs_ = interp_->locs_;
-                      const std::vector<float>& vals_ = interp_->vals_;
-                      const TrcKeySampling& hs_ = interp_->hs_;
-                      Array2DImpl<float>* grid_ = interp_->grid_;
-                      Array2DImpl<float>* carr_ = interp_->carr_;
-                      ,
-                      const Coord pos(locs_[idx].first, locs_[idx].second);
-                      Coord bid = SI().binID2Coord().transformBackNoSnap(pos);
-                      BinID bidSnap = SI().binID2Coord().transformBack(pos, hs_.start_, hs_.step_);
-                      if (mIsEqual(bid.x, bidSnap.inl(), mDefEps) && mIsEqual(bid.y, bidSnap.crl(), mDefEps)) {
-                          int ix = hs_.inlIdx(bidSnap.inl());
-                          int iy = hs_.crlIdx(bidSnap.crl());
-                          if (ix>=0 && ix<hs_.nrInl() && iy>=0 && iy<hs_.nrCrl()) {
-                            Threads::Locker lckr( lock_ );
-                            double prev = mIsUdf(grid_->get(ix,iy)) ? 0.0 : grid_->get(ix,iy);
-                            grid_->set(ix, iy, prev + vals_[idx]);
-                            carr_->set(ix, iy, carr_->get(ix, iy) + 1.0);
-                          }
-                      } else {
-                          BinID r[4];
-                          r[0] = bid.x<bidSnap.inl() ? bidSnap-BinID(hs_.step_.inl(),0) : bidSnap;
-                          r[1] = r[0] + BinID(hs_.step_.inl(),0);
-                          r[2] = bid.y<bidSnap.crl() ? r[0]-BinID(0,hs_.step_.crl()) : r[0];
-                          r[3] = r[2] + BinID(hs_.step_.inl(),0);
-                          for (int ir=0; ir<4; ir++) {
-                              Coord rpos = SI().binID2Coord().transform(r[ir]);
-                              if (!interp_->faultBetween(pos, rpos)) {
-                                  int ix = hs_.inlIdx(r[ir].inl());
-                                  int iy = hs_.crlIdx(r[ir].crl());
-                                  if (ix>=0 && ix<hs_.nrInl() && iy>=0 && iy<hs_.nrCrl()) {
-                                    double dist = rpos.sqHorDistTo(pos);
-                                    double wgt = tanh(dist)/dist;
-                                    Threads::Locker lckr( lock_ );
-                                    double prev = mIsUdf(grid_->get(ix,iy)) ? 0.0 : grid_->get(ix,iy);
-                                    grid_->set(ix, iy, prev + wgt*vals_[idx]);
-                                    carr_->set(ix, iy, carr_->get(ix, iy) + wgt);
-                                  }
-                              }
-                          }
-                      }
-                      , )
-                      
+const std::vector<TPoint>& locs_ = interp_->binLocs_;
+const std::vector<float>& vals_ = interp_->vals_;
+const TrcKeySampling& hs_ = interp_->hs_;
+Array2DImpl<float>* grid_ = interp_->grid_;
+Array2DImpl<float>* carr_ = interp_->carr_;
+,
+const Coord pos(locs_[idx].first, locs_[idx].second);
+BinID bidSnap = hs_.getNearest(BinID(mNINT32(pos.x), mNINT32(pos.y)));
+if (mIsEqual(pos.x, bidSnap.inl(), mDefEps) && mIsEqual(pos.y, bidSnap.crl(), mDefEps)) {
+    int ix = hs_.inlIdx(bidSnap.inl());
+    int iy = hs_.crlIdx(bidSnap.crl());
+    if (ix>=0 && ix<hs_.nrInl() && iy>=0 && iy<hs_.nrCrl()) {
+	Threads::Locker lckr( lock_ );
+	double prev = mIsUdf(grid_->get(ix,iy)) ? 0.0 : grid_->get(ix,iy);
+	grid_->set(ix, iy, prev + vals_[idx]);
+	carr_->set(ix, iy, carr_->get(ix, iy) + 1.0);
+    }
+} else {
+    BinID r[4];
+    r[0] = pos.x<bidSnap.inl() ? bidSnap-BinID(hs_.step_.inl(),0) : bidSnap;
+    r[1] = r[0] + BinID(hs_.step_.inl(),0);
+    r[2] = pos.y<bidSnap.crl() ? r[0]-BinID(0,hs_.step_.crl()) : r[0];
+    r[3] = r[2] + BinID(hs_.step_.inl(),0);
+    for (int ir=0; ir<4; ir++) {
+	Coord rpos(r[ir].inl(), r[ir].crl());
+	if (!interp_->faultBetween(pos, rpos)) {
+	    int ix = hs_.inlIdx(r[ir].inl());
+	    int iy = hs_.crlIdx(r[ir].crl());
+	    if (ix>=0 && ix<hs_.nrInl() && iy>=0 && iy<hs_.nrCrl()) {
+		double dist = rpos.sqHorDistTo(pos);
+		double wgt = tanh(dist)/dist;
+		Threads::Locker lckr( lock_ );
+		double prev = mIsUdf(grid_->get(ix,iy)) ? 0.0 : grid_->get(ix,iy);
+		grid_->set(ix, iy, prev + wgt*vals_[idx]);
+		carr_->set(ix, iy, carr_->get(ix, iy) + wgt);
+	    }
+	}
+    }
+}
+, )
+
 void wmGridder2D::localInterp()
 {
+    carr_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
+    if (!carr_) {
+	ErrMsg("wmGridder2D::prepareForGridding - allocation of array for confidence grid failed");
+	return;
+    }
+    carr_->setAll(0.0);
+    
     Threads::Lock lock;
-    LocalInterpolator interp( locs_.size(), this, lock);
+    LocalInterpolator interp( binLocs_.size(), this, lock);
     interp.execute();
-}
-
-bool wmGridder2D::doWork( od_int64 start, od_int64 stop, int threadid )
-{
-    int count = 0;
-    for (od_int64 idx=start; idx<=stop; idx++) {
-        BinID gridBid = hs_.atIndex(idx);
-        Coord gridPos = SI().binID2Coord().transform(gridBid);
-        int ix = hs_.inlIdx(gridBid.inl());
-        int iy = hs_.crlIdx(gridBid.crl());
-        if (isUncropped(gridPos) && !inFaultHeave(gridPos)) 
-            interpolate_(ix, iy, gridPos);
-        count++;
-        if (!(count%200))
-            addToNrDone(200);
+    
+    binLocs_.clear();
+    vals_.clear();
+    interpidx_.erase();
+    
+    for (od_int64 idx=0; idx<hs_.totalNr(); idx++) {
+	BinID gridBid = hs_.atIndex(idx);
+	int ix = hs_.inlIdx(gridBid.inl());
+	int iy = hs_.crlIdx(gridBid.crl());
+	float carr = carr_->get(ix,iy);
+	double x = gridBid.inl();
+	double y = gridBid.crl();
+	Coord gridPos(x, y);
+	if (isUncropped(gridPos) && !inFaultHeave(gridPos)) {
+	    if (carr!=0.0) {
+		float val = grid_->get(ix, iy)/carr;
+		grid_->set(ix, iy, val);
+		vals_.push_back( val );
+		binLocs_.push_back(TPoint(x, y));
+	    } else
+		interpidx_ += idx;
+	} else
+	    grid_->set(ix, iy, mUdf(float));
     }
-    addToNrDone(count%200);
-    return true;    
-}    
-
-wmIDWGridder2D::wmIDWGridder2D()
-    : wmGridder2D()
-{}
-
-bool wmIDWGridder2D::usePar(const IOPar& par)
-{
-    wmGridder2D::usePar(par);
-    return true;
 }
 
-bool wmIDWGridder2D::prepareForGridding(bool doLocalInterp)
-{
-    return wmGridder2D::prepareForGridding( true );
-}
-
-  
-void wmIDWGridder2D::interpolate_( int ix, int iy, Coord pos )
-{
-    double val = 0.0;
-    double wgtsum = 0.0;
-    if (!mIsUdf(searchradius_)) {
-        TIds result;
-        kdtree_.range( pos.x-searchradius_, pos.y-searchradius_, 
-                       pos.x+searchradius_, pos.y+searchradius_, [&result](const std::size_t id) { result.push_back(id); });
-        if (result.size() == 0)
-            return;
-        double r2 = searchradius_*searchradius_;
-        for (int idx=0; idx<result.size(); idx++) {
-            Coord locs(locs_[result[idx]].first, locs_[result[idx]].second);
-            if (faultBetween(pos, locs))
-                continue;
-            double vals = vals_[result[idx]];
-            double d = (locs.x-pos.x)*(locs.x-pos.x)+(locs.y-pos.y)*(locs.y-pos.y);
-            if ( mIsZero(d,mDefEpsF)) {
-				grid_->set(ix, iy, (float)vals);
-				return;
-            }
-            if (d<=r2) {
-                double wgt = 1.0 / d;
-                val += vals * wgt;
-                wgtsum += wgt;
-            }
-        }
-        if (mIsZero(wgtsum, mDefEpsD))
-            return;
-        val /= wgtsum;
-    } else {
-        for (int idx=0; idx<locs_.size(); idx++) {
-            Coord locs(locs_[idx].first, locs_[idx].second);
-            if (faultBetween(pos, locs))
-                continue;
-            double d = (locs.x-pos.x)*(locs.x-pos.x)+(locs.y-pos.y)*(locs.y-pos.y);
-            if ( mIsZero(d,mDefEpsF)) {
-				grid_->set(ix, iy, vals_[idx]);
-				return;
-            }
-            double wgt = 1.0 / d;
-            val += vals_[idx] * wgt;
-            wgtsum += wgt;
-        }
-        if (mIsZero(wgtsum, mDefEpsD))
-            return;
-        val /= wgtsum;
-    }
-	grid_->set(ix, iy, (float)val);
-}
-
+/*
 wmLCCTSGridder2D::wmLCCTSGridder2D()
 : wmGridder2D()
 , tension_(0.25)
+, minvals_(7)
+, maxvals_(20)
 {}
 
 bool wmLCCTSGridder2D::usePar(const IOPar& par)
 {
     par.get(sKeyTension(), tension_);
+    par.get(sKeyMaxVal(), maxvals_);
+    if (maxvals_<minvals_)
+	maxvals_ = minvals_;
     return wmGridder2D::usePar(par);
 }
 
-bool wmLCCTSGridder2D::prepareForGridding(bool doLocalInterp)
+bool wmLCCTSGridder2D::prepareForGridding(TaskRunner* tr)
 {
-    bool res = wmGridder2D::prepareForGridding( true );
+    bool res = wmGridder2D::prepareForGridding( tr );
 // Set up some local constants
     double gs = (hs_.lineDistance() + hs_.trcDistance())/2.0;
     p0_ = sqrt(tension_/(1.0-tension_))/gs;
@@ -592,6 +548,7 @@ double wmLCCTSGridder2D::basis_(const double r) const
     return g;
 }
 
+
 void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
 {
     if (!mIsUdf(searchradius_) && carr_->get(ix,iy)==0.0) {
@@ -611,9 +568,10 @@ void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
             }
         }
         int num = result.size();
-        if (num < 7) {
+        if (num < minvals_) {
             return;
         }
+        num = num<maxvals_ ? num : maxvals_;
         
         Eigen::MatrixXd M = Eigen::MatrixXd::Zero(num+3, num+3);
         Eigen::ArrayXd d(num);
@@ -656,38 +614,4 @@ void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
         grid_->set(ix, iy, (float)val);
     }
 }
-
-/*
-wmIterGridder2D::wmIterGridder2D()
-    : wmGridder2D()
-{ }
-
-bool wmIterGridder2D::usePar(const IOPar& par)
-{
-    wmGridder2D::usePar(par);
-    
-    return true;
-}
-
-bool wmIterGridder2D::prepareForGridding(bool doLocalInterp)
-{
-    return wmGridder2D::prepareForGridding( true );
-}
-
-bool wmIterGridder2D::doWork(od_int64 start, od_int64 stop, int threadid)
-{
-    int count = 0;
-    for (od_int64 idx=start; idx<=stop; idx++) {
- 
-        count++;
-        if (!(count%100))
-            addToNrDone(100);
-    }
-    addToNrDone(count%100);
-    return true;    
-}     
-
-//void wmIterGridder2D::pcg(Eigen::ArrayXXd& u, const Eigen::ArrayXXd& f, const Eigen::ArrayXXd& C, const Eigen::ArrayXXd& p, double& lambda, const double tolerance)
-//{
-    
 */

@@ -66,3 +66,6 @@ if( OD_CREATE_LAUNCHERS )
 endif( OD_CREATE_LAUNCHERS )
 
 OD_WRITE_ALOFILES( ${CMAKE_CURRENT_BINARY_DIR} )
+
+add_subdirectory(plugins/external)
+

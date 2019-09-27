@@ -1,0 +1,6 @@
+[submodule "plugins/external/nanoflann"]
+	path = plugins/external/nanoflann
+	url = https://github.com/jlblancoc/nanoflann.git
+[submodule "plugins/external/eigen-git-mirror"]
+	path = plugins/external/eigen-git-mirror
+	url = https://github.com/eigenteam/eigen-git-mirror.git
