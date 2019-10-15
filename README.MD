@@ -12,15 +12,15 @@ For details please see the [documentation](http://waynegm.github.io/OpendTect-Pl
 |--------|-------------|
 | [AVOAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/AVOAttrib.html) | Six attributes derived from reflection intercept and gradient |
 | [AVOPolarAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/AVOPolarAttrib.html) |Six attributes derived from AVO Polarization in the AVO Intercept-Gradient crossplot |
-| [DataExtentHorizon](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/DataExtentHorizon.html) |Create a constant Z value 3D horizon which covers the extent of 2D and 3D seismic data. |
 | [ExternalAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/ExternalAttrib.html) | Calculate attribute using an external process such as a python script |
 | [GeopackageExport](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/GeopackageExport.html) | Export OpendTect data to a [GeoPackage](https://www.geopackage.org/) database |
 | [GradientAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/GradientAttrib.html) | Calculate inline, crossline or z gradient using rotationally invariant operators |
 | [Grid2D3DHorizon](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/Grid2D-3D.html) | Grid 2D and 3D horizon interpretation |
-| [LTFAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/LTFAttrib.html) | Local time-frequency decomposition |
-| [Mistie](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/Mistie.html) | Edit/apply Z shift, phase rotation and amplitude corrections to 2D seismic data |
+| [LocalAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/LocalAttrib.html) | Implementation of Fomel's local attribute concept, only Local time-frequency decomposition for now |
+| [Mistie](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/Mistie.html) | Estimate/edit/apply Z shift, phase rotation and amplitude corrections to 2D and 3D seismic data |
 | [MLVFilter](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/MLVFilter.html) | Structure preserving filtering |
 | [RSpecAttrib](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/RSpecAttrib.html) | Recursive time-frequency decomposition |
+| [WMTools](http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/WMTools.html) | Miscellaneous tools for OpendTect, including generation of data extent horizon, convex hull polygons |
 
 ## Building and Installation
 

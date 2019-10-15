@@ -1,5 +1,22 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.10
+### uiWMTools
+- Create plugin for miscellaneous OpendTect tools
+- Move DataExtentHorizon tool into this plugin
+- Add Convex Hull polygon generator tool
+
+### DataExtentHorizon
+- No longer a separate plugin, now included in uiWMTools plugin
+
+### uiGrid2D3DHorizon 
+- fixed: 3D survey data used even if 3D survey toggle is unchecked
+- add Multi-level B-Spline gridding option
+- revise implementation of Inverse Distance Weighted gridding, include option to just use specified number of nearest neighbour points
+
+### uiGeopackageExport plugin
+- add support for session save/restore to GeopackageDisplay layers
+
 ## Release 6.4.8
 
 ### RSpecAttrib
