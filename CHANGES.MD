@@ -5,6 +5,8 @@
 - Create plugin for miscellaneous OpendTect tools
 - Move DataExtentHorizon tool into this plugin
 - Add Convex Hull polygon generator tool
+- Add fault polyline generator tool
+- Add constant Z polyline generator tool
 
 ### DataExtentHorizon
 - No longer a separate plugin, now included in uiWMTools plugin

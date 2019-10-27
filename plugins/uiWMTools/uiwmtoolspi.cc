@@ -41,6 +41,7 @@
 #include "uiwmpolygontreeitem.h"
 #include "uiconvexhull.h"
 #include "uifaultpoly.h"
+#include "uicontourpoly.h"
 
 template <class T> class ODPolygon;
 
@@ -71,6 +72,7 @@ public:
     void	dataExtentHorizonCB(CallBacker*);
     void	convexHullCB(CallBacker*);
     void	faultPolyCB(CallBacker*);
+    void	contourPolyCB(CallBacker*);
     void	treeMenuCB(CallBacker*);
     
     
@@ -87,6 +89,8 @@ public:
     int 		convexpolymenuid_;
     MenuItem		faultpolyitem_;
     int 		faultpolymenuid_;
+    MenuItem		contourpolyitem_;
+    int			contourpolymenuid_;
 };
 
 
@@ -98,6 +102,8 @@ uiWMToolsMgr::uiWMToolsMgr( uiODMain* a )
 	, convexpolymenuid_(201)
 	, faultpolyitem_(m3Dots(tr("Create Fault Polygons/Polylines")))
 	, faultpolymenuid_(202)
+	, contourpolyitem_(m3Dots(tr("New Constant Z Polyline")))
+	, contourpolymenuid_(203)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiWMToolsMgr::updateMenu );
     mAttachCB( appl_->sceneMgr().treeToBeAdded, uiWMToolsMgr::treeToBeAddedCB );
@@ -107,7 +113,8 @@ uiWMToolsMgr::uiWMToolsMgr( uiODMain* a )
     dehitem_.id = dehmenuid_;
     convexpolyitem_.id = convexpolymenuid_;
     faultpolyitem_.id = faultpolymenuid_;
-    
+    contourpolyitem_.id = contourpolymenuid_;
+
     updateMenu(0);
 }
 
@@ -157,6 +164,7 @@ void uiWMToolsMgr::treeAddedCB(CallBacker* cb)
     }
     if ( polytreeparent_ ) {
 	polytreeparent_->toolsmenu_.addItem( &convexpolyitem_ );
+	polytreeparent_->toolsmenu_.addItem( &contourpolyitem_ );
 	polytreeparent_->toolsmenu_.addItem( &faultpolyitem_ );
 	mAttachCB(polytreeparent_->handleMenu, uiWMToolsMgr::treeMenuCB);
     }
@@ -181,6 +189,8 @@ void uiWMToolsMgr::treeMenuCB(CallBacker* cb)
 	convexHullCB(0);
     } else if (menuid == faultpolymenuid_) {
 	faultPolyCB(0);
+    } else if (menuid == contourpolymenuid_) {
+	contourPolyCB(0);
     }
 }
 
@@ -216,6 +226,20 @@ void uiWMToolsMgr::faultPolyCB(CallBacker*)
 	
 	if ( polytreeparent_ && ps && ps->size() )
 	    polytreeparent_->addNewPolygon( ps );
+    }
+}
+
+void uiWMToolsMgr::contourPolyCB(CallBacker*)
+{
+    uiContourPoly contourpolydlg( appl_ );
+    if ( !contourpolydlg.go() )
+	return;
+
+    Pick::Set* ps = contourpolydlg.getPolygonPickSet();
+    if ( polytreeparent_ ) {
+	polytreeparent_->addNewPolygon( ps );
+	if (polytreeparent_->lastAddedChild)
+	    polytreeparent_->lastAddedChild->setProperty("Z value", contourpolydlg.getZ());
     }
 }
 

@@ -81,7 +81,8 @@ void uiWMPolygonParentTreeItem::addPolygon(Pick::Set* ps )
 {
     if ( !ps ) return;
     uiWMPolygonTreeItem* item = new uiWMPolygonTreeItem( -1, *ps );
-    addChild( item, false );    
+    addChild( item, true );
+    lastAddedChild = item;
 }
 
 bool uiWMPolygonParentTreeItem::showSubMenu()
@@ -140,6 +141,12 @@ bool uiWMPolygonParentTreeItem::showSubMenu()
     }
     else if ( mnuid==mSavePolyIdx )
     {
+	for (int idx=0; idx<children_.size(); idx++) {
+	    mDynamicCastGet(uiWMPolygonTreeItem*,itm,children_[idx])
+	    if (itm)
+		itm->updateZ();
+	}
+
 	if ( !applMgr()->pickServer()->storePickSets() )
 	    uiMSG().error( tr("Problem saving changes. "
 	    "Check write protection.") );
@@ -164,7 +171,6 @@ bool uiWMPolygonParentTreeItem::showSubMenu()
 
 uiTreeItem* uiWMPolygonTreeItemFactory::createForVis(int visid, uiTreeItem*) const
 {
-    uiMSG().message(tr("In createForVis"));
     mDynamicCastGet(visSurvey::PickSetDisplay*,psd,
 		    ODMainWin()->applMgr().visServer()->getObject(visid));
     if ( !psd || !psd->isPolygon() )
@@ -180,3 +186,28 @@ uiWMPolygonTreeItem::uiWMPolygonTreeItem(int dispid,Pick::Set& ps)
     
 uiWMPolygonTreeItem::~uiWMPolygonTreeItem()
 {}
+
+void uiWMPolygonTreeItem::handleMenuCB( CallBacker* cb )
+{
+    mCBCapsuleUnpackWithCaller( int, mnuid, caller, cb );
+    mDynamicCastGet( MenuHandler*, menu, caller );
+    if ( menu->isHandled() || mnuid==-1 )
+	return;
+
+    if ( menu->menuID()!=displayID() )
+	return;
+
+    if ( mnuid==storemnuitem_.id || mnuid==storeasmnuitem_.id )
+	updateZ();
+    uiODPolygonTreeItem::handleMenuCB(cb);
+}
+
+void uiWMPolygonTreeItem::updateZ()
+{
+    float zval;
+    if ( getProperty( "Z value", zval ) ) {
+	for (int idx=0; idx<set_.size(); idx++)
+	    set_.get(idx).setZ(zval);
+	applMgr()->storePickSet( set_ );
+    }
+}

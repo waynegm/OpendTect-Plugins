@@ -21,7 +21,7 @@
 #include "uiwmtoolsmod.h"
 
 #include "uiodpicksettreeitem.h"
-
+class uiWMPolygonTreeItem;
 
 mExpClass(uiWMTools) uiWMPolygonParentTreeItem: public uiODPolygonParentTreeItem
 { mODTextTranslationClass(uiWMPolygonParentTreeItem)
@@ -36,6 +36,7 @@ public:
     CNotifier<uiWMPolygonParentTreeItem,int>	handleMenu;
     MenuItem		toolsmenu_;
     
+    uiWMPolygonTreeItem*	lastAddedChild;
 };
 
 mExpClass(uiWMTools) uiWMPolygonTreeItemFactory : public uiODTreeItemFactory
@@ -53,10 +54,14 @@ public:
     uiWMPolygonTreeItem(int dispid,Pick::Set&);
     virtual		~uiWMPolygonTreeItem();
 
+    void	updateZ();
+
 protected:
+    void	handleMenuCB(CallBacker*);
+
     virtual const char*	parentType() const
     { return typeid(uiWMPolygonParentTreeItem).name(); }
-    
+
 };
 
 #endif

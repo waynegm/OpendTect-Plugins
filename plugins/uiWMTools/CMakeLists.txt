@@ -6,7 +6,8 @@ SET(OD_MODULE_SOURCES
     uidehmainwin.cc
     uiwmpolygontreeitem.cc 
     uiconvexhull.cc
-    uifaultpoly.cc )
+    uifaultpoly.cc 
+    uicontourpoly.cc )
 
 SET( OD_PLUGIN_ALO_EXEC ${OD_MAIN_EXEC} )
 OD_INIT_MODULE()
