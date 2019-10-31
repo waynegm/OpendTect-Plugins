@@ -1,0 +1,6 @@
+[submodule "external/eigen-git-mirror"]
+	path = external/eigen-git-mirror
+	url = https://github.com/eigenteam/eigen-git-mirror.git
+[submodule "external/nanoflann"]
+	path = external/nanoflann
+	url = https://github.com/jlblancoc/nanoflann.git
