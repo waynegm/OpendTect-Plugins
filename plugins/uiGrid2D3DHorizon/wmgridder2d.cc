@@ -52,7 +52,6 @@ const char* wmGridder2D::sKeyTension()      { return "Tension"; }
 
 const char* wmGridder2D::MethodNames[] =
 {
-    "Local Radial Basis Functions",
     "Multilevel B-Splines",
     "Inverse Distance Weighted",
     0
@@ -68,9 +67,7 @@ const char* wmGridder2D::ScopeNames[] =
 wmGridder2D* wmGridder2D::create( const char* methodName )
 {
     BufferString tmp(methodName);
-    if (tmp == MethodNames[LocalRBF])
-        return (wmGridder2D*) new wmRBFGridder2D();
-    else if (tmp == MethodNames[IDW])
+    if (tmp == MethodNames[IDW])
 	return (wmGridder2D*) new wmIDWGridder2D();
     else if (tmp == MethodNames[MBA])
 	return (wmGridder2D*) new wmMBAGridder2D();
@@ -83,9 +80,7 @@ wmGridder2D* wmGridder2D::create( const char* methodName )
 bool wmGridder2D::canHandleFaultPolygons( const char* methodName )
 {
     BufferString tmp(methodName);
-    if (tmp == MethodNames[LocalRBF])
-	return true;
-    else if (tmp == MethodNames[IDW])
+    if (tmp == MethodNames[IDW])
 	return true;
     else if (tmp == MethodNames[MBA])
 	return false;

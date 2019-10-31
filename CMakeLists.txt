@@ -12,8 +12,8 @@ project(OpendTect_Plugins)
 set ( OD_SUBSYSTEM "waynegm_plugin" )
 set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 
-add_subdirectory(plugins/external)
-include_directories(plugins/external/include plugins/wm_include)
+add_subdirectory(external)
+include_directories(external/include plugins/wm_include)
 
 #Setup output directory
 option ( OD_BUILD_LOCAL "Build in local directory" ON )
