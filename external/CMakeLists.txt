@@ -14,7 +14,8 @@ if((NOT ${NANOFLANN_INCLUDE_DIR}) OR (NOT EXISTS ${NANOFLANN_INCLUDE_DIR}))
     execute_process(COMMAND git submodule update --init -- nanoflann
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/nanoflann/include/nanoflann.hpp DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/nanoflann.h)
+    file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/nanoflann/include/nanoflann.hpp DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include )
+    file( RENAME ${CMAKE_CURRENT_SOURCE_DIR}/include/nanoflann.hpp ${CMAKE_CURRENT_SOURCE_DIR}/include/nanoflann.h ) 
     set(NANOFLANN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 endif()
 
