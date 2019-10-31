@@ -10,13 +10,10 @@ public:
     wmMBAGridder2D();
     ~wmMBAGridder2D() {}
     
-    void		setPoint(const Coord& binLoc, const float val);
     bool		prepareForGridding();
     bool		executeGridding(TaskRunner*);
     
 protected:
-    std::vector<mba::point<2>> 	binLocs_;
-    std::vector<float> 		vals_;
     
     int				maxlevels_;
     

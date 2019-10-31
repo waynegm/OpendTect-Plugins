@@ -76,7 +76,7 @@ bool uiInputGrp::fillPar( IOPar& par ) const
                 par.set(IOPar::compKey(wmGridder2D::sKey2DLineID(), idx), mids[idx]);
         }
     }
-    if (!hor3Did.isUdf()) {
+    if (!hor3Did.isUdf() && exp3D_->isChecked()) {
         par.set( wmGridder2D::sKey3DHorizonID(), hor3Did );
         TrcKeyZSampling tkz;
         get3Dsel(tkz);

@@ -2,9 +2,6 @@
 #define wmgridder2d_h
 
 #include <cstddef>
-#include <vector>
-#include <utility>
-#include "kdbush.h"
 #include "factory.h"
 #include "trckeysampling.h"
 #include "polygon.h"
@@ -18,15 +15,12 @@ class LocalInterpolator;
 namespace EM { class Horizon3D; }
 
 
-typedef std::pair<double, double> TPoint;
-typedef kdbush::KDBush<TPoint, std::size_t> KDTree;
-
 class wmGridder2D
 { mODTextTranslationClass(wmGridder2D);
 public:
     friend class LocalInterpolator;
-    enum ScopeType   { BoundingBox, Horizon };
-    enum Method { LocalRBF, MBA, IDW }; 
+    enum ScopeType   { BoundingBox, ConvexHull, Horizon };
+    enum Method { MBA, IDW };
     static const char*	ScopeNames[];
     static const char*	MethodNames[];
     static wmGridder2D*	create(const char* methodName);
@@ -34,12 +28,6 @@ public:
     
     virtual		~wmGridder2D();
 
-    void		setBlockSize(float bs) { blocksize_ = bs; }
-    float		getBlockSize() const { return blocksize_; }
-
-    void		setPercOverlap(int polp) { percoverlap_ = polp; }
-    int			getPercOverlap() const { return percoverlap_; }
-    
     virtual void	setPoint(const Coord& binLoc, const float val);
     void		includeInRange(const Coord& binLoc);
     
@@ -63,8 +51,8 @@ public:
     static const char*  sKeyColStep();
     static const char*  sKeyMethod();
     static const char*  sKeyClipPolyID(); 
-    static const char*  sKeyBlockSize(); 
-    static const char*  sKeyOverlap(); 
+    static const char*  sKeySearchRadius();
+    static const char*  sKeyMaxPoints();
     static const char*  sKeyScopeType();
     static const char*  sKeyFaultPolyID();
     static const char*  sKeyFaultPolyNr();
@@ -86,31 +74,34 @@ protected:
     MultiID                 hor3DID_;
     TrcKeySampling          hor3Dsubsel_;
 
-    MultiID                         croppolyID_;
-    ODPolygon<Pos::Ordinate_Type>   croppoly_;
+    MultiID					croppolyID_;
+    ODPolygon<Pos::Ordinate_Type>		croppoly_;
     
-    TypeSet<MultiID>                            faultpolyID_;
-    ObjectSet<ODPolygon<Pos::Ordinate_Type>>    faultpoly_;
+    TypeSet<MultiID>				faultpolyID_;
+    ObjectSet<ODPolygon<Pos::Ordinate_Type>>	faultpoly_;
     
-    TypeSet<MultiID>        faultids_;
-    ScopeType               scope_;
-    MultiID                 horScopeID_;
-    std::vector<float>      vals_;
-    std::vector<TPoint>     binLocs_; 
-    KDTree		    kdtree_;
-    Interval<float>         inlrg_;
-    Interval<float>         crlrg_;
-    float                   blocksize_;
-    int		    	    percoverlap_;
+    TypeSet<MultiID>				faultids_;
+
+    ScopeType					scope_;
+    MultiID					horScopeID_;
+    ODPolygon<Pos::Ordinate_Type>		cvxhullpoly_;
+
+    float					searchradius_;
+    int						maxpoints_;
+
+    TypeSet<float>				vals_;
+    TypeSet<Coord>				binLocs_;
+    Interval<Pos::Ordinate_Type>		inlrg_;
+    Interval<Pos::Ordinate_Type>		crlrg_;
     
-    Array2DImpl<float>*     grid_;
-    Array2DImpl<float>*     carr_;
-    TypeSet<od_int64>	    interpidx_;
-    TrcKeySampling          hs_;
+    Array2DImpl<float>*				grid_;
+    Array2DImpl<float>*				carr_;
+    TypeSet<od_int64>				interpidx_;
+    TrcKeySampling				hs_;
     
-    const TaskRunner*	    tr_;
+    const TaskRunner*				tr_;
     
-    void                    localInterp();
+    void					localInterp( bool approximation = true );
 };
 
 #endif

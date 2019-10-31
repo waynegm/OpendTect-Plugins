@@ -65,9 +65,11 @@ public:
     virtual void    usePar(const IOPar&);
     
 protected:
-    uiGenInput*         blocksizefld_;
+    uiGenInput*         searchradiusfld_;
+    uiGenInput*         maxpointsfld_;
 };
 
+/*
 class uiRBF : public ui2D3DInterpol
 { mODTextTranslationClass(uiRBF);
 public:
@@ -81,7 +83,7 @@ protected:
     uiGenInput*		percoverlapfld_;
     uiGenInput*         tensionfld_;
 };    
-
+*/
 class uiMBA : public ui2D3DInterpol
 { mODTextTranslationClass(uiMBA);
 public:

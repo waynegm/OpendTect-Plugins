@@ -1,15 +1,8 @@
 #include "mbagridder2d.h"
 
 wmMBAGridder2D::wmMBAGridder2D()
-: maxlevels_(5)
+: maxlevels_(10)
 {    
-}
-
-void wmMBAGridder2D::setPoint( const Coord& binLoc, const float val )
-{
-    binLocs_.push_back(mba::point<2>{binLoc.x, binLoc.y});
-    includeInRange(binLoc);
-    vals_.push_back(val);
 }
 
 bool wmMBAGridder2D::prepareForGridding()
@@ -22,28 +15,25 @@ bool wmMBAGridder2D::prepareForGridding()
 
 bool wmMBAGridder2D::executeGridding(TaskRunner* tr)
 {
+    std::vector<mba::point<2>> binLocs(binLocs_.size());
+    std::vector<float> vals(binLocs_.size());
+    for (int idx=0; idx<binLocs_.size(); idx++) {
+	binLocs[idx] = mba::point<2>{binLocs_[idx].x, binLocs_[idx].y};
+	vals[idx] = vals_[idx];
+    }
+
     mba::point<2> lo = { hs_.start_.inl(), hs_.start_.crl() };
     mba::point<2> hi = { hs_.stop_.inl(), hs_.stop_.crl() };
     
-    int xstart = mNINT32((hs_.nrInl()-1)/pow(2,maxlevels_-1)+1);
-    int ystart = mNINT32((hs_.nrCrl()-1)/pow(2,maxlevels_-1)+1);
-    mba::index<2> grid = { xstart, ystart };
+    mba::index<2> grid = { 2, 2 };
     
-    mba::MBA<2> interp(lo, hi, grid, binLocs_, vals_, maxlevels_);
+    mba::MBA<2> interp(lo, hi, grid, binLocs, vals, maxlevels_);
     
-    const Array2DInfo& arrinfo = grid_->info();
-    int pos[2];
-    for (od_int64 idx=0; idx<hs_.totalNr(); idx++) {
-	BinID gridBid = hs_.atIndex(idx);
+    for (od_int64 idx=0; idx<interpidx_.size(); idx++) {
+	BinID gridBid = hs_.atIndex(interpidx_[idx]);
 	int ix = hs_.inlIdx(gridBid.inl());
 	int iy = hs_.crlIdx(gridBid.crl());
-	double x = gridBid.inl();
-	double y = gridBid.crl();
-	Coord gridPos(x, y);
-	if (isUncropped(gridPos) && !inFaultHeave(gridPos))
-	    grid_->set(ix, iy, interp(mba::point<2>{x, y}));
-	else
-	    grid_->set(ix, iy, mUdf(float));
+	grid_->set(ix, iy, interp(mba::point<2>{gridBid.inl(), gridBid.crl()}));
     }
     return true;
 }

@@ -1,6 +1,5 @@
 #include "wmgridder2d.h"
 #include "mbagridder2d.h"
-#include "rbfgridder2d.h"
 #include "idwgridder2d.h"
 
 #include "uimsg.h"
@@ -36,8 +35,8 @@ const char* wmGridder2D::sKeyRowStep()      { return "RowStep"; }
 const char* wmGridder2D::sKeyColStep()      { return "ColStep"; }
 const char* wmGridder2D::sKeyMethod()       { return "Method"; }
 const char* wmGridder2D::sKeyClipPolyID()   { return "ClipPolyID"; }
-const char* wmGridder2D::sKeyBlockSize()    { return "BlockSize"; }
-const char* wmGridder2D::sKeyOverlap()      { return "PercentOverlap"; }
+const char* wmGridder2D::sKeySearchRadius() { return "SearchRadius"; }
+const char* wmGridder2D::sKeyMaxPoints()    { return "MaxPoints"; }
 const char* wmGridder2D::sKeyScopeType()    { return "ScopeType"; }
 const char* wmGridder2D::sKeyFaultPolyID()  { return "FaultPolyID"; }
 const char* wmGridder2D::sKeyFaultPolyNr()  { return "FaultPolyNr"; }
@@ -60,6 +59,7 @@ const char* wmGridder2D::MethodNames[] =
 const char* wmGridder2D::ScopeNames[] =
 {
     "Bounding Box",
+    "Convex Hull",
     "Horizon",
     0
 };
@@ -91,11 +91,11 @@ bool wmGridder2D::canHandleFaultPolygons( const char* methodName )
 }
 
 wmGridder2D::wmGridder2D() 
-    : kdtree_(10)
-    , blocksize_(mUdf(float))
-    , grid_(0)
+    : grid_(0)
     , carr_(0)
     , tr_(nullptr)
+    , searchradius_(mUdf(float))
+    , maxpoints_(mUdf(int))
 {
     hs_ = SI().sampling( false ).hsamp_;
     hor2DID_.setUdf();
@@ -117,8 +117,8 @@ wmGridder2D::~wmGridder2D()
 // loc is in survey grid coordinates
 void wmGridder2D::setPoint( const Coord& binLoc, const float val )
 {
-    binLocs_.push_back(TPoint(binLoc.x, binLoc.y));
-    vals_.push_back(val);
+    binLocs_ += binLoc;
+    vals_ += val;
     includeInRange(binLoc);
 }
 
@@ -174,8 +174,8 @@ bool wmGridder2D::usePar(const IOPar& par)
         }
     }
     
-    par.get(sKeyBlockSize(), blocksize_);
-    par.get(sKeyOverlap(), percoverlap_);
+    par.get(sKeySearchRadius(), searchradius_);
+    par.get(sKeyMaxPoints(), maxpoints_);
     
     par.get(sKeyRowStep(), hs_.step_.first);
     par.get(sKeyColStep(), hs_.step_.second);
@@ -212,6 +212,8 @@ bool wmGridder2D::saveGridTo(EM::Horizon3D* hor3d)
 
 bool wmGridder2D::loadData()
 {
+    cvxhullpoly_.erase();
+
     if (!hor3DID_.isUdf()) {
         EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3DID_);
         if (!obj) {
@@ -226,15 +228,22 @@ bool wmGridder2D::loadData()
            return false;
         }
         for (int iln=hor3Dsubsel_.start_.inl(); iln<=hor3Dsubsel_.stop_.inl(); iln+=hor3Dsubsel_.step_.inl()) {
+	    Coord coord;
+	    bool first = true;
             for (int xln=hor3Dsubsel_.start_.crl(); xln<=hor3Dsubsel_.stop_.crl(); xln+=hor3Dsubsel_.step_.crl()) {
                 BinID bid(iln,xln);
                 TrcKey tk(bid);
                 const float z = hor->getZ( tk );
                 if (mIsUdf(z))
                     continue;
-                Coord coord(iln, xln);
+                coord = Coord(iln, xln);
                 setPoint(coord, z);
+		if (first) {
+		    cvxhullpoly_.add(coord);
+		    first = false;
+		}
             }
+            cvxhullpoly_.add(coord);
         }
         obj->unRef();
     }
@@ -260,6 +269,8 @@ bool wmGridder2D::loadData()
                 
             TrcKey tk( geomids_[idx], -1 );
             int spnr = mUdf(int);
+	    Coord binLoc;
+	    bool first = true;
             for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step ) {
                 tk.setTrcNr( trcnr );
                 const float z = hor->getZ( tk );
@@ -268,13 +279,18 @@ bool wmGridder2D::loadData()
 
                 Coord coord;
                 survgeom2d->getPosByTrcNr( trcnr, coord, spnr );
-		Coord binLoc = SI().binID2Coord().transformBackNoSnap(coord);
+		binLoc = SI().binID2Coord().transformBackNoSnap(coord);
                 setPoint(binLoc, z);
+		if (first) {
+		    cvxhullpoly_.add(binLoc);
+		    first = false;
+		}
             }
+            cvxhullpoly_.add(binLoc);
         }
         obj->unRef();
     }
-    
+
     if (!croppolyID_.isUdf()) {
         croppoly_.erase();
         PtrMan<IOObj> ioobj = IOM().get(croppolyID_);
@@ -326,13 +342,17 @@ bool wmGridder2D::loadData()
 
 bool wmGridder2D::setScope()
 {
-    if (scope_==BoundingBox) {
+    if (scope_==BoundingBox || scope_==ConvexHull) {
         StepInterval<int> inlrg((int)Math::Floor(inlrg_.start), (int)Math::Ceil(inlrg_.stop), hs_.step_.first);
 		inlrg.stop = inlrg.atIndex(inlrg.indexOnOrAfter(Math::Ceil(inlrg_.stop), mDefEps));
         StepInterval<int> crlrg((int)Math::Floor(crlrg_.start), (int)Math::Ceil(crlrg_.stop), hs_.step_.second);
 		crlrg.stop = crlrg.atIndex(crlrg.indexOnOrAfter(Math::Ceil(crlrg_.stop), mDefEps));
         hs_.setInlRange(Interval<int>(inlrg.start,inlrg.stop));
         hs_.setCrlRange(Interval<int>(crlrg.start, crlrg.stop));
+	if (scope_==ConvexHull )
+	    cvxhullpoly_.convexHull();
+	else
+	    cvxhullpoly_.erase();
     } else if (scope_==Horizon && !horScopeID_.isUdf()) {
         EM::IOObjInfo eminfo(horScopeID_);
         hs_.setInlRange(eminfo.getInlRange());
@@ -345,8 +365,13 @@ bool wmGridder2D::setScope()
 
 bool wmGridder2D::isUncropped( Coord pos ) const
 {
-    if (!croppolyID_.isUdf())
-        return croppoly_.isInside( pos, true, mDefEpsD);
+    if (!croppolyID_.isUdf()) {
+	if (cvxhullpoly_.isEmpty())
+	    return croppoly_.isInside( pos, true, mDefEpsD);
+	else
+	    return croppoly_.isInside( pos, true, mDefEpsD) && cvxhullpoly_.isInside( pos, true, mDefEpsD);
+    } else if (!cvxhullpoly_.isEmpty())
+	return cvxhullpoly_.isInside( pos, true, mDefEpsD);
     else
         return true;
 }
@@ -406,7 +431,21 @@ bool wmGridder2D::prepareForGridding()
     } else
 	grid_->setSize(hs_.nrInl(), hs_.nrCrl());
     
-    grid_->setAll(mUdf(float));
+    grid_->setAll(0.0);
+    interpidx_.erase();
+
+    for (od_int64 idx=0; idx<hs_.totalNr(); idx++) {
+	BinID gridBid = hs_.atIndex(idx);
+	double x = gridBid.inl();
+	double y = gridBid.crl();
+	int ix = hs_.inlIdx(gridBid.inl());
+	int iy = hs_.crlIdx(gridBid.crl());
+	Coord gridPos(x, y);
+	if (!isUncropped(gridPos) || inFaultHeave(gridPos))
+	    grid_->set(ix, iy, mUdf(float));
+	else
+	    interpidx_ += idx;
+    }
     
     return true;
 }
@@ -414,23 +453,27 @@ bool wmGridder2D::prepareForGridding()
 mDefParallelCalc2Pars( LocalInterpolator, od_static_tr("LocalInterpolator","Interpolate nearest grid points"),
 		       const wmGridder2D*, interp, Threads::Lock, lock )
 mDefParallelCalcBody( 
-const std::vector<TPoint>& locs_ = interp_->binLocs_;
-const std::vector<float>& vals_ = interp_->vals_;
+const TypeSet<Coord>& locs_ = interp_->binLocs_;
+const TypeSet<float>& vals_ = interp_->vals_;
 const TrcKeySampling& hs_ = interp_->hs_;
 Array2DImpl<float>* grid_ = interp_->grid_;
 Array2DImpl<float>* carr_ = interp_->carr_;
 ,
-const Coord pos(locs_[idx].first, locs_[idx].second);
+const Coord pos(locs_[idx]);
 BinID bidSnap = hs_.getNearest(BinID(mNINT32(pos.x), mNINT32(pos.y)));
 if (mIsEqual(pos.x, bidSnap.inl(), mDefEps) && mIsEqual(pos.y, bidSnap.crl(), mDefEps)) {
     int ix = hs_.inlIdx(bidSnap.inl());
     int iy = hs_.crlIdx(bidSnap.crl());
-    if (ix>=0 && ix<hs_.nrInl() && iy>=0 && iy<hs_.nrCrl()) {
-	Threads::Locker lckr( lock_ );
-	double prev = mIsUdf(grid_->get(ix,iy)) ? 0.0 : grid_->get(ix,iy);
-	grid_->set(ix, iy, prev + vals_[idx]);
-	carr_->set(ix, iy, carr_->get(ix, iy) + 1.0);
-    }
+    if (ix<0 || ix>=hs_.nrInl() || iy<0 || iy>=hs_.nrCrl())
+	continue;
+
+    float prev = grid_->get(ix,iy);
+    if (mIsUdf(prev))
+	continue;
+
+    Threads::Locker lckr( lock_ );
+    grid_->set(ix, iy, prev + vals_[idx]);
+    carr_->set(ix, iy, carr_->get(ix, iy) + 1.0);
 } else {
     BinID r[4];
     r[0] = pos.x<bidSnap.inl() ? bidSnap-BinID(hs_.step_.inl(),0) : bidSnap;
@@ -438,24 +481,29 @@ if (mIsEqual(pos.x, bidSnap.inl(), mDefEps) && mIsEqual(pos.y, bidSnap.crl(), mD
     r[2] = pos.y<bidSnap.crl() ? r[0]-BinID(0,hs_.step_.crl()) : r[0];
     r[3] = r[2] + BinID(hs_.step_.inl(),0);
     for (int ir=0; ir<4; ir++) {
+	int ix = hs_.inlIdx(r[ir].inl());
+	int iy = hs_.crlIdx(r[ir].crl());
+	if (ix<0 || ix>=hs_.nrInl() || iy<0 || iy>=hs_.nrCrl())
+	    continue;
+
+	float prev = grid_->get(ix,iy);
+	if (mIsUdf(prev))
+	    continue;
+
 	Coord rpos(r[ir].inl(), r[ir].crl());
-	if (!interp_->faultBetween(pos, rpos)) {
-	    int ix = hs_.inlIdx(r[ir].inl());
-	    int iy = hs_.crlIdx(r[ir].crl());
-	    if (ix>=0 && ix<hs_.nrInl() && iy>=0 && iy<hs_.nrCrl()) {
-		double dist = rpos.sqHorDistTo(pos);
-		double wgt = tanh(dist)/dist;
-		Threads::Locker lckr( lock_ );
-		double prev = mIsUdf(grid_->get(ix,iy)) ? 0.0 : grid_->get(ix,iy);
-		grid_->set(ix, iy, prev + wgt*vals_[idx]);
-		carr_->set(ix, iy, carr_->get(ix, iy) + wgt);
-	    }
-	}
+	if (interp_->faultBetween(pos, rpos))
+	    continue;
+
+	double dist = rpos.sqHorDistTo(pos);
+	double wgt = tanh(dist)/dist;
+	Threads::Locker lckr( lock_ );
+	grid_->set(ix, iy, prev + wgt*vals_[idx]);
+	carr_->set(ix, iy, carr_->get(ix, iy) + wgt);
     }
 }
 , )
 
-void wmGridder2D::localInterp()
+void wmGridder2D::localInterp( bool approximation )
 {
     carr_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
     if (!carr_) {
@@ -468,28 +516,28 @@ void wmGridder2D::localInterp()
     LocalInterpolator interp( binLocs_.size(), this, lock);
     interp.execute();
     
-    binLocs_.clear();
-    vals_.clear();
-    interpidx_.erase();
-    
+    binLocs_.erase();
+    vals_.erase();
+    if (!approximation)
+	interpidx_.erase();
+
     for (od_int64 idx=0; idx<hs_.totalNr(); idx++) {
 	BinID gridBid = hs_.atIndex(idx);
 	int ix = hs_.inlIdx(gridBid.inl());
 	int iy = hs_.crlIdx(gridBid.crl());
+	float gridval = grid_->get(ix,iy);
+	if (mIsUdf(gridval))
+	    continue;
+
 	float carr = carr_->get(ix,iy);
-	double x = gridBid.inl();
-	double y = gridBid.crl();
-	Coord gridPos(x, y);
-	if (isUncropped(gridPos) && !inFaultHeave(gridPos)) {
-	    if (carr!=0.0) {
-		float val = grid_->get(ix, iy)/carr;
-		grid_->set(ix, iy, val);
-		vals_.push_back( val );
-		binLocs_.push_back(TPoint(x, y));
-	    } else
+	if (carr!=0.0) {
+	    float val = gridval/carr;
+	    grid_->set(ix, iy, val);
+	    vals_ +=  val;
+	    binLocs_ += Coord(gridBid.inl(), gridBid.crl());
+	    if (!approximation)
 		interpidx_ += idx;
-	} else
-	    grid_->set(ix, iy, mUdf(float));
+	}
     }
 }
 
