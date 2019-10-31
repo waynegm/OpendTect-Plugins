@@ -242,9 +242,23 @@ void uiConvexHull::fillPolyFromHorizon()
 	    obj->unRef();
 	    return;
 	}
-	Pick::Set ps;
-	hor->geometry().getBoundingPolygon( 0, ps );
-	ps.getPolygon( poly_ );
+	TrcKeySampling hs = tkzs.hsamp_;
+	for (int iln=hs.start_.inl(); iln<=hs.stop_.inl(); iln+=hs.step_.inl()) {
+	    BinID bid;
+	    bool first = true;
+	    for (int xln=hs.start_.crl(); xln<=hs.stop_.crl(); xln+=hs.step_.crl()) {
+		TrcKey tk(BinID(iln,xln));
+		const float z = hor->getZ( tk );
+		if (mIsUdf(z))
+		    continue;
+		bid = BinID(iln,xln);
+		if (first) {
+		    poly_.add(SI().transform( bid ));
+		    first = false;
+		}
+	    }
+	    poly_.add(SI().transform( bid ));
+	}
 	obj->unRef();
     }
     
