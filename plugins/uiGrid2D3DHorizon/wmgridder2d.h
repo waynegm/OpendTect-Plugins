@@ -19,8 +19,8 @@ class wmGridder2D
 { mODTextTranslationClass(wmGridder2D);
 public:
     friend class LocalInterpolator;
-    enum ScopeType   { BoundingBox, ConvexHull, Horizon };
-    enum Method { MBA, IDW };
+    enum ScopeType   { Range, BoundingBox, ConvexHull, Horizon };
+    enum Method { LTPS, MSMBA, MBA, IDW, NRN };
     static const char*	ScopeNames[];
     static const char*	MethodNames[];
     static wmGridder2D*	create(const char* methodName);
@@ -47,8 +47,6 @@ public:
     bool		saveGridTo(EM::Horizon3D*);
     
     static const char*  sKeyScopeHorID();
-    static const char*  sKeyRowStep();
-    static const char*  sKeyColStep();
     static const char*  sKeyMethod();
     static const char*  sKeyClipPolyID(); 
     static const char*  sKeySearchRadius();

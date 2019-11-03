@@ -36,6 +36,13 @@ bool WMLib::ui3DRangeGrp::fillPar( IOPar& par ) const
     return true;
 }
 
+void WMLib::ui3DRangeGrp::usePar( const IOPar& par )
+{
+    TrcKeySampling hs;
+    hs.usePar(par);
+    setTrcKeySampling(hs);
+}
+
 TrcKeySampling  WMLib::ui3DRangeGrp::getTrcKeySampling() const
 {
     TrcKeySampling hs;
@@ -118,4 +125,10 @@ void WMLib::ui3DRangeGrp::rangeChg(Callbacker* cb)
         if (crlfld_->getIStepInterval() != hs.crlRange())
             crlfld_->setValue(hs.crlRange());
     }
+}
+
+void WMLib::ui3DRangeGrp::setSnap( bool yn )
+{
+    stepSnap_ = yn;
+    rangeChg(0);
 }

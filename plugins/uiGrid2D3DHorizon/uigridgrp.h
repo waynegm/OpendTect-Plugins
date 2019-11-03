@@ -69,21 +69,33 @@ protected:
     uiGenInput*         maxpointsfld_;
 };
 
-/*
-class uiRBF : public ui2D3DInterpol
-{ mODTextTranslationClass(uiRBF);
+
+class uiLTPS : public ui2D3DInterpol
+{ mODTextTranslationClass(uiLTPS);
 public:
-    uiRBF(uiParent*);
+    uiLTPS(uiParent*);
     
     virtual bool    fillPar(IOPar&) const;
     virtual void    usePar(const IOPar&);
 
 protected:
-    uiGenInput*         blocksizefld_;
-    uiGenInput*		percoverlapfld_;
-    uiGenInput*         tensionfld_;
+    uiGenInput*         searchradiusfld_;
+    uiGenInput*         maxpointsfld_;
 };    
-*/
+
+class uiMSMBA : public ui2D3DInterpol
+{ mODTextTranslationClass(uiMSMBA);
+public:
+    uiMSMBA(uiParent*);
+
+    virtual bool    fillPar(IOPar&) const;
+    virtual void    usePar(const IOPar&);
+
+protected:
+    uiGenInput*         searchradiusfld_;
+};
+
+
 class uiMBA : public ui2D3DInterpol
 { mODTextTranslationClass(uiMBA);
 public:
@@ -92,4 +104,11 @@ public:
 protected:
 };
 
+class uiNearestNeighbour : public ui2D3DInterpol
+{ mODTextTranslationClass(uiNearestNeighbour);
+public:
+    uiNearestNeighbour(uiParent*);
+
+protected:
+};
 #endif

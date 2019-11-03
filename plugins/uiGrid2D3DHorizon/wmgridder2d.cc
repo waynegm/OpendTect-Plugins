@@ -1,6 +1,9 @@
 #include "wmgridder2d.h"
 #include "mbagridder2d.h"
 #include "idwgridder2d.h"
+#include "ltpsgridder2d.h"
+#include "msmbagridder2d.h"
+#include "nrngridder2d.h"
 
 #include "uimsg.h"
 #include "bufstring.h"
@@ -21,18 +24,7 @@
 #include "picksettr.h"
 
 
-#ifndef M_LOG_2
-#define M_LOG_2 0.69314718055994530942
-#endif
-#ifndef M_GAMMA
-#define M_GAMMA 0.577215664901532860606512
-#endif
-
-typedef std::vector<std::size_t> TIds;
-
 const char* wmGridder2D::sKeyScopeHorID()   { return "ScopeHorID"; }
-const char* wmGridder2D::sKeyRowStep()      { return "RowStep"; }
-const char* wmGridder2D::sKeyColStep()      { return "ColStep"; }
 const char* wmGridder2D::sKeyMethod()       { return "Method"; }
 const char* wmGridder2D::sKeyClipPolyID()   { return "ClipPolyID"; }
 const char* wmGridder2D::sKeySearchRadius() { return "SearchRadius"; }
@@ -51,13 +43,17 @@ const char* wmGridder2D::sKeyTension()      { return "Tension"; }
 
 const char* wmGridder2D::MethodNames[] =
 {
+    "Local Thin-plate Spline",
+    "Multistage Multilevel B-Splines",
     "Multilevel B-Splines",
     "Inverse Distance Weighted",
+    "Nearest Neighbour",
     0
 };
 
 const char* wmGridder2D::ScopeNames[] =
 {
+    "Range",
     "Bounding Box",
     "Convex Hull",
     "Horizon",
@@ -67,10 +63,16 @@ const char* wmGridder2D::ScopeNames[] =
 wmGridder2D* wmGridder2D::create( const char* methodName )
 {
     BufferString tmp(methodName);
-    if (tmp == MethodNames[IDW])
+    if (tmp == MethodNames[LTPS])
+	return (wmGridder2D*) new wmLTPSGridder2D();
+    else if (tmp == MethodNames[IDW])
 	return (wmGridder2D*) new wmIDWGridder2D();
     else if (tmp == MethodNames[MBA])
 	return (wmGridder2D*) new wmMBAGridder2D();
+    else if (tmp == MethodNames[MSMBA])
+	return (wmGridder2D*) new wmMSMBAGridder2D();
+    else if (tmp == MethodNames[NRN])
+	return (wmGridder2D*) new wmNRNGridder2D();
     else {
         ErrMsg("wmGridder2D::create - unrecognised method name");
         return nullptr;
@@ -80,10 +82,16 @@ wmGridder2D* wmGridder2D::create( const char* methodName )
 bool wmGridder2D::canHandleFaultPolygons( const char* methodName )
 {
     BufferString tmp(methodName);
-    if (tmp == MethodNames[IDW])
+    if (tmp == MethodNames[LTPS])
+	return true;
+    else if (tmp == MethodNames[IDW])
+	return true;
+    else if (tmp == MethodNames[MSMBA])
 	return true;
     else if (tmp == MethodNames[MBA])
 	return false;
+    else if (tmp == MethodNames[NRN])
+	return true;
     else {
 	ErrMsg("wmGridder2D::canHandleFaultPolygons - unrecognised method name");
 	return false;
@@ -177,8 +185,7 @@ bool wmGridder2D::usePar(const IOPar& par)
     par.get(sKeySearchRadius(), searchradius_);
     par.get(sKeyMaxPoints(), maxpoints_);
     
-    par.get(sKeyRowStep(), hs_.step_.first);
-    par.get(sKeyColStep(), hs_.step_.second);
+    hs_.usePar(par);
     
     faultids_.erase();
     int nrfaults = 0;
@@ -357,23 +364,23 @@ bool wmGridder2D::setScope()
         EM::IOObjInfo eminfo(horScopeID_);
         hs_.setInlRange(eminfo.getInlRange());
         hs_.setCrlRange(eminfo.getCrlRange());
-    } else
-        return false;
+    }
 
     return true;
 }
 
 bool wmGridder2D::isUncropped( Coord pos ) const
 {
-    if (!croppolyID_.isUdf()) {
-	if (cvxhullpoly_.isEmpty())
-	    return croppoly_.isInside( pos, true, mDefEpsD);
-	else
-	    return croppoly_.isInside( pos, true, mDefEpsD) && cvxhullpoly_.isInside( pos, true, mDefEpsD);
-    } else if (!cvxhullpoly_.isEmpty())
-	return cvxhullpoly_.isInside( pos, true, mDefEpsD);
+    bool result = true;
+    if (croppolyID_.isUdf()) {
+	if ( scope_ == ConvexHull )
+	    result = cvxhullpoly_.isInside( pos, true, mDefEpsD);
+    } else if ( scope_==ConvexHull )
+	result = croppoly_.isInside( pos, true, mDefEpsD) && cvxhullpoly_.isInside( pos, true, mDefEpsD);
     else
-        return true;
+	result = croppoly_.isInside( pos, true, mDefEpsD);
+
+    return result;
 }
 
 bool wmGridder2D::inFaultHeave(Coord pos) const
@@ -535,9 +542,9 @@ void wmGridder2D::localInterp( bool approximation )
 	    grid_->set(ix, iy, val);
 	    vals_ +=  val;
 	    binLocs_ += Coord(gridBid.inl(), gridBid.crl());
-	    if (!approximation)
+	} else if (!approximation)
 		interpidx_ += idx;
-	}
+
     }
 }
 

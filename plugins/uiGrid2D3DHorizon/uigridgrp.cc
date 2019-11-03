@@ -20,10 +20,16 @@
 ui2D3DInterpol* ui2D3DInterpol::create( const char* methodName, uiParent* p )
 {
     BufferString tmp(methodName);
-    if (tmp == wmGridder2D::MethodNames[wmGridder2D::IDW])
+    if (tmp == wmGridder2D::MethodNames[wmGridder2D::LTPS])
+	return (ui2D3DInterpol*) new uiLTPS(p);
+    else if (tmp == wmGridder2D::MethodNames[wmGridder2D::IDW])
         return (ui2D3DInterpol*) new uiIDW(p);
     else if (tmp == wmGridder2D::MethodNames[wmGridder2D::MBA])
 	return (ui2D3DInterpol*) new uiMBA(p);
+    else if (tmp == wmGridder2D::MethodNames[wmGridder2D::MSMBA])
+	return (ui2D3DInterpol*) new uiMSMBA(p);
+    else if (tmp == wmGridder2D::MethodNames[wmGridder2D::NRN])
+	return (ui2D3DInterpol*) new uiNearestNeighbour(p);
     else {
         ErrMsg("ui2D3DInterpol::create - unrecognised method name");
         return nullptr;
@@ -47,11 +53,12 @@ uiGridGrp::uiGridGrp( uiParent* p )
     gridfld_ = new WMLib::ui3DRangeGrp(this, tr("Grid Area"), false);
     gridfld_->setSensitive(false, true);
     gridfld_->attach(alignedBelow, scopefld_);
+    gridfld_->setTrcKeySampling( SI().sampling(true).hsamp_ );
     
     methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
     methodfld_->attach( alignedBelow, gridfld_ );
     methodfld_->valuechanged.notify( mCB(this,uiGridGrp,methodChgCB) );
-    methodfld_->setValue(wmGridder2D::IDW);
+    methodfld_->setValue(wmGridder2D::LTPS);
     
     polycropfld_ = new WMLib::uiPolygonParSel(this, tr("Cropping Polygon"), false);
     polycropfld_->attach( alignedBelow, methodfld_ );
@@ -91,19 +98,23 @@ void uiGridGrp::scopeChgCB(CallBacker* )
         horfld_->display(false);
         gridfld_->displayFields(false, true);
         gridfld_->setSensitive(false, true);
+	gridfld_->setSnap(true);
     } else if (scopefld_->getIntValue() == wmGridder2D::ConvexHull) {
 	horfld_->display(false);
 	gridfld_->displayFields(false, true);
 	gridfld_->setSensitive(false, true);
+	gridfld_->setSnap(true);
     } else if (scopefld_->getIntValue() == wmGridder2D::Horizon) {
         horfld_->display(true);
         gridfld_->setSensitive(false, false);
         gridfld_->displayFields(true, true);
-        horChgCB(0);
-    } else {
-        horfld_->display(false);
-        gridfld_->setSensitive(true, true);
-        gridfld_->displayFields(true, true);
+	gridfld_->setSnap(false);
+	horChgCB(0);
+    } else if (scopefld_->getIntValue() == wmGridder2D::Range) {
+	horfld_->display(false);
+	gridfld_->setSensitive(true, true);
+	gridfld_->displayFields(true, true);
+	gridfld_->setSnap(true);
     }
 }
 
@@ -162,8 +173,7 @@ bool uiGridGrp::fillPar( IOPar& par ) const
             uiStrings::phrEnter(tr("positive integer value for steps")) );
         return false;
     }
-    par.set( wmGridder2D::sKeyRowStep(), step.inl() );
-    par.set( wmGridder2D::sKeyColStep(), step.crl() );
+    gridfld_->fillPar( par );
     
     const int methodidx = methodfld_->getIntValue( 0 );
     par.set( wmGridder2D::sKeyMethod(), wmGridder2D::MethodNames[methodidx] );
@@ -203,10 +213,7 @@ void uiGridGrp::usePar( const IOPar& par )
         }
     }
     
-    TrcKeySampling tks;
-    par.get(wmGridder2D::sKeyRowStep(), tks.step_.first);
-    par.get(wmGridder2D::sKeyColStep(), tks.step_.second);
-    gridfld_->setTrcKeySampling( tks );
+    gridfld_->usePar(par);
     
     BufferStringSet strs( wmGridder2D::MethodNames );
     int methodidx = strs.indexOf(par.find(wmGridder2D::sKeyMethod()));
@@ -279,142 +286,82 @@ void uiIDW::usePar( const IOPar& par )
 	maxpointsfld_->setValue(50);
     }
 }
-/*
-uiCCTS::uiCCTS( uiParent* p )
-: ui2D3DInterpol(p)
+
+uiLTPS::uiLTPS(uiParent* p)
+    : ui2D3DInterpol(p)
 {
-    //    fltselfld_ = new uiFaultParSel( this, false );
-    
     uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
-    radiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(5000.0) );
-    radiusfld_->setWithCheck( false );
-    
-    tensionfld_ = new uiGenInput( this, tr("Tension"), FloatInpSpec(0.25) );
-    tensionfld_->setWithCheck( false );
-    tensionfld_->attach( alignedBelow, radiusfld_ );
-    
-    maxvalsfld_ = new uiGenInput(this, tr("Maximum Points"), IntInpSpec(20));
-    maxvalsfld_->setWithCheck(false);
-    maxvalsfld_->attach(alignedBelow, tensionfld_);
+    searchradiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(8000.0) );
+
+    maxpointsfld_ = new uiGenInput( this, tr("Maximum points"), IntInpSpec(50) );
+    maxpointsfld_->attach(alignedBelow, searchradiusfld_);
 }
 
-bool uiCCTS::fillPar( IOPar& par ) const
+bool uiLTPS::fillPar(IOPar& par) const
 {
-    const float radius = radiusfld_->getFValue(0);
+    const float radius = searchradiusfld_->getFValue(0);
     if ( radius<=0 )
     {
-        uiMSG().error( "Search radius must be positive" );
-        return false;
+	uiMSG().error( "Search radius must be positive" );
+	return false;
     }
     par.set( wmGridder2D::sKeySearchRadius(), radius );
-    
-    const float tension = tensionfld_->getFValue(0);
-    if ( tension<=0.0 || tension>=1.0 )
+
+    const int npoints = maxpointsfld_->getIntValue(0);
+    if ( npoints<=0 )
     {
-        uiMSG().error( "Tension must be between 0 and 1" );
-        return false;
-    }
-    par.set( wmGridder2D::sKeyTension(), tension );
-    
-    const int maxvals = maxvalsfld_->getIntValue(0);
-    if ( maxvals<=0 )
-    {
-	uiMSG().error( tr("Maximum Points must be greater than 0") );
+	uiMSG().error( "Maximum points must be positive" );
 	return false;
     }
-    
-    //    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
-    //    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
-    //    for ( int idx=0; idx<selfaultids.size(); idx++ )
-    //        par.set( IOPar::compKey(wmGridder2D::sKeyFaultID(),idx), selfaultids[idx] );
-    
+    par.set( wmGridder2D::sKeyMaxPoints(), npoints );
+
     return true;
 }
 
-void uiCCTS::usePar( const IOPar& par )
+void uiLTPS::usePar(const IOPar& par)
 {
-    float radius;
-    if (par.get(wmGridder2D::sKeySearchRadius(), radius))
-        radiusfld_->setValue(radius);
-    
-    float tension;
-    if (par.get(wmGridder2D::sKeyTension(), tension))
-        tensionfld_->setValue(tension);
+    float radius = 12000;
+    par.get(wmGridder2D::sKeySearchRadius(), radius);
+    searchradiusfld_->setValue(radius);
+
+    int npoints = 30;
+    par.get(wmGridder2D::sKeyMaxPoints(), npoints);
+    maxpointsfld_->setValue(npoints);
 }
 
-uiIter::uiIter( uiParent* p )
-    : ui2D3DInterpol(p)
-{ }
-
-bool uiIter::fillPar( IOPar& par ) const
+uiMSMBA::uiMSMBA(uiParent* p)
+: ui2D3DInterpol(p)
 {
+    uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
+    searchradiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(12000.0) );
+}
+
+bool uiMSMBA::fillPar(IOPar& par) const
+{
+    const float radius = searchradiusfld_->getFValue(0);
+    if ( radius<=0 )
+    {
+	uiMSG().error( "Search radius must be positive" );
+	return false;
+    }
+    par.set( wmGridder2D::sKeySearchRadius(), radius );
+
     return true;
 }
-*/
-/*
-uiRBF::uiRBF(uiParent* p)
-    : ui2D3DInterpol(p)
+
+void uiMSMBA::usePar(const IOPar& par)
 {
-    uiString titletext( tr("Block size %1").arg(SI().getUiXYUnitString()) );
-    blocksizefld_ = new uiGenInput( this, titletext, FloatInpSpec(8000.0) );
-    blocksizefld_->setWithCheck( false );
-    
-    percoverlapfld_ = new uiGenInput(this, tr("Percentage overlap"), IntInpSpec(20));
-    percoverlapfld_->setWithCheck(false);
-    percoverlapfld_->attach(alignedBelow, blocksizefld_);
-    
-    tensionfld_ = new uiGenInput( this, tr("Tension"), FloatInpSpec(0.25) );
-    tensionfld_->setWithCheck( false );
-    tensionfld_->attach( alignedBelow, blocksizefld_ );
+    float radius = 12000;
+    par.get(wmGridder2D::sKeySearchRadius(), radius);
+    searchradiusfld_->setValue(radius);
 }
 
-bool uiRBF::fillPar(IOPar& par) const
-{
-    const float blocksize = blocksizefld_->getFValue(0);
-    if ( blocksize<=0 )
-    {
-	uiMSG().error( "Block size must be positive" );
-	return false;
-    }
-    par.set( wmGridder2D::sKeySearchRadius(), blocksize );
-    
-    const int percoverlap = percoverlapfld_->getIntValue(0);
-    if ( percoverlap<=0 || percoverlap>=100 )
-    {
-	uiMSG().error( tr("Percent overlap must be between 0 and 100") );
-	return false;
-    }
-    par.set( wmGridder2D::sKeyMaxPoints(), percoverlap );
-    
-    const float tension = tensionfld_->getFValue(0);
-    if ( tension<=0.0 || tension>=1.0 )
-    {
-	uiMSG().error( "Tension must be between 0 and 1" );
-	return false;
-    }
-    par.set( wmGridder2D::sKeyTension(), tension );
-    
-    return true;    
-}
-
-void uiRBF::usePar(const IOPar& par)
-{
-    float blocksize;
-    if (par.get(wmGridder2D::sKeySearchRadius(), blocksize))
-	blocksizefld_->setValue(blocksize);
-    
-    float percoverlap;
-    if (par.get(wmGridder2D::sKeyMaxPoints(), percoverlap))
-	percoverlapfld_->setValue(percoverlap);
-    
-    float tension;
-    if (par.get(wmGridder2D::sKeyTension(), tension))
-	tensionfld_->setValue(tension);
-}
-*/
 uiMBA::uiMBA(uiParent* p)
     : ui2D3DInterpol(p)
 {}
 
+uiNearestNeighbour::uiNearestNeighbour(uiParent* p)
+: ui2D3DInterpol(p)
+{}
 
   
