@@ -67,7 +67,7 @@ bool uiHorInputGrp::fillPar( IOPar& par ) const
 {
     MultiID hor2Did, hor3Did;
     getHorIds(hor2Did, hor3Did);
-    if (!hor2Did.isUdf()) {
+    if (!hor2Did.isUdf() && lines2Dfld_->nrChosen()) {
         TypeSet<Pos::GeomID> mids;
         getGeoMids(mids);
         if (mids.size()>0) {
@@ -124,12 +124,12 @@ void uiHorInputGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did ) const
 {
     hor2Did.setUdf();
     hor3Did.setUdf();
-    if (hor2Dfld_!=nullptr) {
+    if (hor2Dfld_!=nullptr && lines2Dfld_!=nullptr && lines2Dfld_->nrChosen()) {
         const IOObj* horObj = hor2Dfld_->ioobj(true);
         if (horObj!=nullptr)
             hor2Did = horObj->key();
     }
-    if (hor3Dfld_!=nullptr) {
+    if (hor3Dfld_!=nullptr && exp3D_!=nullptr && exp3D_->isChecked()) {
         const IOObj* horObj = hor3Dfld_->ioobj(true);
         if (horObj!=nullptr)
             hor3Did = horObj->key();
