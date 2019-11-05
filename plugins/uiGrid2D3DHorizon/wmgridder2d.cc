@@ -29,6 +29,8 @@ const char* wmGridder2D::sKeyClipPolyID()   { return "ClipPolyID"; }
 const char* wmGridder2D::sKeySearchRadius() { return "SearchRadius"; }
 const char* wmGridder2D::sKeyMaxPoints()    { return "MaxPoints"; }
 const char* wmGridder2D::sKeyScopeType()    { return "ScopeType"; }
+const char* wmGridder2D::sKeyContourPolyID()  { return "ContourPolyID"; }
+const char* wmGridder2D::sKeyContourPolyNr()  { return "ContourPolyNr"; }
 const char* wmGridder2D::sKeyFaultPolyID()  { return "FaultPolyID"; }
 const char* wmGridder2D::sKeyFaultPolyNr()  { return "FaultPolyNr"; }
 const char* wmGridder2D::sKeyFaultID()      { return "FaultID"; }
@@ -176,6 +178,18 @@ bool wmGridder2D::usePar(const IOPar& par)
         }
     }
     
+    int nrcontpoly = 0;
+    contpolyID_.erase();
+    if (par.get(sKeyContourPolyNr(), nrcontpoly)) {
+	for (int idx=0; idx<nrcontpoly; idx++) {
+	    MultiID id;
+	    if (!par.get(IOPar::compKey(sKeyContourPolyID(), idx), id))
+		return false;
+	    contpolyID_ += id;
+	}
+    }
+
+
     par.get(sKeySearchRadius(), searchradius_);
     par.get(sKeyMaxPoints(), maxpoints_);
     
@@ -290,6 +304,30 @@ bool wmGridder2D::loadData()
             cvxhullpoly_.add(binLoc);
         }
         obj->unRef();
+    }
+
+    ODPolygon<Pos::Ordinate_Type> poly;
+    for (int idx=0; idx<contpolyID_.size(); idx++) {
+	poly.erase();
+	PtrMan<IOObj> ioobj = IOM().get(contpolyID_[idx]);
+	if (!ioobj) {
+	    ErrMsg("wmGridder2D::loadData - cannot get contour polyline ioobj");
+	    return false;
+	}
+	Pick::Set ps;
+	BufferString msg;
+	if (!PickSetTranslator::retrieve(ps, ioobj, true, msg)) {
+	    BufferString tmp("wmGridder2D::loadData - error reading contour polygon - ");
+	    tmp += msg;
+	    ErrMsg(tmp);
+	    return false;
+	}
+	for (int idp=0; idp<ps.size(); idp++) {
+	    const Pick::Location& pl = ps[idp];
+	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos().coord());
+	    setPoint(binLoc, pl.z());
+	    cvxhullpoly_.add(binLoc);
+	}
     }
 
     if (!croppolyID_.isUdf()) {

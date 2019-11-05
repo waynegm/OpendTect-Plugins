@@ -56,6 +56,8 @@ public:
     static const char*  sKeyFaultPolyNr();
     static const char*  sKeyFaultID();
     static const char*  sKeyFaultNr();
+    static const char*  sKeyContourPolyID();
+    static const char*  sKeyContourPolyNr();
     static const char*  sKey2DHorizonID();
     static const char*  sKey2DLineIDNr();
     static const char*  sKey2DLineID();
@@ -75,6 +77,8 @@ protected:
     MultiID					croppolyID_;
     ODPolygon<Pos::Ordinate_Type>		croppoly_;
     
+    TypeSet<MultiID>				contpolyID_;
+
     TypeSet<MultiID>				faultpolyID_;
     ObjectSet<ODPolygon<Pos::Ordinate_Type>>	faultpoly_;
     
