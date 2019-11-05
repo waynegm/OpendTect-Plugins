@@ -1,5 +1,6 @@
 #include "mbagridder2d.h"
-#include <iostream>
+#include "mba.hpp"
+#include <array>
 
 wmMBAGridder2D::wmMBAGridder2D()
 : maxlevels_(10)
@@ -34,7 +35,7 @@ bool wmMBAGridder2D::executeGridding(TaskRunner* tr)
 	BinID gridBid = hs_.atIndex(interpidx_[idx]);
 	int ix = hs_.inlIdx(gridBid.inl());
 	int iy = hs_.crlIdx(gridBid.crl());
-	grid_->set(ix, iy, interp(mba::point<2>{gridBid.inl(), gridBid.crl()}));
+	grid_->set(ix, iy, interp(mba::point<2>{(double)gridBid.inl(), (double)gridBid.crl()}));
     }
     return true;
 }

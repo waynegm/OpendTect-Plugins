@@ -48,7 +48,7 @@ public:
     uiTreeItem*		createForVis(int visid, uiTreeItem* ) const;
 };
 
-mExpClass(uiODMain) uiWMPolygonTreeItem : public uiODPolygonTreeItem
+mExpClass(uiWMTools) uiWMPolygonTreeItem : public uiODPolygonTreeItem
 { mODTextTranslationClass(uiWMPolygonTreeItem)
 public:
     uiWMPolygonTreeItem(int dispid,Pick::Set&);
