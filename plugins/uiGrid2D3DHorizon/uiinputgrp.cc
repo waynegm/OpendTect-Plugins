@@ -18,6 +18,7 @@
 #include "typeset.h"
 #include "ranges.h"
 #include "survinfo.h"
+#include "uipolygonparsel.h"
 
 #include "survgeom2d.h"
 #include "trckeyzsampling.h"
@@ -52,7 +53,12 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
         subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
+	lastfld = (uiObject*) subsel3Dfld_;
     }
+
+    contpolyfld_ = new WMLib::uiPolygonParSel(this, tr("Contour Polygons/Polylines"), true);
+    contpolyfld_->attach( alignedBelow, lastfld );
+
     update();
 }
 
@@ -82,6 +88,12 @@ bool uiInputGrp::fillPar( IOPar& par ) const
         get3Dsel(tkz);
         tkz.hsamp_.fillPar(par);
     }
+
+    const TypeSet<MultiID>& selpolytids = contpolyfld_->selPolygonIDs();
+    par.set( wmGridder2D::sKeyContourPolyNr(), selpolytids.size() );
+    for ( int idx=0; idx<selpolytids.size(); idx++ )
+	par.set( IOPar::compKey(wmGridder2D::sKeyContourPolyID(),idx), selpolytids[idx] );
+
     return true;
 }
 
@@ -114,6 +126,22 @@ void uiInputGrp::usePar( const IOPar& par )
             }
         }
     }
+
+    int nrcontpoly = 0;
+    contpolyfld_->setEmpty();
+    if (par.get(wmGridder2D::sKeyContourPolyNr(), nrcontpoly)) {
+	if (nrcontpoly>0) {
+	    TypeSet<MultiID> polyIDs;
+	    for (int idx=0; idx<nrcontpoly; idx++) {
+		MultiID id;
+		if (!par.get(IOPar::compKey(wmGridder2D::sKeyContourPolyID(), idx), id))
+		    return;
+		polyIDs += id;
+	    }
+	    contpolyfld_->setSelectedPolygons(polyIDs);
+	}
+    }
+
 }
 
 void uiInputGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did ) const

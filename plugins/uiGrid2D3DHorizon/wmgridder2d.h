@@ -20,7 +20,7 @@ class wmGridder2D
 public:
     friend class LocalInterpolator;
     enum ScopeType   { Range, BoundingBox, ConvexHull, Horizon };
-    enum Method { LTPS, MSMBA, MBA, IDW, NRN };
+    enum Method { LTPS, MBA, IDW, NRN };
     static const char*	ScopeNames[];
     static const char*	MethodNames[];
     static wmGridder2D*	create(const char* methodName);
@@ -56,6 +56,8 @@ public:
     static const char*  sKeyFaultPolyNr();
     static const char*  sKeyFaultID();
     static const char*  sKeyFaultNr();
+    static const char*  sKeyContourPolyID();
+    static const char*  sKeyContourPolyNr();
     static const char*  sKey2DHorizonID();
     static const char*  sKey2DLineIDNr();
     static const char*  sKey2DLineID();
@@ -75,6 +77,8 @@ protected:
     MultiID					croppolyID_;
     ODPolygon<Pos::Ordinate_Type>		croppoly_;
     
+    TypeSet<MultiID>				contpolyID_;
+
     TypeSet<MultiID>				faultpolyID_;
     ObjectSet<ODPolygon<Pos::Ordinate_Type>>	faultpoly_;
     

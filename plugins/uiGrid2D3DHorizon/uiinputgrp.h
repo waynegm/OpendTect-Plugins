@@ -12,6 +12,7 @@ class MultiID;
 class TrcKeyZSampling;
 namespace WMLib {
     class uiSeis2DLineSelGrp;
+    class uiPolygonParSel;
 };
 
 class uiInputGrp : public uiDlgGroup
@@ -35,7 +36,8 @@ protected:
     uiCheckBox*                 exp3D_;
     uiIOObjSel*                 hor3Dfld_;
     uiPosSubSel*                subsel3Dfld_;
-    
+    WMLib::uiPolygonParSel*     contpolyfld_;
+
     void                hor2DselCB(CallBacker*);
     void                hor3DselCB(CallBacker*);
     void                exp3DselCB(CallBacker*);
