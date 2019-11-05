@@ -83,19 +83,6 @@ protected:
     uiGenInput*         maxpointsfld_;
 };    
 
-class uiMSMBA : public ui2D3DInterpol
-{ mODTextTranslationClass(uiMSMBA);
-public:
-    uiMSMBA(uiParent*);
-
-    virtual bool    fillPar(IOPar&) const;
-    virtual void    usePar(const IOPar&);
-
-protected:
-    uiGenInput*         searchradiusfld_;
-};
-
-
 class uiMBA : public ui2D3DInterpol
 { mODTextTranslationClass(uiMBA);
 public:

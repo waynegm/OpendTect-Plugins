@@ -2,7 +2,6 @@
 #include "mbagridder2d.h"
 #include "idwgridder2d.h"
 #include "ltpsgridder2d.h"
-#include "msmbagridder2d.h"
 #include "nrngridder2d.h"
 
 #include "uimsg.h"
@@ -44,7 +43,6 @@ const char* wmGridder2D::sKeyTension()      { return "Tension"; }
 const char* wmGridder2D::MethodNames[] =
 {
     "Local Thin-plate Spline",
-    "Multistage Multilevel B-Splines",
     "Multilevel B-Splines",
     "Inverse Distance Weighted",
     "Nearest Neighbour",
@@ -69,8 +67,6 @@ wmGridder2D* wmGridder2D::create( const char* methodName )
 	return (wmGridder2D*) new wmIDWGridder2D();
     else if (tmp == MethodNames[MBA])
 	return (wmGridder2D*) new wmMBAGridder2D();
-    else if (tmp == MethodNames[MSMBA])
-	return (wmGridder2D*) new wmMSMBAGridder2D();
     else if (tmp == MethodNames[NRN])
 	return (wmGridder2D*) new wmNRNGridder2D();
     else {
@@ -85,8 +81,6 @@ bool wmGridder2D::canHandleFaultPolygons( const char* methodName )
     if (tmp == MethodNames[LTPS])
 	return true;
     else if (tmp == MethodNames[IDW])
-	return true;
-    else if (tmp == MethodNames[MSMBA])
 	return true;
     else if (tmp == MethodNames[MBA])
 	return false;
@@ -243,8 +237,8 @@ bool wmGridder2D::loadData()
                 const float z = hor->getZ( tk );
                 if (mIsUdf(z))
                     continue;
-                coord = Coord(iln, xln);
-                setPoint(coord, z);
+		coord = Coord(iln, xln);
+		setPoint(Coord(iln, xln), z);
 		if (first) {
 		    cvxhullpoly_.add(coord);
 		    first = false;
@@ -284,8 +278,8 @@ bool wmGridder2D::loadData()
                 if (mIsUdf(z))
                     continue;
 
-                Coord coord;
-                survgeom2d->getPosByTrcNr( trcnr, coord, spnr );
+		Coord coord;
+		survgeom2d->getPosByTrcNr( trcnr, coord, spnr );
 		binLoc = SI().binID2Coord().transformBackNoSnap(coord);
                 setPoint(binLoc, z);
 		if (first) {

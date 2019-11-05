@@ -26,8 +26,6 @@ ui2D3DInterpol* ui2D3DInterpol::create( const char* methodName, uiParent* p )
         return (ui2D3DInterpol*) new uiIDW(p);
     else if (tmp == wmGridder2D::MethodNames[wmGridder2D::MBA])
 	return (ui2D3DInterpol*) new uiMBA(p);
-    else if (tmp == wmGridder2D::MethodNames[wmGridder2D::MSMBA])
-	return (ui2D3DInterpol*) new uiMSMBA(p);
     else if (tmp == wmGridder2D::MethodNames[wmGridder2D::NRN])
 	return (ui2D3DInterpol*) new uiNearestNeighbour(p);
     else {
@@ -293,7 +291,7 @@ uiLTPS::uiLTPS(uiParent* p)
     uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
     searchradiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(8000.0) );
 
-    maxpointsfld_ = new uiGenInput( this, tr("Maximum points"), IntInpSpec(50) );
+    maxpointsfld_ = new uiGenInput( this, tr("Maximum points per sector"), IntInpSpec(4) );
     maxpointsfld_->attach(alignedBelow, searchradiusfld_);
 }
 
@@ -324,36 +322,9 @@ void uiLTPS::usePar(const IOPar& par)
     par.get(wmGridder2D::sKeySearchRadius(), radius);
     searchradiusfld_->setValue(radius);
 
-    int npoints = 30;
+    int npoints = 4;
     par.get(wmGridder2D::sKeyMaxPoints(), npoints);
     maxpointsfld_->setValue(npoints);
-}
-
-uiMSMBA::uiMSMBA(uiParent* p)
-: ui2D3DInterpol(p)
-{
-    uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
-    searchradiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(12000.0) );
-}
-
-bool uiMSMBA::fillPar(IOPar& par) const
-{
-    const float radius = searchradiusfld_->getFValue(0);
-    if ( radius<=0 )
-    {
-	uiMSG().error( "Search radius must be positive" );
-	return false;
-    }
-    par.set( wmGridder2D::sKeySearchRadius(), radius );
-
-    return true;
-}
-
-void uiMSMBA::usePar(const IOPar& par)
-{
-    float radius = 12000;
-    par.get(wmGridder2D::sKeySearchRadius(), radius);
-    searchradiusfld_->setValue(radius);
 }
 
 uiMBA::uiMBA(uiParent* p)

@@ -19,5 +19,13 @@ if((NOT ${NANOFLANN_INCLUDE_DIR}) OR (NOT EXISTS ${NANOFLANN_INCLUDE_DIR}))
     set(NANOFLANN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 endif()
 
+if((NOT ${MBA_INCLUDE_DIR}) OR (NOT EXISTS ${MBA_INCLUDE_DIR}))
+    message("Unable to find mba")
+    execute_process(COMMAND git submodule update --init -- mba
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+    file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/mba/mba/mba.hpp DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include )
+    set(MBA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+endif()
 
 

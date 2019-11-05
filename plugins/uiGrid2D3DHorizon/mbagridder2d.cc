@@ -1,4 +1,5 @@
 #include "mbagridder2d.h"
+#include <iostream>
 
 wmMBAGridder2D::wmMBAGridder2D()
 : maxlevels_(10)

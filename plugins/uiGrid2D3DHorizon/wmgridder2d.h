@@ -20,7 +20,7 @@ class wmGridder2D
 public:
     friend class LocalInterpolator;
     enum ScopeType   { Range, BoundingBox, ConvexHull, Horizon };
-    enum Method { LTPS, MSMBA, MBA, IDW, NRN };
+    enum Method { LTPS, MBA, IDW, NRN };
     static const char*	ScopeNames[];
     static const char*	MethodNames[];
     static wmGridder2D*	create(const char* methodName);
