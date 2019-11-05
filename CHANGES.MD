@@ -12,9 +12,12 @@
 - No longer a separate plugin, now included in uiWMTools plugin
 
 ### uiGrid2D3DHorizon 
-- fixed: 3D survey data used even if 3D survey toggle is unchecked
+- fixed 3D survey data used even if 3D survey toggle is unchecked
 - add Multi-level B-Spline gridding option
 - revise implementation of Inverse Distance Weighted gridding, include option to just use specified number of nearest neighbour points
+- revise thin plate spline option
+- add polylines as a z value zource
+- add convex hull and range scope options
 
 ### uiGeopackageExport plugin
 - add support for session save/restore to GeopackageDisplay layers
