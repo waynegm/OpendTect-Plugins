@@ -29,7 +29,6 @@
 
 uiMistieEstimateMainWin::uiMistieEstimateMainWin( uiParent* p )
     : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","mistie")).modal(true) )
-    , data3dfld_(0)
 {
     setCtrlStyle( OkAndCancel );
     setOkText( uiStrings::sApply() );
@@ -91,8 +90,10 @@ uiMistieEstimateMainWin::~uiMistieEstimateMainWin()
 
 void uiMistieEstimateMainWin::use3DCB(CallBacker*)
 {
-    data3dfld_->setSensitive(use3dfld_->isChecked());
-    trcstepfld_->setSensitive(use3dfld_->isChecked());
+    if ( data3dfld_ && trcstepfld_) {
+	data3dfld_->setSensitive(use3dfld_->isChecked());
+	trcstepfld_->setSensitive(use3dfld_->isChecked());
+    }
 }
 
 bool uiMistieEstimateMainWin::acceptOK(CallBacker*)
@@ -127,7 +128,7 @@ bool uiMistieEstimateMainWin::acceptOK(CallBacker*)
     TaskRunner::execute(&uitr, misties);
     misties_ = misties.getMisties();
     
-    if (SI().has3D() && use3dfld_->isChecked()) {
+    if (use3dfld_ && use3dfld_->isChecked()) {
         Line3DOverlapFinder lines3Doverlap(data3dfld_->ioobj(true), bpfinder.bendPoints());
         TaskRunner::execute(&uitr, lines3Doverlap);
         

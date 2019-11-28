@@ -29,9 +29,9 @@ public:
 protected:
     uiSeisSel*                  seisselfld_;
     WMLib::uiSeis2DLineSelGrp*  lineselfld_;
-    uiCheckBox*                 use3dfld_;
-    uiSeisSel*                  data3dfld_;
-    uiGenInput*                 trcstepfld_;
+    uiCheckBox*                 use3dfld_ = nullptr;
+    uiSeisSel*                  data3dfld_ = nullptr;
+    uiGenInput*                 trcstepfld_ = nullptr;
     uiGenInput*                 gatefld_;
     uiLabeledSpinBox*           lagfld_;
     
