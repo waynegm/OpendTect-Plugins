@@ -70,10 +70,8 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 		if (i==0) {
 			tmp->attach(alignedBelow, exfilefld_);
 			lstfld = 0;
-		}	else if (i%2)
-			tmp->attach(rightTo, inpflds_[i-1]);
-		else {
-			tmp->attach(alignedBelow, inpflds_[i-2]);
+		} else {
+			tmp->attach(alignedBelow, inpflds_[i-1]);
 			lstfld = i;
 		}
 		tmp->display(false);
