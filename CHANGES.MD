@@ -1,5 +1,9 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.11
+### Mistie
+- Fix crash during mistie estimation (add locks around variable update)
+
 ## Release 6.4.10
 ### uiWMTools
 - Create plugin for miscellaneous OpendTect tools

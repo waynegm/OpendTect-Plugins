@@ -7,6 +7,11 @@
 </head>
 <body>
 <h1>OpendTect Plugins Release Notes</h1>
+<h2>Release 6.4.11</h2>
+<h3>Mistie</h3>
+<ul>
+<li>Fix crash during mistie estimation (add locks around variable update)</li>
+</ul>
 <h2>Release 6.4.10</h2>
 <h3>uiWMTools</h3>
 <ul>
@@ -22,9 +27,12 @@
 </ul>
 <h3>uiGrid2D3DHorizon</h3>
 <ul>
-<li>fixed: 3D survey data used even if 3D survey toggle is unchecked</li>
+<li>fixed 3D survey data used even if 3D survey toggle is unchecked</li>
 <li>add Multi-level B-Spline gridding option</li>
 <li>revise implementation of Inverse Distance Weighted gridding, include option to just use specified number of nearest neighbour points</li>
+<li>revise thin plate spline option</li>
+<li>add polylines as a z value zource</li>
+<li>add convex hull and range scope options</li>
 </ul>
 <h3>uiGeopackageExport plugin</h3>
 <ul>
