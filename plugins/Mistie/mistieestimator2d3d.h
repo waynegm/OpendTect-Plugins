@@ -31,6 +31,7 @@ protected:
     const ObjectSet<BendPoints>&               bpoints_;
     Geom::PosRectangle<Pos::Ordinate_Type>     bounds3d_;
     ManagedObjectSet<Seis::RangeSelData>       selranges_;
+    Threads::Lock lock_;    
     
     bool        doWork(od_int64 start, od_int64 stop, int threadis);
     bool        doFinish(bool success);

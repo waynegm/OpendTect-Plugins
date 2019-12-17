@@ -131,7 +131,6 @@ bool uiMistieEstimateMainWin::acceptOK(CallBacker*)
     if (use3dfld_ && use3dfld_->isChecked()) {
         Line3DOverlapFinder lines3Doverlap(data3dfld_->ioobj(true), bpfinder.bendPoints());
         TaskRunner::execute(&uitr, lines3Doverlap);
-        
         MistieEstimator2D3D misties2d3d(data3dfld_->ioobj(true), seisselfld_->ioobj(true), lines3Doverlap.selData(), zrg, lagtime, trcstepfld_->getIntValue());
         TaskRunner::execute(&uitr, misties2d3d);
         misties_.add(misties2d3d.getMisties());

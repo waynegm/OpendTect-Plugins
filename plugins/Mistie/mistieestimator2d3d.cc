@@ -81,7 +81,8 @@ bool Line3DOverlapFinder::doWork(od_int64 start, od_int64 stop, int tid)
             range->cubeSampling().hsamp_.setInlRange(Interval<int>(0,0));
             range->cubeSampling().hsamp_.setCrlRange(trc1<trc2 ? Interval<int>(trc1, trc2) : Interval<int>(trc2, trc1));
             range->setGeomID(bps->geomid_);
-            selranges_ += range;
+	    Threads::Locker lckr( lock_ );
+	    selranges_ += range;
         }
     }
     return true;
@@ -110,6 +111,7 @@ MistieEstimator2D3D::MistieEstimator2D3D(const IOObj* ioobj3D, const IOObj* ioob
         lineB = Survey::GM().getName(selranges_[idx]->geomID());
         trcA = selranges[idx]->crlRange().start;
         trcB = selranges[idx]->crlRange().stop;
+	Threads::Locker lckr( lock_ );
         misties_.add(lineA, trcA, lineB, trcB, pos);
     }
 }
@@ -137,7 +139,6 @@ bool MistieEstimator2D3D::doWork( od_int64 start, od_int64 stop, int threadid )
     BufferString lineA, lineB;
     int trc1, trc2;
     SeisTrc trcA, trcB;
-    
     for (int idx=mCast(int,start); idx<=stop && shouldContinue(); idx++, addToNrDone(1)) {
         float zdiff = 0.0;
         float phasediff = 0.0;
@@ -158,7 +159,6 @@ bool MistieEstimator2D3D::doWork( od_int64 start, od_int64 stop, int threadid )
                 trcnums += traces.atIndex(it);
         } else
             trcnums += traces.center();
-        
         int count = 0;
         for (int it=0; it<trcnums.size(); it++) {
             if(get2DTrc(lineB, trcnums[it], trcB)) {
