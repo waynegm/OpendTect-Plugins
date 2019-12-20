@@ -29,9 +29,11 @@
 #include "trckeyzsampling.h"
 #include "uimsg.h"
 
+#include "wmplugins.h"
+
 using namespace Attrib;
 
-mInitAttribUI(uiLTFAttrib,LTFAttrib,"Spectral Decomposition by Local Attribute",sKeyFreqGrp())
+mInitAttribUI(uiLTFAttrib,LTFAttrib,"Spectral Decomposition by Local Attribute",wmPlugins::sKeyWMPlugins())
 
 
 uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )

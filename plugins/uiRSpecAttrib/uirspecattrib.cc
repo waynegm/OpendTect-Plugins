@@ -33,9 +33,11 @@
 #include "uistrings.h"
 #include "uibutton.h"
 
+#include "wmplugins.h"
+
 using namespace Attrib;
 
-mInitAttribUI(uiRSpecAttrib,RSpecAttrib,"Recursive spectral decomposition",sKeyFreqGrp())
+mInitAttribUI(uiRSpecAttrib,RSpecAttrib,"Recursive spectral decomposition",wmPlugins::sKeyWMPlugins())
 
 
 uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )

@@ -7,7 +7,7 @@
 
 class MistieData;
 
-mClass(Mistie) MistieCorrectionData
+mExpClass(Mistie) MistieCorrectionData
 {
 public:
     MistieCorrectionData();

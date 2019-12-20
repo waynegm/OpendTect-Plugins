@@ -28,6 +28,8 @@ ________________________________________________________________________
 #include "uigeninput.h"
 #include "uispinbox.h"
 
+#include "wmplugins.h"
+
 using namespace Attrib;
 
 const int cMinVal = 3;
@@ -43,7 +45,7 @@ static const char* outstr[] =
     0
 };
 
-mInitAttribUI(uiMLVFilterAttrib,MLVFilter,"MLV Filter",sKeyFilterGrp())
+mInitAttribUI(uiMLVFilterAttrib,MLVFilter,"MLV Filter",wmPlugins::sKeyWMPlugins())
 
 
 uiMLVFilterAttrib::uiMLVFilterAttrib( uiParent* p, bool is2d )

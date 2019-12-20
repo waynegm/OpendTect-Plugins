@@ -38,9 +38,11 @@ ________________________________________________________________________
 #include "uistrings.h"
 #include "datainpspec.h"
 
+#include "wmplugins.h"
+
 using namespace Attrib;
 
-mInitAttribUI(uiExternalAttrib,ExternalAttrib,"External Attribute",sKeyBasicGrp())
+mInitAttribUI(uiExternalAttrib,ExternalAttrib,"External Attribute",wmPlugins::sKeyWMPlugins())
 
 
 uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )

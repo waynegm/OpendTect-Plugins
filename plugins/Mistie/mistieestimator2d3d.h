@@ -15,7 +15,7 @@ namespace Survey { class Geometry2D; }
 namespace Seis { class RangeSelData; }
 class BendPoints;
 
-mClass(Mistie) Line3DOverlapFinder : public ParallelTask
+mExpClass(Mistie) Line3DOverlapFinder : public ParallelTask
 { mODTextTranslationClass(Line3DOverlapFinder)
 public:
     Line3DOverlapFinder(const IOObj* ioobj3D, const ObjectSet<BendPoints>&);

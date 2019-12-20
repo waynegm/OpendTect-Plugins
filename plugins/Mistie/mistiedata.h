@@ -7,8 +7,7 @@
 #include "coord.h"
 
 class MistieCorrectionData;
-
-mClass(Mistie) MistieData
+mExpClass(Mistie) MistieData
 {
 public:
     MistieData();

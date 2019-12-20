@@ -28,6 +28,8 @@
 #include "uiattrsel.h"
 #include "uigeninput.h"
 
+#include "wmplugins.h"
+
 using namespace Attrib;
 
 
@@ -43,7 +45,7 @@ static const char* outputstr[] =
 };
 
 
-mInitAttribUI(uiAVOAttrib,AVOAttrib,"AVO Attribute",sKeyBasicGrp())
+mInitAttribUI(uiAVOAttrib,AVOAttrib,"AVO Attribute",wmPlugins::sKeyWMPlugins())
 
 
 uiAVOAttrib::uiAVOAttrib( uiParent* p, bool is2d )

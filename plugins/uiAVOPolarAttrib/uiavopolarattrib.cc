@@ -9,6 +9,8 @@
 #include "uigeninput.h"
 #include "uistepoutsel.h"
 
+#include "wmplugins.h"
+
 using namespace Attrib;
 
 static const char* OutputNames[] =
@@ -22,7 +24,7 @@ static const char* OutputNames[] =
     0
 };
 
-mInitAttribUI(uiAVOPolarAttrib,AVOPolarAttrib,"AVOPolarAttrib",sKeyBasicGrp())
+mInitAttribUI(uiAVOPolarAttrib,AVOPolarAttrib,"AVOPolarAttrib",wmPlugins::sKeyWMPlugins())
 
 uiAVOPolarAttrib::uiAVOPolarAttrib( uiParent* p, bool is2d )
 : uiAttrDescEd(p,is2d, HelpKey("wgm","avop") )

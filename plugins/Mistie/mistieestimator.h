@@ -13,7 +13,7 @@ class Line2DInterSectionSet;
 class SeisTrc;
 class IOObj;
 
-mClass(uiMistie) MistieEstimator : public ParallelTask
+mExpClass(Mistie) MistieEstimator : public ParallelTask
 { mODTextTranslationClass(MistieEstimator)
 public:
     MistieEstimator(const IOObj* ioobj, Line2DInterSectionSet& intset, ZGate window, float maxshift);

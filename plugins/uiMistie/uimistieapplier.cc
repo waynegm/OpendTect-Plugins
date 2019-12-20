@@ -14,9 +14,11 @@
 #include "oddirs.h"
 #include "filepath.h"
 
+#include "wmplugins.h"
+
 using namespace Attrib;
 
-mInitAttribUI(uiMistieApplier,MistieApplier,"Mistie Application",sKeyBasicGrp())
+mInitAttribUI(uiMistieApplier,MistieApplier,"Mistie Application",wmPlugins::sKeyWMPlugins())
 
 uiMistieApplier::uiMistieApplier( uiParent* p, bool is2d )
     : uiAttrDescEd(p,is2d, HelpKey("wgm", "mistie" ))

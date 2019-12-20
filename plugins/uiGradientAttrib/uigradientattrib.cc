@@ -27,6 +27,8 @@ ________________________________________________________________________
 #include "uiattrsel.h"
 #include "uigeninput.h"
 
+#include "wmplugins.h"
+
 using namespace Attrib;
 
 static const char* opstr[] =
@@ -44,7 +46,7 @@ static const char* outstr[] =
     0
 };
 
-mInitAttribUI(uiGradientAttrib,GradientAttrib,"Gradient Attribute",sKeyFilterGrp())
+mInitAttribUI(uiGradientAttrib,GradientAttrib,"Gradient Attribute",wmPlugins::sKeyWMPlugins())
 
 
 uiGradientAttrib::uiGradientAttrib( uiParent* p, bool is2d )
