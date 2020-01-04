@@ -35,17 +35,19 @@ public:
 protected:
     uiODMain*   appl_;
     uiMistieAnalysisMainWin*    mistiedlg_;
+    uiMistieCorrMainWin*	corrdlg_;
     
     
 };
 
 uiMistieMgr::uiMistieMgr( uiODMain* a )
     : appl_(a)
-    , mistiedlg_(0)
+    , mistiedlg_(nullptr)
+    , corrdlg_(nullptr)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiMistieMgr::updateMenu );
     mAttachCB(IOM().surveyChanged, uiMistieMgr::surveyChgCB);
-    updateMenu(0);
+    updateMenu(nullptr);
 }
 
 uiMistieMgr::~uiMistieMgr()
@@ -64,24 +66,29 @@ void uiMistieMgr::updateMenu( CallBacker* )
 
 void uiMistieMgr::doCorrectionEdit( CallBacker* )
 {
-    uiMistieCorrMainWin* dlg = new uiMistieCorrMainWin( appl_ );
-    dlg->show();
-    dlg->raise();
+    if ( !corrdlg_ )
+	corrdlg_ = new uiMistieCorrMainWin( appl_ );
+    corrdlg_->show();
+    corrdlg_->raise();
 }
 
 void uiMistieMgr::doMistieAnalysis( CallBacker* )
 {
-    mistiedlg_ = new uiMistieAnalysisMainWin( appl_ );
+    if ( !mistiedlg_ )
+	mistiedlg_ = new uiMistieAnalysisMainWin( appl_ );
     mistiedlg_->show();
     mistiedlg_->raise();
 }
 
 void uiMistieMgr::surveyChgCB( CallBacker* )
 {
-    if (mistiedlg_) {
+    if ( mistiedlg_ ) {
         mistiedlg_->close();
-        delete mistiedlg_;
-        mistiedlg_ = 0;
+        deleteAndZeroPtr( mistiedlg_ );
+    }
+    if ( corrdlg_ ) {
+	corrdlg_->close();
+	deleteAndZeroPtr( corrdlg_ );
     }
 }
 
