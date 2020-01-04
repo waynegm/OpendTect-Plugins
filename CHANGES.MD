@@ -2,6 +2,7 @@
 
 ## Release 6.4.12
 - Place all attributes in wmPlugins group
+- Fixes for handling survey change
 
 ### Mistie
 - Fix build issues on Windows (declare classes as mExpClass)
