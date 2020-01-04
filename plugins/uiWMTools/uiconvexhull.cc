@@ -284,7 +284,7 @@ void uiConvexHull::fillPolyFromHorizon()
 		continue;
 	    
 	    TrcKey tk( mids[idx], -1 );
-	    int spnr = mUdf(int);
+	    float spnr = mUdf(float);
 	    Coord coord;
 	    bool first = true;
 	    for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step ) {

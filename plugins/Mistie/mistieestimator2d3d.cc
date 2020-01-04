@@ -74,7 +74,8 @@ bool Line3DOverlapFinder::doWork(od_int64 start, od_int64 stop, int tid)
         for (int id=0; id<trimmedLine.size(); id++) {
             Coord crd1 = SI().binID2Coord().transform(trimmedLine[id]->first());
             Coord crd2 = SI().binID2Coord().transform(trimmedLine[id]->last());
-            int trc1, trc2, sp;
+            int trc1, trc2;
+	    float sp;
             geom2d->getPosByCoord(crd1, trc1, sp);
             geom2d->getPosByCoord(crd2, trc2, sp);
             Seis::RangeSelData* range = new Seis::RangeSelData();

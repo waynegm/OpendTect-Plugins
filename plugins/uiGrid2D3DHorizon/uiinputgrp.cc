@@ -188,7 +188,7 @@ void uiInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
             int gidx = horGeomids.indexOf(geomids[idx]);
             StepInterval<int> trcrng = trcRanges[gidx];
             Coord pos;
-            int spnr;
+            float spnr;
             geom2d->getPosByTrcNr(trcrng.start, pos, spnr);
             BinID bin = SI().transform(pos);
             if (idx==0) {

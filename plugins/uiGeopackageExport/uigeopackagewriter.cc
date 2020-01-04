@@ -635,7 +635,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
                 
                 TrcKey tk( geomids[idx], -1 );
                 Coord crd;
-                int spnr = mUdf(int);
+                float spnr = mUdf(float);
 
                 if (gdalDS_->StartTransaction() == OGRERR_FAILURE) {
                     ErrMsg("uiGeopackageWriter::writeHorizon - starting transaction for writing 2D horizon failed" );

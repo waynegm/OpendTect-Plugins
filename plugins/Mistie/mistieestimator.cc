@@ -23,7 +23,8 @@ MistieEstimator::MistieEstimator(const IOObj* ioobj, Line2DInterSectionSet& ints
     , ioobj_(ioobj)
 {
     BufferString lineA, lineB;
-    int trcA, trcB, spnr;
+    int trcA, trcB;
+    float spnr;
     Coord pos;
     for (int idx=0; idx<intset.size(); idx++) {
         Pos::GeomID geomidA = intset[idx]->geomID();

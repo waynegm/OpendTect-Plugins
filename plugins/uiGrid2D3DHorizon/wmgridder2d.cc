@@ -283,7 +283,7 @@ bool wmGridder2D::loadData()
                 continue;
                 
             TrcKey tk( geomids_[idx], -1 );
-            int spnr = mUdf(int);
+            float spnr = mUdf(float);
 	    Coord binLoc;
 	    bool first = true;
             for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step ) {
