@@ -1,5 +1,10 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.0
+- Adapt to OpendTect v6.6 API changes
+- Fixes for handling survey change
+
+
 ## Release 6.4.12
 - Place all attributes in wmPlugins group
 
