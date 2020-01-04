@@ -48,11 +48,12 @@ public:
     uiGeotiffExportMainWin*     gtifdlg_;
     uiVisMenuItemHandler        geopmnuitemhndlr_;
 
-    void		updateToolBar(CallBacker*);
-    void		updateMenu(CallBacker*);
-    void		gpxDialog(CallBacker*);
-    void		gtifDialog(CallBacker*);
+    void	updateToolBar(CallBacker*);
+    void	updateMenu(CallBacker*);
+    void	gpxDialog(CallBacker*);
+    void	gtifDialog(CallBacker*);
     void        doDisplayCB(CallBacker*);
+    void	surveyChgCB(CallBacker*);
     
     bool        hasCRSdefined();
     bool        has3DHorizons();
@@ -60,14 +61,14 @@ public:
 
 
 uiGeopackageExportMgr::uiGeopackageExportMgr( uiODMain* a )
-	: appl_(a)
-	, gpxdlg_(0)
-    , gtifdlg_(0)
+    : appl_(a)
+    , gpxdlg_(nullptr)
+    , gtifdlg_(nullptr)
     , geopmnuitemhndlr_(visSurvey::HorizonDisplay::sFactoryKeyword(), *a->applMgr().visServer(), tr("Geopackage Display"), mCB(this, uiGeopackageExportMgr, doDisplayCB), "Add", 994)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiGeopackageExportMgr::updateMenu );
-    mAttachCB( IOM().applicationClosing, uiGeopackageExportMgr::updateMenu );
-    updateMenu(0);
+    mAttachCB( IOM().surveyChanged, uiGeopackageExportMgr::surveyChgCB );
+    updateMenu(nullptr);
 }
 
 
@@ -93,17 +94,11 @@ bool uiGeopackageExportMgr::has3DHorizons()
     
 void uiGeopackageExportMgr::updateMenu( CallBacker* )
 {
-    if (gpxdlg_) {
-        delete gpxdlg_;
-        gpxdlg_ = 0;
-    }
+    deleteAndZeroPtr( gpxdlg_ );
     uiAction* newitem = new uiAction( tr("Geopackage Export"), mCB(this,uiGeopackageExportMgr,gpxDialog));
     appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertItem( newitem );
 
-    if (gtifdlg_) {
-        delete gtifdlg_;
-        gtifdlg_ = 0;
-    }
+    deleteAndZeroPtr(gtifdlg_);
     newitem = new uiAction( tr("Geotiff Export"), mCB(this,uiGeopackageExportMgr,gtifDialog));
     appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertItem( newitem );
     
@@ -174,6 +169,18 @@ void uiGeopackageExportMgr::doDisplayCB( CallBacker* )
     if (newitem) {
         parent->addChild(newitem, false);
         newitem->showPropertyDlg();
+    }
+}
+
+void uiGeopackageExportMgr::surveyChgCB( CallBacker* )
+{
+    if (gpxdlg_) {
+	gpxdlg_->close();
+	deleteAndZeroPtr( gpxdlg_ );
+    }
+    if (gtifdlg_) {
+	gtifdlg_->close();
+	deleteAndZeroPtr( gtifdlg_ );
     }
 }
 

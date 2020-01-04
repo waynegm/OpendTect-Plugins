@@ -196,7 +196,7 @@ void uiWMToolsMgr::treeMenuCB(CallBacker* cb)
 
 void uiWMToolsMgr::dataExtentHorizonCB(CallBacker* cb)
 {
-    if ( dehdlg_==nullptr ) {
+    if ( !dehdlg_ ) {
 	dehdlg_ = new uidehMainWin( appl_ );
     }
     dehdlg_->show();
@@ -245,9 +245,10 @@ void uiWMToolsMgr::contourPolyCB(CallBacker*)
 
 void uiWMToolsMgr::surveyChangeCB( CallBacker* )
 {
-    if (dehdlg_)
+    if (dehdlg_) {
 	dehdlg_->close();
-    deleteAndZeroPtr(dehdlg_);
+	deleteAndZeroPtr(dehdlg_);
+    }
 
 }
 

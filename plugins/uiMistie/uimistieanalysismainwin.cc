@@ -244,8 +244,10 @@ void uiMistieAnalysisMainWin::closeCB(CallBacker*)
     if (!checkMistieSave())
         return;
 
-    if (corrviewer_)
+    if (corrviewer_) {
         corrviewer_->close();
+	deleteAndZeroPtr( corrviewer_ );
+    }
     
     misties_.erase();
     corrs_.erase();

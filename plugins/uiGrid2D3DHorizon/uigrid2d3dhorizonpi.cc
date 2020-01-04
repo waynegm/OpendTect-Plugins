@@ -1,5 +1,6 @@
 #include "uigrid2d3dhorizonmod.h"
 
+#include "ioman.h"
 #include "uimenu.h"
 #include "uiodmenumgr.h"
 #include "uitoolbar.h"
@@ -28,12 +29,13 @@ public:
 			uiGrid2D3DHorizonMgr(uiODMain*);
 			~uiGrid2D3DHorizonMgr();
 
-    uiODMain*		appl_;
+    uiODMain*			appl_;
     uiGrid2D3DHorizonMainWin*	dlg_;
 
     void		updateToolBar(CallBacker*);
     void		updateMenu(CallBacker*);
     void		gridDialog(CallBacker*);
+    void		surveyChgCB(CallBacker*);
 };
 
 
@@ -43,8 +45,9 @@ uiGrid2D3DHorizonMgr::uiGrid2D3DHorizonMgr( uiODMain* a )
 {
     mAttachCB( appl_->menuMgr().dTectTBChanged, uiGrid2D3DHorizonMgr::updateToolBar );
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiGrid2D3DHorizonMgr::updateMenu );
-    updateToolBar(0);
-    updateMenu(0);
+    mAttachCB(IOM().surveyChanged, uiGrid2D3DHorizonMgr::surveyChgCB);
+    updateToolBar(nullptr);
+    updateMenu(nullptr);
 }
 
 
@@ -61,8 +64,7 @@ void uiGrid2D3DHorizonMgr::updateToolBar( CallBacker* )
 
 void uiGrid2D3DHorizonMgr::updateMenu( CallBacker* )
 {
-    delete dlg_;
-    dlg_ = nullptr;
+    deleteAndZeroPtr( dlg_ );
 
     uiODMenuMgr& mnumgr = appl_->menuMgr();
     uiActionSeparString gridprocstr( "Create Horizon Output" );
@@ -75,13 +77,20 @@ void uiGrid2D3DHorizonMgr::updateMenu( CallBacker* )
 
 void uiGrid2D3DHorizonMgr::gridDialog( CallBacker* )
 {
-    if ( dlg_==nullptr ) {
+    if ( !dlg_ ) {
         dlg_ = new uiGrid2D3DHorizonMainWin( appl_ );
     }
     dlg_->show();
     dlg_->raise();
 }
 
+void uiGrid2D3DHorizonMgr::surveyChgCB( CallBacker* )
+{
+    if ( dlg_ ) {
+	dlg_->close();
+	deleteAndZeroPtr( dlg_ );
+    }
+}
 
 mDefODInitPlugin(uiGrid2D3DHorizon)
 {
