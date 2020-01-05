@@ -6,9 +6,8 @@
 #_______________________________________________________________________________
 
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.0)
 project(OpendTect_Plugins)
-
 set ( OD_SUBSYSTEM "waynegm_plugin" )
 set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 
@@ -67,5 +66,15 @@ if( OD_CREATE_LAUNCHERS )
 endif( OD_CREATE_LAUNCHERS )
 
 OD_WRITE_ALOFILES( ${CMAKE_CURRENT_BINARY_DIR} )
+
+install(FILES LICENSE.txt DESTINATION ${CMAKE_INSTALL_PREFIX} RENAME wmplugin_LICENSE.txt)
+install(FILES CHANGES.MD DESTINATION ${CMAKE_INSTALL_PREFIX}/doc/ReleaseInfo RENAME RELEASE.wmplugins.txt)
+if( WIN64 )
+    install(FILES VERSION.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/relinfo RENAME ver.wmplugins_win64.txt)
+elseif( ${OD_PLFSUBDIR} STREQUAL "lux64" )
+    install(FILES VERSION.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/relinfo RENAME ver.wmplugins_lux64.txt)
+endif()
+
+
 
 
