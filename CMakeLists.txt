@@ -71,6 +71,7 @@ install(FILES LICENSE.txt DESTINATION ${CMAKE_INSTALL_PREFIX} RENAME wmplugin_LI
 install(FILES CHANGES.MD DESTINATION ${CMAKE_INSTALL_PREFIX}/doc/ReleaseInfo RENAME RELEASE.wmplugins.txt)
 if( ${OD_PLFSUBDIR} STREQUAL "win64" )
     install(FILES VERSION.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/relinfo RENAME ver.wmplugins_win64.txt)
+    install(DIRECTORY ${OpendTect_Plugins_BINARY_DIR}/bin/${OD_PLFSUBDIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ )
 elseif( ${OD_PLFSUBDIR} STREQUAL "lux64" )
     install(FILES VERSION.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/relinfo RENAME ver.wmplugins_lux64.txt)
 endif()
