@@ -25,6 +25,8 @@ ________________________________________________________________________
 #include "attribfactory.h"
 #include "attribparam.h"
 #include "envvars.h"
+#include "filepath.h"
+#include "oddirs.h"
 #include "survinfo.h"
 
 #include "extproc.h"
@@ -70,7 +72,19 @@ void ExternalAttrib::initClass()
 	desc->addInput(InputSpec("Input data", true));
 	desc->addOutputDataType( Seis::UnknowData );
 	
-	exdir_ = GetEnvVar("OD_EX_DIR");
+	if ( GetEnvVarYN("OD_EX_DIR") )
+	    exdir_ = GetEnvVar("OD_EX_DIR");
+	else {
+	    FilePath fp( GetScriptDir(),"python","wmpy" );
+	    if ( fp.exists() )
+		exdir_ = fp.fullPath();
+	    else if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
+		FilePath ufp( GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", "python", "wmpy" );
+		if ( ufp.exists() )
+		    exdir_ = ufp.fullPath();
+	    }
+	}
+
 	
 	mAttrEndInitClass
 }

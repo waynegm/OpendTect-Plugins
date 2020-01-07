@@ -1,5 +1,11 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.1
+### External Attributes
+- If OD_EX_DIR environment variable not set look in some other sensible places for external attribute scripts such as:
+    - "OpendTect Install Folder"/bin/python/wmpy
+    - %OD_USER_PLUGIN_DIR%/bin/python/wmpy
+
 ## Release 6.6.0
 - Adapt to OpendTect v6.6 API changes
 - Fixes for handling survey change
