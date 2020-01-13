@@ -6,6 +6,11 @@
     - "OpendTect Install Folder"/bin/python/wmpy
     - %OD_USER_PLUGIN_DIR%/bin/python/wmpy
 
+### uiGrid2D3DHorizon
+- ensure faults are only used if fault selection field is displayed
+- properly set polyline/polygon fault open/closed status and honor during fault masking
+
+
 ## Release 6.6.0
 - Adapt to OpendTect v6.6 API changes
 - Fixes for handling survey change
