@@ -10,6 +10,9 @@
 - ensure faults are only used if fault selection field is displayed
 - properly set polyline/polygon fault open/closed status and honor during fault masking
 
+### uiWMTools
+- fix crash on hitting cancel button of fault polygon generation dialog
+- use fault stick intersections with horizon to generate fault polygons
 
 ## Release 6.6.0
 - Adapt to OpendTect v6.6 API changes
