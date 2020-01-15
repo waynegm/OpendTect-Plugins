@@ -19,19 +19,18 @@
 
 #include "rspecattrib.h"
 #include "odplugin.h"
-
+#include "wmplugins.h"
 
 mDefODPluginEarlyLoad(RSpecAttrib)
 mDefODPluginInfo(RSpecAttrib)
 {
-	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Recursive spectral decomposition attribute (base)",
-		"Recursive spectral decomposition attribute (base)",
-		"Wayne Mogg",
-		"6.0",
-		"Recursive spectral decomposition attribute for OpendTect",
-		PluginInfo::GPL ) );
-	return &retpi;
+    mDefineStaticLocalObject( PluginInfo, retpi,(
+	"Recursive spectral decomposition attribute (Base)",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Recursive spectral decomposition attribute for OpendTect" ) );
+    return &retpi;
 }
 
 

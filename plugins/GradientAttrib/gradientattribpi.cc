@@ -21,19 +21,18 @@ ________________________________________________________________________
 #include "odplugin.h"
 #include "gradientattribmod.h"
 
-
+#include "wmplugins.h"
 
 mDefODPluginEarlyLoad(GradientAttrib)
 
 mDefODPluginInfo(GradientAttrib)
 {
-	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Gradient Attribute (base)",
-		"Gradient Attribute (base)",
-		"Wayne Mogg",
-		"6.0",
-    	"Inline, crossline and Z gradients for OpendTect v5+",
-		PluginInfo::GPL ) );
+    mDefineStaticLocalObject( PluginInfo, retpi,(
+	"Gradient Attribute (Base)",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Inline, crossline and Z gradients for OpendTect" ) );
     return &retpi;
 }
 

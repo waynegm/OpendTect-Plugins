@@ -23,23 +23,22 @@ ________________________________________________________________________
 #include "odplugin.h"
 
 #include "uiexternalattrib.h"
-
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiExternalAttrib)
 {
-	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"External Attribute (UI)",
-		"External Attribute (UI)",
-		"Wayne Mogg",
-		"6.0",
-		"",
-		PluginInfo::GPL ) );
-	return &retpi;
+    mDefineStaticLocalObject( PluginInfo, retpi,(
+	"External Attribute (UI)",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Attribute calculation using an external process for OpendTect" ) );
+    return &retpi;
 }
 
 mDefODInitPlugin(uiExternalAttrib)
 {
-	uiExternalAttrib::initClass();
-	return 0;
+    uiExternalAttrib::initClass();
+    return 0;
 }
 

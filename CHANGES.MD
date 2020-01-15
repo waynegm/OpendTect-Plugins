@@ -1,6 +1,8 @@
 # OpendTect Plugins Release Notes
 
 ## Release 6.6.1
+- Make PluginInfo fields consistent across all plugins
+
 ### External Attributes
 - If OD_EX_DIR environment variable not set look in some other sensible places for external attribute scripts such as:
     - "OpendTect Install Folder"/bin/python/wmpy

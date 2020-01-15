@@ -23,17 +23,17 @@ ________________________________________________________________________
 #include "odplugin.h"
 
 #include "uigradientattrib.h"
+#include "wmplugins.h"
 
 
 mDefODPluginInfo(uiGradientAttrib)
 {
-	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Inline, Crossline or Z gradient Attribute (UI)",
-		"Inline, Crossline or Z gradient Attribute (UI)",
-		"Wayne Mogg",
-		"6.0",
-		"",
-		PluginInfo::GPL ) );
+    mDefineStaticLocalObject( PluginInfo, retpi,(
+	"Gradient Attribute (UI)",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Inline, crossline and Z gradients for OpendTect" ) );
     return &retpi;
 }
 

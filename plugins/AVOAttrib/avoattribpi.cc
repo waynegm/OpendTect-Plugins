@@ -19,25 +19,24 @@
 
 #include "avoattrib.h"
 #include "odplugin.h"
-
+#include "wmplugins.h"
 
 mDefODPluginEarlyLoad(AVOAttrib)
 mDefODPluginInfo(AVOAttrib)
 {
-	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"AVO attribute (base)",
-		"AVO attribute (base)",
-		"Wayne Mogg",
-		"6.0",
-		"Simple AVO for OpendTect v5+",
-		PluginInfo::GPL ) );
+    mDefineStaticLocalObject( PluginInfo, retpi,(
+	"AVO attribute (Base)",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Simple AVO for OpendTect" ) );
     return &retpi;
 }
 
 
 mDefODInitPlugin(AVOAttrib)
 {
-   Attrib::AVOAttrib::initClass();
+    Attrib::AVOAttrib::initClass();
 
     return 0;
 }

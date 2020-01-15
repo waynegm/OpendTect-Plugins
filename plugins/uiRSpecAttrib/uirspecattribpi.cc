@@ -23,22 +23,22 @@
 #include "odplugin.h"
 
 #include "uirspecattrib.h"
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiRSpecAttrib)
 {
-	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Recursive spectral decomposition attribute (UI)",
-		"Recursive spectral decomposition attribute (UI)",
-		"Wayne Mogg",
-		"6.0",
-		"",
-		PluginInfo::GPL ) );
-	return &retpi;
+    mDefineStaticLocalObject( PluginInfo, retpi,(
+	"Recursive spectral decomposition attribute (UI)",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Recursive spectral decomposition attribute for OpendTect" ) );
+    return &retpi;
 }
 
 mDefODInitPlugin(uiRSpecAttrib)
 {
-	uiRSpecAttrib::initClass();
-	return 0;
+    uiRSpecAttrib::initClass();
+    return 0;
 }
 

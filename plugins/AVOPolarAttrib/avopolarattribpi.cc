@@ -1,17 +1,17 @@
 #include "avopolarattrib.h"
 #include "odplugin.h"
 #include "avopolarattribmod.h"
-
+#include "wmplugins.h"
 
 mDefODPluginEarlyLoad(AVOPolarAttrib)
 mDefODPluginInfo(AVOPolarAttrib)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
-    "AVO Polarization Attributes",
-    "OpendTect",
-    "Wayne Mogg",
-    "1.0",
-    "") );
+    "AVO Polarization Attributes (Base)",
+    wmPlugins::sKeyWMPlugins(),
+    "Wayne Mogg (WM Seismic Solutions)",
+    "=od",
+    "AVO Polarization attributes for OpendTect") );
     return &retpi;
 }
 

@@ -21,22 +21,22 @@
 #include "odplugin.h"
 
 #include "uiltfattrib.h"
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiLocalAttrib)
 {
-	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Local seismic attributes plugin (UI)",
-        "OpendTect",
-		"Wayne Mogg",
-		"6.0",
-        "UI plugin for various local seismic attributes as per Madagascar but without the dependencies",
-		PluginInfo::GPL ) );
-	return &retpi;
+    mDefineStaticLocalObject( PluginInfo, retpi,(
+	"Local seismic attributes (UI)",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Various local seismic attributes as per Madagascar but without the dependencies" ) );
+    return &retpi;
 }
 
 mDefODInitPlugin(uiLocalAttrib)
 {
-	uiLTFAttrib::initClass();
-	return 0;
+    uiLTFAttrib::initClass();
+    return 0;
 }
 

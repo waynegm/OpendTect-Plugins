@@ -23,23 +23,22 @@
 #include "odplugin.h"
 
 #include "uiavoattrib.h"
-
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiAVOAttrib)
 {
-	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"AVO Attribute (UI)",
-		"AVO Attribute (UI)",
-		"Wayne Mogg",
-		"6.0",
-		"",
-		PluginInfo::GPL ) );	
+    mDefineStaticLocalObject( PluginInfo, retpi,(
+	"AVO Attribute (UI)",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Simple AVO for OpendTect" ) );
     return &retpi;
 }
 
 
 mDefODInitPlugin(uiAVOAttrib)
 {
-	uiAVOAttrib::initClass();
-	return 0;
+    uiAVOAttrib::initClass();
+    return 0;
 }

@@ -24,16 +24,16 @@
 #include "uigeopackageexportmainwin.h"
 #include "uigeotiffexportmainwin.h"
 #include "uigeopackagetreeitem.h"
-
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiGeopackageExport)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
-    "Geopackage Export plugin",
-    "",
-    "Wayne Mogg",
-    "1.0",
-    "Export OpendTect survey information to a Geopackage database."));
+	"Geopackage Export plugin",
+	wmPlugins::sKeyWMPlugins(),
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Export OpendTect data to a Geopackage database."));
     return &retpi;
 }
 
