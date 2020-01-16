@@ -12,15 +12,19 @@ typedef struct keyholder {
 keyholder keys[] = {
     {"avo", "AVOAttrib.html"},
     {"avop","AVOPolarAttrib.html"},
-    {"deh", "DataExtentHorizon.html"},
+    {"deh", "WMTools.html#data-extent-horizon"},
     {"ext", "ExternalAttrib.html"},
+    {"fpl", "WMTools.html#fault-surface-3d-horizon-intersection-polyline"},
+    {"geodisp","GeopackageDisplay.html"},
     {"geopkg", "GeopackageExport.html"},
     {"geotiff", "GeotiffExport.html"},
     {"grad", "GradientAttrib.html"},
     {"grid2d3d","Grid2D-3D.html"},
-    {"ltf", "LTFAttrib.html"},
+    {"ltf", "LocalAttrib.html"},
     {"mistie", "Mistie.html"},
     {"mlv", "MLVFilter.html"},
+    {"pconz","WMTools.html#constant-z-polyline"},
+    {"pcvx","WMTools.html#convex-hull-polygon"},
     {"rspec","RSpecAttrib.html"},
     { 0, 0}
 };

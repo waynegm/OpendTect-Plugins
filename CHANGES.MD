@@ -2,6 +2,7 @@
 
 ## Release 6.6.1
 - Make PluginInfo fields consistent across all plugins
+- Update help keys
 
 ### External Attributes
 - If OD_EX_DIR environment variable not set look in some other sensible places for external attribute scripts such as:

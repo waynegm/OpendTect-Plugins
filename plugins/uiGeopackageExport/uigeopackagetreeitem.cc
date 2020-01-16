@@ -202,7 +202,7 @@ class uiGeopackageParsDlg : public uiDialog
 { mODTextTranslationClass(uiGeopackageParsDlg);
 public:
     uiGeopackageParsDlg( uiParent* p, uiGeopackageReader& reader, const OD::LineStyle& ls, const int shift=0 )
-        : uiDialog(p, Setup(tr("Geopackage Display Options"),mNoDlgTitle,mTODOHelpKey))
+        : uiDialog(p, Setup(tr("Geopackage Display Options"),mNoDlgTitle,HelpKey("wgm","geodisp")))
         , reader_(reader)
     {
         BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
