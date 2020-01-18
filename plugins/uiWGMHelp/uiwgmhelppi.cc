@@ -57,11 +57,11 @@ public:
 mDefODPluginInfo(uiWGMHelp)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
-        "uiWGMHelp plugin",
+	"uiWGMHelp plugin",
 	wmPlugins::sKeyWMPlugins(),
-        "Wayne Mogg (WM Seismic Solutions)",
-        "=od",
-        "Help provider for the WMPlugin's collection.") );
+	"Wayne Mogg (WM Seismic Solutions)",
+	"=od",
+	"Help provider for the WMPlugin's collection.") );
     return &retpi;
 }
 
