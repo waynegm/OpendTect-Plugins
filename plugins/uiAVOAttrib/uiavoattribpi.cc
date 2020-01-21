@@ -28,7 +28,7 @@
 mDefODPluginInfo(uiAVOAttrib)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
-	"AVO Attribute (UI)",
+	"AVO Attributes (UI)",
 	wmPlugins::sKeyWMPlugins(),
 	"Wayne Mogg (WM Seismic Solutions)",
 	"=od",
@@ -40,5 +40,5 @@ mDefODPluginInfo(uiAVOAttrib)
 mDefODInitPlugin(uiAVOAttrib)
 {
     uiAVOAttrib::initClass();
-    return 0;
+    return nullptr;
 }

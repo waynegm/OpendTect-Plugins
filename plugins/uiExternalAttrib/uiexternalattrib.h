@@ -23,6 +23,7 @@ ________________________________________________________________________
 
 #include "uiexternalattribmod.h"
 #include "uiattrdesced.h"
+#include "uitable.h"
 #include "json.h"
 #include "wmparamsetget.h"
 
@@ -35,43 +36,56 @@ class uiExt_StepOutSel;
 
 /*! \brief External Attribute description editor */
 
+class uiExternalAttribInp : public uiTable
+{mODTextTranslationClass(uiExternalAttribInp);
+public:
+    uiExternalAttribInp(uiParent*,const uiTable::Setup&);
+    ~uiExternalAttribInp();
+
+
+protected:
+    ObjectSet<uiAttrSel>		inpflds_;
+    uiGenInput*				outputfld_;
+};
+
 class uiExternalAttrib : public uiAttrDescEd
 { mODTextTranslationClass(uiExternalAttrib);
 public:
 
-	uiExternalAttrib(uiParent*,bool);
-	~uiExternalAttrib();
+    uiExternalAttrib(uiParent*,bool);
+    ~uiExternalAttrib();
     
 protected:
 
-	ExtProc*				extproc_;
-	uiFileInput*			exfilefld_;
-	uiFileInput*			interpfilefld_;
-	ObjectSet<uiAttrSel>	inpflds_;
-	uiGenInput*				zmarginfld_;
-	uiExt_StepOutSel*		stepoutfld_;
-	uiGenInput*				outputfld_;
-	uiGenInput*				selectfld_;
-	ObjectSet<uiGenInput>	parflds_;
-	uiToolButton*			help_;
+    ExtProc*			extproc_;
+    uiFileInput*		exfilefld_;
+    uiFileInput*		interpfilefld_;
+    uiExternalAttribInp*	uiinp_;
+    ObjectSet<uiAttrSel>	inpflds_;
+    uiGenInput*			zmarginfld_;
+    uiExt_StepOutSel*		stepoutfld_;
+    uiGenInput*			outputfld_;
+    uiGenInput*			selectfld_;
+    ObjectSet<uiGenInput>	parflds_;
+    uiToolButton*		help_;
 	
-	
-	void		exfileChanged(CallBacker*);
-	void		setExFileName( const char* );
-	BufferString	getExFileName();
-	bool		setParameters(const Attrib::Desc&);
+    void		makeUI();
+    void		exfileChanged(CallBacker*);
+    void		setExFileName( const char* );
+    BufferString	getExFileName();
+    bool		setParameters(const Attrib::Desc&);
     bool		setInput(const Attrib::Desc&);
     bool		getParameters(Attrib::Desc&);
     bool		getInput(Attrib::Desc&);
 
-	bool		setOutput(const Attrib::Desc&);
-	bool		getOutput(Attrib::Desc&);
+    bool		setOutput(const Attrib::Desc&);
+    bool		getOutput(Attrib::Desc&);
+
+    void		doHelp( CallBacker* cb );
+    void		doZmarginCheck( CallBacker* cb );
+    void		doStepOutCheck( CallBacker* cb );
 	
-	void		doHelp( CallBacker* cb );
-	void		doZmarginCheck( CallBacker* cb );
-	void		doStepOutCheck( CallBacker* cb );
-	
-    			mDeclReqAttribUIFns
+    mDeclReqAttribUIFns
 };
 
 

@@ -8,6 +8,8 @@
 - If OD_EX_DIR environment variable not set look in some other sensible places for external attribute scripts such as:
     - "OpendTect Install Folder"/bin/python/wmpy
     - %OD_USER_PLUGIN_DIR%/bin/python/wmpy
+- Set default Python interpreter using the OpendTect Python settings
+- Use a table to display the UI fields
 
 ### uiGrid2D3DHorizon
 - ensure faults are only used if fault selection field is displayed

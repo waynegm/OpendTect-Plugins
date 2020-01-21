@@ -46,7 +46,7 @@
 Coord3 lineSegmentIntersectsTriangle( Coord3 start, Coord3 end,
 			      Coord3 trVert0, Coord3 trVert1, Coord3 trVert2 )
 {
-    Coord3 res = mUdf(Coord3);
+    Coord3 res = Coord3::udf();
 
     Coord3 edge1 = trVert1 - trVert0;
     Coord3 edge2 = trVert2 - trVert0;

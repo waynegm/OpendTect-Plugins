@@ -27,10 +27,35 @@ ________________________________________________________________________
 #include "envvars.h"
 #include "filepath.h"
 #include "oddirs.h"
+#include "pythonaccess.h"
+#include "settings.h"
 #include "survinfo.h"
 
 #include "extproc.h"
 
+FilePath getPythonPath()
+{
+    FilePath fp;
+
+    BufferString pythonstr( sKey::Python() ); pythonstr.toLower();
+    const IOPar& pythonsetts = Settings::fetch( pythonstr );
+    OD::PythonSource source;
+    if (!OD::PythonSourceDef().parse(pythonsetts,OD::PythonAccess::sKeyPythonSrc(),source))
+	source = OD::System;
+
+
+    if ( source == OD::Custom )
+    {
+	BufferString virtenvloc, virtenvnm;
+	pythonsetts.get(OD::PythonAccess::sKeyEnviron(),virtenvloc);
+	pythonsetts.get(sKey::Name(),virtenvnm);
+	fp = FilePath("/", virtenvloc, "envs", virtenvnm, "bin" );
+    }
+
+    fp.add( pythonstr );
+
+    return fp;
+}
 
 namespace Attrib
 {
@@ -45,6 +70,7 @@ void ExternalAttrib::initClass()
 	mAttrStartInitClassWithUpdate
 
 	StringParam* interpfilepar = new StringParam( interpFileStr() );
+	interpfilepar->setDefaultValue( getPythonPath().fullPath() );
 	desc->addParam( interpfilepar );
 	
 	StringParam* exfilepar = new StringParam( exFileStr() );

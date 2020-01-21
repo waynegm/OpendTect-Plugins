@@ -25,7 +25,7 @@ mDefODPluginEarlyLoad(AVOAttrib)
 mDefODPluginInfo(AVOAttrib)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
-	"AVO attribute (Base)",
+	"AVO Attributes (Base)",
 	wmPlugins::sKeyWMPlugins(),
 	"Wayne Mogg (WM Seismic Solutions)",
 	"=od",
@@ -37,6 +37,5 @@ mDefODPluginInfo(AVOAttrib)
 mDefODInitPlugin(AVOAttrib)
 {
     Attrib::AVOAttrib::initClass();
-
-    return 0;
+    return nullptr;
 }

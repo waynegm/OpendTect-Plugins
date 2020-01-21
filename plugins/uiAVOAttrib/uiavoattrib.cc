@@ -45,7 +45,7 @@ static const char* outputstr[] =
 };
 
 
-mInitAttribUI(uiAVOAttrib,AVOAttrib,"AVO Attribute",wmPlugins::sKeyWMPlugins())
+mInitAttribUI(uiAVOAttrib,AVOAttrib,"AVO Attributes",wmPlugins::sKeyWMPlugins())
 
 
 uiAVOAttrib::uiAVOAttrib( uiParent* p, bool is2d )

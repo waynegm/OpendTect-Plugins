@@ -55,6 +55,7 @@ public:
 	static const char*		parStr()		{ return "par"; }
 	
 	static BufferString		exdir_;
+	static BufferString		interp_;
 	
 protected:
 							~ExternalAttrib();
