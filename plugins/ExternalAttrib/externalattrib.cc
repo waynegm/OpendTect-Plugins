@@ -49,8 +49,12 @@ FilePath getPythonPath()
 	BufferString virtenvloc, virtenvnm;
 	pythonsetts.get(OD::PythonAccess::sKeyEnviron(),virtenvloc);
 	pythonsetts.get(sKey::Name(),virtenvnm);
-	fp = FilePath("/", virtenvloc, "envs", virtenvnm, "bin" );
-    }
+#ifdef __win__
+	fp = FilePath( virtenvloc, "envs", virtenvnm, "bin" );
+#else
+	fp = FilePath("/", virtenvloc, "envs", virtenvnm, "bin");
+#endif
+	}
 
     fp.add( pythonstr );
 

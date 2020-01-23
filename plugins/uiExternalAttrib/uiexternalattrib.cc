@@ -70,7 +70,6 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     uiFileInput::Setup su;
     su.defseldir("").forread(true);
     #ifdef __win__
-	pypath.setExtension("exe");
 	su.filter("*.exe");
     #endif
     interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), su );
