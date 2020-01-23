@@ -10,6 +10,7 @@
     - %OD_USER_PLUGIN_DIR%/bin/python/wmpy
 - Set default Python interpreter using the OpendTect Python settings
 - Use a table to display the UI fields
+- put Python external attribute scripts into repository
 
 ### uiGrid2D3DHorizon
 - ensure faults are only used if fault selection field is displayed
