@@ -74,9 +74,8 @@ if( ${OD_PLFSUBDIR} STREQUAL "win64" )
     install(DIRECTORY ${OpendTect_Plugins_BINARY_DIR}/bin/${OD_PLFSUBDIR} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ )
 elseif( ${OD_PLFSUBDIR} STREQUAL "lux64" )
     install(FILES VERSION.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/relinfo RENAME ver.wmplugins_lux64.txt)
-    install(DIRECTORY ${OpendTect_Plugins_BINARY_DIR}/bin/python DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ PATTERN "__pycache__" EXCLUDE)
 endif()
-
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/bin/python DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ PATTERN "__pycache__" EXCLUDE)
 
 
 

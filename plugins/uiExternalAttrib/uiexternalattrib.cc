@@ -73,6 +73,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	su.filter("*.exe");
     #endif
     interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), su );
+	interpfilefld_->setFileName(ExternalAttrib::getPythonPath().fullPath());
     interpfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
 
     exfilefld_ = new uiFileInput( this, tr("External File"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).defseldir(ExternalAttrib::exdir_) );

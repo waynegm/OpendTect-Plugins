@@ -44,6 +44,7 @@ public:
 	static void				initClass();
 							ExternalAttrib(Desc&);
 
+	static FilePath			getPythonPath();
 	static const char*		attribName()	{ return "ExternalAttrib"; }
 	void					getCompNames(BufferStringSet&) const;
 	

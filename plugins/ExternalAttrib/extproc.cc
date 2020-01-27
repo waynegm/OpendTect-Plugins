@@ -26,6 +26,7 @@ ________________________________________________________________________
 #include "msgh.h"
 #include "objectset.h"
 #include "file.h"
+#include "filepath.h"
 #include "envvars.h"
 #include "procinst.h"
 
@@ -39,6 +40,8 @@ public:
 	
 	bool			getParam();
 	void			setFile(const char* fname, const char* iname);
+	BufferStringSet getInterpreterArgs() const;
+	void			addQuotesIfNeeded(BufferStringSet& args);
 	
 	bool			isOK;
 	SeisInfo		seisInfo;
@@ -83,6 +86,61 @@ void ExtProcImpl::setFile(const char* fname, const char* iname)
 	return;
 }
 
+BufferStringSet ExtProcImpl::getInterpreterArgs() const
+{
+	BufferStringSet res;
+	if (infile.isEmpty())
+		return res;
+
+#ifdef __win__
+	BufferString pythonstr(sKey::Python()); 
+	pythonstr.toLower();
+	if ( infile.find(pythonstr) && infile.find( "envs" ) ) {
+// Must be an Anaconda environment
+		BufferString pyexe = FilePath(infile).fileName();
+		FilePath envpath = FilePath(infile).pathOnly();
+		BufferString envname = envpath.fileName();
+		FilePath envspath(envpath.pathOnly());
+		if (envspath.fileName() == "envs") {
+			FilePath anaconda_root = FilePath(envspath.pathOnly());
+			FilePath anaconda_activate = anaconda_root.add("Scripts").add("activate");
+			res.add(anaconda_activate.fullPath()).add(envname).add("&").add(pyexe);
+		} else
+			res.add(infile);
+	} else if (infile.find(pythonstr)) {
+		FilePath root(FilePath(infile).pathOnly());
+		if (root.add("envs").exists()) {
+// Probably an Anaconda base environment
+			BufferString envname("base");
+			BufferString pyexe = FilePath(infile).fileName();
+			FilePath anaconda_root = FilePath(infile).pathOnly();
+			FilePath anaconda_activate = anaconda_root.add("Scripts").add("activate");
+			res.add(anaconda_activate.fullPath()).add(envname).add("&").add(pyexe);
+		}
+		else
+			res.add(infile);
+	} else
+		res.add(infile);
+#else
+	res.add(infile);
+#endif
+	return res;
+}
+
+void ExtProcImpl::addQuotesIfNeeded(BufferStringSet& args)
+{
+	for (int idx = 0; idx < args.size(); idx++) {
+		BufferString& str = args.get(idx);
+		if (!str.find(' '))
+			continue;
+		if (str[0] == '"')
+			continue;
+		const char* quote = "\"";
+		str.insertAt(0, quote);
+		str.add(quote);
+	}
+}
+
 void ExtProcImpl::startInst( ProcInst* pi )
 {
 	BufferString params(json::Serialize(jsonpar).c_str());
@@ -90,22 +148,20 @@ void ExtProcImpl::startInst( ProcInst* pi )
 	params.replace("\"","\"\""); 
 	params.embed('"','"');
 #endif
-	char* args[5];
-	if (infile.isEmpty()) {
-		args[0] = (char*) exfile.getCStr();
-		args[1] = (char*) "-c";
-		args[2] = (char*) params.getCStr();
-		args[3] = 0;
-	} else if (exfile.isEmpty()) {
+	BufferStringSet runargs;
+	if ( !infile.isEmpty() && !exfile.isEmpty() )
+		runargs = getInterpreterArgs();
+	else if ( exfile.isEmpty() ) {
 		ErrMsg("ExtProcImpl::startInst - no external attribute file provided");
-	} else {
-		args[0] = (char*) infile.getCStr();
-		args[1] = (char*) exfile.getCStr();
-		args[2] = (char*) "-c";
-		args[3] = (char*) params.getCStr();
-		args[4] = 0;
+		return;
 	}
-	if (!pi->start( args, seisInfo ))
+
+	runargs.add(exfile);
+	runargs.add("-c");
+	runargs.add(params);
+	addQuotesIfNeeded(runargs);
+
+	if (!pi->start( runargs, seisInfo ))
 	{
 		ErrMsg("ExtProcImpl::startInst - run error");
 	}
@@ -117,21 +173,19 @@ bool ExtProcImpl::getParam()
 	ProcInst pi;
 	bool result = true;
 	BufferString params;
-	char* args[4];
-	if (infile.isEmpty()) {
-		args[0] = (char*) exfile.getCStr();
-		args[1] = (char*) "-g";
-		args[2] = 0;
-	} else if (exfile.isEmpty()) {
-		ErrMsg("ExtProcImpl::getParam - no external attribute file provided");
+	BufferStringSet runargs;
+	if (!infile.isEmpty() && !exfile.isEmpty())
+		runargs = getInterpreterArgs();
+	else if (exfile.isEmpty()) {
+		ErrMsg("ExtProcImpl::startInst - no external attribute file provided");
 		return false;
-	} else {
-		args[0] = (char*) infile.getCStr();
-		args[1] = (char*) exfile.getCStr();
-		args[2] = (char*) "-g";
-		args[3] = 0;
 	}
-	if (pi.start( args )) {
+
+	runargs.add(exfile);
+	runargs.add("-g");
+	addQuotesIfNeeded(runargs);
+
+	if (pi.start( runargs )) {
 		params = pi.readAllStdOut();
 		if (pi.finish() != 0 ) {
 			ErrMsg("ExtProcImpl::getParam - external attribute exited abnormally");

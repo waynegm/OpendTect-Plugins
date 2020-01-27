@@ -33,7 +33,15 @@ ________________________________________________________________________
 
 #include "extproc.h"
 
-FilePath getPythonPath()
+namespace Attrib
+{
+
+	mAttrDefCreateInstance(ExternalAttrib)
+
+	ExtProc* ExternalAttrib::dProc_ = NULL;
+	BufferString ExternalAttrib::exdir_ = "";
+
+FilePath ExternalAttrib::getPythonPath()
 {
     FilePath fp;
 
@@ -44,30 +52,31 @@ FilePath getPythonPath()
 	source = OD::System;
 
 
-    if ( source == OD::Custom )
-    {
-	BufferString virtenvloc, virtenvnm;
-	pythonsetts.get(OD::PythonAccess::sKeyEnviron(),virtenvloc);
-	pythonsetts.get(sKey::Name(),virtenvnm);
+    if ( source == OD::Custom ) {
+		BufferString virtenvloc, virtenvnm;
+		pythonsetts.get(OD::PythonAccess::sKeyEnviron(),virtenvloc);
+		pythonsetts.get(sKey::Name(),virtenvnm);
 #ifdef __win__
-	fp = FilePath( virtenvloc, "envs", virtenvnm, "bin" );
+		fp = FilePath( virtenvloc, "envs", virtenvnm );
 #else
-	fp = FilePath("/", virtenvloc, "envs", virtenvnm, "bin");
+		fp = FilePath( "/", virtenvloc, "envs", virtenvnm );
 #endif
 	}
+	else if (source == OD::Internal) {
+		OD::PythA().getPathToInternalEnv(fp, true);
+		fp.add("envs").add("odmlpython-cpu-mkl");
+		if (!fp.exists())
+			OD::PythA().getPathToInternalEnv(fp, true);
+	}
+#ifdef __win__
+	pythonstr.add(".exe");
+#else
+	fp.add("bin");
+#endif
 
     fp.add( pythonstr );
-
     return fp;
 }
-
-namespace Attrib
-{
-
-mAttrDefCreateInstance(ExternalAttrib)    
-
-ExtProc* ExternalAttrib::dProc_ = NULL;
-BufferString ExternalAttrib::exdir_ = "";
 
 void ExternalAttrib::initClass()
 {
@@ -337,7 +346,5 @@ const BinID* ExternalAttrib::desStepout(int input,int output) const
 	else
 		return &stepout_;
 }
-
-
 }; //namespace
 
