@@ -350,8 +350,10 @@ bool ProcInst::start( const BufferStringSet& runargs)
 			close(fd);
 
 		char** argv = new char*[runargs.size() + 1];
-		for (int idx = 0; idx < runargs.size(); idx++)
-			argv[idx] = runargs.get(idx).getCStr();
+		for (int idx = 0; idx < runargs.size(); idx++) {
+		    BufferString* arg = new BufferString(runargs.get(idx));
+		    argv[idx] = arg->getCStr();
+		}
 		argv[runargs.size()] = 0;
 		execve(argv[0], argv, envp);
 //	Should never get here

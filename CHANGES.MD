@@ -11,7 +11,8 @@
 - Set default Python interpreter using the OpendTect Python settings
 - Use a table to display the UI fields
 - Put Python external attribute scripts into repository
-- For Windows activate environment before use 
+- For Windows activate environment before starting Python script
+- Add refresh/reset button beside interpreter field to force update against OpendTect Python settings
 
 ### uiGrid2D3DHorizon
 - ensure faults are only used if fault selection field is displayed

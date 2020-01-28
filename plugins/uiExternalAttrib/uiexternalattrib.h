@@ -68,6 +68,7 @@ protected:
     uiGenInput*			selectfld_;
     ObjectSet<uiGenInput>	parflds_;
     uiToolButton*		help_;
+    uiToolButton*		refinterp_;
 	
     void		makeUI();
     void		exfileChanged(CallBacker*);
@@ -84,6 +85,7 @@ protected:
     void		doHelp( CallBacker* cb );
     void		doZmarginCheck( CallBacker* cb );
     void		doStepOutCheck( CallBacker* cb );
+    void		updateinterpCB( CallBacker* );
 	
     mDeclReqAttribUIFns
 };

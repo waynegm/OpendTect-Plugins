@@ -73,15 +73,20 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	su.filter("*.exe");
     #endif
     interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), su );
-	interpfilefld_->setFileName(ExternalAttrib::getPythonPath().fullPath());
+    interpfilefld_->setFileName(ExternalAttrib::getPythonPath().fullPath());
     interpfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
+
+    CallBack cb1 = mCB(this,uiExternalAttrib,updateinterpCB);
+    refinterp_ = new uiToolButton( this, "restart", uiStrings::sReset(), cb1 );
+    refinterp_->attach (rightTo, interpfilefld_);
+    refinterp_->display(true);
 
     exfilefld_ = new uiFileInput( this, tr("External File"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).defseldir(ExternalAttrib::exdir_) );
     exfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
     exfilefld_->attach(alignedBelow, interpfilefld_);
 
-    CallBack cb = mCB(this,uiExternalAttrib,doHelp);
-    help_ = new uiToolButton( this, "contexthelp", uiStrings::sHelp(), cb );
+    CallBack cb2 = mCB(this,uiExternalAttrib,doHelp);
+    help_ = new uiToolButton( this, "contexthelp", uiStrings::sHelp(), cb2 );
     help_->attach (rightTo, exfilefld_);
     help_->display(false);
 
@@ -98,6 +103,14 @@ uiExternalAttrib::~uiExternalAttrib()
     detachAllNotifiers();
 }
 
+void uiExternalAttrib::updateinterpCB(CallBacker*)
+{
+    BufferString newinterpfile = ExternalAttrib::getPythonPath().fullPath();
+    if (newinterpfile!=interpfilefld_->fileName()) {
+	interpfilefld_->setFileName(newinterpfile);
+	exfileChanged(0);
+    }
+}
 
 void uiExternalAttrib::makeUI()
 {
