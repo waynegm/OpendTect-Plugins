@@ -52,8 +52,8 @@ mDefODPluginInfo(uiWMTools)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"uiWMTools plugin",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
 	"Miscellaneous tools to make life with OpendTect easier.") );
     return &retpi;
 }

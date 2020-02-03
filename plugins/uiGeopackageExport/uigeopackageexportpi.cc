@@ -31,8 +31,8 @@ mDefODPluginInfo(uiGeopackageExport)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"Geopackage Export plugin",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
 	"Export OpendTect data to a Geopackage database."));
     return &retpi;
 }

@@ -27,8 +27,8 @@ mDefODPluginInfo(LocalAttrib)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"Local seismic attributes (Base)",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
 	"Various local seismic attributes as per Madagascar but without the dependencies" ) );
     return &retpi;
 }

@@ -30,9 +30,9 @@ mDefODPluginInfo(MLVFilterAttrib)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"Mean of Least Variance Filter Attribute (Base)",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
-    	"Mean of least variance structure preserving filter for OpendTect" ) );
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
+	"Mean of least variance structure preserving filter for OpendTect" ) );
     return &retpi;
 }
 

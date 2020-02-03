@@ -30,8 +30,8 @@ mDefODPluginInfo(uiAVOAttrib)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"AVO Attributes (UI)",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
 	"Simple AVO for OpendTect" ) );
     return &retpi;
 }

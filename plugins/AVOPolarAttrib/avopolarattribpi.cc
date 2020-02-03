@@ -9,8 +9,8 @@ mDefODPluginInfo(AVOPolarAttrib)
     mDefineStaticLocalObject( PluginInfo, retpi,(
     "AVO Polarization Attributes (Base)",
     wmPlugins::sKeyWMPlugins(),
-    "Wayne Mogg (WM Seismic Solutions)",
-    "=od",
+    wmPlugins::sKeyWMPluginsAuthor(),
+    wmPlugins::sKeyWMPluginsVersion(),
     "AVO Polarization attributes for OpendTect") );
     return &retpi;
 }

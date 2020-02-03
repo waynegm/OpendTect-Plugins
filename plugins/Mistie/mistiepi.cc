@@ -9,8 +9,8 @@ mDefODPluginInfo(Mistie)
     mDefineStaticLocalObject( PluginInfo, retpi,(
     "Mistie analysis and correction (Base)",
     wmPlugins::sKeyWMPlugins(),
-    "Wayne Mogg (WM Seismic Solutions)",
-    "=od",
+    wmPlugins::sKeyWMPluginsAuthor(),
+    wmPlugins::sKeyWMPluginsVersion(),
     "Mistie analysis and correction for OpendTect") );
     return &retpi;
 }

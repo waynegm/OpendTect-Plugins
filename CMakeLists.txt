@@ -77,5 +77,10 @@ elseif( ${OD_PLFSUBDIR} STREQUAL "lux64" )
 endif()
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/bin/python DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ PATTERN "__pycache__" EXCLUDE)
 
-
+if(${CMAKE_SOURCE_DIR}/VERSION.txt IS_NEWER_THAN ${CMAKE_SOURCE_DIR}/plugins/wm_include/version.h)
+    file(READ ${CMAKE_SOURCE_DIR}/VERSION.txt content)
+    set(delim "===")
+    set(content "static const char* wm_version = R\"${delim}(\n${content})${delim}\";")
+    file(WRITE ${CMAKE_SOURCE_DIR}/plugins/wm_include/version.h "${content}")
+endif()
 

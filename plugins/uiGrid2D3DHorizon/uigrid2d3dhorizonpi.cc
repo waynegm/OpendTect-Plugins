@@ -18,8 +18,8 @@ mDefODPluginInfo(uiGrid2D3DHorizon)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"Grid 2D and 3D horizon plugin",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
 	"Grid 2D and 3D OpendTect horizon data."));
     return &retpi;
 }

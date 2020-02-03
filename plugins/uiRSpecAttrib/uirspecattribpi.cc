@@ -30,8 +30,8 @@ mDefODPluginInfo(uiRSpecAttrib)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"Recursive spectral decomposition attribute (UI)",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
 	"Recursive spectral decomposition attribute for OpendTect" ) );
     return &retpi;
 }

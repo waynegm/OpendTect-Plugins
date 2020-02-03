@@ -30,8 +30,8 @@ mDefODPluginInfo(GradientAttrib)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"Gradient Attribute (Base)",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
 	"Inline, crossline and Z gradients for OpendTect" ) );
     return &retpi;
 }

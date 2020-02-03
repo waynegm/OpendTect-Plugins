@@ -1,5 +1,8 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.2
+- Use plugin version in PluginInfo field
+
 ## Release 6.6.1
 - Make PluginInfo fields consistent across all plugins
 - Update help keys

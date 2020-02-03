@@ -30,8 +30,8 @@ mDefODPluginInfo(uiExternalAttrib)
     mDefineStaticLocalObject( PluginInfo, retpi,(
 	"External Attribute (UI)",
 	wmPlugins::sKeyWMPlugins(),
-	"Wayne Mogg (WM Seismic Solutions)",
-	"=od",
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
 	"Attribute calculation using an external process for OpendTect" ) );
     return &retpi;
 }
