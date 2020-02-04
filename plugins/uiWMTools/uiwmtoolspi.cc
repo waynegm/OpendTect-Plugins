@@ -42,6 +42,7 @@
 #include "uiconvexhull.h"
 #include "uifaultpoly.h"
 #include "uicontourpoly.h"
+#include "wmplugins.h"
 
 template <class T> class ODPolygon;
 
@@ -50,10 +51,10 @@ mDefODPluginInfo(uiWMTools)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
     "uiWMTools plugin",
-    "",
-    "Wayne Mogg",
-    "1.0",
-    "Miscellaneous tools to make life with OpendTect easier."));
+    wmPlugins::sKeyWMPlugins(),
+    wmPlugins::sKeyWMPluginsAuthor(),
+    wmPlugins::sKeyWMPluginsVersion(),
+    "Miscellaneous tools to make life with OpendTect easier.") );
     return &retpi;
 }
 

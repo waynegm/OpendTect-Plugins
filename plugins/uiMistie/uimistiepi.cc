@@ -9,15 +9,16 @@
 #include "uimistieapplier.h"
 #include "uimistiecorrmainwin.h"
 #include "uimistieanalysismainwin.h"
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiMistie)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
-    "Mistie analysis and correction (UI) plugin",
-    "OpendTect",
-    "Wayne Mogg",
-    "1.0",
-    "A plugin for determining seismic misties, computing corrections and applying them to seismic data") );
+	"Mistie analysis and correction (UI)",
+	wmPlugins::sKeyWMPlugins(),
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
+	"Mistie analysis and correction for OpendTect") );
     return &retpi;
 }
 

@@ -18,17 +18,17 @@
 
 #include "ltfattrib.h"
 #include "odplugin.h"
-
+#include "wmplugins.h"
 
 mDefODPluginEarlyLoad(LocalAttrib)
 mDefODPluginInfo(LocalAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Local seismic attributes plugin (base)",
-		"OpendTect",
-		"Wayne Mogg",
-		"6.0",
-		"Base plugin for various local seismic attributes as per Madagascar but without the dependencies",
+		"Local seismic attributes (Base)",
+		wmPlugins::sKeyWMPlugins(),
+		wmPlugins::sKeyWMPluginsAuthor(),
+		wmPlugins::sKeyWMPluginsVersion(),
+		"Various local seismic attributes as per Madagascar but without the dependencies",
 		PluginInfo::GPL ) );
 	return &retpi;
 }

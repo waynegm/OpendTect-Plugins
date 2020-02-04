@@ -23,17 +23,17 @@ ________________________________________________________________________
 #include "odplugin.h"
 
 #include "uiexternalattrib.h"
-
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiExternalAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"External Attribute (UI)",
-		"External Attribute (UI)",
-		"Wayne Mogg",
-		"6.0",
-		"",
-		PluginInfo::GPL ) );
+	    "External Attribute (UI)",
+	    wmPlugins::sKeyWMPlugins(),
+	    wmPlugins::sKeyWMPluginsAuthor(),
+	    wmPlugins::sKeyWMPluginsVersion(),
+	    "Attribute calculation using an external process for OpendTect",
+	    PluginInfo::GPL ) );
 	return &retpi;
 }
 

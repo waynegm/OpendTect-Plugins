@@ -19,17 +19,17 @@
 
 #include "avoattrib.h"
 #include "odplugin.h"
-
+#include "wmplugins.h"
 
 mDefODPluginEarlyLoad(AVOAttrib)
 mDefODPluginInfo(AVOAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"AVO attribute (base)",
-		"AVO attribute (base)",
-		"Wayne Mogg",
-		"6.0",
-		"Simple AVO for OpendTect v5+",
+		"AVO attribute (Base)",
+		wmPlugins::sKeyWMPlugins(),
+		wmPlugins::sKeyWMPluginsAuthor(),
+		wmPlugins::sKeyWMPluginsVersion(),
+		"Simple AVO for OpendTect",
 		PluginInfo::GPL ) );
     return &retpi;
 }
