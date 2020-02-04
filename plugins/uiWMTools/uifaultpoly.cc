@@ -43,6 +43,38 @@
 #include "survgeom3d.h"
 
 
+Coord3 lineSegmentIntersectsTriangle( Coord3 start, Coord3 end,
+			      Coord3 trVert0, Coord3 trVert1, Coord3 trVert2 )
+{
+    Coord3 res = Coord3::udf();
+
+    Coord3 edge1 = trVert1 - trVert0;
+    Coord3 edge2 = trVert2 - trVert0;
+    Coord3 seg = end - start;
+    Coord3 h = seg.cross( edge2 );
+    double a = edge1.dot( h );
+    if ( mIsZero( a, mDefEps ) )
+	return res;
+
+    double f = 1.0/a;
+    Coord3 s = start - trVert0;
+    double u = f * s.dot( h );
+    if ( u<0.0 || u>1.0 )
+	return res;
+
+    Coord3 q = s.cross( edge1 );
+    double v = f * seg.dot( q ) ;
+    if ( v<0.0 || u+v>1.0 )
+	return res;
+
+    double t = f * edge2.dot( q );
+
+    if ( t>mDefEps && t<1.0-mDefEps )
+	res = start + seg * t;
+
+    return res;
+}
+
 uiFaultPoly::uiFaultPoly( uiParent* p )
     : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","fpl")))
 {
@@ -66,7 +98,6 @@ uiFaultPoly::uiFaultPoly( uiParent* p )
 uiFaultPoly::~uiFaultPoly()
 {
     detachAllNotifiers();
-    hor_->unRef();
 }
 
 bool uiFaultPoly::acceptOK( CallBacker*)
@@ -133,15 +164,8 @@ Pick::Set* uiFaultPoly::getPolyForFault( int idx )
     
     BufferString faultname = fault->name();
     const EM::SectionID fsid = fault->sectionID( 0 );
-    PtrMan<Geometry::ExplFaultStickSurface> faultsurf = new Geometry::ExplFaultStickSurface(
-					fault->geometry().sectionGeometry(fsid), SI().zScale() );
-    faultsurf->setCoordList( new Coord3ListImpl, new Coord3ListImpl );
-    if ( !faultsurf->update(true,0) ) {
-	uiMSG().error(tr("uiFaultPoly::getPolyForFault - can't update fault surface for fault %1").arg(faultname));
-	obj->unRef();
-	return nullptr;
-    }
-    
+    const Geometry::FaultStickSurface* fss = fault->geometry().sectionGeometry(fsid);
+
     const EM::SectionID hsid = hor_->sectionID( 0 );
     Geometry::BinIDSurface* surf = hor_->geometry().sectionGeometry(hsid);
     if (!surf) {
@@ -151,9 +175,30 @@ Pick::Set* uiFaultPoly::getPolyForFault( int idx )
     }
     
     Coord3ListImpl coords;
-    Geometry::FaultBinIDSurfaceIntersector fsi( 0.0, *surf, *faultsurf, coords );
-    fsi.compute();
-    
+    for ( int idstick=0; idstick<fss->nrSticks(); idstick++ )
+    {
+	const TypeSet<Coord3>& stick = *(fss->getStick( idstick ));
+	for (int iseg=0; iseg<stick.size()-1; iseg++ )
+	{
+	    Coord3 pos = lineSegmentIntersection( stick[iseg], stick[iseg+1],
+						  surf );
+	    if ( !mIsUdf(pos) )
+		coords.add( pos );
+	}
+    }
+
+    for ( int idstick=fss->nrSticks()-1; idstick>=0; idstick-- )
+    {
+	const TypeSet<Coord3>& stick = *(fss->getStick( idstick ));
+	for (int iseg=stick.size()-1; iseg>0; iseg-- )
+	{
+	    Coord3 pos = lineSegmentIntersection( stick[iseg-1], stick[iseg],
+						  surf );
+	    if ( !mIsUdf(pos) )
+		coords.add( pos );
+	}
+    }
+
     Pick::Set* ps = new Pick::Set;
     BufferString name( prefix_ );
     name += faultname;
@@ -178,3 +223,41 @@ bool uiFaultPoly::addToDisplay() const
     return saveButtonChecked();
 }
 
+Coord3 uiFaultPoly::lineSegmentIntersection( Coord3 start, Coord3 end,
+				    const Geometry::BinIDSurface* surf ) const
+{
+    Coord3 res = Coord3::udf();
+
+    const StepInterval<int> rrg = surf->rowRange();
+    const StepInterval<int> crg = surf->colRange();
+    const BinID origin_( rrg.start, crg.start );
+    const BinID step_( rrg.step, crg.step );
+
+    const Coord spos = SI().binID2Coord().transformBackNoSnap( start );
+    const Coord epos = SI().binID2Coord().transformBackNoSnap( end );
+
+    const BinID bidstart( rrg.snap( spos.x, -1 ), crg.snap( spos.y, -1 ) );
+    const BinID bidend( rrg.snap( epos.x, -1 ), crg.snap( epos.y, -1 ) );
+
+    StepInterval<int> brrg( bidstart.inl(), bidend.inl(), rrg.step );
+    brrg.sort();
+    StepInterval<int> bcrg( bidstart.crl(), bidend.crl(), crg.step );
+    bcrg.sort();
+    for ( int row=brrg.start; row<=brrg.stop; row+=brrg.step ) {
+	for ( int col=bcrg.start; col<=bcrg.stop; col+=bcrg.step ) {
+	    Coord3 v00 = surf->getKnot( BinID( row, col), true );
+	    Coord3 v01 = surf->getKnot( BinID( row, col+bcrg.step), true );
+	    Coord3 v11 = surf->getKnot( BinID( row+brrg.step, col+bcrg.step ),
+					true );
+	    Coord3 v10 = surf->getKnot( BinID( row+brrg.step, col ), true );
+	    res = lineSegmentIntersectsTriangle( start, end, v00, v01, v11 );
+	    if ( !mIsUdf(res) )
+		return res;
+	    res = lineSegmentIntersectsTriangle( start, end, v00, v11, v10 );
+	    if ( !mIsUdf(res) )
+		return res;
+	}
+    }
+
+    return res;
+}

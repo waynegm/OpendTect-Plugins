@@ -20,10 +20,16 @@
 #include "uidialog.h"
 #include "commontypes.h"
 #include "polygon.h"
+#include "coord.h"
 
 namespace Pick {
     class Set;
 };
+
+namespace Geometry {
+    class BinIDSurface;
+};
+
 class Callbacker;
 class uiColorInput;
 class uiGenInput;
@@ -44,7 +50,8 @@ public:
     int		nrFaults() const;
     Pick::Set*	getPolyForFault( int idx );
     // Becomes yours
-    
+    Coord3	lineSegmentIntersection(Coord3, Coord3,
+					const Geometry::BinIDSurface*) const;
 
 protected:
 

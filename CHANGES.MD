@@ -5,6 +5,10 @@
 - Use plugin version in PluginInfo field
 - Update help keys
 
+### uiWMTools
+- fix crash on hitting cancel button of fault polygon generation dialog
+- use fault stick intersections with horizon to generate fault polygons
+
 ## Release 6.4.12
 - Place all attributes in wmPlugins group
 - Fixes for handling survey change
