@@ -34,7 +34,9 @@ __pycache__
 #OpendTect
 *.alo
 *mod.h
-bin
+bin/lux64
+bin/win64
+
 #Windows
 x64
 *.vcxproj*

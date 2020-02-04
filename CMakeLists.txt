@@ -75,6 +75,7 @@ if( ${OD_PLFSUBDIR} STREQUAL "win64" )
 elseif( ${OD_PLFSUBDIR} STREQUAL "lux64" )
     install(FILES VERSION.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/relinfo RENAME ver.wmplugins_lux64.txt)
 endif()
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/bin/python DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ PATTERN "__pycache__" EXCLUDE)
 
 if(${CMAKE_SOURCE_DIR}/VERSION.txt IS_NEWER_THAN ${CMAKE_SOURCE_DIR}/plugins/wm_include/version.h)
     file(READ ${CMAKE_SOURCE_DIR}/VERSION.txt content)

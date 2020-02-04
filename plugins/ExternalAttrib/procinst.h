@@ -47,8 +47,8 @@ public:
 	float			getOutput( int output, int idx );
 	void			resize( int nrsamples );
 
-	bool			start( char *const argv[] );
-	bool			start( char *const argv[], SeisInfo& si );
+	bool			start( const BufferStringSet& runargs);
+	bool			start( const BufferStringSet& runargs, SeisInfo& si );
 	int				finish();
 	BufferString	logFileName();
 	BufferString	readAllStdOut();

@@ -139,7 +139,7 @@ void ProcInst::resize( int nrsamples )
 	}
 }
 
-bool ProcInst::start( char *const argv[] )
+bool ProcInst::start( const BufferStringSet& runargs)
 {
 #ifdef __win__
 	if (pD->hChildProcess != NULL)
@@ -229,13 +229,8 @@ bool ProcInst::start( char *const argv[] )
 		return false;
 	}
 // Build the command line
-	BufferString cmd = " /C";
-	int i = 0;
-	while (argv[i]!=0) {
-		cmd += " ";
-		cmd += argv[i];
-		i++;
-	}
+	BufferString cmd = " /C ";
+	cmd.add(runargs.cat(" "));
 // Spawn the child process
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -353,6 +348,13 @@ bool ProcInst::start( char *const argv[] )
 			fds = FOPEN_MAX;
 		for (fd = 3; fd<fds; fd++)
 			close(fd);
+
+		char** argv = new char*[runargs.size() + 1];
+		for (int idx = 0; idx < runargs.size(); idx++) {
+		    BufferString* arg = new BufferString(runargs.get(idx));
+		    argv[idx] = arg->getCStr();
+		}
+		argv[runargs.size()] = 0;
 		execve(argv[0], argv, envp);
 //	Should never get here
 		ErrMsg("ProcInst::start - child process not started");
@@ -366,10 +368,10 @@ bool ProcInst::start( char *const argv[] )
 }
 
 
-bool ProcInst::start( char *const argv[], SeisInfo& si )
+bool ProcInst::start( const BufferStringSet& runargs, SeisInfo& si )
 {
 	bool 	result = false;
-	if (start( argv )) {
+	if (start( runargs )) {
 // Check for errors
 		result = writeSeisInfo( si );
 	} else {
