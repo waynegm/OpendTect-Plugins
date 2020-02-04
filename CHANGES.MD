@@ -3,6 +3,9 @@
 ## Release 6.6.2
 - Use plugin version in PluginInfo field
 
+### External Attribute Scripts
+- Update ex_spatial_filter_circular and ex_spatial_filter_rectangular for change in scipy dependency
+
 ## Release 6.6.1
 - Make PluginInfo fields consistent across all plugins
 - Update help keys
