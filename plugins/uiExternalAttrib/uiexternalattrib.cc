@@ -77,7 +77,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     interpfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
 
     CallBack cb1 = mCB(this,uiExternalAttrib,updateinterpCB);
-    refinterp_ = new uiToolButton( this, "restart", uiStrings::sReset(), cb1 );
+    refinterp_ = new uiToolButton( this, "refresh", uiStrings::sReset(), cb1 );
     refinterp_->attach (rightTo, interpfilefld_);
     refinterp_->display(true);
 
