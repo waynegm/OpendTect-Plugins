@@ -25,24 +25,57 @@ ________________________________________________________________________
 #include "attribfactory.h"
 #include "attribparam.h"
 #include "envvars.h"
+#include "filepath.h"
+#include "oddirs.h"
+#include "pythonaccess.h"
+#include "settings.h"
 #include "survinfo.h"
 
 #include "extproc.h"
 
-
 namespace Attrib
 {
 
-mAttrDefCreateInstance(ExternalAttrib)    
+	mAttrDefCreateInstance(ExternalAttrib)
 
-ExtProc* ExternalAttrib::dProc_ = NULL;
-BufferString ExternalAttrib::exdir_ = "";
+	ExtProc* ExternalAttrib::dProc_ = NULL;
+	BufferString ExternalAttrib::exdir_ = "";
+
+FilePath ExternalAttrib::getPythonPath()
+{
+    FilePath fp;
+
+    BufferString pythonstr( sKey::Python() ); pythonstr.toLower();
+    const IOPar& pythonsetts = Settings::fetch( pythonstr );
+    OD::PythonSource source;
+    if (!OD::PythonSourceDef().parse(pythonsetts,OD::PythonAccess::sKeyPythonSrc(),source))
+	source = OD::System;
+
+
+    if ( source == OD::Custom ) {
+		BufferString virtenvloc, virtenvnm;
+		pythonsetts.get(OD::PythonAccess::sKeyEnviron(),virtenvloc);
+		pythonsetts.get(sKey::Name(),virtenvnm);
+#ifdef __win__
+		fp = FilePath( virtenvloc, "envs", virtenvnm );
+#else
+		fp = FilePath( "/", virtenvloc, "envs", virtenvnm, "bin" );
+#endif
+	}
+#ifdef __win__
+	pythonstr.add(".exe");
+#endif
+
+    fp.add( pythonstr );
+    return fp;
+}
 
 void ExternalAttrib::initClass()
 {
 	mAttrStartInitClassWithUpdate
 
 	StringParam* interpfilepar = new StringParam( interpFileStr() );
+	interpfilepar->setDefaultValue( getPythonPath().fullPath() );
 	desc->addParam( interpfilepar );
 	
 	StringParam* exfilepar = new StringParam( exFileStr() );
@@ -70,7 +103,19 @@ void ExternalAttrib::initClass()
 	desc->addInput(InputSpec("Input data", true));
 	desc->addOutputDataType( Seis::UnknowData );
 	
-	exdir_ = GetEnvVar("OD_EX_DIR");
+	if ( GetEnvVarYN("OD_EX_DIR") )
+	    exdir_ = GetEnvVar("OD_EX_DIR");
+	else {
+	    FilePath fp( GetScriptDir(),"python","wmpy" );
+	    if ( fp.exists() )
+		exdir_ = fp.fullPath();
+	    else if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
+		FilePath ufp( GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", "python", "wmpy" );
+		if ( ufp.exists() )
+		    exdir_ = ufp.fullPath();
+	    }
+	}
+
 	
 	mAttrEndInitClass
 }
