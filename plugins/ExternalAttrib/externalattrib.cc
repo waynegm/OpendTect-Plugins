@@ -53,17 +53,22 @@ FilePath ExternalAttrib::getPythonPath()
 
 
     if ( source == OD::Custom ) {
-		BufferString virtenvloc, virtenvnm;
-		pythonsetts.get(OD::PythonAccess::sKeyEnviron(),virtenvloc);
-		pythonsetts.get(sKey::Name(),virtenvnm);
+	BufferString virtenvloc, virtenvnm;
+	pythonsetts.get(OD::PythonAccess::sKeyEnviron(),virtenvloc);
+	pythonsetts.get(sKey::Name(),virtenvnm);
 #ifdef __win__
-		fp = FilePath( virtenvloc, "envs", virtenvnm );
+	fp = FilePath( virtenvloc, "envs", virtenvnm );
 #else
-		fp = FilePath( "/", virtenvloc, "envs", virtenvnm, "bin" );
+	fp = FilePath( "/", virtenvloc, "envs", virtenvnm, "bin" );
 #endif
-	}
+    } else if ( source == OD::System ) {
+#ifndef __win__
+	fp = FilePath("/","usr","bin");
+#endif
+    }
+
 #ifdef __win__
-	pythonstr.add(".exe");
+    pythonstr.add(".exe");
 #endif
 
     fp.add( pythonstr );
