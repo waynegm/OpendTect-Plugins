@@ -374,6 +374,10 @@ bool wmGridder2D::loadData()
 	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos_.coord());
 	    fault->add(binLoc);
         }
+        if (ps.disp_.connect_==Pick::Set::Disp::Close)
+          fault->setClosed( true );
+        else
+          fault->setClosed( false );
         faultpoly_ += fault;
     }
     return true;
@@ -418,7 +422,7 @@ bool wmGridder2D::isUncropped( Coord pos ) const
 bool wmGridder2D::inFaultHeave(Coord pos) const
 {
     for (int idx=0; idx<faultpoly_.size(); idx++) {
-        if (faultpoly_[idx]->isInside(pos, false, mDefEpsD))
+        if (faultpoly_[idx]->isClosed() && faultpoly_[idx]->isInside(pos, false, mDefEpsD))
             return true;
     }
     return false;

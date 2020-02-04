@@ -5,6 +5,10 @@
 - Use plugin version in PluginInfo field
 - Update help keys
 
+### uiGrid2D3DHorizon
+- ensure faults are only used if fault selection field is displayed
+- properly set polyline/polygon fault open/closed status and honor during fault masking
+
 ### uiWMTools
 - fix crash on hitting cancel button of fault polygon generation dialog
 - use fault stick intersections with horizon to generate fault polygons
