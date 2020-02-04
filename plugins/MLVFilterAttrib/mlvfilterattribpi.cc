@@ -20,7 +20,7 @@ ________________________________________________________________________
 #include "mlvfilterattrib.h"
 #include "odplugin.h"
 #include "mlvfilterattribmod.h"
-
+#include "wmplugins.h"
 
 
 mDefODPluginEarlyLoad(MLVFilterAttrib)
@@ -28,12 +28,12 @@ mDefODPluginEarlyLoad(MLVFilterAttrib)
 mDefODPluginInfo(MLVFilterAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Mean of Least Variance Filter Attribute (base)",
-		"Mean of Least Variance Filter Attribute (base)",
-		"Wayne Mogg",
-		"6.0",
-    	"Mean of least variance structure preserving smoothing for OpendTect v5+",
-		PluginInfo::GPL ) );
+	    "Mean of Least Variance Filter Attribute (Base)",
+	    wmPlugins::sKeyWMPlugins(),
+	    wmPlugins::sKeyWMPluginsAuthor(),
+	    wmPlugins::sKeyWMPluginsVersion(),
+	    "Mean of least variance structure preserving filter for OpendTect",
+	    PluginInfo::GPL ) );
     return &retpi;
 }
 

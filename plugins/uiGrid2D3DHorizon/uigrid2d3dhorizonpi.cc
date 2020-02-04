@@ -10,16 +10,16 @@
 #include "uimsg.h"
 
 #include "uigrid2d3dhorizonmainwin.h"
-
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiGrid2D3DHorizon)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
-    "Grid 2D and 3D horizon plugin",
-    "",
-    "Wayne Mogg",
-    "1.0",
-    "Grid 2D and 3D OpendTect horizon data."));
+	"Grid 2D and 3D horizon plugin",
+	wmPlugins::sKeyWMPlugins(),
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
+	"Grid 2D and 3D OpendTect horizon data."));
     return &retpi;
 }
 

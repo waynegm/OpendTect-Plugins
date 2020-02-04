@@ -19,17 +19,17 @@ ________________________________________________________________________
 
 #include "externalattrib.h"
 #include "odplugin.h"
-#include "msgh.h"
+#include "wmplugins.h"
 
 mDefODPluginEarlyLoad(ExternalAttrib)
 
 mDefODPluginInfo(ExternalAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"External Attribute (base)",
-		"External Attribute (base)",
-		"Wayne Mogg",
-		"6.0",
+		"External Attribute (Base)",
+		wmPlugins::sKeyWMPlugins(),
+		wmPlugins::sKeyWMPluginsAuthor(),
+		wmPlugins::sKeyWMPluginsVersion(),
 		"Attribute calculation using an external process for OpendTect",
 		PluginInfo::GPL ) );
 	return &retpi;

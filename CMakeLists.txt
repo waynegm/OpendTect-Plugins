@@ -75,6 +75,12 @@ elseif( ${OD_PLFSUBDIR} STREQUAL "lux64" )
     install(FILES VERSION.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/relinfo RENAME ver.wmplugins_lux64.txt)
 endif()
 
+if(${CMAKE_SOURCE_DIR}/VERSION.txt IS_NEWER_THAN ${CMAKE_SOURCE_DIR}/plugins/wm_include/version.h)
+    file(READ ${CMAKE_SOURCE_DIR}/VERSION.txt content)
+    set(delim "===")
+    set(content "static const char* wm_version = R\"${delim}(\n${content})${delim}\";")
+    file(WRITE ${CMAKE_SOURCE_DIR}/plugins/wm_include/version.h "${content}")
+endif()
 
 
 

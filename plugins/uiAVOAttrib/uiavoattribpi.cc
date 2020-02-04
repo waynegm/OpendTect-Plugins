@@ -23,17 +23,17 @@
 #include "odplugin.h"
 
 #include "uiavoattrib.h"
-
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiAVOAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"AVO Attribute (UI)",
-		"AVO Attribute (UI)",
-		"Wayne Mogg",
-		"6.0",
-		"",
-		PluginInfo::GPL ) );	
+	    "AVO Attributes (UI)",
+	    wmPlugins::sKeyWMPlugins(),
+	    wmPlugins::sKeyWMPluginsAuthor(),
+	    wmPlugins::sKeyWMPluginsVersion(),
+	    "Simple AVO for OpendTect",
+	    PluginInfo::GPL ) );
     return &retpi;
 }
 

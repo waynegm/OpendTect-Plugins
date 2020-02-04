@@ -23,17 +23,17 @@ ________________________________________________________________________
 #include "odplugin.h"
 
 #include "uimlvfilterattrib.h"
-
+#include "wmplugins.h"
 
 mDefODPluginInfo(uiMLVFilterAttrib)
 {
 	mDefineStaticLocalObject( PluginInfo, retpi,(
-		"Mean of Least Variance Filter Attribute (UI)",
-		"Mean of Least Variance Filter Attribute (UI)",
-		"Wayne Mogg",
-		"6.0",
-		"",
-		PluginInfo::GPL ) );
+	    "Mean of Least Variance Filter Attribute (UI)",
+	    wmPlugins::sKeyWMPlugins(),
+	    wmPlugins::sKeyWMPluginsAuthor(),
+	    wmPlugins::sKeyWMPluginsVersion(),
+	    "Mean of least variance structure preserving filter for OpendTect",
+	    PluginInfo::GPL ) );
     return &retpi;
 }
 

@@ -1,5 +1,10 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.13
+- Make PluginInfo fields consistent across all plugins
+- Use plugin version in PluginInfo field
+- Update help keys
+
 ## Release 6.4.12
 - Place all attributes in wmPlugins group
 - Fixes for handling survey change

@@ -2,6 +2,7 @@
 #include "uimsg.h"
 #include "uihelpview.h"
 #include "uiwgmhelpmod.h"
+#include "wmplugins.h"
 
 typedef struct keyholder {
     const char* key;
@@ -52,11 +53,11 @@ public:
 mDefODPluginInfo(uiWGMHelp)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(
-        "uiWGMHelp plugin",
-        "OpendTect",
-        "Wayne Mogg",
-        "1.0",
-        "Help provider for Wayne Moggs attribute plugins.") );
+	"uiWGMHelp plugin",
+	wmPlugins::sKeyWMPlugins(),
+	wmPlugins::sKeyWMPluginsAuthor(),
+	wmPlugins::sKeyWMPluginsVersion(),
+	"Help provider for the WMPlugin's collection.") );
     return &retpi;
 }
 
