@@ -5,7 +5,6 @@
 #
 import sys,os
 import numpy as np
-import scipy.misc as sm
 import scipy.special as ss
 #
 # Import the module with the I/O scaffolding of the External Attribute
@@ -84,7 +83,7 @@ def lpKernel(N, freq):
             else:
                 pandq = m%2 + n%2
                 mandn = np.sqrt(m*m+n*n)
-                val = (sm.factorial2(N)**4 * np.pi**pandq * freq * ss.jn(1,np.pi * freq * mandn)) / ( 2**(pandq+1) * sm.factorial2(N+m) * sm.factorial2(N-m) * sm.factorial2(N+n) *sm.factorial2(N-n) *mandn )  
+                val = (ss.factorial2(N)**4 * np.pi**pandq * freq * ss.jn(1,np.pi * freq * mandn)) / ( 2**(pandq+1) * ss.factorial2(N+m) * ss.factorial2(N-m) * ss.factorial2(N+n) *ss.factorial2(N-n) *mandn )
                 result[i,j] = val
                 result[j,i] = val
                 result[im,j] = val
