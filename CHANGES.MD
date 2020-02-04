@@ -5,15 +5,18 @@
 - Use plugin version in PluginInfo field
 - Update help keys
 
-### External Attributes
+### External Attribute
 - If OD_EX_DIR environment variable not set look in some other sensible places for external attribute scripts such as:
     - "OpendTect Install Folder"/bin/python/wmpy
     - %OD_USER_PLUGIN_DIR%/bin/python/wmpy
 - Set default Python interpreter using the OpendTect Python settings
 - Use a table to display the UI fields
-- Put Python external attribute scripts into repository
 - For Windows activate environment before starting Python script
 - Add refresh/reset button beside interpreter field to force update against OpendTect Python settings
+
+### External Attribute Scripts
+- Put Python external attribute scripts into repository
+- Update ex_spatial_filter_circular and ex_spatial_filter_rectangular for change in scipy dependency
 
 ### uiGrid2D3DHorizon
 - ensure faults are only used if fault selection field is displayed
