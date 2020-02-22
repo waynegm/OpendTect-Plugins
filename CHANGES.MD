@@ -1,5 +1,10 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.3
+
+### External Attribute Scripts
+- Add ex_angle_stacks_3_to_AVOIG.py and ex_angle_stacks_5_to_AVOIG.py
+
 ## Release 6.6.2
 - Use plugin version in PluginInfo field
 
