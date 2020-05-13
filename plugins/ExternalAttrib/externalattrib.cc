@@ -31,6 +31,8 @@ ________________________________________________________________________
 #include "settings.h"
 #include "survinfo.h"
 
+#include "uiwgmhelp.h"
+
 #include "extproc.h"
 
 namespace Attrib
@@ -41,49 +43,13 @@ namespace Attrib
 	ExtProc* ExternalAttrib::dProc_ = NULL;
 	BufferString ExternalAttrib::exdir_ = "";
 
-FilePath ExternalAttrib::getPythonPath()
-{
-    FilePath fp;
-
-    BufferString pythonstr( sKey::Python() ); pythonstr.toLower();
-    const IOPar& pythonsetts = Settings::fetch( pythonstr );
-    OD::PythonSource source;
-    if (!OD::PythonSourceDef().parse(pythonsetts,OD::PythonAccess::sKeyPythonSrc(),source))
-	source = OD::System;
-
-
-    if ( source == OD::Custom ) {
-		BufferString virtenvloc, virtenvnm;
-		pythonsetts.get(OD::PythonAccess::sKeyEnviron(),virtenvloc);
-		pythonsetts.get(sKey::Name(),virtenvnm);
-#ifdef __win__
-		fp = FilePath( virtenvloc, "envs", virtenvnm );
-#else
-		fp = FilePath( "/", virtenvloc, "envs", virtenvnm );
-#endif
-	}
-	else if (source == OD::Internal) {
-		OD::PythA().getPathToInternalEnv(fp, true);
-		fp.add("envs").add("odmlpython-cpu-mkl");
-		if (!fp.exists())
-			OD::PythA().getPathToInternalEnv(fp, true);
-	}
-#ifdef __win__
-	pythonstr.add(".exe");
-#else
-	fp.add("bin");
-#endif
-
-    fp.add( pythonstr );
-    return fp;
-}
-
 void ExternalAttrib::initClass()
 {
 	mAttrStartInitClassWithUpdate
 
 	StringParam* interpfilepar = new StringParam( interpFileStr() );
-	interpfilepar->setDefaultValue( getPythonPath().fullPath() );
+	FilePath pypath;
+	interpfilepar->setDefaultValue( uiWGMHelp::GetPythonInterpPath().fullPath() );
 	desc->addParam( interpfilepar );
 	
 	StringParam* exfilepar = new StringParam( exFileStr() );
@@ -117,7 +83,8 @@ void ExternalAttrib::initClass()
 	    FilePath fp( GetScriptDir(),"python","wmpy" );
 	    if ( fp.exists() )
 		exdir_ = fp.fullPath();
-	    else if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
+
+	    if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
 		FilePath ufp( GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", "python", "wmpy" );
 		if ( ufp.exists() )
 		    exdir_ = ufp.fullPath();

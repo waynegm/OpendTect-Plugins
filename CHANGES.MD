@@ -1,15 +1,15 @@
 # OpendTect Plugins Release Notes
 
-## Release 6.6.3
-
-### External Attribute Scripts
-- Add ex_angle_stacks_3_to_AVOIG.py and ex_angle_stacks_5_to_AVOIG.py
-
 ## Release 6.6.2
 - Use plugin version in PluginInfo field
 
+### External Attributes
+- Prefer %OD_USER_PLUGIN_DIR%/bin/python/wmpy ahead of "OpendTect Install Folder"/bin/python/wmpy for location of
+external attribute scripts
+
 ### External Attribute Scripts
 - Update ex_spatial_filter_circular and ex_spatial_filter_rectangular for change in scipy dependency
+- Add ex_angle_stacks_3_to_AVOIG.py and ex_angle_stacks_5_to_AVOIG.py
 
 ## Release 6.6.1
 - Make PluginInfo fields consistent across all plugins

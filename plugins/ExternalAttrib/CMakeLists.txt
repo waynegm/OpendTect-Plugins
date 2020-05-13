@@ -4,7 +4,7 @@
 # 	Dec 2014	Wayne Mogg
 #_______________________________________________________________________________
 
-SET(OD_MODULE_DEPS AttributeEngine uiBase)
+SET(OD_MODULE_DEPS AttributeEngine uiWGMHelp)
 
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES

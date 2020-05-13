@@ -42,6 +42,7 @@ ________________________________________________________________________
 #include "uistrings.h"
 #include "datainpspec.h"
 
+#include "uiwgmhelp.h"
 #include "wmplugins.h"
 
 using namespace Attrib;
@@ -73,7 +74,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
 	su.filter("*.exe");
     #endif
     interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), su );
-    interpfilefld_->setFileName(ExternalAttrib::getPythonPath().fullPath());
+    interpfilefld_->setFileName(uiWGMHelp::GetPythonInterpPath().fullPath());
     interpfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
 
     CallBack cb1 = mCB(this,uiExternalAttrib,updateinterpCB);
@@ -93,6 +94,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     makeUI();
 
     setHAlignObj( uiinp_ );
+    postFinalise().notify( mCB(this,uiExternalAttrib,initGrp) );
 }
 
 uiExternalAttrib::~uiExternalAttrib()
@@ -103,9 +105,14 @@ uiExternalAttrib::~uiExternalAttrib()
     detachAllNotifiers();
 }
 
+void uiExternalAttrib::initGrp( CallBacker* )
+{
+    updateinterpCB(nullptr);
+}
+
 void uiExternalAttrib::updateinterpCB(CallBacker*)
 {
-    BufferString newinterpfile = ExternalAttrib::getPythonPath().fullPath();
+    BufferString newinterpfile = uiWGMHelp::GetPythonInterpPath().fullPath();
     if (newinterpfile!=interpfilefld_->fileName()) {
 	interpfilefld_->setFileName(newinterpfile);
 	exfileChanged(0);

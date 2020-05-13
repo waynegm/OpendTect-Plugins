@@ -41,17 +41,16 @@ static const int cNrInputs = 6;
 mExpClass(ExternalAttrib) ExternalAttrib : public Provider
 {
 public:
-	static void				initClass();
-							ExternalAttrib(Desc&);
+	static void		initClass();
+				ExternalAttrib(Desc&);
 
-	static FilePath			getPythonPath();
-	static const char*		attribName()	{ return "ExternalAttrib"; }
-	void					getCompNames(BufferStringSet&) const;
+	static const char*	attribName()	{ return "ExternalAttrib"; }
+	void			getCompNames(BufferStringSet&) const;
 	
-	static const char*		interpFileStr()	{ return "interpfile"; }
-	static const char*		exFileStr()		{ return "exfile"; }
-	static const char*		zmarginStr() 	{ return "zmargin"; }
-	static const char*		stepoutStr()	{ return "stepout"; }
+	static const char*	interpFileStr()	{ return "interpfile"; }
+	static const char*	exFileStr()		{ return "exfile"; }
+	static const char*	zmarginStr() 	{ return "zmargin"; }
+	static const char*	stepoutStr()	{ return "stepout"; }
 	static const char*      selectStr()  	{ return "selection"; }
 	static const char*		parStr()		{ return "par"; }
 	

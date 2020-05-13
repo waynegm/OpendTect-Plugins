@@ -86,6 +86,7 @@ protected:
     void		doZmarginCheck( CallBacker* cb );
     void		doStepOutCheck( CallBacker* cb );
     void		updateinterpCB( CallBacker* );
+    void		initGrp(CallBacker*);
 	
     mDeclReqAttribUIFns
 };

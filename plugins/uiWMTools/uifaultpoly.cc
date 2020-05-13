@@ -41,39 +41,8 @@
 #include "explfaultsticksurface.h"
 #include "survinfo.h"
 #include "survgeom3d.h"
+#include "trigonometry.h"
 
-
-Coord3 lineSegmentIntersectsTriangle( Coord3 start, Coord3 end,
-			      Coord3 trVert0, Coord3 trVert1, Coord3 trVert2 )
-{
-    Coord3 res = Coord3::udf();
-
-    Coord3 edge1 = trVert1 - trVert0;
-    Coord3 edge2 = trVert2 - trVert0;
-    Coord3 seg = end - start;
-    Coord3 h = seg.cross( edge2 );
-    double a = edge1.dot( h );
-    if ( mIsZero( a, mDefEps ) )
-	return res;
-
-    double f = 1.0/a;
-    Coord3 s = start - trVert0;
-    double u = f * s.dot( h );
-    if ( u<0.0 || u>1.0 )
-	return res;
-
-    Coord3 q = s.cross( edge1 );
-    double v = f * seg.dot( q ) ;
-    if ( v<0.0 || u+v>1.0 )
-	return res;
-
-    double t = f * edge2.dot( q );
-
-    if ( t>mDefEps && t<1.0-mDefEps )
-	res = start + seg * t;
-
-    return res;
-}
 
 uiFaultPoly::uiFaultPoly( uiParent* p )
     : uiDialog(p,uiDialog::Setup(getCaptionStr(),mNoDlgTitle,HelpKey("wgm","fpl")))

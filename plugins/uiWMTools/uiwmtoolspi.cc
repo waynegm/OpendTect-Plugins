@@ -22,11 +22,14 @@
 #include "uimenu.h"
 #include "uiodmenumgr.h"
 #include "uiodscenemgr.h"
+#include "uiodstdmenu.h"
 #include "uiodhortreeitem.h"
 #include "uiodpicksettreeitem.h"
 #include "uitoolbar.h"
 #include "uistring.h"
 #include "odplugin.h"
+#include "oscommand.h"
+#include "pythonaccess.h"
 #include "survinfo.h"
 #include "uimsg.h"
 #include "ioman.h"
@@ -42,6 +45,7 @@
 #include "uiconvexhull.h"
 #include "uifaultpoly.h"
 #include "uicontourpoly.h"
+#include "uiwgmhelp.h"
 #include "wmplugins.h"
 
 template <class T> class ODPolygon;
@@ -75,11 +79,9 @@ public:
     void	faultPolyCB(CallBacker*);
     void	contourPolyCB(CallBacker*);
     void	treeMenuCB(CallBacker*);
-    
-    
 
     uiODMain*   		appl_;
-    
+
     uidehMainWin*		dehdlg_ = 0;
     uiWMPolygonParentTreeItem*	polytreeparent_ = 0;
     
@@ -92,8 +94,8 @@ public:
     int 		faultpolymenuid_;
     MenuItem		contourpolyitem_;
     int			contourpolymenuid_;
-};
 
+};
 
 uiWMToolsMgr::uiWMToolsMgr( uiODMain* a )
 	: appl_(a)
@@ -117,6 +119,7 @@ uiWMToolsMgr::uiWMToolsMgr( uiODMain* a )
     contourpolyitem_.id = contourpolymenuid_;
 
     updateMenu(0);
+
 }
 
 
