@@ -229,7 +229,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		return false;
 	}
 // Build the command line
-	BufferString cmd = " /C ";
+	BufferString cmd;
 	cmd.add(runargs.cat(" "));
 // Spawn the child process
 	STARTUPINFO si;
@@ -242,7 +242,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	si.hStdInput = g_hChildStd_IN_Rd;
 	ZeroMemory(&pi, sizeof(pi));
 	
-	bool res = CreateProcess( 	cmd_path, 
+	bool res = CreateProcess( 	NULL, 
 								cmd.getCStr(),
 								NULL,
 								NULL,
