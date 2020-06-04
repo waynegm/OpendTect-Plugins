@@ -113,11 +113,12 @@ void ExternalAttrib::initClass()
 	else {
 	    FilePath fp( GetScriptDir(),"python","wmpy" );
 	    if ( fp.exists() )
-		exdir_ = fp.fullPath();
-	    else if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
-		FilePath ufp( GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", "python", "wmpy" );
-		if ( ufp.exists() )
-		    exdir_ = ufp.fullPath();
+			exdir_ = fp.fullPath();
+
+	    if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
+			FilePath ufp( GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", "python", "wmpy" );
+			if ( ufp.exists() )
+				exdir_ = ufp.fullPath();
 	    }
 	}
 

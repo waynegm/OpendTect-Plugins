@@ -103,8 +103,8 @@ BufferStringSet ExtProcImpl::getInterpreterArgs() const
 		FilePath envspath(envpath.pathOnly());
 		if (envspath.fileName() == "envs") {
 			FilePath anaconda_root = FilePath(envspath.pathOnly());
-			FilePath anaconda_activate = anaconda_root.add("Scripts").add("activate");
-			res.add(anaconda_activate.fullPath()).add(envname).add("&").add(pyexe);
+			FilePath anaconda_activate = anaconda_root.add("Scripts").add("activate.bat");
+			res.add(anaconda_activate.fullPath()).add(envname).add("^&").add(pyexe);
 		} else
 			res.add(infile);
 	} else if (infile.find(pythonstr)) {
@@ -114,8 +114,8 @@ BufferStringSet ExtProcImpl::getInterpreterArgs() const
 			BufferString envname("base");
 			BufferString pyexe = FilePath(infile).fileName();
 			FilePath anaconda_root = FilePath(infile).pathOnly();
-			FilePath anaconda_activate = anaconda_root.add("Scripts").add("activate");
-			res.add(anaconda_activate.fullPath()).add(envname).add("&").add(pyexe);
+			FilePath anaconda_activate = anaconda_root.add("Scripts").add("activate.bat");
+			res.add(anaconda_activate.fullPath()).add(envname).add("^&").add(pyexe);
 		}
 		else
 			res.add(infile);

@@ -220,16 +220,8 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		ErrMsg("ProcInst::start - unable to open error log file %s", logFileName().getCStr());
 		return false;
 	}
-//	
-// Get path to the shell
-	char* cmd_path = NULL;
-	cmd_path = getenv("ComSpec");
-	if (!cmd_path) {
-		ErrMsg("ProcInst::start - ComSpec is not defined");
-		return false;
-	}
 // Build the command line
-	BufferString cmd = " /C ";
+	BufferString cmd;
 	cmd.add(runargs.cat(" "));
 // Spawn the child process
 	STARTUPINFO si;
@@ -242,7 +234,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	si.hStdInput = g_hChildStd_IN_Rd;
 	ZeroMemory(&pi, sizeof(pi));
 	
-	bool res = CreateProcess( 	cmd_path, 
+	bool res = CreateProcess( 	NULL, 
 								cmd.getCStr(),
 								NULL,
 								NULL,

@@ -18,6 +18,8 @@
 - Use a table to display the UI fields
 - For Windows activate environment before starting Python script
 - Add refresh/reset button beside interpreter field to force update against OpendTect Python settings
+- Prefer %OD_USER_PLUGIN_DIR%/bin/pyhton/wmpy ahead of "OpendTect Install Folder"/bin/python/wmpy for location of external attribute scripts
+- Fix for spaces in python environment path on Windows
 
 ### External Attribute Scripts
 - Put Python external attribute scripts into repository
