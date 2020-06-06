@@ -1,7 +1,7 @@
 function(make_includable input_file output_file)
     file(READ ${input_file} content)
     set(delim "===")
-    set(content "static const char* mistie_report = R\"${delim}(\n${content})${delim}\";")
+    set(content "static const char* mistie_report = R\"${delim}(${content})${delim}\";")
     file(WRITE ${output_file} "${content}")
 endfunction(make_includable)
 

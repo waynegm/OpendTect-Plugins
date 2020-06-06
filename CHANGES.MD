@@ -2,8 +2,13 @@
 
 ## Release 6.4.14
 
+### Mistie
+- Add filter by correlation quality
+
 ### External Attribute Scripts
 - Add ex_angle_stacks_3_to_AVOIG.py and ex_angle_stacks_5_to_AVOIG.py
+- Prefer %OD_USER_PLUGIN_DIR%/bin/python/wmpy ahead of "OpendTect Install Folder"/bin/python/wmpy for location of external attribute scripts
+- Fix for spaces in python environment path on Windows
 
 ## Release 6.4.13
 - Make PluginInfo fields consistent across all plugins
@@ -18,8 +23,6 @@
 - Use a table to display the UI fields
 - For Windows activate environment before starting Python script
 - Add refresh/reset button beside interpreter field to force update against OpendTect Python settings
-- Prefer %OD_USER_PLUGIN_DIR%/bin/pyhton/wmpy ahead of "OpendTect Install Folder"/bin/python/wmpy for location of external attribute scripts
-- Fix for spaces in python environment path on Windows
 
 ### External Attribute Scripts
 - Put Python external attribute scripts into repository
