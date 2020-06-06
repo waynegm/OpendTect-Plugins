@@ -2,6 +2,9 @@
 
 ## Release 6.4.14
 
+### uiGrid2D3DHorizon
+- Don't write number of fault polygons to par file if no faults selected
+
 ### Mistie
 - Add filter by correlation quality
 

@@ -99,7 +99,7 @@ public:
     uiFilterEstDlg( uiParent *p )
     : uiDialog(p,Setup(tr("Filters on Mistie Estimates"),mNoDlgTitle,mTODOHelpKey))
     {
-	qualfld_ = new uiGenInput( this, tr("Tie Quality Range"), FloatInpSpec(0.5, 0.0, 1.0, 0.1) );
+	qualfld_ = new uiGenInput( this, tr("Minimum Tie Quality"), FloatInpSpec(0.5, 0.0, 1.0, 0.1) );
 	qualfld_->setWithCheck();
 
 	setOkText(uiStrings::sFilter());
