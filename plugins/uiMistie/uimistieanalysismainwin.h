@@ -40,12 +40,14 @@ protected:
     BufferString    filename_;
     MistieData      misties_;
     MistieCorrectionData corrs_;
+    float	    minquality_;
 
     MenuItem        newitem_;
     MenuItem        openitem_;
     MenuItem        saveitem_;
     MenuItem        saveasitem_;
     MenuItem        mergeitem_;
+    MenuItem	    filteritem_;
     MenuItem        calcitem_;
     MenuItem        xplotitem_;
     MenuItem        helpitem_;
@@ -59,6 +61,7 @@ protected:
     void            saveCB(CallBacker*);
     void            saveasCB(CallBacker*);
     void            mergeCB(CallBacker*);
+    void            filterCB(CallBacker*);
     void            calcCB(CallBacker*);
     void            xplotCB(CallBacker*);
     void            closeCB(CallBacker*);

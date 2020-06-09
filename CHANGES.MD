@@ -3,6 +3,12 @@
 ## Release 6.6.2
 - Use plugin version in PluginInfo field
 
+### Mistie
+- Add filter by correlation quality
+
+### uiGrid2D3DHorizon
+- Don't write number of fault polygons to par file if no faults selected
+
 ### External Attributes
 - Prefer %OD_USER_PLUGIN_DIR%/bin/python/wmpy ahead of "OpendTect Install Folder"/bin/python/wmpy for location of external attribute scripts
 - Fix for spaces in python environment path on Windows

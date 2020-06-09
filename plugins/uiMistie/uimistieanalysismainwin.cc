@@ -93,13 +93,34 @@ protected:
     uiCheckBox*     replacebut_;
 };
 
+class uiFilterEstDlg : public uiDialog
+{ mODTextTranslationClass(uiFilterEstDlg);
+public:
+    uiFilterEstDlg( uiParent *p )
+    : uiDialog(p,Setup(tr("Filters on Mistie Estimates"),mNoDlgTitle,mTODOHelpKey))
+    {
+	qualfld_ = new uiGenInput( this, tr("Minimum Tie Quality"), FloatInpSpec(0.5, 0.0, 1.0, 0.1) );
+	qualfld_->setWithCheck();
+
+	setOkText(uiStrings::sFilter());
+    }
+
+    uiGenInput* 	qualfld_;
+    protected:
+    bool acceptOK( CallBacker* )
+    {
+	return true;
+    }
+};
+
 class uiCorrCalcDlg : public uiDialog
 { mODTextTranslationClass(uiCorrCalcDlg);
 public:
-    uiCorrCalcDlg( uiParent* p, const MistieData& misties, MistieCorrectionData& corrs )
+    uiCorrCalcDlg( uiParent* p, const MistieData& misties, const float minquality, MistieCorrectionData& corrs )
     : uiDialog(p,Setup(tr("Calculate Mistie Corrections"),mNoDlgTitle,mTODOHelpKey))
     , misties_(misties)
     , corrs_(corrs)
+    , minquality_(minquality)
     {
         
         lineselfld_ = new WMLib::uiBufferStringSetSelGrp( this, OD::ChooseZeroOrMore );
@@ -110,14 +131,10 @@ public:
         uiLabel* lbl = new uiLabel( this, tr("Reference Line(s)") );
         lbl->attach(leftOf, lineselfld_);
         
-        minqualfld_ = new uiGenInput(this, tr("Minimum Tie Quality"), FloatInpSpec(0.5));
-        minqualfld_->attach(alignedBelow, lineselfld_);
-        minqualfld_->valuechanged.notify(mCB(this,uiCorrCalcDlg,minqualCB));
-        
         maxiterfld_ = new uiLabeledSpinBox(this, tr("Maximum Iterations"));
         maxiterfld_->box()->setInterval(1, 500, 1);
         maxiterfld_->box()->setValue( 200 );
-        maxiterfld_->attach(alignedBelow, minqualfld_);
+        maxiterfld_->attach(alignedBelow, lineselfld_);
         
         uiString minzchglbl(tr("Minimum RMS Z Mistie Change "));
         minzchglbl.append(SI().zDomain().uiUnitStr(true));
@@ -139,21 +156,13 @@ public:
 protected:
     const MistieData&           misties_;
     MistieCorrectionData&       corrs_;
+    float			minquality_;
     
     WMLib::uiBufferStringSetSelGrp*  lineselfld_;
-    uiGenInput*                 minqualfld_;
     uiLabeledSpinBox*           maxiterfld_;
     uiGenInput*                 minzchgfld_;
     uiGenInput*                 minampchgfld_;
     uiGenInput*                 minphasechgfld_;
-    
-    void minqualCB(CallBacker*)
-    {
-        if (minqualfld_->getfValue()<0)
-            minqualfld_->setValue(0.0);
-        if (minqualfld_->getfValue()>1.0)
-            minqualfld_->setValue(1.0);
-    }
     
     void minchgCB(CallBacker*)
     {
@@ -170,9 +179,9 @@ protected:
         BufferStringSet lnms;
         lineselfld_->getChosen(lnms);
         corrs_.erase();
-        corrs_.computeZCor(misties_, lnms, minqualfld_->getfValue(), maxiterfld_->box()->getValue(), 0.75, minzchgfld_->getfValue());
-        corrs_.computePhaseCor(misties_, lnms, minqualfld_->getfValue(), maxiterfld_->box()->getValue(), 0.75, minphasechgfld_->getfValue());
-        corrs_.computeAmpCor(misties_, lnms, minqualfld_->getfValue(), maxiterfld_->box()->getValue(), 0.75, minampchgfld_->getfValue());
+        corrs_.computeZCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minzchgfld_->getfValue());
+        corrs_.computePhaseCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minphasechgfld_->getfValue());
+        corrs_.computeAmpCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minampchgfld_->getfValue());
         
         return true;
     }
@@ -185,14 +194,16 @@ uiMistieAnalysisMainWin::uiMistieAnalysisMainWin( uiParent* p )
     , saveitem_(uiStrings::sSave(), "save", "", mCB(this,uiMistieAnalysisMainWin,saveCB), sMnuID++) 
     , saveasitem_(uiStrings::sSaveAs(), "saveas", "", mCB(this,uiMistieAnalysisMainWin,saveasCB), sMnuID++)
     , mergeitem_(uiStrings::sMerge(), "plus", "", mCB(this,uiMistieAnalysisMainWin,mergeCB), sMnuID++)
+    , filteritem_(uiStrings::sFilter(), "minus", "", mCB(this,uiMistieAnalysisMainWin,filterCB), sMnuID++)
     , calcitem_(tr("Calculate Corrections"), "attributes", "", mCB(this,uiMistieAnalysisMainWin,calcCB), sMnuID++)
     , xplotitem_(tr("Crossplot Mistie Data"), "xplot", "", mCB(this,uiMistieAnalysisMainWin,xplotCB), sMnuID++)
     , helpitem_(tr("Help"), "contexthelp", "", mCB(this,uiMistieAnalysisMainWin,helpCB), sMnuID++) 
-	, corrviewer_(0)
+    , corrviewer_(0)
     
 {
     setCtrlStyle(CloseOnly);
     createToolBar();
+    mSetUdf(minquality_);
     
     table_ = new uiTable( this, uiTable::Setup().rowgrow(false).selmode(uiTable::Multi),"Mistie Table" );
     BufferStringSet lbls(ColumnLabels);
@@ -221,6 +232,7 @@ void uiMistieAnalysisMainWin::createToolBar()
     tb_->addButton( saveasitem_ );
     tb_->addSeparator();
     tb_->addButton( mergeitem_ );
+    tb_->addButton( filteritem_ );
     tb_->addSeparator();
     tb_->addButton( calcitem_ );
     tb_->addButton( xplotitem_ );
@@ -261,7 +273,7 @@ void uiMistieAnalysisMainWin::helpCB( CallBacker* cb )
 
 void uiMistieAnalysisMainWin::calcCB( CallBacker* cb )
 {
-    uiCorrCalcDlg dlg(this, misties_, corrs_);
+    uiCorrCalcDlg dlg(this, misties_, minquality_, corrs_);
     if (!dlg.go())
         return;
     
@@ -299,15 +311,14 @@ void uiMistieAnalysisMainWin::xplotCB( CallBacker* )
         strm << "var misties = [ \n";
         for (int idx=0; idx<misties_.size(); idx++) {
             misties_.get(idx, lineA, trcA, lineB, trcB, pos, zdiff, phasediff, ampdiff, quality);
+	    if ( !mIsUdf(minquality_) && quality < minquality_ )
+		continue;
             strm << "[ \"" << lineA << "\" , " << trcA << ", \"" << lineB <<"\", " << trcB << ", " << pos.x << ", " << pos.y << ", " << zdiff << ", " << phasediff << ", " << ampdiff << ", " << quality;
             if (corrs_.size()>0)
                 strm << ", " << misties_.getZMistieWith(corrs_, idx) << ", " << misties_.getPhaseMistieWith(corrs_,idx) << ", " << misties_.getAmpMistieWith(corrs_, idx);
-            if (idx==misties_.size()-1)
-                strm << " ]\n];\n";
-            else
-                strm << "],\n";
+	    strm << "],\n";
         }
-        strm << "</script>\n</body>\n</html>\n";
+        strm << "];\n</script>\n</body>\n</html>\n";
     }
     uiDesktopServices::openUrl ( outputfp.fullPath() );
 }
@@ -324,6 +335,20 @@ void uiMistieAnalysisMainWin::mergeCB( CallBacker* )
         return;
     }
     
+    fillTable();
+}
+
+void uiMistieAnalysisMainWin::filterCB( CallBacker* )
+{
+    uiFilterEstDlg dlg(this);
+    if (!dlg.go())
+	return;
+
+    if ( dlg.qualfld_->isChecked() )
+	minquality_ = dlg.qualfld_->getFValue();
+    else
+	mSetUdf(minquality_);
+
     fillTable();
 }
 
@@ -355,18 +380,22 @@ void uiMistieAnalysisMainWin::fillTable()
     float zdiff, phasediff, ampdiff, quality;
     Coord pos;
     
+    int irow = 0;
     for (int idx=0; idx<misties_.size(); idx++) {
         misties_.get(idx, lineA, trcA, lineB, trcB, pos, zdiff, phasediff, ampdiff, quality);
-        table_->setText(RowCol(idx, lineACol), lineA);
-        table_->setText(RowCol(idx, lineBCol), lineB);
-        table_->setValue(RowCol(idx, trcACol), trcA);
-        table_->setValue(RowCol(idx, trcBCol), trcB);
-        table_->setValue(RowCol(idx, xCol), pos.x, 1);
-        table_->setValue(RowCol(idx, yCol), pos.y, 1);
-        table_->setValue(RowCol(idx, zCol), zdiff, 2);
-        table_->setValue(RowCol(idx, phaseCol), phasediff, 2);
-        table_->setValue(RowCol(idx, ampCol), ampdiff, 2);
-        table_->setValue(RowCol(idx, qualCol), quality, 3);
+	if ( !mIsUdf(minquality_) && quality<minquality_ )
+	    continue;
+        table_->setText(RowCol(irow, lineACol), lineA);
+        table_->setText(RowCol(irow, lineBCol), lineB);
+        table_->setValue(RowCol(irow, trcACol), trcA);
+        table_->setValue(RowCol(irow, trcBCol), trcB);
+        table_->setValue(RowCol(irow, xCol), pos.x, 1);
+        table_->setValue(RowCol(irow, yCol), pos.y, 1);
+        table_->setValue(RowCol(irow, zCol), zdiff, 2);
+        table_->setValue(RowCol(irow, phaseCol), phasediff, 2);
+        table_->setValue(RowCol(irow, ampCol), ampdiff, 2);
+        table_->setValue(RowCol(irow, qualCol), quality, 3);
+	irow++;
     }
     table_->setPrefHeightInRows(50);
 }

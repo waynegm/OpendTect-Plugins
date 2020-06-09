@@ -156,9 +156,11 @@ bool uiGridGrp::fillPar( IOPar& par ) const
 
     if ( faultpolyfld_->isDisplayed() )  {
 	const TypeSet<MultiID>& selpolytids = faultpolyfld_->selPolygonIDs();
-	par.set( wmGridder2D::sKeyFaultPolyNr(), selpolytids.size() );
-	for ( int idx=0; idx<selpolytids.size(); idx++ )
-	    par.set( IOPar::compKey(wmGridder2D::sKeyFaultPolyID(),idx), selpolytids[idx] );
+	if ( selpolytids.size()>=1 ) {
+	    par.set( wmGridder2D::sKeyFaultPolyNr(), selpolytids.size() );
+	    for ( int idx=0; idx<selpolytids.size(); idx++ )
+		par.set( IOPar::compKey(wmGridder2D::sKeyFaultPolyID(),idx), selpolytids[idx] );
+	}
     }
     
 //    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
