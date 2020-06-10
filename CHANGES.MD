@@ -15,7 +15,8 @@
 
 ### External Attribute Scripts
 - Update ex_spatial_filter_circular and ex_spatial_filter_rectangular for change in scipy dependency
-- Add ex_angle_stacks_3_to_AVOIG.py and ex_angle_stacks_5_to_AVOIG.py
+- Add Misc/ex_angle_stacks_3_to_AVOIG.py and Misc/ex_angle_stacks_5_to_AVOIG.py
+- Misc/ex_correlation.py - clip coreelation values to range 0-1
 
 ## Release 6.6.1
 - Make PluginInfo fields consistent across all plugins
