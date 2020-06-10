@@ -25,7 +25,8 @@ import extattrib as xa
 #
 xa.params = {
 	'Inputs': ['Input'],
-	'ZSampMargin' : {'Value':[-10,10], 'Hidden': True},
+	'ZSampMargin' : {'Value':[-20,20], 'Hidden': True},
+	'Parallel' : False,
 	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/ZC_Block.html'
 }
 #

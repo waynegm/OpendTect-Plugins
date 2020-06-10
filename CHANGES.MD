@@ -9,7 +9,10 @@
 - Add filter by correlation quality
 
 ### External Attribute Scripts
-- Add ex_angle_stacks_3_to_AVOIG.py and ex_angle_stacks_5_to_AVOIG.py
+- Add Misc/ex_angle_stacks_3_to_AVOIG.py and Misc/ex_angle_stacks_5_to_AVOIG.py
+- Misc/ex_correlation.py - clip coreelation values to range 0-1
+
+### External Attribute Plugin
 - Prefer %OD_USER_PLUGIN_DIR%/bin/python/wmpy ahead of "OpendTect Install Folder"/bin/python/wmpy for location of external attribute scripts
 - Fix for spaces in python environment path on Windows
 

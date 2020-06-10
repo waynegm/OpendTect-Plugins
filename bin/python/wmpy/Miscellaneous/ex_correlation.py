@@ -84,7 +84,7 @@ def localCorr( reference, match, winlen, nlag, lag, qual ):
         if pos>0 and pos<lags-1:
             cp = (cor[pos-1]-cor[pos+1])/(2.*cor[pos-1]-4.*cor[pos]+2.*cor[pos+1])
             lag[ir] = pos-nlag+cp
-            qual[ir] = cor[pos]
+            qual[ir] = max(min(cor[pos],1),0.)
         else:
             lag[ir]=0.0
             qual[ir]=0.0
