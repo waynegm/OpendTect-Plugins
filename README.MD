@@ -2,6 +2,12 @@
 
 This is the source code for a collection of plugins for the open source seismic interpretation system [OpendTect](http://www.opendtect.org). All code is provided under the terms of the [GNU General Public License Version 3](./LICENSE.txt).
 
+<p align="center">
+<a href="https://www.youtube.com/watch?v=nXIyODFinjw">
+<img src="https://img.youtube.com/vi/nXIyODFinjw/0.jpg" width="50%" >
+ </a>
+</p>
+
 As of 5-Jan-2020 code development in the master branch is for OpendTect 6.6. If you are interested in the latest source code for:
 
 -  OpendTect v6.4 please refer to the 6.4 branch
