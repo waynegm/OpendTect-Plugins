@@ -1,5 +1,8 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.3
+- Rebuild to accommodate API changes in OpendTect 6.6beta5
+
 ## Release 6.6.2
 - Use plugin version in PluginInfo field
 
