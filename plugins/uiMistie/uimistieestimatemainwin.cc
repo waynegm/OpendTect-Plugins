@@ -81,7 +81,11 @@ uiMistieEstimateMainWin::uiMistieEstimateMainWin( uiParent* p )
     float zfac = SI().showZ2UserFactor();
     gatefld_->setValue(ZGate(zr.start*zfac, zr.stop*zfac));
     gatefld_->valuechanged.notify(mCB(this,uiMistieEstimateMainWin,gatefldchangeCB));
-    
+
+    onlyzfld_ = new uiCheckBox(this, "Only estimate Z misties");
+    onlyzfld_->attach(alignedBelow, lagfld_);
+    onlyzfld_->setChecked(false);
+
     postFinalise().notify(mCB(this,uiMistieEstimateMainWin,seisselCB));
 }
 
@@ -124,14 +128,15 @@ bool uiMistieEstimateMainWin::acceptOK(CallBacker*)
     Line2DInterSectionFinder intfinder(bpfinder.bendPoints(),  intset);
     TaskRunner::execute(&uitr, intfinder);
     
-    MistieEstimator misties(seisselfld_->ioobj(true), intset, zrg, lagtime);
+    MistieEstimator misties(seisselfld_->ioobj(true), intset, zrg, lagtime, !onlyzfld_->isChecked());
     TaskRunner::execute(&uitr, misties);
     misties_ = misties.getMisties();
     
     if (use3dfld_ && use3dfld_->isChecked()) {
         Line3DOverlapFinder lines3Doverlap(data3dfld_->ioobj(true), bpfinder.bendPoints());
         TaskRunner::execute(&uitr, lines3Doverlap);
-        MistieEstimator2D3D misties2d3d(data3dfld_->ioobj(true), seisselfld_->ioobj(true), lines3Doverlap.selData(), zrg, lagtime, trcstepfld_->getIntValue());
+	MistieEstimator2D3D misties2d3d(data3dfld_->ioobj(true), seisselfld_->ioobj(true), lines3Doverlap.selData(), zrg, lagtime,
+					trcstepfld_->getIntValue(), !onlyzfld_->isChecked());
         TaskRunner::execute(&uitr, misties2d3d);
         misties_.add(misties2d3d.getMisties());
     }

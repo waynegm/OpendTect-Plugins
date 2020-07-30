@@ -1,5 +1,13 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.4.15
+
+### Mistie
+- Fix bug when no correlation quality filter set
+- If filter is set show in filter dialog
+- Add option to calculate only Z misties
+
+
 ## Release 6.4.14
 
 ### uiGrid2D3DHorizon
