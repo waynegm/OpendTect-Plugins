@@ -41,7 +41,8 @@ protected:
 mExpClass(Mistie) MistieEstimator2D3D : public ParallelTask
 { mODTextTranslationClass(MistieEstimator2D3D)
 public:
-    MistieEstimator2D3D(const IOObj* ioobj3D, const IOObj* ioobj2D, const ManagedObjectSet<Seis::RangeSelData>& selranges, ZGate window, float maxshift, int trcstep=100);
+    MistieEstimator2D3D(const IOObj* ioobj3D, const IOObj* ioobj2D, const ManagedObjectSet<Seis::RangeSelData>& selranges,
+			ZGate window, float maxshift, int trcstep=100, bool allEst=true);
     ~MistieEstimator2D3D();
 
     od_int64    nrIterations() const;
@@ -59,6 +60,7 @@ protected:
     MistieData                  misties_;
     ZGate                       window_;
     float                       maxshift_;
+    bool			allest_;
     Threads::Lock               lock_;
     int                         counter_;
     

@@ -16,7 +16,7 @@ class IOObj;
 mExpClass(Mistie) MistieEstimator : public ParallelTask
 { mODTextTranslationClass(MistieEstimator)
 public:
-    MistieEstimator(const IOObj* ioobj, Line2DInterSectionSet& intset, ZGate window, float maxshift);
+    MistieEstimator(const IOObj* ioobj, Line2DInterSectionSet& intset, ZGate window, float maxshift, bool allEst=true);
     ~MistieEstimator();
 
     od_int64    nrIterations() const;
@@ -30,6 +30,7 @@ protected:
     MistieData                  misties_;
     ZGate                       window_;
     float                       maxshift_;
+    bool			allest_;
     Threads::Lock               lock_;
     int                         counter_;
     

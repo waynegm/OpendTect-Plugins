@@ -94,13 +94,15 @@ bool Line3DOverlapFinder::doFinish(bool success)
     return true;
 }
 
-MistieEstimator2D3D::MistieEstimator2D3D(const IOObj* ioobj3D, const IOObj* ioobj2D,  const ManagedObjectSet<Seis::RangeSelData>& selranges, ZGate window, float maxshift, int trcstep)
+MistieEstimator2D3D::MistieEstimator2D3D(const IOObj* ioobj3D, const IOObj* ioobj2D,  const ManagedObjectSet<Seis::RangeSelData>& selranges,
+					 ZGate window, float maxshift, int trcstep, bool allEst)
     : window_(window)
     , maxshift_(maxshift)
     , ioobj2d_(ioobj2D)
     , ioobj3d_(ioobj3D)
     , selranges_(selranges)
     , trcstep_(trcstep)
+    , allest_(allEst)
 {
     BufferString lineA, lineB;
     int trcA = 0;
@@ -179,7 +181,7 @@ bool MistieEstimator2D3D::doWork( od_int64 start, od_int64 stop, int threadid )
                     float pd = 0.0;
                     float ad = 1.0;
                     float q = 0.0;
-                    if (computeMistie( trcA, trcB, maxshift_, zd, pd, ad, q )) {
+		    if (allest_ ? computeMistie( trcA, trcB, maxshift_, zd, pd, ad, q ) : computeMistie( trcA, trcB, maxshift_, zd, q )) {
                         count++;
                         zdiff += zd;
                         cPhasediff +=  std::complex<float>(cos(Math::toRadians(pd)),sin(Math::toRadians(pd)));

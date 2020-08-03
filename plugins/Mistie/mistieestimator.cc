@@ -17,10 +17,11 @@
 
 #include "trcanalysis.h"
 
-MistieEstimator::MistieEstimator(const IOObj* ioobj, Line2DInterSectionSet& intset, ZGate window, float maxshift)
+MistieEstimator::MistieEstimator(const IOObj* ioobj, Line2DInterSectionSet& intset, ZGate window, float maxshift, bool allEst)
     : window_(window)
     , maxshift_(maxshift)
     , ioobj_(ioobj)
+    , allest_(allEst)
 {
     BufferString lineA, lineB;
     int trcA, trcB;
@@ -87,7 +88,11 @@ bool MistieEstimator::doWork( od_int64 start, od_int64 stop, int threadid )
                 SeisTrc* tmp = trcB.getRelTrc( window_, trcA.info().sampling.step );
                 trcB = *tmp;
             }
-            computeMistie( trcA, trcB, maxshift_, zdiff, phasediff, ampdiff, quality );
+            if (allest_)
+		computeMistie( trcA, trcB, maxshift_, zdiff, phasediff, ampdiff, quality );
+	    else
+		computeMistie( trcA, trcB, maxshift_, zdiff, quality );
+
         } else {
             BufferString tmp("MistieEstimator::doWork - could not get trace data for: ");
             tmp += lineA; tmp+= " "; tmp += lineB;

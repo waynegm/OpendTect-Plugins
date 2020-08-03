@@ -34,6 +34,7 @@ protected:
     uiGenInput*                 trcstepfld_ = nullptr;
     uiGenInput*                 gatefld_;
     uiLabeledSpinBox*           lagfld_;
+    uiCheckBox*			onlyzfld_;
     
     MistieData                  misties_;
     

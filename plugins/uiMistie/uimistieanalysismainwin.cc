@@ -96,11 +96,15 @@ protected:
 class uiFilterEstDlg : public uiDialog
 { mODTextTranslationClass(uiFilterEstDlg);
 public:
-    uiFilterEstDlg( uiParent *p )
+    uiFilterEstDlg( uiParent *p, float minquality )
     : uiDialog(p,Setup(tr("Filters on Mistie Estimates"),mNoDlgTitle,mTODOHelpKey))
     {
 	qualfld_ = new uiGenInput( this, tr("Minimum Tie Quality"), FloatInpSpec(0.5, 0.0, 1.0, 0.1) );
 	qualfld_->setWithCheck();
+	if (!mIsUdf(minquality)) {
+	    qualfld_->setValue(minquality);
+	    qualfld_->setChecked(true);
+	}
 
 	setOkText(uiStrings::sFilter());
     }
@@ -273,7 +277,7 @@ void uiMistieAnalysisMainWin::helpCB( CallBacker* cb )
 
 void uiMistieAnalysisMainWin::calcCB( CallBacker* cb )
 {
-    uiCorrCalcDlg dlg(this, misties_, minquality_, corrs_);
+    uiCorrCalcDlg dlg(this, misties_, mIsUdf(minquality_) ? 0.0 : minquality_, corrs_);
     if (!dlg.go())
         return;
     
@@ -340,7 +344,7 @@ void uiMistieAnalysisMainWin::mergeCB( CallBacker* )
 
 void uiMistieAnalysisMainWin::filterCB( CallBacker* )
 {
-    uiFilterEstDlg dlg(this);
+    uiFilterEstDlg dlg(this, minquality_);
     if (!dlg.go())
 	return;
 
