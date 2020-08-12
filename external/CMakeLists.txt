@@ -28,4 +28,12 @@ if((NOT ${MBA_INCLUDE_DIR}) OR (NOT EXISTS ${MBA_INCLUDE_DIR}))
     set(MBA_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 endif()
 
+if((NOT ${PYBIND11_INCLUDE_DIR}) OR (NOT EXISTS ${PYBIND11_INCLUDE_DIR}))
+    message("Unable to find pybind11")
+    execute_process(COMMAND git submodule update --init -- pybind11
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+    file( COPY ${CMAKE_CURRENT_SOURCE_DIR}/pybind11/include/pybind11 DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include )
+    set(PYBIND11_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+endif()
 
