@@ -170,11 +170,11 @@ protected:
     
     void minchgCB(CallBacker*)
     {
-        if (minzchgfld_->getfValue()<0.0)
+        if (minzchgfld_->getFValue()<0.0)
             minzchgfld_->setValue(0.0);
-        if (minphasechgfld_->getfValue()<0.0)
+        if (minphasechgfld_->getFValue()<0.0)
             minphasechgfld_->setValue(0.0);
-        if (minampchgfld_->getfValue()<0.0)
+        if (minampchgfld_->getFValue()<0.0)
             minampchgfld_->setValue(0.0);
     }
     
@@ -183,9 +183,9 @@ protected:
         BufferStringSet lnms;
         lineselfld_->getChosen(lnms);
         corrs_.erase();
-        corrs_.computeZCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minzchgfld_->getfValue());
-        corrs_.computePhaseCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minphasechgfld_->getfValue());
-        corrs_.computeAmpCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minampchgfld_->getfValue());
+        corrs_.computeZCor(misties_, lnms, minquality_, maxiterfld_->box()->getIntValue(), 0.75, minzchgfld_->getFValue());
+        corrs_.computePhaseCor(misties_, lnms, minquality_, maxiterfld_->box()->getIntValue(), 0.75, minphasechgfld_->getFValue());
+        corrs_.computeAmpCor(misties_, lnms, minquality_, maxiterfld_->box()->getIntValue(), 0.75, minampchgfld_->getFValue());
         
         return true;
     }
@@ -290,7 +290,7 @@ void uiMistieAnalysisMainWin::calcCB( CallBacker* cb )
 
 void uiMistieAnalysisMainWin::xplotCB( CallBacker* )
 {
-    BufferString fnm = FilePath::getTempName("html");
+    BufferString fnm = FilePath::getTempFullPath(0, "html");
     FilePath outputfp( fnm );
     {
         BufferString lineA, lineB;
