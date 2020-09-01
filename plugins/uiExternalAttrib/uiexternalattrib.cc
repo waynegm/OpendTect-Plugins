@@ -372,7 +372,7 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 		if (extproc_->hasParam(i))  {
 			BufferString s(ExternalAttrib::parStr());
 			s.add(i);
-			mSetFloat( s, (parflds_[i])->getfValue() );
+			mSetFloat( s, (parflds_[i])->getFValue() );
 		}
 	}
     return true;

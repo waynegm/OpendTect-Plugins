@@ -163,7 +163,7 @@ bool uiLTFAttrib::getParameters( Attrib::Desc& desc )
     
 //    mSetFloat( LTFAttrib::freqStr(), freqfld_->box()->getValue() );
 //	mSetInt( LTFAttrib::smoothStr(), smoothfld_->box()->getValue() );
-	mSetInt( LTFAttrib::niterStr(), niterfld_->box()->getValue() );
+	mSetInt( LTFAttrib::niterStr(), niterfld_->box()->getIntValue() );
 //	mSetInt( LTFAttrib::marginStr(), marginfld_->box()->getValue() );
 	
 	return true;
