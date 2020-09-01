@@ -24,7 +24,7 @@
 
 using namespace WMLib;
 
-uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
+uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon, bool show3Dsubsel )
 : uiDlgGroup(p, tr("Input Data")), hor2Dfld_(nullptr), lines2Dfld_(nullptr),
   hor3Dfld_(nullptr), subsel3Dfld_(nullptr)
 {
@@ -52,6 +52,7 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon 
         
         subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
         subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
+	subsel3Dfld_->display(show3Dsubsel);
 
     }
     mAttachCB( postFinalise(), uiHorInputGrp::initGrp );
@@ -59,8 +60,9 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon 
 
 void uiHorInputGrp::exp3DselCB(CallBacker*)
 {
-    hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-    subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+    const bool use3d = exp3D_->isChecked();
+    hor3Dfld_->setChildrenSensitive(use3d);
+    subsel3Dfld_->setChildrenSensitive(use3d);
 }
 
 bool uiHorInputGrp::fillPar( IOPar& par ) const

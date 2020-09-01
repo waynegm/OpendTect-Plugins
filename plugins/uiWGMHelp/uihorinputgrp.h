@@ -20,7 +20,7 @@ class uiSeis2DLineSelGrp;
 mExpClass(uiWGMHelp) uiHorInputGrp : public uiDlgGroup
 { mODTextTranslationClass(uiHorInputGrp);
 public:
-    uiHorInputGrp(uiParent*, bool has2Dhorizon=false, bool has3Dhorizon=false );
+    uiHorInputGrp(uiParent*, bool has2Dhorizon=false, bool has3Dhorizon=false, bool show3Dsubsel=true );
     ~uiHorInputGrp() {}
     
     void        getHorIds( MultiID& hor2Did, MultiID& hor3Did ) const;
@@ -35,11 +35,12 @@ public:
     static const char*	sKey2DHorizonID()	{ return "2DHorizonID"; }
     static const char* 	sKey2DLineIDNr()	{ return "2DLineIDNr"; }
     static const char*	sKey3DHorizonID()	{ return "3DHorizonID"; }
+
+    uiCheckBox*                 exp3D_;
     
 protected:
     uiIOObjSel*                 hor2Dfld_;
     uiSeis2DLineSelGrp* 	lines2Dfld_;
-    uiCheckBox*                 exp3D_;
     uiIOObjSel*                 hor3Dfld_;
     uiPosSubSel*                subsel3Dfld_;
     
