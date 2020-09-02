@@ -9,6 +9,7 @@
 #include "uimistieapplier.h"
 #include "uimistiecorrmainwin.h"
 #include "uimistieanalysismainwin.h"
+#include "uimistiecorrhordlg.h"
 #include "wmplugins.h"
 
 mDefODPluginInfo(uiMistie)
@@ -31,12 +32,14 @@ public:
     void updateMenu(CallBacker*);
     void doCorrectionEdit(CallBacker*);
     void doMistieAnalysis(CallBacker*);
+    void doMistieCorrection(CallBacker*);
     void surveyChgCB(CallBacker*);
     
 protected:
     uiODMain*   appl_;
     uiMistieAnalysisMainWin*    mistiedlg_;
     uiMistieCorrMainWin*	corrdlg_;
+    uiMistieCorrHorDlg*		corrhordlg_;
     
     
 };
@@ -45,6 +48,7 @@ uiMistieMgr::uiMistieMgr( uiODMain* a )
     : appl_(a)
     , mistiedlg_(nullptr)
     , corrdlg_(nullptr)
+    , corrhordlg_(nullptr)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiMistieMgr::updateMenu );
     mAttachCB(IOM().surveyChanged, uiMistieMgr::surveyChgCB);
@@ -58,11 +62,17 @@ uiMistieMgr::~uiMistieMgr()
 
 void uiMistieMgr::updateMenu( CallBacker* )
 {
+    uiODMenuMgr& mnumgr = appl_->menuMgr();
     uiAction* newitem = new uiAction( tr("Mistie Corrections"), mCB(this,uiMistieMgr,doCorrectionEdit));
-    appl_->menuMgr().getBaseMnu( uiODApplMgr::Man )->insertItem( newitem );
+    mnumgr.getBaseMnu( uiODApplMgr::Man )->insertItem( newitem );
 
     newitem = new uiAction( tr("Mistie Analysis"), mCB(this,uiMistieMgr,doMistieAnalysis));
-    appl_->menuMgr().analMnu()->insertItem( newitem );
+    mnumgr.analMnu()->insertItem( newitem );
+
+    uiActionSeparString gridprocstr( "Create Horizon Output" );
+    uiAction* itm = mnumgr.procMnu()->findAction( gridprocstr );
+    if ( !itm || !itm->getMenu() ) return;
+    itm->getMenu()->insertItem( new uiAction("Apply Mistie Corrections ...",mCB(this,uiMistieMgr,doMistieCorrection)));
 }
 
 void uiMistieMgr::doCorrectionEdit( CallBacker* )
@@ -79,6 +89,14 @@ void uiMistieMgr::doMistieAnalysis( CallBacker* )
 	mistiedlg_ = new uiMistieAnalysisMainWin( appl_ );
     mistiedlg_->show();
     mistiedlg_->raise();
+}
+
+void uiMistieMgr::doMistieCorrection( CallBacker* )
+{
+    if ( !corrhordlg_ )
+	corrhordlg_ = new uiMistieCorrHorDlg( appl_ );
+    corrhordlg_->show();
+    corrhordlg_->raise();
 }
 
 void uiMistieMgr::surveyChgCB( CallBacker* )
