@@ -8,6 +8,7 @@ SET(OD_MODULE_SOURCES
     mistieestimator.cc
     trcanalysis.cc
     mistieestimator2d3d.cc
+    mistieapplytohorizon.cc
 )
 
 add_definitions( -DNDEBUG )

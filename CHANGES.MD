@@ -1,14 +1,17 @@
 # OpendTect Plugins Release Notes
 
-## Release 6.6.5
+## Release 6.6.6
 - Fix some depreciated OpendTect API calls
 
 ### Mistie
-- Add ability to calculate Z misties from horizon interpretation
+- Add calculation of Z misties from horizon interpretation
 - Add tool to apply Z corrections to horizon interpretation
 
+## Release 6.6.5
+- Rebuild to accommodate API changes in OpendTect 6.6beta9
+
 ## Release 6.6.4
--Rebuild to accommodate API changes in OpendTect 6.6beta8
+- Rebuild to accommodate API changes in OpendTect 6.6beta8
 
 ### Mistie
 - Fix bug when no correlation quality filter set

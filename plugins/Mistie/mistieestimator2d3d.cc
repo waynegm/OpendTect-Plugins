@@ -1,33 +1,46 @@
 #include "mistieestimator2d3d.h"
 
-#include "survgeom.h"
-#include "survgeom2d.h"
-#include "geom2dintersections.h"
-#include "seisread.h"
-#include "seisioobjinfo.h"
-#include "seistrc.h"
-#include "seistype.h"
 #include "bufstring.h"
-#include "seisselectionimpl.h"
 #include "ctxtioobj.h"
-#include "ioman.h"
-#include "seistrctr.h"
+#include "emhorizon2d.h"
+#include "emhorizon3d.h"
+#include "emmanager.h"
+#include "emobject.h"
+#include "geom2dintersections.h"
 #include "iodir.h"
-#include "survinfo.h"
+#include "ioman.h"
 #include "linerectangleclipper.h"
 #include "posinfo2d.h"
+#include "seisioobjinfo.h"
+#include "seisread.h"
+#include "seisselectionimpl.h"
+#include "seistrc.h"
+#include "seistrctr.h"
+#include "seistype.h"
+#include "survgeom.h"
+#include "survgeom2d.h"
+#include "survinfo.h"
 
 #include "unsupported/Eigen/FFT"
 #include "trcanalysis.h"
 
 Line3DOverlapFinder::Line3DOverlapFinder(const IOObj* ioobj3D, const ObjectSet<BendPoints>& bpoints)
-    : ioobj3d_(ioobj3D)
-    , bpoints_(bpoints)
+    : bpoints_(bpoints)
 {
-    SeisIOObjInfo info(ioobj3d_);
+    SeisIOObjInfo info(ioobj3D);
     TrcKeyZSampling tkz;
     info.getRanges(tkz);
-    TrcKeySampling tks = tkz.hsamp_;
+    setBounds(tkz.hsamp_);
+}
+
+Line3DOverlapFinder::Line3DOverlapFinder(const EM::Horizon3D* hor3D, const ObjectSet<BendPoints>& bpoints)
+: bpoints_(bpoints)
+{
+    setBounds(hor3D->range());
+}
+
+void Line3DOverlapFinder::setBounds(TrcKeySampling tks )
+{
     tks.normalise();
     bounds3d_.setLeft(tks.inlRange().start);
     bounds3d_.setRight(tks.inlRange().stop);
@@ -94,8 +107,10 @@ bool Line3DOverlapFinder::doFinish(bool success)
     return true;
 }
 
-MistieEstimator2D3D::MistieEstimator2D3D(const IOObj* ioobj3D, const IOObj* ioobj2D,  const ManagedObjectSet<Seis::RangeSelData>& selranges,
-					 ZGate window, float maxshift, int trcstep, bool allEst)
+MistieEstimatorFromSeismic2D3D::MistieEstimatorFromSeismic2D3D(const IOObj* ioobj3D, const IOObj* ioobj2D,
+							       const ManagedObjectSet<Seis::RangeSelData>& selranges,
+							       ZGate window, float maxshift,
+							       int trcstep, bool allEst)
     : window_(window)
     , maxshift_(maxshift)
     , ioobj2d_(ioobj2D)
@@ -119,25 +134,25 @@ MistieEstimator2D3D::MistieEstimator2D3D(const IOObj* ioobj3D, const IOObj* ioob
     }
 }
 
-MistieEstimator2D3D::~MistieEstimator2D3D()
+MistieEstimatorFromSeismic2D3D::~MistieEstimatorFromSeismic2D3D()
 {}
 
-od_int64 MistieEstimator2D3D::nrIterations() const
+od_int64 MistieEstimatorFromSeismic2D3D::nrIterations() const
 {
     return misties_.size();
 }
 
-uiString MistieEstimator2D3D::uiMessage() const
+uiString MistieEstimatorFromSeismic2D3D::uiMessage() const
 {
     return tr("Estimating 2D to 3D misties");
 }
 
-uiString MistieEstimator2D3D::uiNrDoneText() const
+uiString MistieEstimatorFromSeismic2D3D::uiNrDoneText() const
 {
     return tr("Lines done");
 }
 
-bool MistieEstimator2D3D::doWork( od_int64 start, od_int64 stop, int threadid )
+bool MistieEstimatorFromSeismic2D3D::doWork( od_int64 start, od_int64 stop, int threadid )
 {
     BufferString lineA, lineB;
     int trc1, trc2;
@@ -211,7 +226,7 @@ bool MistieEstimator2D3D::doWork( od_int64 start, od_int64 stop, int threadid )
     return true;
 }
 
-bool MistieEstimator2D3D::get2DTrc( BufferString line, int trcnr, SeisTrc& trc )
+bool MistieEstimatorFromSeismic2D3D::get2DTrc( BufferString line, int trcnr, SeisTrc& trc )
 {
     Pos::GeomID geomid = Survey::GM().getGeomID(line);
     
@@ -229,7 +244,7 @@ bool MistieEstimator2D3D::get2DTrc( BufferString line, int trcnr, SeisTrc& trc )
     return (!trc.isNull());
 }
 
-bool MistieEstimator2D3D::get3DTrc( int inl, int crl, SeisTrc& trc )
+bool MistieEstimatorFromSeismic2D3D::get3DTrc( int inl, int crl, SeisTrc& trc )
 {
     Seis::RangeSelData range;
     range.setZRange(window_);
@@ -244,9 +259,130 @@ bool MistieEstimator2D3D::get3DTrc( int inl, int crl, SeisTrc& trc )
     return (!trc.isNull());
 }
 
-bool MistieEstimator2D3D::doFinish( bool success )
+bool MistieEstimatorFromSeismic2D3D::doFinish( bool success )
 {
     return true;
 }
+
+MistieEstimatorFromHorizon2D3D::MistieEstimatorFromHorizon2D3D(MultiID hor3Did, MultiID hor2Did,
+							       const ManagedObjectSet<Seis::RangeSelData>& selranges,
+							       int trcstep)
+: hor3did_(hor3Did)
+, hor2did_(hor2Did)
+, selranges_(selranges)
+, trcstep_(trcstep)
+{
+    BufferString lineA, lineB;
+    int trcA = 0;
+    int trcB = 0;
+    Coord pos;
+    lineA += "3D";
+    for (int idx=0; idx<selranges_.size(); idx++) {
+	lineB = Survey::GM().getName(selranges_[idx]->geomID());
+	trcA = selranges[idx]->crlRange().start;
+	trcB = selranges[idx]->crlRange().stop;
+	misties_.add(lineA, trcA, lineB, trcB, pos);
+    }
+}
+
+MistieEstimatorFromHorizon2D3D::~MistieEstimatorFromHorizon2D3D()
+{}
+
+od_int64 MistieEstimatorFromHorizon2D3D::nrIterations() const
+{
+    return misties_.size();
+}
+
+uiString MistieEstimatorFromHorizon2D3D::uiMessage() const
+{
+    return tr("Estimating 2D to 3D misties from Horizon");
+}
+
+uiString MistieEstimatorFromHorizon2D3D::uiNrDoneText() const
+{
+    return tr("Lines done");
+}
+
+bool MistieEstimatorFromHorizon2D3D::doPrepare(int nrthreads)
+{
+    if (hor2did_.isUdf() || hor3did_.isUdf())
+	return false;
+    EM::EMObject* obj2d = EM::EMM().loadIfNotFullyLoaded(hor2did_);
+    if (!obj2d) {
+	ErrMsg("MistieEstimatorFromHorizon2D3D::doPrepare - loading 2D input horizon failed");
+	return false;
+    }
+    EM::EMObject* obj3d = EM::EMM().loadIfNotFullyLoaded(hor3did_);
+    if (!obj3d) {
+	ErrMsg("MistieEstimatorFromHorizon2D3D::doPrepare - loading 3D input horizon failed");
+	return false;
+    }
+    obj2d->ref();
+    obj3d->ref();
+    mDynamicCast(EM::Horizon3D*,hor3d_,obj3d);
+    mDynamicCast(EM::Horizon2D*,hor2d_,obj2d);
+    if (!hor3d_ || !hor2d_) {
+	ErrMsg("MistieEstimatorFromHorizon2D3D::doPrepare - casting horizons failed");
+	obj2d->unRef();
+	obj3d->unRef();
+	return false;
+    }
+
+    return true;
+}
+
+bool MistieEstimatorFromHorizon2D3D::doWork( od_int64 start, od_int64 stop, int threadid )
+{
+    BufferString lineA, lineB;
+    int trc1, trc2;
+    for (int idx=mCast(int,start); idx<=stop && shouldContinue(); idx++, addToNrDone(1)) {
+	float zdiff = 0.0;
+	float phasediff = 0.0;
+	float ampdiff = 1.0;
+	float quality = 1.0;
+
+	if (!misties_.get(idx, lineA, trc1, lineB, trc2)) {
+	    BufferString tmp("MistieEstimatorFromHorizon2D3D::doWork - could not get intersection details at index: ");
+	    tmp += idx;
+	    ErrMsg(tmp);
+	    continue;
+	}
+	StepInterval<int> traces(trc1, trc2, trcstep_);
+	TypeSet<int> trcnums;
+	if (traces.nrSteps()>=1) {
+	    for (int it=0; it<traces.nrSteps(); it++)
+		trcnums += traces.atIndex(it);
+	} else
+	    trcnums += traces.center();
+	int count = 0;
+	for (int it=0; it<trcnums.size(); it++) {
+	    const TrcKey tk2d(Survey::GM().getGeomID(lineB), trcnums[it]);
+	    const Coord3 pos2d = hor2d_->getCoord(tk2d);
+	    float z3d = hor3d_->getZ(SI().transform(pos2d.coord()));
+	    if (!mIsUdf(z3d) && !mIsUdf(pos2d.z))
+	    {
+		zdiff += (pos2d.z - z3d) * SI().showZ2UserFactor();
+		count++;
+	    }
+	}
+	if (count)
+	    zdiff /= count;
+	Threads::Locker lckr( lock_ );
+	misties_.set(idx, zdiff, phasediff, ampdiff, quality);
+    }
+
+    return true;
+}
+
+bool MistieEstimatorFromHorizon2D3D::doFinish( bool success )
+{
+    if (hor2d_)
+	hor2d_->unRef();
+    if (hor3d_)
+	hor3d_->unRef();
+
+    return true;
+}
+
 
 

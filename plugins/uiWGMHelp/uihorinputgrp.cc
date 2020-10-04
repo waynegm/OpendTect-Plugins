@@ -40,14 +40,18 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon,
         lastfld = (uiObject*) lines2Dfld_;
     }
     if (has3Dhorizon) {
-        exp3D_ = new uiCheckBox(this, "Include 3D horizon");
-        if (lastfld!=nullptr)
-            exp3D_->attach(alignedBelow, lastfld);
-        exp3D_->setChecked(true);
-        exp3D_->activated.notify(mCB(this, uiHorInputGrp, exp3DselCB));
+	if (has2Dhorizon) {
+	    exp3D_ = new uiCheckBox(this, "Include 3D horizon");
+	    if (lastfld!=nullptr)
+		exp3D_->attach(alignedBelow, lastfld);
+	    exp3D_->setChecked(true);
+	    exp3D_->activated.notify(mCB(this, uiHorInputGrp, exp3DselCB));
+	    lastfld = (uiObject*) exp3D_;
+	}
         
         hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon");
-        hor3Dfld_->attach(alignedBelow, exp3D_);
+        if (lastfld)
+	    hor3Dfld_->attach(alignedBelow, lastfld);
         hor3Dfld_->selectionDone.notify( mCB(this, uiHorInputGrp, hor3DselCB));
         
         subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
@@ -60,7 +64,9 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon,
 
 void uiHorInputGrp::exp3DselCB(CallBacker*)
 {
-    const bool use3d = exp3D_->isChecked();
+    bool use3d = true;
+    if (hor2Dfld_ && exp3D_)
+	use3d = exp3D_->isChecked();
     hor3Dfld_->setChildrenSensitive(use3d);
     subsel3Dfld_->setChildrenSensitive(use3d);
 }
@@ -79,7 +85,7 @@ bool uiHorInputGrp::fillPar( IOPar& par ) const
                 par.set(IOPar::compKey(sKey2DLineID(), idx), mids[idx]);
         }
     }
-    if (!hor3Did.isUdf() && exp3D_->isChecked()) {
+    if (!hor3Did.isUdf() && (!hor2Dfld_ || (exp3D_ && exp3D_->isChecked()))) {
         par.set( sKey3DHorizonID(), hor3Did );
         TrcKeyZSampling tkz;
         get3Dsel(tkz);
@@ -96,17 +102,18 @@ void uiHorInputGrp::usePar( const IOPar& par )
     if (exp3D_)
 	exp3D_->setChecked(false);
     if (par.get(sKey3DHorizonID(), hor3Did))
-        if (hor3Dfld_!=nullptr && subsel3Dfld_!=nullptr) {
+        if (hor3Dfld_ && subsel3Dfld_) {
             hor3Dfld_->setInput(hor3Did);
             TrcKeyZSampling tkz;
             tkz.usePar(par);
             subsel3Dfld_->setInput(tkz);
-	    exp3D_->setChecked(true);
+	    if (exp3D_)
+		exp3D_->setChecked(true);
         }
         
     hor2Did.setUdf();
     if (par.get(sKey2DHorizonID(), hor2Did)) {
-        if (hor2Dfld_!=nullptr) {
+        if (hor2Dfld_) {
             int nlines = 0;
             par.get(sKey2DLineIDNr(), nlines);
             if (nlines>0) {
@@ -126,14 +133,14 @@ void uiHorInputGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did ) const
 {
     hor2Did.setUdf();
     hor3Did.setUdf();
-    if (hor2Dfld_!=nullptr && lines2Dfld_!=nullptr && lines2Dfld_->nrChosen()) {
+    if (hor2Dfld_ && lines2Dfld_ && lines2Dfld_->nrChosen()) {
         const IOObj* horObj = hor2Dfld_->ioobj(true);
-        if (horObj!=nullptr)
+        if (horObj)
             hor2Did = horObj->key();
     }
-    if (hor3Dfld_!=nullptr && exp3D_!=nullptr && exp3D_->isChecked()) {
+    if (hor3Dfld_ && (!hor2Dfld_ || (exp3D_ && exp3D_->isChecked()))) {
         const IOObj* horObj = hor3Dfld_->ioobj(true);
-        if (horObj!=nullptr)
+        if (horObj)
             hor3Did = horObj->key();
     }
 }
@@ -219,7 +226,7 @@ void uiHorInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
 
 int uiHorInputGrp::num2DLinesChosen()
 {
-    if (hor2Dfld_!=nullptr && lines2Dfld_!=nullptr)
+    if (hor2Dfld_ && lines2Dfld_)
         return lines2Dfld_->nrChosen();
     else
         return 0;
@@ -228,14 +235,14 @@ int uiHorInputGrp::num2DLinesChosen()
 void uiHorInputGrp::getGeoMids( TypeSet<Pos::GeomID>& geomids ) const
 {
     geomids.erase();
-    if (lines2Dfld_!=nullptr)
+    if (lines2Dfld_)
         lines2Dfld_->getChosen(geomids);
 }
 
 void uiHorInputGrp::get3Dsel( TrcKeyZSampling& envelope ) const
 {
     envelope.setEmpty();
-    if (subsel3Dfld_!=nullptr)
+    if (subsel3Dfld_)
         envelope = subsel3Dfld_->envelope();
 }
 
@@ -294,9 +301,9 @@ void uiHorInputGrp::hor3DselCB(CallBacker*)
 
 void uiHorInputGrp::initGrp(CallBacker*)
 {
-    if (hor2Dfld_!=nullptr)
+    if (hor2Dfld_)
         hor2DselCB(0);
-    if (hor3Dfld_!=nullptr) {
+    if (hor3Dfld_) {
         hor3DselCB(0);
         exp3DselCB(0);
     }

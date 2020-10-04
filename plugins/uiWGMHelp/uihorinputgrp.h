@@ -36,7 +36,7 @@ public:
     static const char* 	sKey2DLineIDNr()	{ return "2DLineIDNr"; }
     static const char*	sKey3DHorizonID()	{ return "3DHorizonID"; }
 
-    uiCheckBox*                 exp3D_;
+    uiCheckBox*                 exp3D_ = nullptr;
     
 protected:
     uiIOObjSel*                 hor2Dfld_;

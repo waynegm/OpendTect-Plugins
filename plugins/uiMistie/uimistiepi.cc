@@ -5,6 +5,7 @@
 #include "uimenu.h"
 #include "uiodmenumgr.h"
 #include "ioman.h"
+#include "survinfo.h"
 
 #include "uimistieapplier.h"
 #include "uimistiecorrmainwin.h"
@@ -32,15 +33,17 @@ public:
     void updateMenu(CallBacker*);
     void doCorrectionEdit(CallBacker*);
     void doMistieAnalysis(CallBacker*);
-    void doMistieCorrection(CallBacker*);
+    void doMistieCorrection2D(CallBacker*);
+    void doMistieCorrection3D(CallBacker*);
     void surveyChgCB(CallBacker*);
     
 protected:
     uiODMain*   appl_;
     uiMistieAnalysisMainWin*    mistiedlg_;
     uiMistieCorrMainWin*	corrdlg_;
-    uiMistieCorrHorDlg*		corrhordlg_;
-    
+    uiMistieCorrHorDlg*		corrhor2ddlg_;
+    uiMistieCorrHorDlg*		corrhor3ddlg_;
+
     
 };
 
@@ -48,8 +51,9 @@ uiMistieMgr::uiMistieMgr( uiODMain* a )
     : appl_(a)
     , mistiedlg_(nullptr)
     , corrdlg_(nullptr)
-    , corrhordlg_(nullptr)
-{
+    , corrhor2ddlg_(nullptr)
+    , corrhor3ddlg_(nullptr)
+    {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiMistieMgr::updateMenu );
     mAttachCB(IOM().surveyChanged, uiMistieMgr::surveyChgCB);
     updateMenu(nullptr);
@@ -72,7 +76,14 @@ void uiMistieMgr::updateMenu( CallBacker* )
     uiActionSeparString gridprocstr( "Create Horizon Output" );
     uiAction* itm = mnumgr.procMnu()->findAction( gridprocstr );
     if ( !itm || !itm->getMenu() ) return;
-    itm->getMenu()->insertItem( new uiAction("Apply Mistie Corrections ...",mCB(this,uiMistieMgr,doMistieCorrection)));
+    uiMenu* miscor = new uiMenu(appl_, tr("Apply Mistie Corrections"));
+
+    if (SI().has2D())
+	miscor->insertItem(new uiAction(m3Dots(uiStrings::s2D()),mCB(this,uiMistieMgr,doMistieCorrection2D)));
+    if (SI().has3D())
+	miscor->insertItem(new uiAction(m3Dots(uiStrings::s3D()),mCB(this,uiMistieMgr,doMistieCorrection3D)));
+
+    itm->getMenu()->insertItem(miscor);
 }
 
 void uiMistieMgr::doCorrectionEdit( CallBacker* )
@@ -91,12 +102,20 @@ void uiMistieMgr::doMistieAnalysis( CallBacker* )
     mistiedlg_->raise();
 }
 
-void uiMistieMgr::doMistieCorrection( CallBacker* )
+void uiMistieMgr::doMistieCorrection2D( CallBacker* )
 {
-    if ( !corrhordlg_ )
-	corrhordlg_ = new uiMistieCorrHorDlg( appl_ );
-    corrhordlg_->show();
-    corrhordlg_->raise();
+    if ( !corrhor2ddlg_ )
+	corrhor2ddlg_ = new uiMistieCorrHorDlg(appl_, true);
+    corrhor2ddlg_->show();
+    corrhor2ddlg_->raise();
+}
+
+void uiMistieMgr::doMistieCorrection3D( CallBacker* )
+{
+    if ( !corrhor3ddlg_ )
+	corrhor3ddlg_ = new uiMistieCorrHorDlg(appl_, false);
+    corrhor3ddlg_->show();
+    corrhor3ddlg_->raise();
 }
 
 void uiMistieMgr::surveyChgCB( CallBacker* )
@@ -109,6 +128,15 @@ void uiMistieMgr::surveyChgCB( CallBacker* )
 	corrdlg_->close();
 	deleteAndZeroPtr( corrdlg_ );
     }
+    if (corrhor2ddlg_) {
+	corrhor2ddlg_->close();
+	deleteAndZeroPtr( corrhor2ddlg_);
+    }
+    if (corrhor3ddlg_) {
+	corrhor3ddlg_->close();
+	deleteAndZeroPtr( corrhor3ddlg_);
+    }
+
 }
 
 mDefODInitPlugin(uiMistie)

@@ -28,7 +28,7 @@ class Callbacker;
 mClass(uiMistie) uiMistieCorrHorDlg : public uiDialog
 { mODTextTranslationClass(uiMistieCorrHorDlg);
 public:
-    uiMistieCorrHorDlg(uiParent*);
+    uiMistieCorrHorDlg(uiParent*, bool);
     ~uiMistieCorrHorDlg();
 
 protected:

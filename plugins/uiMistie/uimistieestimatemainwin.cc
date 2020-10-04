@@ -1,33 +1,31 @@
 #include "uimistieestimatemainwin.h"
 
-#include "uimsg.h"
-//#include "filepath.h"
-//#include "oddirs.h"
-//#include "uifileinput.h"
 #include "ctxtioobj.h"
 #include "emsurfacetr.h"
+#include "emhorizon3d.h"
+#include "emmanager.h"
+#include "emobject.h"
+#include "datainpspec.h"
+#include "geom2dintersections.h"
 #include "iodir.h"
 #include "iodirentry.h"
-
-#include "uidialog.h"
+#include "ioman.h"
+#include "ioman.h"
+#include "seis2ddata.h"
 #include "string.h"
+#include "seisselectionimpl.h"
+#include "survgeom.h"
+#include "survinfo.h"
+#include "zdomain.h"
+#include "uibutton.h"
+#include "uidialog.h"
+#include "uigeninput.h"
+#include "uimsg.h"
+#include "uiseissel.h"
+#include "uispinbox.h"
 #include "uistring.h"
 #include "uistrings.h"
 #include "uitaskrunner.h"
-#include "zdomain.h"
-#include "survinfo.h"
-#include "datainpspec.h"
-#include "geom2dintersections.h"
-#include "survgeom.h"
-#include "uiseissel.h"
-#include "seis2ddata.h"
-#include "ioman.h"
-#include "uispinbox.h"
-#include "uibutton.h"
-#include "uigeninput.h"
-
-#include "seisselectionimpl.h"
-//#include "seisioobjinfo.h"
 
 #include "uiseis2dlineselgrp.h"
 #include "uihorinputgrp.h"
@@ -166,7 +164,7 @@ bool uiMistieEstimateBySeismic::estimateMisties(MistieData& misties)
     if (use3dfld_ && use3dfld_->isChecked()) {
 	Line3DOverlapFinder lines3Doverlap(data3dfld_->ioobj(true), bpfinder.bendPoints());
 	TaskRunner::execute(&uitr, lines3Doverlap);
-	MistieEstimator2D3D misties2d3d(data3dfld_->ioobj(true), seisselfld_->ioobj(true), lines3Doverlap.selData(), zrg, lagtime,
+	MistieEstimatorFromSeismic2D3D misties2d3d(data3dfld_->ioobj(true), seisselfld_->ioobj(true), lines3Doverlap.selData(), zrg, lagtime,
 					trcstepfld_->getIntValue(), !onlyzfld_->isChecked());
 	TaskRunner::execute(&uitr, misties2d3d);
 	misties.add(misties2d3d.getMisties());
@@ -228,6 +226,10 @@ bool uiMistieEstimateByHorizon::estimateMisties(MistieData& misties)
 	uiMSG().error( tr("Please select a 2D horizon to analyse") );
 	return false;
     }
+    if (horinpgrp_->exp3D_->isChecked() && hor3Did.isUdf()) {
+	uiMSG().error( tr("Please select a 3D horizon to analyse") );
+	return false;
+    }
 
     TypeSet<Pos::GeomID> geomids;
     horinpgrp_->getGeoMids(geomids);
@@ -243,6 +245,28 @@ bool uiMistieEstimateByHorizon::estimateMisties(MistieData& misties)
     TaskRunner::execute(&uitr, misest);
     misties = misest.getMisties();
 
+    if (!hor3Did.isUdf() && horinpgrp_->exp3D_->isChecked()) {
+	EM::EMObject* obj3d = EM::EMM().loadIfNotFullyLoaded(hor3Did);
+	if (!obj3d) {
+	    ErrMsg("uiMistieEstimateByHorizon::estimateMisties - loading 3D input horizon failed");
+	    return false;
+	}
+	obj3d->ref();
+	EM::Horizon3D* hor3d;
+	mDynamicCast(EM::Horizon3D*,hor3d,obj3d);
+	if (!hor3d)
+	{
+	    ErrMsg("uiMistieEstimateByHorizon::estimateMisties - casting horizons failed");
+	    obj3d->unRef();
+	    return false;
+	}
+	Line3DOverlapFinder lines3Doverlap(hor3d, bpfinder.bendPoints());
+	TaskRunner::execute(&uitr, lines3Doverlap);
+	obj3d->unRef();
+	MistieEstimatorFromHorizon2D3D misties2d3d(hor3Did, hor2Did, lines3Doverlap.selData(), trcstepfld_->getIntValue());
+	TaskRunner::execute(&uitr, misties2d3d);
+	misties.add(misties2d3d.getMisties());
+    }
 
     return true;
 }
@@ -279,46 +303,7 @@ bool uiMistieEstimateMainWin::acceptOK(CallBacker*)
 	result = seisgrp_->estimateMisties(misties_);
     else
 	result = horgrp_->estimateMisties(misties_);
-/*
-    if (lineselfld_->nrChosen()==0) {
-        uiMSG().error( tr("Please select the 2D line(s) to analyse") );
-        return false;
-    }
-    
-    if (trcstepfld_ && trcstepfld_->getIntValue()<=0) {
-        uiMSG().error(tr("The 2D Trace Step must be a positive number."));
-        return false;
-    }
-    
-    ZGate zrg = gatefld_->getFInterval();
-    zrg.scale(1.0/SI().showZ2UserFactor());
-    
-    float lagtime = lagfld_->box()->getFValue() / SI().showZ2UserFactor();
-    
-    TypeSet<Pos::GeomID> geomids;
-    lineselfld_->getChosen(geomids);
-    
-    uiTaskRunner uitr(this);
-    BendPointFinder2DGeomSet bpfinder(geomids);
-    TaskRunner::execute(&uitr, bpfinder);
-    
-    Line2DInterSectionSet intset;
-    Line2DInterSectionFinder intfinder(bpfinder.bendPoints(),  intset);
-    TaskRunner::execute(&uitr, intfinder);
-    
-    MistieEstimator misties(seisselfld_->ioobj(true), intset, zrg, lagtime, !onlyzfld_->isChecked());
-    TaskRunner::execute(&uitr, misties);
-    misties_ = misties.getMisties();
-    
-    if (use3dfld_ && use3dfld_->isChecked()) {
-        Line3DOverlapFinder lines3Doverlap(data3dfld_->ioobj(true), bpfinder.bendPoints());
-        TaskRunner::execute(&uitr, lines3Doverlap);
-	MistieEstimator2D3D misties2d3d(data3dfld_->ioobj(true), seisselfld_->ioobj(true), lines3Doverlap.selData(), zrg, lagtime,
-					trcstepfld_->getIntValue(), !onlyzfld_->isChecked());
-        TaskRunner::execute(&uitr, misties2d3d);
-        misties_.add(misties2d3d.getMisties());
-    }
-*/
+
     return result;
 }
 
