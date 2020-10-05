@@ -43,8 +43,8 @@ protected:
     uiSurfaceWrite*             outfld_;
     
     bool                acceptOK(CallBacker*);
-    void                lineselCB(Callbacker*);
-    void                include3DCB(Callbacker*);
+    void                lineselCB(CallBacker*);
+    void                include3DCB(CallBacker*);
 
 private:
     uiString    getCaptionStr() const;

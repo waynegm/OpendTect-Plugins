@@ -48,9 +48,16 @@ uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )
 	gatefld_ = new uiGenInput( this, gateLabel(), DoubleInpIntervalSpec().setName("Z start",0).setName("Z stop",1) );
     gatefld_->attach( alignedBelow, inpfld_ );
 	
-	BufferString lbl( "Output frequency (" );
-	lbl += zIsTime() ? "Hz" :
-	(SI().zInMeter() ? "cycles/km" : "cycles/kft"); lbl += ")";
+	uiString lbl;
+	const bool zistime = SI().zDomain().isTime();
+	const bool zismeter = SI().zDomain().isDepth() && !SI().depthsInFeet();
+	if (zistime)
+	    lbl = tr("Output Frequency (Hz)");
+	else if (zismeter)
+	    lbl = tr("Output Wavenumber (/km)");
+	else
+	    lbl = tr("Output Wavenumber (/kft)");
+
 	freqfld_ = new uiLabeledSpinBox( this, lbl, 1 );
 	freqfld_->attach( alignedBelow, gatefld_ );
 	freqfld_->box()->doSnap( true );

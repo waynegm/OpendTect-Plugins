@@ -12,7 +12,7 @@ uiWellsGrp::uiWellsGrp( uiParent* p )
 {
     uiIOObjSelGrp::Setup stup; 
     stup.choicemode_ = OD::ChooseZeroOrMore;
-    wellsfld_ = new uiIOObjSelGrp( this, ctio_, "Well(s)", stup );
+    wellsfld_ = new uiIOObjSelGrp( this, ctio_, uiStrings::sWells(), stup );
     wellsfld_->getManipGroup()->display(false);
     
     expWellTracks_ = new uiCheckBox(this, tr("Export Well Tracks"));

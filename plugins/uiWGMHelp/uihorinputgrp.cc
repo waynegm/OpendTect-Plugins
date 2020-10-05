@@ -31,7 +31,7 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon,
     uiObject* lastfld = nullptr;
     
     if (has2Dhorizon) {
-        hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), "2D Horizon");
+        hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), uiStrings::s2DHorizon());
         hor2Dfld_->selectionDone.notify( mCB(this, uiHorInputGrp, hor2DselCB));
         
         lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
@@ -41,7 +41,7 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon,
     }
     if (has3Dhorizon) {
 	if (has2Dhorizon) {
-	    exp3D_ = new uiCheckBox(this, "Include 3D horizon");
+	    exp3D_ = new uiCheckBox(this, tr("Include 3D horizon"));
 	    if (lastfld!=nullptr)
 		exp3D_->attach(alignedBelow, lastfld);
 	    exp3D_->setChecked(true);
@@ -49,7 +49,7 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon,
 	    lastfld = (uiObject*) exp3D_;
 	}
         
-        hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon");
+        hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon());
         if (lastfld)
 	    hor3Dfld_->attach(alignedBelow, lastfld);
         hor3Dfld_->selectionDone.notify( mCB(this, uiHorInputGrp, hor3DselCB));

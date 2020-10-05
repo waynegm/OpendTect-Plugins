@@ -40,17 +40,24 @@ uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
 : uiAttrDescEd(p,is2d,HelpKey("wgm", "ltf"))
 
 {
-	inpfld_ = createInpFld( is2d );
+    inpfld_ = createInpFld( is2d );
 
     gatefld_ = new uiGenInput( this, gateLabel(), DoubleInpIntervalSpec().setName("Z start",0).setName("Z stop",1) );
     gatefld_->attach( alignedBelow, inpfld_ );
     
-	BufferString lbl( "Output frequency (" );
-	lbl += zIsTime() ? "Hz" :
-	(SI().zInMeter() ? "cycles/km" : "cycles/kft"); lbl += ")";
-	freqfld_ = new uiLabeledSpinBox( this, lbl, 1 );
-	freqfld_->attach( alignedBelow, gatefld_ );
-	freqfld_->box()->doSnap( true );
+    uiString lbl;
+    const bool zistime = SI().zDomain().isTime();
+    const bool zismeter = SI().zDomain().isDepth() && !SI().depthsInFeet();
+    if (zistime)
+	lbl = tr("Output Frequency (Hz)");
+    else if (zismeter)
+	lbl = tr("Output Wavenumber (/km)");
+    else
+	lbl = tr("Output Wavenumber (/kft)");
+
+    freqfld_ = new uiLabeledSpinBox( this, lbl, 1 );
+    freqfld_->attach( alignedBelow, gatefld_ );
+    freqfld_->box()->doSnap( true );
 
     stepfld_ = new uiLabeledSpinBox( this, uiStrings::sStep(), 1 );
     stepfld_->attach( rightTo, freqfld_ );

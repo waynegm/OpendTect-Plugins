@@ -51,7 +51,7 @@ uiFaultPoly::uiFaultPoly( uiParent* p )
     setOkText( tr("Create") );
     setShrinkAllowed(true);
 
-    hor3Dfld_ = new uiIOObjSel( this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon" );
+    hor3Dfld_ = new uiIOObjSel( this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon() );
 
     faultsfld_ = new uiFaultParSel( this, false );
     faultsfld_->attach( alignedBelow, hor3Dfld_ );

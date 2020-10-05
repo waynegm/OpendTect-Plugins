@@ -12,7 +12,7 @@ uiRandomLinesGrp::uiRandomLinesGrp( uiParent* p )
 {
     uiIOObjSelGrp::Setup stup; 
     stup.choicemode_ = OD::ChooseZeroOrMore;
-    linesfld_ = new uiIOObjSelGrp( this, ctio_, "Line(s)", stup );
+    linesfld_ = new uiIOObjSelGrp( this, ctio_, uiStrings::sLine(2), stup );
     linesfld_->getManipGroup()->display(false);
 }
 

@@ -210,8 +210,11 @@ uiMistieAnalysisMainWin::uiMistieAnalysisMainWin( uiParent* p )
     mSetUdf(minquality_);
     
     table_ = new uiTable( this, uiTable::Setup().rowgrow(false).selmode(uiTable::Multi),"Mistie Table" );
-    BufferStringSet lbls(ColumnLabels);
-    lbls.get(zCol) += SI().getZUnitString();
+    uiStringSet lbls;
+    lbls.add(tr("LineA")).add(tr("LineB")).add(tr("TrcA")).add(tr("TrcB"))
+        .add(uiStrings::sX()).add(uiStrings::sY()).add(tr("Z Mistie\n%1").arg(SI().getZUnitString()))
+	.add(tr("Phase\nRotation (deg)")).add(tr("Amplitude\nScalar")).add(tr("Quality"));
+
     table_->setColumnLabels( lbls);
     table_->showGrid( true );
     table_->setNrRows( 10 );

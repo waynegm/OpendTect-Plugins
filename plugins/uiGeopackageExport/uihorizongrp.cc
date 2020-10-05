@@ -21,12 +21,12 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
     namefld_ = new uiGenInput(this, tr("Output Layer") );
     uiObject* lastfld = (uiObject*) namefld_;
     if (has2Dhorizon) {
-        exp2D_ = new uiCheckBox(this, "Export 2D horizon");
+        exp2D_ = new uiCheckBox(this, uiStrings::phrExport(uiStrings::s2DHorizon()));
         exp2D_->attach(alignedBelow, namefld_);
         exp2D_->setChecked(false);
         exp2D_->activated.notify(mCB(this, uiHorizonGrp, exp2Dsel));
         
-        hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), "2D Horizon");
+        hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), uiStrings::s2DHorizon());
         hor2Dfld_->attach(alignedBelow, exp2D_);
         hor2Dfld_->selectionDone.notify( mCB(this, uiHorizonGrp, hor2Dsel));
         
@@ -42,12 +42,12 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         lastfld = (uiObject*) lines2Dfld_;
     }
     if (has3Dhorizon) {
-        exp3D_ = new uiCheckBox(this, "Export 3D horizon");
+	exp3D_ = new uiCheckBox(this, uiStrings::phrExport(uiStrings::s3DHorizon()));
         exp3D_->attach(alignedBelow, lastfld);
         exp3D_->setChecked(false);
         exp3D_->activated.notify(mCB(this, uiHorizonGrp, exp3Dsel));
 
-        hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon");
+	hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon());
         hor3Dfld_->attach(alignedBelow, exp3D_);
         hor3Dfld_->selectionDone.notify( mCB(this, uiHorizonGrp, hor3Dsel));
         

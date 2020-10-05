@@ -42,8 +42,10 @@ uiCorrViewer::uiCorrViewer( uiParent* p, const MistieCorrectionData& corrs )
     createToolBar();
     
     table_ = new uiTable( this, uiTable::Setup().rowgrow(false).selmode(uiTable::NoSelection),"Mistie Correction Table" );
-    BufferStringSet lbls(ColumnLabels);
-    lbls.get(1) += SI().getZUnitString();
+    uiStringSet lbls;
+    lbls.add(tr("Line/Dataset")).add(tr("Z Shift (%1)").arg(SI().getZUnitString()))
+        .add(tr("Phase Rotation (deg)")).add(tr("Amplitude Scalar"));
+
     table_->setColumnLabels( lbls);
     table_->showGrid( true );
     table_->setLeftHeaderHidden( true );

@@ -74,7 +74,7 @@ public:
 ProcInstImpl::ProcInstImpl()
 : input(NULL), output(NULL), read_fd(NULL), write_fd(NULL)
 {
-	logFile = FilePath::getTempName();
+	logFile = FilePath::getTempFullPath(nullptr, nullptr);
 #ifdef __win__
 	hChildProcess = NULL;
 	hChildThread = NULL;
