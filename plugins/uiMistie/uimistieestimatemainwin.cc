@@ -50,7 +50,7 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
     lastfld = (uiObject*) lineselfld_;
 
     if (SI().has3D()) {
-	use3dfld_ = new uiCheckBox(this, "Include 3D data");
+	use3dfld_ = new uiCheckBox(this, tr("Include 3D data"));
 	use3dfld_->attach(alignedBelow, lineselfld_);
 	use3dfld_->setChecked(false);
 	use3dfld_->activated.notify(mCB(this, uiMistieEstimateBySeismic, use3DCB));
@@ -86,7 +86,7 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
     gatefld_->setValue(ZGate(zr.start*zfac, zr.stop*zfac));
     gatefld_->valuechanged.notify(mCB(this,uiMistieEstimateBySeismic,gatefldchangeCB));
 
-    onlyzfld_ = new uiCheckBox(this, "Only estimate Z misties");
+    onlyzfld_ = new uiCheckBox(this, tr("Only estimate Z misties"));
     onlyzfld_->attach(alignedBelow, lagfld_);
     onlyzfld_->setChecked(false);
 

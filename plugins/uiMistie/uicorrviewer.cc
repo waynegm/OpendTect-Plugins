@@ -24,15 +24,6 @@
 
 static int sMnuID = 0;
 
-static const char* ColumnLabels[] =
-{
-    "Line/Dataset",
-    "Z Shift ",
-    "Phase Rotation (deg)",
-    "Amplitude Scalar",
-    0
-};
-
 uiCorrViewer::uiCorrViewer( uiParent* p, const MistieCorrectionData& corrs )
     : uiDialog(p, uiDialog::Setup(getCaptionStr(),mNoDlgTitle,mNoHelpKey))
     , saveitem_(uiStrings::sSave(), "save", "", mCB(this,uiCorrViewer,saveCB), sMnuID++) 

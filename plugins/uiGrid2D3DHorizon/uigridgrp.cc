@@ -249,7 +249,7 @@ bool uiIDW::fillPar( IOPar& par ) const
 	const float radius = searchradiusfld_->getFValue(0);
 	if ( radius<=0 )
 	{
-	    uiMSG().error( "Search radius must be positive" );
+	    uiMSG().error( tr("Search radius must be positive") );
 	    return false;
 	}
 	par.set( wmGridder2D::sKeySearchRadius(), radius );
@@ -259,7 +259,7 @@ bool uiIDW::fillPar( IOPar& par ) const
 	const int npoints = maxpointsfld_->getIntValue(0);
 	if ( npoints<=0 )
 	{
-	    uiMSG().error( "Maximum points must be positive" );
+	    uiMSG().error( tr("Maximum points must be positive") );
 	    return false;
 	}
 	par.set( wmGridder2D::sKeyMaxPoints(), npoints );
@@ -304,7 +304,7 @@ bool uiLTPS::fillPar(IOPar& par) const
     const float radius = searchradiusfld_->getFValue(0);
     if ( radius<=0 )
     {
-	uiMSG().error( "Search radius must be positive" );
+	uiMSG().error( tr("Search radius must be positive") );
 	return false;
     }
     par.set( wmGridder2D::sKeySearchRadius(), radius );
@@ -312,7 +312,7 @@ bool uiLTPS::fillPar(IOPar& par) const
     const int npoints = maxpointsfld_->getIntValue(0);
     if ( npoints<=0 )
     {
-	uiMSG().error( "Maximum points must be positive" );
+	uiMSG().error( tr("Maximum points must be positive") );
 	return false;
     }
     par.set( wmGridder2D::sKeyMaxPoints(), npoints );
