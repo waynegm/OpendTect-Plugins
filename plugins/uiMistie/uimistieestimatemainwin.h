@@ -27,8 +27,8 @@ public:
     bool	estimateMisties(MistieData&);
 
 protected:
-    uiSeisSel*                  seisselfld_;
-    WMLib::uiSeis2DLineSelGrp*  lineselfld_;
+    uiSeisSel*                  seisselfld_ = nullptr;
+    WMLib::uiSeis2DLineSelGrp*  lineselfld_ = nullptr;
     uiCheckBox*                 use3dfld_ = nullptr;
     uiSeisSel*                  data3dfld_ = nullptr;
     uiGenInput*                 trcstepfld_ = nullptr;

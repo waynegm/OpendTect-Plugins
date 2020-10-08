@@ -35,9 +35,9 @@ protected:
     EM::Horizon2D*		inphor_ = nullptr;
     EM::Horizon2D*		outhor_ = nullptr;
 
-    bool        doWork(od_int64 start, od_int64 stop, int threadis);
-    bool        doFinish(bool success);
-    bool	doPrepare(int);
+    virtual bool        doWork(od_int64 start, od_int64 stop, int threadis) override;
+    virtual bool        doFinish(bool success) override;
+    virtual bool	doPrepare(int) override;
 };
 
 mExpClass(Mistie) MistieApplyToHorizon3D : public ParallelTask
@@ -62,7 +62,7 @@ protected:
     Array2D<float>*		arr2d_ = nullptr;
     od_int64			nlocs_;
 
-    bool        doWork(od_int64 start, od_int64 stop, int threadis);
-    bool        doFinish(bool success);
-    bool	doPrepare(int);
+    virtual bool        doWork(od_int64 start, od_int64 stop, int threadis) override;
+    virtual bool        doFinish(bool success) override;
+    virtual bool	doPrepare(int) override;
 };

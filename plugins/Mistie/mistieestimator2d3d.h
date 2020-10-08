@@ -94,8 +94,8 @@ public:
 protected:
     MultiID		hor3did_;
     MultiID		hor2did_;
-    EM::Horizon2D*	hor2d_;
-    EM::Horizon3D*	hor3d_;
+    EM::Horizon2D*	hor2d_ = nullptr;
+    EM::Horizon3D*	hor3d_ = nullptr;
     const ManagedObjectSet<Seis::RangeSelData>& selranges_;
     int			trcstep_;
 
@@ -104,9 +104,9 @@ protected:
     Threads::Lock               lock_;
     int                         counter_;
 
-    bool	doPrepare(int nrthreads);
-    bool        doWork(od_int64 start, od_int64 stop, int threadis);
-    bool        doFinish(bool success);
+    virtual bool	doPrepare(int nrthreads) override;
+    virtual bool        doWork(od_int64 start, od_int64 stop, int threadis) override;
+    virtual bool        doFinish(bool success) override;
 
 };
 #endif

@@ -64,8 +64,10 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
 
 void uiInputGrp::exp3DselCB(CallBacker*)
 {
-    hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-    subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+    if (exp3D_ && hor3Dfld_ && subsel3Dfld_) {
+	hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+	subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+    }
 }
 
 bool uiInputGrp::fillPar( IOPar& par ) const
@@ -102,14 +104,19 @@ void uiInputGrp::usePar( const IOPar& par )
     MultiID hor2Did, hor3Did;
     
     hor3Did.setUdf();
-    if (par.get(wmGridder2D::sKey3DHorizonID(), hor3Did))
-        if (hor3Dfld_!=nullptr && subsel3Dfld_!=nullptr) {
+    if (par.get(wmGridder2D::sKey3DHorizonID(), hor3Did)) {
+        if (hor3Dfld_ && subsel3Dfld_ && exp3D_) {
             hor3Dfld_->setInput(hor3Did);
             TrcKeyZSampling tkz;
             tkz.usePar(par);
             subsel3Dfld_->setInput(tkz);
+	    exp3D_->setChecked(true);
         }
-        
+    } else if (exp3D_)
+	exp3D_->setChecked(false);
+
+    exp3DselCB(nullptr);
+
     hor2Did.setUdf();
     if (par.get(wmGridder2D::sKey2DHorizonID(), hor2Did)) {
         if (hor2Dfld_!=nullptr) {

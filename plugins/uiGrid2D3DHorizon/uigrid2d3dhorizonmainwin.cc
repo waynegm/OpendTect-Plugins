@@ -17,6 +17,7 @@
 #include "uiiosurface.h"
 #include "uitaskrunner.h"
 #include "paralleltask.h"
+#include "oddirs.h"
 
 #include "wmgridder2d.h"
 #include "uiinputgrp.h"
@@ -78,7 +79,8 @@ uiGrid2D3DHorizonMainWin::~uiGrid2D3DHorizonMainWin()
 
 BufferString uiGrid2D3DHorizonMainWin::getParFileName()
 {
-    FilePath fp(SI().getDirName(), "Misc", "grid2d3d.par");
+    FilePath fp(GetDataDir(), "Misc", "grid2d3d.par");
+    ErrMsg(fp.fullPath());
     return fp.fullPath();
 }
 
@@ -100,6 +102,9 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
     IOPar par;
     inputgrp_->fillPar( par );
     gridgrp_->fillPar( par );
+    BufferString tmp;
+    par.dumpPretty(tmp);
+    ErrMsg(tmp);
     par.write(getParFileName(), 0);
     
     FixedString method = par.find( wmGridder2D::sKeyMethod() );

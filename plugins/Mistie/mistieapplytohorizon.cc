@@ -117,6 +117,7 @@ bool MistieApplyToHorizon2D::doWork( od_int64 start, od_int64 stop, int threadid
 
 bool MistieApplyToHorizon2D::doFinish(bool success)
 {
+    bool res = false;
     if (inphor_)
 	inphor_->unRef();
     if (outhor_)
@@ -125,10 +126,10 @@ bool MistieApplyToHorizon2D::doFinish(bool success)
 	outhor_->setMultiID(newhor2did_);
 	PtrMan<Executor> saver = outhor_->saver();
 	if (saver)
-	    return saver->execute();
+	    res = saver->execute();
 	outhor_->unRef();
     }
-    return false;
+    return res;
 }
 
 

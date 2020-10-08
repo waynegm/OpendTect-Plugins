@@ -175,6 +175,7 @@ Pick::Set* uiFaultPoly::getPolyForFault( int idx )
     name += faultname;
     ps->setName( name );
     ps->disp_.color_ = colorfld_->color();
+    ps->disp_.linestyle_ = OD::LineStyle(OD::LineStyle::Solid, 1, colorfld_->color());
     ps->disp_.connect_ = Pick::Set::Disp::Open;
     if ( coords.size()>0 ) {
 	int nextid = coords.nextID( -1 );

@@ -315,6 +315,7 @@ Pick::Set* uiConvexHull::getPolygonPickSet() const
     Pick::Set* ps = new Pick::Set;
     ps->setName( polyname_ );
     ps->disp_.color_ = colorfld_->color();
+    ps->disp_.linestyle_ = OD::LineStyle(OD::LineStyle::Solid, 1, colorfld_->color());
     ps->disp_.connect_ = Pick::Set::Disp::Close;
     for (int iv=0; iv<poly_.size(); iv++) {
 	Coord pos = poly_.getVertex( iv );

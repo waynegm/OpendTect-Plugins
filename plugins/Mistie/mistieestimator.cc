@@ -163,7 +163,7 @@ od_int64 MistieEstimatorFromHorizon::nrIterations() const
 
 uiString MistieEstimatorFromHorizon::uiMessage() const
 {
-    return tr("Estimating misties");
+    return tr("Estimating 2D misties");
 }
 
 uiString MistieEstimatorFromHorizon::uiNrDoneText() const
@@ -171,22 +171,27 @@ uiString MistieEstimatorFromHorizon::uiNrDoneText() const
     return tr("Intersections done");
 }
 
-bool MistieEstimatorFromHorizon::doWork( od_int64 start, od_int64 stop, int threadid )
+bool MistieEstimatorFromHorizon::doPrepare(int nthreads)
 {
-    BufferString lineA, lineB;
-    int trcnrA, trcnrB;
     EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor2did_);
     if (!obj) {
-	ErrMsg("MistieEstimatorFromHorizon::doWork - loading 2D horizon failed");
+	ErrMsg("MistieEstimatorFromHorizon::doPrepare - loading 2D horizon failed");
 	return false;
     }
     obj->ref();
-    mDynamicCastGet(EM::Horizon2D*,hor,obj);
-    if (!hor) {
+    mDynamicCast(EM::Horizon2D*,hor2d_,obj);
+    if (!hor2d_) {
 	ErrMsg("MistieEstimatorFromHorizon - casting 2D horizon failed");
 	obj->unRef();
 	return false;
     }
+    return true;
+}
+
+bool MistieEstimatorFromHorizon::doWork( od_int64 start, od_int64 stop, int threadid )
+{
+    BufferString lineA, lineB;
+    int trcnrA, trcnrB;
 
     for (int idx=mCast(int,start); idx<=stop && shouldContinue(); idx++, addToNrDone(1)) {
 	float zdiff = 0.0;
@@ -202,19 +207,19 @@ bool MistieEstimatorFromHorizon::doWork( od_int64 start, od_int64 stop, int thre
 	}
 	Pos::GeomID geomidA = Survey::GM().getGeomID(lineA);
 	TrcKey tkA(geomidA, trcnrA);
-	const float zA = hor->getZ(tkA);
+	const float zA = hor2d_->getZ(tkA);
 	Pos::GeomID geomidB = Survey::GM().getGeomID(lineB);
 	TrcKey tkB(geomidB, trcnrB);
-	const float zB = hor->getZ(tkB);
+	const float zB = hor2d_->getZ(tkB);
 	if (!mIsUdf(zA) && !mIsUdf(zB))
 	    zdiff = (zB - zA) * SI().showZ2UserFactor();
 	misties_.set(idx, zdiff, phasediff, ampdiff, quality);
     }
-    obj->unRef();
     return true;
 }
 
 bool MistieEstimatorFromHorizon::doFinish( bool success )
 {
+    hor2d_->unRef();
     return true;
 }

@@ -38,20 +38,23 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
 {
     uiObject* lastfld = nullptr;
 
-    uiSeisSel::Setup su(Seis::Line);
-    su.withinserters(false);
-    su.seltxt(tr("Input 2D Data Type/Attribute"));
-    seisselfld_ = new uiSeisSel( this,uiSeisSel::ioContext(Seis::Line,true), su );
-    seisselfld_->selectionDone.notify(mCB(this,uiMistieEstimateBySeismic,seisselCB));
+    if (SI().has2D()) {
+	uiSeisSel::Setup su(Seis::Line);
+	su.withinserters(false);
+	su.seltxt(tr("Input 2D Data Type/Attribute"));
+	seisselfld_ = new uiSeisSel( this,uiSeisSel::ioContext(Seis::Line,true), su );
+	seisselfld_->selectionDone.notify(mCB(this,uiMistieEstimateBySeismic,seisselCB));
 
-    lineselfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
-    lineselfld_->attach(hCentered);
-    lineselfld_->attach(ensureBelow, seisselfld_);
-    lastfld = (uiObject*) lineselfld_;
+	lineselfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
+	lineselfld_->attach(hCentered);
+	lineselfld_->attach(ensureBelow, seisselfld_);
+	lastfld = (uiObject*) lineselfld_->attachObj();
+    }
 
     if (SI().has3D()) {
 	use3dfld_ = new uiCheckBox(this, tr("Include 3D data"));
-	use3dfld_->attach(alignedBelow, lineselfld_);
+	if (lastfld)
+	    use3dfld_->attach(alignedBelow, lastfld);
 	use3dfld_->setChecked(false);
 	use3dfld_->activated.notify(mCB(this, uiMistieEstimateBySeismic, use3DCB));
 
@@ -72,7 +75,8 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
     lagfld_ = new uiLabeledSpinBox( this, lagLabel );
     lagfld_->box()->setInterval(0, 250, 1);
     lagfld_->box()->setValue(100.0);
-    lagfld_->attach( ensureBelow, lastfld );
+    if (lastfld)
+	lagfld_->attach( ensureBelow, lastfld );
 
     uiString gateLabel(tr("Mistie "));
     gateLabel.append(uiStrings::sAnalysis());
@@ -108,6 +112,8 @@ void uiMistieEstimateBySeismic::use3DCB(CallBacker*)
 
 void uiMistieEstimateBySeismic::seisselCB(CallBacker*)
 {
+    if (!seisselfld_ || !lineselfld_)
+	return;
     const IOObj* ioobj = seisselfld_->ioobj(true);
     if (ioobj) {
 	Seis2DDataSet dset( *ioobj );
@@ -131,7 +137,12 @@ void uiMistieEstimateBySeismic::gatefldchangeCB(CallBacker*)
 
 bool uiMistieEstimateBySeismic::estimateMisties(MistieData& misties)
 {
-    if (lineselfld_->nrChosen()==0) {
+    if (!lineselfld_) {
+	uiMSG().error( tr("Mistie analysis requires 2D data") );
+	return false;
+    }
+
+    if (lineselfld_ && lineselfld_->nrChosen()==0) {
 	uiMSG().error( tr("Please select the 2D line(s) to analyse") );
 	return false;
     }
@@ -226,7 +237,7 @@ bool uiMistieEstimateByHorizon::estimateMisties(MistieData& misties)
 	uiMSG().error( tr("Please select a 2D horizon to analyse") );
 	return false;
     }
-    if (horinpgrp_->exp3D_->isChecked() && hor3Did.isUdf()) {
+    if (hor3Did.isUdf() && horinpgrp_->exp3D_ && horinpgrp_->exp3D_->isChecked()) {
 	uiMSG().error( tr("Please select a 3D horizon to analyse") );
 	return false;
     }
@@ -245,7 +256,7 @@ bool uiMistieEstimateByHorizon::estimateMisties(MistieData& misties)
     TaskRunner::execute(&uitr, misest);
     misties = misest.getMisties();
 
-    if (!hor3Did.isUdf() && horinpgrp_->exp3D_->isChecked()) {
+    if (!hor3Did.isUdf() && horinpgrp_->exp3D_ && horinpgrp_->exp3D_->isChecked()) {
 	EM::EMObject* obj3d = EM::EMM().loadIfNotFullyLoaded(hor3Did);
 	if (!obj3d) {
 	    ErrMsg("uiMistieEstimateByHorizon::estimateMisties - loading 3D input horizon failed");

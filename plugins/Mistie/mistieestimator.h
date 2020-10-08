@@ -13,6 +13,7 @@
 class Line2DInterSectionSet;
 class SeisTrc;
 class IOObj;
+namespace EM { class Horizon2D; }
 
 mExpClass(Mistie) MistieEstimatorFromSeismic : public ParallelTask
 { mODTextTranslationClass(MistieEstimatorFromSeismic)
@@ -35,8 +36,8 @@ protected:
     Threads::Lock               lock_;
     int                         counter_;
     
-    bool        doWork(od_int64 start, od_int64 stop, int threadis);
-    bool        doFinish(bool success);
+    virtual bool        doWork(od_int64 start, od_int64 stop, int threadis) override;
+    virtual bool        doFinish(bool success) override;
     
     bool        get2DTrc( BufferString line, int trcnr, SeisTrc& trc );
 };
@@ -55,12 +56,14 @@ public:
 
 protected:
     MultiID	                hor2did_;
+    EM::Horizon2D*		hor2d_ = nullptr;
     MistieData                  misties_;
     Threads::Lock               lock_;
     int                         counter_;
 
-    bool        doWork(od_int64 start, od_int64 stop, int threadis);
-    bool        doFinish(bool success);
+    virtual bool	doPrepare(int) override;
+    virtual bool        doWork(od_int64 start, od_int64 stop, int threadis) override;
+    virtual bool        doFinish(bool success) override;
 };
 
 
