@@ -49,4 +49,5 @@ x64
 *.db
 *.suo
 *.dll.recipe
+*.dir
 
