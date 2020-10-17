@@ -51,7 +51,7 @@ uiFaultPoly::uiFaultPoly( uiParent* p )
     setOkText( tr("Create") );
     setShrinkAllowed(true);
 
-    hor3Dfld_ = new uiIOObjSel( this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon" );
+    hor3Dfld_ = new uiIOObjSel( this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon() );
 
     faultsfld_ = new uiFaultParSel( this, false );
     faultsfld_->attach( alignedBelow, hor3Dfld_ );
@@ -175,6 +175,7 @@ Pick::Set* uiFaultPoly::getPolyForFault( int idx )
     name += faultname;
     ps->setName( name );
     ps->disp_.color_ = colorfld_->color();
+    ps->disp_.linestyle_ = OD::LineStyle(OD::LineStyle::Solid, 1, colorfld_->color());
     ps->disp_.connect_ = Pick::Set::Disp::Open;
     if ( coords.size()>0 ) {
 	int nextid = coords.nextID( -1 );

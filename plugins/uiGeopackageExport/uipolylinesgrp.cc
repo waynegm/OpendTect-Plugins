@@ -13,7 +13,7 @@ uiPolyLinesGrp::uiPolyLinesGrp( uiParent* p )
     ctio_.ctxt_.toselect_.require_.set( sKey::Type(), sKey::Polygon() );
     uiIOObjSelGrp::Setup stup; 
     stup.choicemode_ = OD::ChooseZeroOrMore;
-    linesfld_ = new uiIOObjSelGrp( this, ctio_, "Polyline(s)", stup );
+    linesfld_ = new uiIOObjSelGrp( this, ctio_, uiStrings::sPolyLine(mPlural), stup );
     linesfld_->getManipGroup()->display(false);
 }
 

@@ -25,14 +25,6 @@
 
 static int sMnuID = 0;
 
-static const char* ColumnLabels[] =
-{
-    "Line/Dataset",
-    "Z Shift ",
-    "Phase Rotation (deg)",
-    "Amplitude Scalar",
-    0
-};
 
 class uiMergeCorDlg : public uiDialog
 { mODTextTranslationClass(uiMergeCorDlg);
@@ -93,8 +85,10 @@ uiMistieCorrMainWin::uiMistieCorrMainWin( uiParent* p )
     table_ = new uiTable( this, uiTable::Setup().rowgrow(true)
                                                 .selmode(uiTable::Multi),
                           "Mistie Correction Table" );
-    BufferStringSet lbls(ColumnLabels);
-    lbls.get(1) += SI().getZUnitString();
+    uiStringSet lbls;
+    lbls.add(tr("Line/Dataset")).add(tr("Z Shift (%1)").arg(SI().getZUnitString()))
+        .add(tr("Phase Rotation (deg)")).add(tr("Amplitude Scalar"));
+
     table_->setColumnLabels( lbls);
     table_->showGrid( true );
     table_->setLeftHeaderHidden( true );

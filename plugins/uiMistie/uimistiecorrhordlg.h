@@ -1,8 +1,7 @@
-#ifndef uidehmainwin_h
-#define uidehmainwin_h
+#pragma once
 /*
- *   Data Extent Horizon generator class
- *   Copyright (C) 2019  Wayne Mogg
+ *   Apply Mistie Corrections to Horizon Interpretation
+ *   Copyright (C) 2020  Wayne Mogg
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,35 +18,27 @@
  */
 #include "uidialog.h"
 
-class uiGenInput;
-class uiCheckBox;
 class uiSurfaceWrite;
-class uiSeis2DLineSelGrp;
+class uiFileInput;
 namespace WMLib { 
-    class ui3DRangeGrp;
-    class uiSeis2DLineSelGrp;
+    class uiHorInputGrp;
 };
 class Callbacker;
 
-mClass(uiWMTools) uidehMainWin : public uiDialog
-{ mODTextTranslationClass(uidehMainWin);
+mClass(uiMistie) uiMistieCorrHorDlg : public uiDialog
+{ mODTextTranslationClass(uiMistieCorrHorDlg);
 public:
-    uidehMainWin(uiParent*);
-    ~uidehMainWin();
+    uiMistieCorrHorDlg(uiParent*, bool);
+    ~uiMistieCorrHorDlg();
 
 protected:
-    uiGenInput*                 zfld_;
-    WMLib::uiSeis2DLineSelGrp*  lineselfld_;
-    uiCheckBox*                 include3Dfld_;
-    WMLib::ui3DRangeGrp*        rangefld_;
-    uiSurfaceWrite*             outfld_;
-    
+    WMLib::uiHorInputGrp*	horinpgrp_;
+    uiFileInput*   		mistiefilefld_;
+    uiSurfaceWrite*		outfld_;
+
     bool                acceptOK(CallBacker*);
-    void                lineselCB(CallBacker*);
-    void                include3DCB(CallBacker*);
 
 private:
     uiString    getCaptionStr() const;
 };
 
-#endif

@@ -36,7 +36,7 @@ uiGeotiffExportMainWin::uiGeotiffExportMainWin( uiParent* p )
     const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
     const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
     if (entries3D.size()>0) {
-        expZvalue_ = new uiCheckBox(this, "Export Z value");
+        expZvalue_ = new uiCheckBox(this, tr("Export Z value"));
         expZvalue_->setChecked(true);
         
         hor3Dfld_ = new uiSurfaceRead( this, uiSurfaceRead::Setup(EMHorizon3DTranslatorGroup::sGroupName())
@@ -44,7 +44,7 @@ uiGeotiffExportMainWin::uiGeotiffExportMainWin( uiParent* p )
         hor3Dfld_->attach(alignedBelow, expZvalue_);
         
         BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
-        filefld_ = new uiFileInput( this, "Output file",
+        filefld_ = new uiFileInput( this, uiStrings::sOutputFile(),
                                     uiFileInput::Setup(uiFileDialog::Gen)
                                     .forread(false).filter("*.tif").defseldir(defseldir).allowallextensions(false) );
         filefld_->setDefaultExtension( "tif" );

@@ -79,9 +79,9 @@ void uiMLVFilterAttrib::outChgCB(CallBacker*)
 
 void uiMLVFilterAttrib::sdevsChgCB(CallBacker*)
 {
-    if (sdevsfld_->getfValue()<0.5)
+    if (sdevsfld_->getFValue()<0.5)
         sdevsfld_->setValue(0.5);
-    if (sdevsfld_->getfValue()>6.0)
+    if (sdevsfld_->getFValue()>6.0)
         sdevsfld_->setValue(6.0);
 }
 
@@ -109,9 +109,9 @@ bool uiMLVFilterAttrib::getParameters( Attrib::Desc& desc )
     if ( desc.attribName() != MLVFilter::attribName() )
 	return false;
 
-    mSetInt( MLVFilter::sizeStr(), sizefld_->box()->getValue() );
+    mSetInt( MLVFilter::sizeStr(), sizefld_->box()->getIntValue() );
     mSetEnum(MLVFilter::outputStr(),outfld_->getIntValue());
-    mSetFloat( MLVFilter::sdevsStr(), sdevsfld_->getfValue() );
+    mSetFloat( MLVFilter::sdevsStr(), sdevsfld_->getFValue() );
     
     return true;
 }

@@ -51,7 +51,9 @@ uiGridGrp::uiGridGrp( uiParent* p )
     gridfld_ = new WMLib::ui3DRangeGrp(this, tr("Grid Area"), false);
     gridfld_->setSensitive(false, true);
     gridfld_->attach(alignedBelow, scopefld_);
-    gridfld_->setTrcKeySampling( SI().sampling(true).hsamp_ );
+    TrcKeySampling tks = SI().sampling(true).hsamp_;
+    tks.step_ = BinID(10,10);
+    gridfld_->setTrcKeySampling( tks );
     
     methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
     methodfld_->attach( alignedBelow, gridfld_ );
@@ -249,7 +251,7 @@ bool uiIDW::fillPar( IOPar& par ) const
 	const float radius = searchradiusfld_->getFValue(0);
 	if ( radius<=0 )
 	{
-	    uiMSG().error( "Search radius must be positive" );
+	    uiMSG().error( tr("Search radius must be positive") );
 	    return false;
 	}
 	par.set( wmGridder2D::sKeySearchRadius(), radius );
@@ -259,7 +261,7 @@ bool uiIDW::fillPar( IOPar& par ) const
 	const int npoints = maxpointsfld_->getIntValue(0);
 	if ( npoints<=0 )
 	{
-	    uiMSG().error( "Maximum points must be positive" );
+	    uiMSG().error( tr("Maximum points must be positive") );
 	    return false;
 	}
 	par.set( wmGridder2D::sKeyMaxPoints(), npoints );
@@ -304,7 +306,7 @@ bool uiLTPS::fillPar(IOPar& par) const
     const float radius = searchradiusfld_->getFValue(0);
     if ( radius<=0 )
     {
-	uiMSG().error( "Search radius must be positive" );
+	uiMSG().error( tr("Search radius must be positive") );
 	return false;
     }
     par.set( wmGridder2D::sKeySearchRadius(), radius );
@@ -312,7 +314,7 @@ bool uiLTPS::fillPar(IOPar& par) const
     const int npoints = maxpointsfld_->getIntValue(0);
     if ( npoints<=0 )
     {
-	uiMSG().error( "Maximum points must be positive" );
+	uiMSG().error( tr("Maximum points must be positive") );
 	return false;
     }
     par.set( wmGridder2D::sKeyMaxPoints(), npoints );

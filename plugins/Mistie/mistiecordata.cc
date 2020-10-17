@@ -1,5 +1,6 @@
 #include "mistiecordata.h"
 
+#include "globexpr.h"
 #include "iopar.h"
 #include "msgh.h"
 #include "mistiedata.h"
@@ -57,8 +58,12 @@ void MistieCorrectionData::erase()
 
 int MistieCorrectionData::getIndex( const char* dataname ) const
 {
-    int idx = datanames_.indexOf(dataname);
-    return idx>=0 ? idx : -1;
+    int idx = -1;
+    if (BufferString(dataname)=="3D")
+	idx = datanames_.indexOf(GlobExpr("3D*"));
+    else
+	idx = datanames_.indexOf(dataname);
+    return idx;
 }    
 
 BufferString MistieCorrectionData::getDataName( int idx ) const

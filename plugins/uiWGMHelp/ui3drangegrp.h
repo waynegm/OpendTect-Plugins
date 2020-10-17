@@ -33,7 +33,7 @@ protected:
     
     bool                stepSnap_;
     
-    void                rangeChg(Callbacker*);
+    void                rangeChg(CallBacker*);
     
 };
 }; //namespace

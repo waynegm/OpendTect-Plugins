@@ -18,7 +18,8 @@ set(OD_MODULE_SOURCES
     uimistiecorrmainwin.cc
     uicorrviewer.cc
 	uimistieapplier.cc
-	uimistiepi.cc)
+	uimistiepi.cc
+	uimistiecorrhordlg.cc)
 
 add_definitions( -DNDEBUG )
 

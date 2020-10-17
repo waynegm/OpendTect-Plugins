@@ -48,4 +48,6 @@ x64
 *deps.h
 *.db
 *.suo
+*.dll.recipe
+*.dir
 

@@ -206,7 +206,7 @@ public:
         , reader_(reader)
     {
         BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
-        filefld_ = new uiFileInput( this, "Input file",
+        filefld_ = new uiFileInput( this, tr("Input file"),
                                     uiFileInput::Setup(uiFileDialog::Gen)
                                     .forread(true).filter("*.gpkg").defseldir(defseldir).allowallextensions(false) );
         filefld_->setDefaultExtension( "gpkg" );

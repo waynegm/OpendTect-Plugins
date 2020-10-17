@@ -1,7 +1,7 @@
 #include "ui3drangegrp.h"
 
 #include "uigeninput.h"
-#include "uigroup.h"
+#include "uidlggroup.h"
 #include "uimsg.h"
 
 WMLib::ui3DRangeGrp::ui3DRangeGrp( uiParent* p, const uiString& caption, bool snapToStep )
@@ -95,7 +95,7 @@ void WMLib::ui3DRangeGrp::setSensitive(bool ranges, bool steps)
     crlfld_->setSensitive(steps, 2, 0);
 }
 
-void WMLib::ui3DRangeGrp::rangeChg(Callbacker* cb)
+void WMLib::ui3DRangeGrp::rangeChg(CallBacker* cb)
 {
     if (stepSnap_) {
         TrcKeySampling hs;

@@ -105,7 +105,7 @@ uidehMainWin::~uidehMainWin()
     detachAllNotifiers();
 }
 
-void uidehMainWin::lineselCB(Callbacker*)
+void uidehMainWin::lineselCB(CallBacker*)
 {
     if (lineselfld_==nullptr)
         return;
@@ -139,7 +139,7 @@ void uidehMainWin::lineselCB(Callbacker*)
     rangefld_->setTrcKeySampling(hs);
 }
 
-void uidehMainWin::include3DCB(Callbacker*)
+void uidehMainWin::include3DCB(CallBacker*)
 {
     if (include3Dfld_!=nullptr && include3Dfld_->isChecked()) {
         TrcKeySampling hs = rangefld_->getTrcKeySampling();

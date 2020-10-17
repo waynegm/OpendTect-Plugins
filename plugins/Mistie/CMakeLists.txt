@@ -1,4 +1,4 @@
-SET(OD_MODULE_DEPS AttributeEngine)
+SET(OD_MODULE_DEPS AttributeEngine EarthModel)
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
     mistiepi.cc
@@ -8,6 +8,7 @@ SET(OD_MODULE_SOURCES
     mistieestimator.cc
     trcanalysis.cc
     mistieestimator2d3d.cc
+    mistieapplytohorizon.cc
 )
 
 add_definitions( -DNDEBUG )

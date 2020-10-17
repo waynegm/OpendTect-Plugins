@@ -1,3 +1,3 @@
 static const char* wm_version = R"===(
-6.6.4
+6.6.6
 )===";

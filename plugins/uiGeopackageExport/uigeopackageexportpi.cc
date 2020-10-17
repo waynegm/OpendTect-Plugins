@@ -147,7 +147,7 @@ void uiGeopackageExportMgr::doDisplayCB( CallBacker* )
     
     EM::EMObject* emobj = EM::EMM().getObject( hd->getObjectID() );
     mDynamicCastGet(EM::Horizon3D*,hor,emobj)
-    if ( !hor ) { uiMSG().error("Internal: cannot find horizon"); return; }
+    if ( !hor ) { uiMSG().error(tr("Internal: cannot find horizon")); return; }
     
     uiTreeItem* parent = appl_->sceneMgr().findItem( displayid );
     if ( !parent )

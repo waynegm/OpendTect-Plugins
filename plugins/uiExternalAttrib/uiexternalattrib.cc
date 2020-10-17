@@ -178,7 +178,7 @@ void uiExternalAttrib::makeUI()
     }
 
     if (extproc_->hasZMargin() && !extproc_->hideZMargin()) {
-	zmarginfld_ = new uiGenInput( 0, "Z Window (samples)", IntInpIntervalSpec().setName("Samples after",1).setName("Samples before",0) );
+	zmarginfld_ = new uiGenInput( 0, tr("Z Window (samples)"), IntInpIntervalSpec().setName("Samples after",1).setName("Samples before",0) );
 	mAttachCB(zmarginfld_->valuechanging, uiExternalAttrib::doZmarginCheck);
 
 	Interval<int> val = extproc_->zmargin();
@@ -215,7 +215,7 @@ void uiExternalAttrib::makeUI()
 	    nms.add(nm.buf());
 	}
 	selectfld_ = new uiGenInput( 0, tr("Selection"), StringListInpSpec(nms) );
-	selectfld_->setTitleText(extproc_->selectName());
+	selectfld_->setTitleText(toUiString(extproc_->selectName()));
 	selectfld_->setValue(extproc_->selectValue());
 	selectfld_->display(true);
 	uiinp_->insertRows(uiinp_->nrRows(), 1);
@@ -225,8 +225,8 @@ void uiExternalAttrib::makeUI()
     parflds_.erase();
     for (int i=0; i<cNrParams; i++) {
 	if (extproc_->hasParam(i)) {
-	    uiGenInput* tmp = new uiGenInput( 0, extproc_->paramName(i), FloatInpSpec() );
-	    tmp->setTitleText(extproc_->paramName(i));
+	    uiGenInput* tmp = new uiGenInput( 0, toUiString(extproc_->paramName(i)), FloatInpSpec() );
+	    tmp->setTitleText(toUiString(extproc_->paramName(i)));
 	    tmp->setValue(extproc_->paramValue(i));
 	    tmp->display(true);
 	    parflds_ += tmp;
@@ -372,7 +372,7 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 		if (extproc_->hasParam(i))  {
 			BufferString s(ExternalAttrib::parStr());
 			s.add(i);
-			mSetFloat( s, (parflds_[i])->getfValue() );
+			mSetFloat( s, (parflds_[i])->getFValue() );
 		}
 	}
     return true;

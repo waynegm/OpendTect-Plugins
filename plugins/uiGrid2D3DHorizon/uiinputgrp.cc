@@ -31,7 +31,7 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
     uiObject* lastfld = nullptr;
     
     if (has2Dhorizon) {
-        hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), "2D Horizon");
+	hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), uiStrings::s2DHorizon());
         hor2Dfld_->selectionDone.notify( mCB(this, uiInputGrp, hor2DselCB));
         
         lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
@@ -40,13 +40,13 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         lastfld = (uiObject*) lines2Dfld_;
     }
     if (has3Dhorizon) {
-        exp3D_ = new uiCheckBox(this, "Include 3D horizon");
+        exp3D_ = new uiCheckBox(this, tr("Include 3D horizon"));
         if (lastfld!=nullptr)
             exp3D_->attach(alignedBelow, lastfld);
         exp3D_->setChecked(true);
         exp3D_->activated.notify(mCB(this, uiInputGrp, exp3DselCB));
         
-        hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), "3D Horizon");
+        hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon());
         hor3Dfld_->attach(alignedBelow, exp3D_);
         hor3Dfld_->selectionDone.notify( mCB(this, uiInputGrp, hor3DselCB));
         
@@ -64,8 +64,10 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
 
 void uiInputGrp::exp3DselCB(CallBacker*)
 {
-    hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-    subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+    if (exp3D_ && hor3Dfld_ && subsel3Dfld_) {
+	hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+	subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+    }
 }
 
 bool uiInputGrp::fillPar( IOPar& par ) const
@@ -102,14 +104,19 @@ void uiInputGrp::usePar( const IOPar& par )
     MultiID hor2Did, hor3Did;
     
     hor3Did.setUdf();
-    if (par.get(wmGridder2D::sKey3DHorizonID(), hor3Did))
-        if (hor3Dfld_!=nullptr && subsel3Dfld_!=nullptr) {
+    if (par.get(wmGridder2D::sKey3DHorizonID(), hor3Did)) {
+        if (hor3Dfld_ && subsel3Dfld_ && exp3D_) {
             hor3Dfld_->setInput(hor3Did);
             TrcKeyZSampling tkz;
             tkz.usePar(par);
             subsel3Dfld_->setInput(tkz);
+	    exp3D_->setChecked(true);
         }
-        
+    } else if (exp3D_)
+	exp3D_->setChecked(false);
+
+    exp3DselCB(nullptr);
+
     hor2Did.setUdf();
     if (par.get(wmGridder2D::sKey2DHorizonID(), hor2Did)) {
         if (hor2Dfld_!=nullptr) {

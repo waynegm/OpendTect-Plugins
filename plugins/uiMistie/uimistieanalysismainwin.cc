@@ -170,11 +170,11 @@ protected:
     
     void minchgCB(CallBacker*)
     {
-        if (minzchgfld_->getfValue()<0.0)
+        if (minzchgfld_->getFValue()<0.0)
             minzchgfld_->setValue(0.0);
-        if (minphasechgfld_->getfValue()<0.0)
+        if (minphasechgfld_->getFValue()<0.0)
             minphasechgfld_->setValue(0.0);
-        if (minampchgfld_->getfValue()<0.0)
+        if (minampchgfld_->getFValue()<0.0)
             minampchgfld_->setValue(0.0);
     }
     
@@ -183,9 +183,9 @@ protected:
         BufferStringSet lnms;
         lineselfld_->getChosen(lnms);
         corrs_.erase();
-        corrs_.computeZCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minzchgfld_->getfValue());
-        corrs_.computePhaseCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minphasechgfld_->getfValue());
-        corrs_.computeAmpCor(misties_, lnms, minquality_, maxiterfld_->box()->getValue(), 0.75, minampchgfld_->getfValue());
+        corrs_.computeZCor(misties_, lnms, minquality_, maxiterfld_->box()->getIntValue(), 0.75, minzchgfld_->getFValue());
+        corrs_.computePhaseCor(misties_, lnms, minquality_, maxiterfld_->box()->getIntValue(), 0.75, minphasechgfld_->getFValue());
+        corrs_.computeAmpCor(misties_, lnms, minquality_, maxiterfld_->box()->getIntValue(), 0.75, minampchgfld_->getFValue());
         
         return true;
     }
@@ -210,8 +210,11 @@ uiMistieAnalysisMainWin::uiMistieAnalysisMainWin( uiParent* p )
     mSetUdf(minquality_);
     
     table_ = new uiTable( this, uiTable::Setup().rowgrow(false).selmode(uiTable::Multi),"Mistie Table" );
-    BufferStringSet lbls(ColumnLabels);
-    lbls.get(zCol) += SI().getZUnitString();
+    uiStringSet lbls;
+    lbls.add(tr("LineA")).add(tr("LineB")).add(tr("TrcA")).add(tr("TrcB"))
+        .add(uiStrings::sX()).add(uiStrings::sY()).add(tr("Z Mistie\n%1").arg(SI().getZUnitString()))
+	.add(tr("Phase\nRotation (deg)")).add(tr("Amplitude\nScalar")).add(tr("Quality"));
+
     table_->setColumnLabels( lbls);
     table_->showGrid( true );
     table_->setNrRows( 10 );
@@ -290,7 +293,7 @@ void uiMistieAnalysisMainWin::calcCB( CallBacker* cb )
 
 void uiMistieAnalysisMainWin::xplotCB( CallBacker* )
 {
-    BufferString fnm = FilePath::getTempName("html");
+    BufferString fnm = FilePath::getTempFullPath(0, "html");
     FilePath outputfp( fnm );
     {
         BufferString lineA, lineB;

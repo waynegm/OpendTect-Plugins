@@ -109,7 +109,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     }
     
     BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
-    filefld_ = new uiFileInput( this, "Output file",
+    filefld_ = new uiFileInput( this, tr("Output file"),
                                 uiFileInput::Setup(uiFileDialog::Gen)
                                 .forread(false).filter("*.gpkg").defseldir(defseldir).allowallextensions(false) );
     filefld_->setDefaultExtension( "gpkg" );
