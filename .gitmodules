@@ -7,6 +7,3 @@
 [submodule "external/mba"]
 	path = external/mba
 	url = https://github.com/ddemidov/mba.git
-[submodule "external/pybind11"]
-	path = external/pybind11
-	url = https://github.com/pybind/pybind11.git
