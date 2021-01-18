@@ -11,7 +11,47 @@ project(OpendTect_Plugins)
 set ( OD_SUBSYSTEM "waynegm_plugin" )
 set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 
+if((NOT ${EIGEN3_INCLUDE_DIR}) OR (NOT EXISTS ${EIGEN3_INCLUDE_DIR}))
+    message("Unable to find system Eigen install - will use local")
+    execute_process(COMMAND git submodule update --init -- eigen-git-mirror
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external)
+    file( COPY ${CMAKE_SOURCE_DIR}/external/eigen-git-mirror/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
+    file( COPY ${CMAKE_SOURCE_DIR}/external/eigen-git-mirror/unsupported/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include/unsupported )
+    set(EIGEN3_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
+endif()
+
+if((NOT ${NANOFLANN_INCLUDE_DIR}) OR (NOT EXISTS ${NANOFLANN_INCLUDE_DIR}))
+    message("Unable to find system nanoflann install - will use local")
+    execute_process(COMMAND git submodule update --init -- nanoflann
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external)
+
+    file( COPY ${CMAKE_SOURCE_DIR}/external/nanoflann/include/nanoflann.hpp DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
+    file( RENAME ${CMAKE_SOURCE_DIR}/external/include/nanoflann.hpp ${CMAKE_SOURCE_DIR}/external/include/nanoflann.h )
+    set(NANOFLANN_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
+endif()
+
+if((NOT ${MBA_INCLUDE_DIR}) OR (NOT EXISTS ${MBA_INCLUDE_DIR}))
+    message("Unable to find system mba install - will use local")
+    execute_process(COMMAND git submodule update --init -- mba
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external)
+
+    file( COPY ${CMAKE_SOURCE_DIR}/external/mba/mba/mba.hpp DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
+    set(MBA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
+endif()
+
+if(NOT ${CMAKE_SOURCE_DIR}/python_bindings/pybind11)
+    message("Unable to find system pybind11 - will use local")
+    execute_process(COMMAND git submodule update --init -- pybind11
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/python_bindings)
+
+    file( COPY ${CMAKE_SOURCE_DIR}/python_bindings/pybind11/include/pybind11 DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
+    set(PYBIND11_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
+endif()
+
+
+
 add_subdirectory(external)
+add_subdirectory(python_bindings)
 include_directories(SYSTEM external/include plugins/wm_include)
 
 #Setup output directory
@@ -28,8 +68,8 @@ set ( PLUGINS uiWGMHelp
             uiGrid2D3DHorizon
             Mistie uiMistie
             AVOPolarAttrib uiAVOPolarAttrib
-            RSpecAttrib uiRSpecAttrib 
-            MLVFilterAttrib  uiMLVFilterAttrib 
+            RSpecAttrib uiRSpecAttrib
+            MLVFilterAttrib  uiMLVFilterAttrib
             AVOAttrib uiAVOAttrib
             ExternalAttrib uiExternalAttrib
             GradientAttrib uiGradientAttrib
@@ -58,7 +98,7 @@ if( OD_CREATE_LAUNCHERS )
 	create_target_launcher( ${LAUNCHER}
 	    RUNTIME_LIBRARY_DIRS
 	 ${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH}
-	 ${OD_BINARY_BASEDIR}/${OD_EXEC_OUTPUT_RELPATH} 
+	 ${OD_BINARY_BASEDIR}/${OD_EXEC_OUTPUT_RELPATH}
 	    ENVIRONMENT
 	    DTECT_APPL=${OpendTect_DIR}
 	    WORK=${OpendTect_DIR} )
@@ -66,6 +106,7 @@ if( OD_CREATE_LAUNCHERS )
 endif( OD_CREATE_LAUNCHERS )
 
 OD_WRITE_ALOFILES( ${CMAKE_CURRENT_BINARY_DIR} )
+message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 
 install(FILES LICENSE.txt DESTINATION ${CMAKE_INSTALL_PREFIX} RENAME wmplugin_LICENSE.txt)
 install(FILES CHANGES.MD DESTINATION ${CMAKE_INSTALL_PREFIX}/doc/ReleaseInfo RENAME RELEASE.wmplugins.txt)

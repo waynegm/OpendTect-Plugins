@@ -1,9 +1,12 @@
 [submodule "external/eigen-git-mirror"]
 	path = external/eigen-git-mirror
-	url = https://github.com/eigenteam/eigen-git-mirror.git
+	url = https://gitlab.com/libeigen/eigen.git
 [submodule "external/nanoflann"]
 	path = external/nanoflann
 	url = https://github.com/jlblancoc/nanoflann.git
 [submodule "external/mba"]
 	path = external/mba
 	url = https://github.com/ddemidov/mba.git
+[submodule "python_bindings/pybind11"]
+	path = python_bindings/pybind11
+	url = https://github.com/pybind/pybind11.git
