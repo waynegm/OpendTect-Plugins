@@ -84,10 +84,10 @@ public:
 
     uidehMainWin*		dehdlg_ = 0;
     uiWMPolygonParentTreeItem*	polytreeparent_ = 0;
-    
+
     MenuItem		dehitem_;
     int			dehmenuid_;
-    
+
     MenuItem		convexpolyitem_;
     int 		convexpolymenuid_;
     MenuItem		faultpolyitem_;
@@ -112,7 +112,7 @@ uiWMToolsMgr::uiWMToolsMgr( uiODMain* a )
     mAttachCB( appl_->sceneMgr().treeToBeAdded, uiWMToolsMgr::treeToBeAddedCB );
     mAttachCB( appl_->sceneMgr().treeAdded, uiWMToolsMgr::treeAddedCB );
     mAttachCB(IOM().surveyChanged, uiWMToolsMgr::surveyChangeCB);
-    
+
     dehitem_.id = dehmenuid_;
     convexpolyitem_.id = convexpolymenuid_;
     faultpolyitem_.id = faultpolymenuid_;
@@ -180,8 +180,8 @@ void uiWMToolsMgr::setupDEHMenu()
     uiActionSeparString dehprocstr( "Create Horizon Output" );
     uiAction* itm = mnumgr.procMnu()->findAction( dehprocstr );
     if ( !itm || !itm->getMenu() ) return;
-    
-    itm->getMenu()->insertItem( new uiAction(m3Dots(tr("Create Data Extent Horizon")),mCB(this,uiWMToolsMgr,dataExtentHorizonCB)) );
+
+    itm->getMenu()->insertAction( new uiAction(m3Dots(tr("Create Data Extent Horizon")),mCB(this,uiWMToolsMgr,dataExtentHorizonCB)) );
 }
 
 void uiWMToolsMgr::treeMenuCB(CallBacker* cb)
@@ -212,7 +212,7 @@ void uiWMToolsMgr::convexHullCB(CallBacker*)
     uiConvexHull convexhulldlg( appl_ );
     if ( !convexhulldlg.go() )
 	return;
-    
+
     Pick::Set* ps = convexhulldlg.getPolygonPickSet();
     if ( polytreeparent_ )
 	polytreeparent_->addNewPolygon( ps );
@@ -223,11 +223,11 @@ void uiWMToolsMgr::faultPolyCB(CallBacker*)
     uiFaultPoly faultpolydlg( appl_ );
     if ( !faultpolydlg.go() )
 	return;
-    
+
     int nfaults = faultpolydlg.nrFaults();
     for ( int idx=0; idx<nfaults; idx++ ) {
 	Pick::Set* ps = faultpolydlg.getPolyForFault(idx);
-	
+
 	if ( polytreeparent_ && ps && ps->size() )
 	    polytreeparent_->addNewPolygon( ps );
     }
@@ -264,6 +264,6 @@ mDefODInitPlugin(uiWMTools)
     theinst_ = new uiWMToolsMgr( ODMainWin() );
     if ( !theinst_ )
         return "Cannot instantiate WMTools plugin";
-    
+
      return 0;
 }

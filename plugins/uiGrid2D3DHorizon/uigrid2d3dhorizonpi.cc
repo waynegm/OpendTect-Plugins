@@ -70,8 +70,8 @@ void uiGrid2D3DHorizonMgr::updateMenu( CallBacker* )
     uiODMenuMgr& mnumgr = appl_->menuMgr();
     uiAction* itm = mnumgr.procMnu()->findAction( tr("Create Horizon Output") );
     if ( !itm || !itm->getMenu() ) return;
-    
-    itm->getMenu()->insertItem( new uiAction(tr("Grid 2D-3D Horizon ..."),mCB(this,uiGrid2D3DHorizonMgr,gridDialog)) );
+
+    itm->getMenu()->insertAction( new uiAction(tr("Grid 2D-3D Horizon ..."),mCB(this,uiGrid2D3DHorizonMgr,gridDialog)) );
 }
 
 
@@ -96,10 +96,10 @@ mDefODInitPlugin(uiGrid2D3DHorizon)
 {
     mDefineStaticLocalObject( PtrMan<uiGrid2D3DHorizonMgr>, theinst_, = 0 );
     if ( theinst_ ) return 0;
-    
+
     theinst_ = new uiGrid2D3DHorizonMgr( ODMainWin() );
     if ( !theinst_ )
         return "Cannot instantiate Grid 2D-3D Horizon plugin";
-    
+
      return 0;
 }

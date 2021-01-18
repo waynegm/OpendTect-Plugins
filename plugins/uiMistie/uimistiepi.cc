@@ -36,7 +36,7 @@ public:
     void doMistieCorrection2D(CallBacker*);
     void doMistieCorrection3D(CallBacker*);
     void surveyChgCB(CallBacker*);
-    
+
 protected:
     uiODMain*   appl_;
     uiMistieAnalysisMainWin*    mistiedlg_;
@@ -44,7 +44,7 @@ protected:
     uiMistieCorrHorDlg*		corrhor2ddlg_;
     uiMistieCorrHorDlg*		corrhor3ddlg_;
 
-    
+
 };
 
 uiMistieMgr::uiMistieMgr( uiODMain* a )
@@ -68,10 +68,10 @@ void uiMistieMgr::updateMenu( CallBacker* )
 {
     uiODMenuMgr& mnumgr = appl_->menuMgr();
     uiAction* newitem = new uiAction( tr("Mistie Corrections"), mCB(this,uiMistieMgr,doCorrectionEdit));
-    mnumgr.getBaseMnu( uiODApplMgr::Man )->insertItem( newitem );
+    mnumgr.getBaseMnu( uiODApplMgr::Man )->insertAction( newitem );
 
     newitem = new uiAction( tr("Mistie Analysis"), mCB(this,uiMistieMgr,doMistieAnalysis));
-    mnumgr.analMnu()->insertItem( newitem );
+    mnumgr.analMnu()->insertAction( newitem );
 
     uiActionSeparString gridprocstr( "Create Horizon Output" );
     uiAction* itm = mnumgr.procMnu()->findAction( gridprocstr );
@@ -79,11 +79,11 @@ void uiMistieMgr::updateMenu( CallBacker* )
     uiMenu* miscor = new uiMenu(appl_, tr("Apply Mistie Corrections"));
 
     if (SI().has2D())
-	miscor->insertItem(new uiAction(m3Dots(uiStrings::s2D()),mCB(this,uiMistieMgr,doMistieCorrection2D)));
+	miscor->insertAction(new uiAction(m3Dots(uiStrings::s2D()),mCB(this,uiMistieMgr,doMistieCorrection2D)));
     if (SI().has3D())
-	miscor->insertItem(new uiAction(m3Dots(uiStrings::s3D()),mCB(this,uiMistieMgr,doMistieCorrection3D)));
+	miscor->insertAction(new uiAction(m3Dots(uiStrings::s3D()),mCB(this,uiMistieMgr,doMistieCorrection3D)));
 
-    itm->getMenu()->insertItem(miscor);
+    itm->getMenu()->addMenu(miscor);
 }
 
 void uiMistieMgr::doCorrectionEdit( CallBacker* )
@@ -143,11 +143,11 @@ mDefODInitPlugin(uiMistie)
 {
     mDefineStaticLocalObject( PtrMan<uiMistieMgr>, theinst_, = 0 );
     if ( theinst_ ) return 0;
-    
+
     theinst_ = new uiMistieMgr( ODMainWin() );
     if ( !theinst_ )
         return "Cannot instantiate Mistie plugin";
-    
+
     uiMistieApplier::initClass();
 
     return 0;

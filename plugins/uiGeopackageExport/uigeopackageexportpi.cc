@@ -54,7 +54,7 @@ public:
     void	gtifDialog(CallBacker*);
     void        doDisplayCB(CallBacker*);
     void	surveyChgCB(CallBacker*);
-    
+
     bool        hasCRSdefined();
     bool        has3DHorizons();
 };
@@ -89,20 +89,20 @@ bool uiGeopackageExportMgr::has3DHorizons()
     const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
     const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
     return entries3D.size()>0;
-}    
+}
 
-    
+
 void uiGeopackageExportMgr::updateMenu( CallBacker* )
 {
     deleteAndZeroPtr( gpxdlg_ );
     uiAction* newitem = new uiAction( tr("Geopackage Export"), mCB(this,uiGeopackageExportMgr,gpxDialog));
-    appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertItem( newitem );
+    appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertAction( newitem );
 
     deleteAndZeroPtr(gtifdlg_);
     newitem = new uiAction( tr("Geotiff Export"), mCB(this,uiGeopackageExportMgr,gtifDialog));
-    appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertItem( newitem );
-    
-    
+    appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertAction( newitem );
+
+
 }
 
 void uiGeopackageExportMgr::gpxDialog( CallBacker* )
@@ -144,27 +144,27 @@ void uiGeopackageExportMgr::doDisplayCB( CallBacker* )
     uiVisPartServer* visserv = appl_->applMgr().visServer();
     mDynamicCastGet(visSurvey::HorizonDisplay*,hd,visserv->getObject(displayid))
     if ( !hd ) return;
-    
+
     EM::EMObject* emobj = EM::EMM().getObject( hd->getObjectID() );
     mDynamicCastGet(EM::Horizon3D*,hor,emobj)
     if ( !hor ) { uiMSG().error(tr("Internal: cannot find horizon")); return; }
-    
+
     uiTreeItem* parent = appl_->sceneMgr().findItem( displayid );
     if ( !parent )
         return;
-    
+
     const uiTreeItem* item = parent->findChild("Geopackage");
     if (item) {
 	mDynamicCastGet(const uiGeopackageTreeItem*,gpitm,item);
 	if ( gpitm )
 	    return;
     }
-    
+
     const int attrib = visserv->addAttrib( displayid );
     Attrib::SelSpec spec( "Geopackage", Attrib::SelSpec::cAttribNotSel(), false, 0 );
     spec.setDefString( uiGeopackageTreeItem::sKeyGeopackageDefString() );
     visserv->setSelSpec( displayid, attrib, spec );
-    
+
     uiGeopackageTreeItem* newitem = new uiGeopackageTreeItem(typeid(*parent).name());
     if (newitem) {
         parent->addChild(newitem, false);
@@ -192,8 +192,8 @@ mDefODInitPlugin(uiGeopackageExport)
     theinst_ = new uiGeopackageExportMgr( ODMainWin() );
     if ( !theinst_ )
         return "Cannot instantiate Geopackage Export plugin";
- 
+
     uiGeopackageTreeItem::initClass();
-    
+
     return 0;
 }

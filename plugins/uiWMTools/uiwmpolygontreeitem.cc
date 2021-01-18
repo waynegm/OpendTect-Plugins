@@ -89,42 +89,42 @@ bool uiWMPolygonParentTreeItem::showSubMenu()
 {
     mDynamicCastGet(visSurvey::Scene*,scene,applMgr()->visServer()->getObject(sceneID()));
     const bool hastransform = scene && scene->getZAxisTransform();
-    
+
     uiMenu mnu( getUiParent(), uiStrings::sAction() );
-    mnu.insertItem( new uiAction(m3Dots(uiStrings::sAdd())), mLoadPolyIdx );
-    mnu.insertItem( new uiAction(m3Dots(uiStrings::sNew())), mNewPolyIdx );
+    mnu.insertAction( new uiAction(m3Dots(uiStrings::sAdd())), mLoadPolyIdx );
+    mnu.insertAction( new uiAction(m3Dots(uiStrings::sNew())), mNewPolyIdx );
     if (toolsmenu_.nrItems()) {
 	uiMenu* toolmenu = new uiMenu(toolsmenu_);
-	mnu.insertItem(toolmenu);
+	mnu.addMenu(toolmenu);
     }
-    
+
     if ( children_.size() > 0 )
     {
 	mnu.insertSeparator();
 	uiAction* filteritem =
 	new uiAction( tr("Display Only at Sections") );
-	mnu.insertItem( filteritem, mOnlyAtPolyIdx );
+	mnu.insertAction( filteritem, mOnlyAtPolyIdx );
 	filteritem->setEnabled( !hastransform );
 	uiAction* shwallitem = new uiAction( tr("Display in Full") );
-	mnu.insertItem( shwallitem, mAlwaysPolyIdx );
+	mnu.insertAction( shwallitem, mAlwaysPolyIdx );
 	shwallitem->setEnabled( !hastransform );
 	mnu.insertSeparator();
-	mnu.insertItem( new uiAction(tr("Save Changes")), mSavePolyIdx );
+	mnu.insertAction( new uiAction(tr("Save Changes")), mSavePolyIdx );
     }
-    
+
     addStandardItems( mnu );
-    
+
     const int mnuid = mnu.exec();
     handleMenu.trigger( mnuid );
     if ( mnuid<0 )
 	return false;
-    
+
     if ( mnuid==mLoadPolyIdx )
     {
 	TypeSet<MultiID> mids;
 	if ( !applMgr()->pickServer()->loadSets(mids,true) )
 	    return false;
-	
+
 	for ( int idx=0; idx<mids.size(); idx++ )
 	{
 	    Pick::Set& ps = Pick::Mgr().get( mids[idx] );
@@ -135,7 +135,7 @@ bool uiWMPolygonParentTreeItem::showSubMenu()
     {
 	if ( !applMgr()->pickServer()->createEmptySet(true) )
 	    return false;
-	
+
 	Pick::Set& ps = Pick::Mgr().get( Pick::Mgr().size()-1 );
 	addPolygon( &ps );
     }
@@ -158,14 +158,14 @@ bool uiWMPolygonParentTreeItem::showSubMenu()
 	{
 	    mDynamicCastGet(uiODPolygonTreeItem*,itm,children_[idx])
 	    if ( !itm ) continue;
-	    
+
 	    itm->setOnlyAtSectionsDisplay( !showall );
 	    itm->updateColumnText( uiODSceneMgr::cColorColumn() );
 	}
     }
     else
 	handleStandardItems( mnuid );
-    
+
     return true;
 }
 
@@ -175,7 +175,7 @@ uiTreeItem* uiWMPolygonTreeItemFactory::createForVis(int visid, uiTreeItem*) con
 		    ODMainWin()->applMgr().visServer()->getObject(visid));
     if ( !psd || !psd->isPolygon() )
 	return 0;
-    
+
     Pick::Set* pickset = psd->getSet();
     return new uiWMPolygonTreeItem(visid,*pickset);
 }
@@ -183,7 +183,7 @@ uiTreeItem* uiWMPolygonTreeItemFactory::createForVis(int visid, uiTreeItem*) con
 uiWMPolygonTreeItem::uiWMPolygonTreeItem(int dispid,Pick::Set& ps)
     : uiODPolygonTreeItem(dispid, ps)
     {}
-    
+
 uiWMPolygonTreeItem::~uiWMPolygonTreeItem()
 {}
 
