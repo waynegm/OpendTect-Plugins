@@ -35,14 +35,23 @@
 #include "wellreader.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 void init_wmodpy_wells(py::module_& m) {
     py::class_<wmWells>(m, "Wells", "Encapsulates the wells in an OpendTect survey")
 	.def(py::init<const wmSurvey&>())
-	.def("get_well_names", &wmWells::getWellNames, "Return list of all well names in the survey")
-	.def("get_well_info", &wmWells::getWellInfo, "Return dict with basic information for all wells in the survey")
-	.def("get_well_log_info", &wmWells::getWellLogInfo, "Return dict with basic information for all logs in the specified well")
-	.def("get_markers", &wmWells::getMarkers, "Return dict with marker information for the specified well");
+	.def("get_well_names", &wmWells::getWellNames,
+	     "Return list of all well names in the survey")
+	.def("get_well_info", &wmWells::getWellInfo,
+	     "Return dict with basic information for all wells in the survey")
+	.def("get_well_info_df", &wmWells::getWellInfoDF,
+	     "Return Pandas dataframe with basic information for all wells in the survey - requires Pandas")
+	.def("get_well_info_gdf", &wmWells::getWellInfoGDF,
+	     "Return GeoPandas geodataframe with basic information for all wells in the survey - requires GeoPandas")
+	.def("get_well_log_info", &wmWells::getWellLogInfo,
+	     "Return dict with basic information for all logs in the specified well")
+	.def("get_markers", &wmWells::getMarkers,
+	     "Return dict with marker information for the specified well");
 
 }
 
@@ -67,7 +76,7 @@ py::list wmWells::getWellNames() const
 py::dict wmWells::getWellInfo() const {
     auto Point = py::module::import("shapely.geometry").attr("Point");
     py::dict dict;
-    py::list names, uwid, oper, state, county, welltype, geometry, rvel, gelev;
+    py::list names, uwid, oper, state, county, welltype, x, y, rvel, gelev;
     survey_.activate();
     FilePath fp(survey_.surveyPath().c_str(), "WellInfo");
     const IODir dir(fp.fullPath());
@@ -84,8 +93,8 @@ py::dict wmWells::getWellInfo() const {
 		county.append(std::string(wd->info().county));
 		welltype.append(std::string(wd->info().toString(wd->info().welltype_)));
 		const Coord cd = wd->info().surfacecoord;
-		py::object p = Point(cd.x, cd.y);
-		geometry.append(p);
+		x.append(cd.x);
+		y.append(cd.y);
 		rvel.append(wd->info().replvel);
 		gelev.append(wd->info().groundelev);
 	    }
@@ -96,11 +105,32 @@ py::dict wmWells::getWellInfo() const {
     dict["State"] = state;
     dict["County"] = county;
     dict["WellType"] = welltype;
-    dict["Geometry"] = geometry;
+    dict["X"] = x;
+    dict["Y"] = y;
     dict["ReplacementVelocity"] = rvel;
     dict["GroundElevation"] = gelev;
 
     return dict;
+}
+
+py::object wmWells::getWellInfoDF() const {
+    auto PDF = py::module::import("pandas").attr("DataFrame");
+    return PDF( getWellInfo() );
+}
+
+py::object wmWells::getWellInfoGDF() const {
+    auto GDF = py::module::import("geopandas").attr("GeoDataFrame");
+    auto Point = py::module::import("shapely.geometry").attr("Point");
+    py::dict info = getWellInfo();
+    py::list xs = info["X"];
+    py::list ys = info["Y"];
+    py::list points;
+    for (int idx=0; idx<xs.size(); idx++) {
+	py::object p = Point(xs[idx], ys[idx]);
+	points.append(p);
+    }
+    info["geometry"] = points;
+    return GDF(info, "crs"_a=survey_.epsgCode());
 }
 
 py::dict wmWells::getWellLogInfo(const std::string& wellnm) const {

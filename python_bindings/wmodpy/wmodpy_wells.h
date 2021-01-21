@@ -31,6 +31,8 @@ public:
 
     py::list getWellNames() const;
     py::dict getWellInfo() const;
+    py::object getWellInfoDF() const;
+    py::object getWellInfoGDF() const;
     py::dict getWellLogInfo(const std::string& wellnm) const;
     py::dict getMarkers(const std::string& wellnm) const;
 
