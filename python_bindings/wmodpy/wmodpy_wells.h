@@ -23,7 +23,11 @@ namespace py = pybind11;
 #include "wellman.h"
 
 class wmSurvey;
-namespace Well{ class Data; class LoadReqs; }
+namespace Well{
+    class Data;
+    class LoadReqs;
+    class Track;
+}
 
 class wmWells {
 public:
@@ -33,8 +37,13 @@ public:
     py::dict getWellInfo() const;
     py::object getWellInfoDF() const;
     py::object getWellInfoGDF() const;
+    py::list getWellLogNames(const std::string& wellnm) const;
     py::dict getWellLogInfo(const std::string& wellnm) const;
+    py::object getWellLogInfoDF(const std::string& wellnm) const;
     py::dict getMarkers(const std::string& wellnm) const;
+    py::object getMarkersDF(const std::string& wellnm) const;
+    py::dict getTrack(const std::string& wellnm) const;
+    py::object getTrackDF(const std::string& wellnm) const;
 
 
 protected:
