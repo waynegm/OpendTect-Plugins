@@ -386,20 +386,24 @@ bool wmGridder2D::loadData()
 bool wmGridder2D::setScope()
 {
     if (scope_==BoundingBox || scope_==ConvexHull) {
-        StepInterval<int> inlrg((int)Math::Floor(inlrg_.start), (int)Math::Ceil(inlrg_.stop), hs_.step_.first);
-		inlrg.stop = inlrg.atIndex(inlrg.indexOnOrAfter(Math::Ceil(inlrg_.stop), mDefEps));
-        StepInterval<int> crlrg((int)Math::Floor(crlrg_.start), (int)Math::Ceil(crlrg_.stop), hs_.step_.second);
-		crlrg.stop = crlrg.atIndex(crlrg.indexOnOrAfter(Math::Ceil(crlrg_.stop), mDefEps));
-        hs_.setInlRange(Interval<int>(inlrg.start,inlrg.stop));
-        hs_.setCrlRange(Interval<int>(crlrg.start, crlrg.stop));
-	if (scope_==ConvexHull )
-	    cvxhullpoly_.convexHull();
-	else
-	    cvxhullpoly_.erase();
+        SI().snapStep(hs_.step_, BinID(-1,-1));
+        BinID start((int)Math::Floor(inlrg_.start), (int)Math::Floor(crlrg_.start));
+        BinID stop((int)Math::Floor(inlrg_.stop), (int)Math::Floor(crlrg_.stop));
+        SI().snap(start, BinID(-1,-1));
+        SI().snap(stop, BinID(1,1));
+        StepInterval<int> inlrg(start.inl(), stop.inl(), hs_.step_.first);
+        inlrg.snap(inlrg.stop, 1);
+        StepInterval<int> crlrg(start.crl(), stop.crl(), hs_.step_.second);
+        crlrg.snap(crlrg.stop, 1);
+        hs_.set(inlrg, crlrg);
+        if (scope_==ConvexHull )
+            cvxhullpoly_.convexHull();
+        else
+            cvxhullpoly_.erase();
     } else if (scope_==Horizon && !horScopeID_.isUdf()) {
         EM::IOObjInfo eminfo(horScopeID_);
-        hs_.setInlRange(eminfo.getInlRange());
-        hs_.setCrlRange(eminfo.getCrlRange());
+        hs_.setLineRange(eminfo.getInlRange());
+        hs_.setTrcRange(eminfo.getCrlRange());
     }
 
     return true;

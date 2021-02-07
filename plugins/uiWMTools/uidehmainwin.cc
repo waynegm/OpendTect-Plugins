@@ -48,18 +48,18 @@ uidehMainWin::uidehMainWin( uiParent* p )
     setCtrlStyle( OkAndCancel );
     setOkText( tr("Create") );
     setShrinkAllowed(true);
-    
+
     uiString lbl = tr("Z Value ");
     lbl.append( SI().getUiZUnitString() );
     zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start*SI().zDomain().userFactor()) );
-    
+
     uiObject* lastfld = (uiObject*) zfld_;
     uiSeparator* horsepxt = new uiSeparator(this, "Hor Sep Data Extent");
     horsepxt->attach(stretchedBelow, zfld_);
     uiLabel* lblxt = new uiLabel(this, tr("Data Extent"));
     lblxt->attach(leftBorder);
     lblxt->attach(ensureBelow, horsepxt);
-    
+
     if (SI().has2D()) {
         BufferStringSet lnms;
         TypeSet<Pos::GeomID> geomids;
@@ -72,7 +72,7 @@ uidehMainWin::uidehMainWin( uiParent* p )
             mAttachCB(lineselfld_->selectionDone, uidehMainWin::lineselCB);
         }
     }
-    
+
     if (SI().has3D()) {
         include3Dfld_ = new uiCheckBox(this, tr("Include 3D survey area"));
         include3Dfld_->attach(alignedBelow, lastfld);
@@ -81,7 +81,7 @@ uidehMainWin::uidehMainWin( uiParent* p )
         lastfld = (uiObject*) include3Dfld_;
         include3Dfld_->activated.notify(mCB(this, uidehMainWin, include3DCB));
     }
-            
+
     uiSeparator* outsep = new uiSeparator(this, "Output");
     outsep->attach(stretchedBelow, lastfld);
     uiLabel* outlbl = new uiLabel(this, tr("Output Horizon"));
@@ -93,10 +93,10 @@ uidehMainWin::uidehMainWin( uiParent* p )
     outfld_->attach(stretchedBelow, lastfld);
     outfld_->attach(ensureBelow, outlbl);
     enableSaveButton(tr("Display after create"));
-    
+
     rangefld_ = new WMLib::ui3DRangeGrp(this, tr("Area Selection"), true);
     rangefld_->attach(alignedBelow, outfld_);
-    
+
     include3DCB(0);
 }
 
@@ -155,13 +155,13 @@ bool uidehMainWin::acceptOK( CallBacker*)
         uiMSG().error( tr("Z value is undefined. Please enter a valid value") );
         return false;
     }
-    
+
     zval /= SI().zDomain().userFactor();
     if (!SI().zRange(false).includes(zval,false)) {
         const bool res = uiMSG().askContinue( tr("Z Value is outside survey Z range") );
         if ( !res ) return false;
     }
-    
+
     EM::IOObjInfo eminfo( outfld_->selIOObj()->key() );
     if (eminfo.isOK()) {
         uiString msg = tr("Horizon: %1\nalready exists."
@@ -169,13 +169,13 @@ bool uidehMainWin::acceptOK( CallBacker*)
         if ( !uiMSG().askOverwrite(msg) )
             return false;
     }
-    
+
     RefMan<EM::Horizon3D> hor3d = EM::Horizon3D::createWithConstZ(zval, rangefld_->getTrcKeySampling());
     if (!hor3d) {
         ErrMsg("uidehMainWin::acceptOK - creation of output horizon failed");
         return false;
     }
-    
+
     {
         uiTaskRunner uitr(this);
         hor3d->setMultiID(outfld_->selIOObj()->key());

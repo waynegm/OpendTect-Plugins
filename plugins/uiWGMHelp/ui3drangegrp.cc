@@ -1,4 +1,5 @@
 #include "ui3drangegrp.h"
+#include "survinfo.h"
 
 #include "uigeninput.h"
 #include "uidlggroup.h"
@@ -15,12 +16,12 @@ WMLib::ui3DRangeGrp::ui3DRangeGrp( uiParent* p, const uiString& caption, bool sn
     iis.setName("Inl Start",0).setName("Inl Stop",1).setName("Inl step",2);
     inlfld_ = new uiGenInput(this, uiStrings::phrInline(uiStrings::sRange()), iis);
     inlfld_->valuechanged.notify( mCB(this,ui3DRangeGrp,rangeChg) );
-    
+
     iis.setName("Crl Start",0).setName("Crl Stop",1).setName("Crl step",2);
     crlfld_ = new uiGenInput( this, tr("Cross-line range"), iis );
     crlfld_->attach(alignedBelow, inlfld_);
     crlfld_->valuechanged.notify( mCB(this,ui3DRangeGrp,rangeChg) );
-    
+
     setHAlignObj( inlfld_ );
 }
 WMLib::ui3DRangeGrp::~ui3DRangeGrp()
@@ -52,7 +53,7 @@ TrcKeySampling  WMLib::ui3DRangeGrp::getTrcKeySampling() const
     hs.start_.crl() = crlfld_->getIStepInterval().start;
     hs.stop_.crl() =  crlfld_->getIStepInterval().stop;
     hs.step_.crl() =  crlfld_->getIStepInterval().step;
-    
+
     return hs;
 }
 
@@ -98,32 +99,25 @@ void WMLib::ui3DRangeGrp::setSensitive(bool ranges, bool steps)
 void WMLib::ui3DRangeGrp::rangeChg(CallBacker* cb)
 {
     if (stepSnap_) {
+	NotifyStopper ns1(inlfld_->valuechanged);
+	NotifyStopper ns2(crlfld_->valuechanged);
+
         TrcKeySampling hs;
-        int step = inlfld_->getIStepInterval().step;
-        int start = inlfld_->getIStepInterval().start;
-        int stop = inlfld_->getIStepInterval().stop;
-        hs.start_.inl() = step * (int)( Math::Ceil( (float)start/(float)step ) );
-        if (hs.start_.inl()>start)
-            hs.start_.inl() -= step;
-        hs.stop_.inl()  = step * (int)( Math::Floor( (float)stop/(float)step ) );
-        if (hs.stop_.inl()<stop)
-            hs.stop_.inl() += step;
-        hs.step_.inl()  = step;
-        if (inlfld_->getIStepInterval() != hs.inlRange())
-            inlfld_->setValue(hs.inlRange());
-        
-        step = crlfld_->getIStepInterval().step;
-        start = crlfld_->getIStepInterval().start;
-        stop = crlfld_->getIStepInterval().stop;
-        hs.start_.crl() = step * (int)( Math::Ceil( (float)start/(float)step ) );
-        if (hs.start_.crl()>start)
-            hs.start_.crl() -= step;
-        hs.stop_.crl()  = step * (int)( Math::Floor( (float)stop/(float)step ) );
-        if (hs.stop_.crl()<stop)
-            hs.stop_.crl() += step;
-        hs.step_.crl()  = step;
-        if (crlfld_->getIStepInterval() != hs.crlRange())
-            crlfld_->setValue(hs.crlRange());
+	hs.step_ = BinID(inlfld_->getIStepInterval().step,
+			 crlfld_->getIStepInterval().step);
+	SI().snapStep(hs.step_, BinID(-1,-1));
+	BinID start(inlfld_->getIStepInterval().start,
+		    crlfld_->getIStepInterval().start);
+	SI().snap(start, BinID(-1,-1));
+	BinID stop(inlfld_->getIStepInterval().stop,
+		   crlfld_->getIStepInterval().stop);
+	SI().snap(stop, BinID(1,1));
+	StepInterval<int> inlrg(start.inl(), stop.inl(), hs.step_.first);
+        inlrg.snap(inlrg.stop, 1);
+        StepInterval<int> crlrg(start.crl(), stop.crl(), hs.step_.second);
+        crlrg.snap(crlrg.stop, 1);
+        inlfld_->setValue(inlrg);
+	crlfld_->setValue(crlrg);
     }
 }
 

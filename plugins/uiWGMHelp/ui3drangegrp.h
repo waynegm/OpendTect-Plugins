@@ -10,13 +10,13 @@ class Callbacker;
 
 namespace WMLib
 {
-    
+
 mExpClass(uiWGMHelp) ui3DRangeGrp : public uiDlgGroup
 { mODTextTranslationClass(ui3DRangeGrp);
 public:
     ui3DRangeGrp(uiParent*, const uiString&, bool snapToStep=false);
     ~ui3DRangeGrp();
-    
+
     bool                fillPar( IOPar& par ) const;
     void		usePar( const IOPar& par );
     TrcKeySampling      getTrcKeySampling() const;
@@ -26,15 +26,15 @@ public:
     void                setSensitive(bool yn=true);
     void                setSensitive(bool ranges, bool steps);
     void		setSnap(bool yn);
-    
+
 protected:
     uiGenInput*         inlfld_;
     uiGenInput*         crlfld_;
-    
+
     bool                stepSnap_;
-    
+
     void                rangeChg(CallBacker*);
-    
+
 };
 }; //namespace
 

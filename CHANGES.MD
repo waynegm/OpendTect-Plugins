@@ -1,5 +1,15 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.7
+###uiWMTools
+- Ensure DataExtentHorizons conforms to survey definition
+
+###uiGrid2D3DHorizon
+- Ensure BoundingBox and ConvexHull horizon extents conform to survey definition
+
+###OpendTect Python Bindings
+- First release of some experimental python bindings for accessing OpendTect data
+
 ## Release 6.6.6
 - Fix some depreciated OpendTect API calls
 

@@ -52,7 +52,7 @@ uiGridGrp::uiGridGrp( uiParent* p )
     gridfld_->setSensitive(false, true);
     gridfld_->attach(alignedBelow, scopefld_);
     TrcKeySampling tks = SI().sampling(true).hsamp_;
-    tks.step_ = BinID(10,10);
+    tks.step_ = tks.step_ * 5;
     gridfld_->setTrcKeySampling( tks );
     
     methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
