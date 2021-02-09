@@ -15,7 +15,12 @@ if (UNIX)
     SET(CMAKE_INSTALL_RPATH "\$ORIGIN/")
     SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
-set(PYTHON_EXECUTABLE ${OpendTect_DIR}/../Python/bin/python)
+if (UNIX)
+    set(PYTHON_EXECUTABLE ${OpendTect_DIR}/../Python/bin/python)
+else()
+    set(PYTHON_EXECUTABLE ${OpendTect_DIR}/../Python/pythonw)
+endif()
+
 
 #
 #
@@ -28,11 +33,10 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/pybind11)
 set ( PYMODULES
 	wmodpy
 )
-
+link_directories( ${OD_RUNTIMELIBPATH} )
 foreach ( module ${PYMODULES} )
   file (GLOB MOD_FILES "${CMAKE_CURRENT_SOURCE_DIR}/wmodpy/*.cc")
   pybind11_add_module(${module} SYSTEM ${MOD_FILES})
-  target_link_libraries( ${module} PRIVATE -L${OD_RUNTIMELIBPATH} )
   target_link_libraries( ${module} PRIVATE ${OD_RUNTIMELIBS} )
   install( TARGETS ${module} COMPONENT python LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/${OD_PLFSUBDIR}/Release )
 endforeach()

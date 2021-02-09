@@ -50,4 +50,7 @@ x64
 *.suo
 *.dll.recipe
 *.dir
+*.pyd
+*.exp
+.vs/
 

@@ -87,7 +87,6 @@ py::list wmWells::getWellNames() const
 }
 
 py::dict wmWells::getWellInfo() const {
-    auto Point = py::module::import("shapely.geometry").attr("Point");
     py::dict dict;
     py::list names, uwid, oper, state, county, welltype, x, y, rvel, gelev;
     survey_.activate();
