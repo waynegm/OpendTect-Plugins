@@ -19,6 +19,7 @@
 #include "pybind11/pybind11.h"
 #include "wmodpy_survey.h"
 
+#include "ascstream.h"
 #include "bufstring.h"
 #include "dirlist.h"
 #include "file.h"
@@ -33,11 +34,15 @@
 #include "oddirs.h"
 #include "oscommand.h"
 #include "ptrman.h"
+#include "safefileio.h"
 #include "survinfo.h"
 #include "wellman.h"
 
 
 namespace py = pybind11;
+
+std::string wmSurvey::curbasedir_;
+std::string wmSurvey::cursurvey_;
 
 void init_wmodpy_survey(py::module_& m) {
     m.def("get_surveys", [](const char* basedir) {
@@ -64,6 +69,13 @@ void init_wmodpy_survey(py::module_& m) {
 	.def("has3d", &wmSurvey::has3D, "Return if the the survey contains 3D seismic data")
 	.def("epsg", &wmSurvey::epsgCode, "Return the survey CRS EPSG code");
 
+}
+
+std::string getModulePath()
+{
+    py::gil_scoped_acquire acquire;
+    py::object wmodpy = py::module::import("wmodpy");
+    return wmodpy.attr("__file__").cast<std::string>();
 }
 
 wmSurvey::wmSurvey(const std::string& basedir, const std::string& surveynm)
@@ -104,30 +116,54 @@ bool wmSurvey::has3D() const
 
 std::string wmSurvey::epsgCode() const
 {
-    BufferString epsg(si_->pars().find("Coordinate System.Projection.ID"));
-    epsg.replace("`", ":");
+    BufferString epsg;
+    FilePath fp( basedir_.c_str(), survey_.c_str(), SurveyInfo::sKeySetupFileName() );
+    SafeFileIO sfio( fp.fullPath(), false );
+    if ( sfio.open(true) )
+    {
+        ascistream astream( sfio.istrm() );
+        if ( astream.isOfFileType("Survey Info") )
+        {
+            astream.next();
+            const IOPar survpar( astream );
+            PtrMan<IOPar> coordsystempar = survpar.subselect( sKey::CoordSys() );
+            if ( !coordsystempar )
+	            coordsystempar = si_->pars().subselect( sKey::CoordSys() );
+            if ( coordsystempar )
+            {
+                epsg = coordsystempar->find("Projection.ID");
+                epsg.replace("`", ":");
+            }
+        }
+        sfio.closeSuccess();
+    }
     return std::string(epsg);
 }
 
 std::string wmSurvey::surveyPath() const
 {
+    activate();
     FilePath fp(si_->getDataDirName(), si_->getDirName());
     return std::string(fp.fullPath());
 }
 
 void wmSurvey::activate() const {
+    if (basedir_==curbasedir_ && survey_==cursurvey_)
+        return;
     OS::MachineCommand mc;
-    mc.addArg("/opt/seismic/OpendTect_6/6.6.0/bin/lux64/Release/od_main");
+    mc.addArg(getModulePath().c_str());
     mc.addKeyedArg("dtectdata", basedir_.c_str());
     mc.addKeyedArg("survey", survey_.c_str());
     int argc = mc.args().size();
     char** argv = new char*[argc+1];
     for (int idx=0; idx<argc; idx++) {
-	BufferString* arg = new BufferString(mc.args().get(idx));
-	argv[idx] = arg->getCStr();
+	    BufferString* arg = new BufferString(mc.args().get(idx));
+	    argv[idx] = arg->getCStr();
     }
     argv[argc] = 0;
     SetProgramArgs( argc, argv);
     IOM().setDataSource(basedir_.c_str(), survey_.c_str(), true);
+    curbasedir_ = basedir_;
+    cursurvey_ = survey_;
     Well::MGR().cleanup();
 }

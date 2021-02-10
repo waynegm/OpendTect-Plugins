@@ -37,5 +37,7 @@ public:
 protected:
     SurveyInfo*	si_=nullptr;
     std::string	basedir_, survey_;
+    static std::string curbasedir_, cursurvey_;
 
 };
+
