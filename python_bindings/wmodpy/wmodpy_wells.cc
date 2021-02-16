@@ -92,23 +92,27 @@ py::dict wmWells::getWellInfo() const {
     survey_.activate();
     FilePath fp(survey_.surveyPath().c_str(), "WellInfo");
     const IODir dir(fp.fullPath());
-    Well::Man& mgr = Well::MGR();
     for (int idx=0; idx<dir.size(); idx++) {
 	    const IOObj* ioobj = dir.get(idx);
 	    if (ioobj && ioobj->group()=="Well") {
 	        MultiID wid = ioobj->key();
-	        const Well::Data* wd = mgr.get(wid, Well::LoadReqs(Well::Inf));
-	        if (wd) {
-		        names.append(std::string(wd->info().name()));
-		        uwid.append(std::string(wd->info().uwid));
-		        state.append(std::string(wd->info().state));
-		        county.append(std::string(wd->info().county));
-		        welltype.append(std::string(wd->info().toString(wd->info().welltype_)));
-		        const Coord cd = wd->info().surfacecoord;
-		        x.append(cd.x);
-		        y.append(cd.y);
-		        rvel.append(wd->info().replvel);
-		        gelev.append(wd->info().groundelev);
+	        RefMan<Well::Data> wd = new Well::Data;
+            if (wd) {
+                wd->ref();
+                Well::Reader rdr( wid, *wd );
+                if (rdr.getInfo()) {
+		            names.append(std::string(wd->info().name()));
+		            uwid.append(std::string(wd->info().uwid));
+		            state.append(std::string(wd->info().state));
+		            county.append(std::string(wd->info().county));
+		            welltype.append(std::string(wd->info().toString(wd->info().welltype_)));
+		            const Coord cd = wd->info().surfacecoord;
+		            x.append(cd.x);
+		            y.append(cd.y);
+		            rvel.append(wd->info().replvel);
+		            gelev.append(wd->info().groundelev);
+                }
+                wd->unRef();
 	        }
 	    }
     }

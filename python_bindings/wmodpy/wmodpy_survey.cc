@@ -165,5 +165,5 @@ void wmSurvey::activate() const {
     IOM().setDataSource(basedir_.c_str(), survey_.c_str(), true);
     curbasedir_ = basedir_;
     cursurvey_ = survey_;
-    Well::MGR().cleanup();
+//    Well::MGR().cleanup();
 }
