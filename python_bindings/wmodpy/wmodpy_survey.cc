@@ -43,6 +43,9 @@ namespace py = pybind11;
 
 std::string wmSurvey::curbasedir_;
 std::string wmSurvey::cursurvey_;
+std::string wmSurvey::modulepath_;
+
+extern "C" { mGlobal(Basic) void SetCurBaseDataDirOverrule(const char*); }
 
 void init_wmodpy_survey(py::module_& m) {
     m.def("get_surveys", [](const char* basedir) {
@@ -71,11 +74,22 @@ void init_wmodpy_survey(py::module_& m) {
 
 }
 
-std::string getModulePath()
+void wmSurvey::setModulePath()
 {
     py::gil_scoped_acquire acquire;
     py::object wmodpy = py::module::import("wmodpy");
-    return wmodpy.attr("__file__").cast<std::string>();
+    modulepath_ = wmodpy.attr("__file__").cast<std::string>();
+
+    OS::MachineCommand mc;
+    mc.addArg(modulepath_.c_str());
+    int argc = mc.args().size();
+    char** argv = new char*[argc+1];
+    for (int idx=0; idx<argc; idx++) {
+        BufferString* arg = new BufferString(mc.args().get(idx));
+        argv[idx] = arg->getCStr();
+    }
+    argv[argc] = 0;
+    SetProgramArgs( argc, argv);
 }
 
 wmSurvey::wmSurvey(const std::string& basedir, const std::string& surveynm)
@@ -150,18 +164,11 @@ std::string wmSurvey::surveyPath() const
 void wmSurvey::activate() const {
     if (basedir_==curbasedir_ && survey_==cursurvey_)
         return;
-    OS::MachineCommand mc;
-    mc.addArg(getModulePath().c_str());
-    mc.addKeyedArg("dtectdata", basedir_.c_str());
-    mc.addKeyedArg("survey", survey_.c_str());
-    int argc = mc.args().size();
-    char** argv = new char*[argc+1];
-    for (int idx=0; idx<argc; idx++) {
-	    BufferString* arg = new BufferString(mc.args().get(idx));
-	    argv[idx] = arg->getCStr();
-    }
-    argv[argc] = 0;
-    SetProgramArgs( argc, argv);
+
+    if (modulepath_.empty())
+        setModulePath();
+
+    SetCurBaseDataDirOverrule(basedir_.c_str());
     IOM().setDataSource(basedir_.c_str(), survey_.c_str(), true);
     curbasedir_ = basedir_;
     cursurvey_ = survey_;
