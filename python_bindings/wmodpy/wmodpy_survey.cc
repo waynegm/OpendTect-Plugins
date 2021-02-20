@@ -45,22 +45,21 @@ std::string wmSurvey::curbasedir_;
 std::string wmSurvey::cursurvey_;
 std::string wmSurvey::modulepath_;
 
-extern "C" { mGlobal(Basic) void SetCurBaseDataDirOverrule(const char*); }
-
 void init_wmodpy_survey(py::module_& m) {
     m.def("get_surveys", [](const char* basedir) {
-	py::list list;
-	if (!IOMan::isValidDataRoot(basedir))
+	    wmSurvey::initModule();
+	    py::list list;
+	    if (!IOMan::isValidDataRoot(basedir))
+    	     return list;
+		DirList dl(basedir, File::DirsInDir);
+	    for (int idx=0; idx<dl.size(); idx++) {
+	        const BufferString& dirnm = dl.get(idx);
+	        const FilePath fp(basedir, dirnm);
+	        const BufferString fpstr = fp.fullPath();
+	        if (File::exists(fpstr) && IOMan::isValidSurveyDir(fpstr))
+                list.append(std::string(dirnm));
+	    }
 	    return list;
-	DirList dl(basedir, File::DirsInDir);
-	for (int idx=0; idx<dl.size(); idx++) {
-	    const BufferString& dirnm = dl.get(idx);
-	    const FilePath fp(basedir, dirnm);
-	    const BufferString fpstr = fp.fullPath();
-	    if (File::exists(fpstr) && IOMan::isValidSurveyDir(fpstr))
-		list.append(std::string(dirnm));
-	}
-	return list;
     }, "Return list of survey names in given survey data root",
 	py::arg("survey_data_root"));
 
@@ -71,11 +70,13 @@ void init_wmodpy_survey(py::module_& m) {
 	.def("has2d", &wmSurvey::has2D, "Return if the survey contains 2D seismic data")
 	.def("has3d", &wmSurvey::has3D, "Return if the the survey contains 3D seismic data")
 	.def("epsg", &wmSurvey::epsgCode, "Return the survey CRS EPSG code");
-
 }
 
-void wmSurvey::setModulePath()
+void wmSurvey::initModule()
 {
+	if (!modulepath_.empty())
+		return;
+
     py::gil_scoped_acquire acquire;
     py::object wmodpy = py::module::import("wmodpy");
     modulepath_ = wmodpy.attr("__file__").cast<std::string>();
@@ -161,12 +162,12 @@ std::string wmSurvey::surveyPath() const
     return std::string(fp.fullPath());
 }
 
+extern "C" { mGlobal(Basic) void SetCurBaseDataDirOverrule(const char*); }
+
 void wmSurvey::activate() const {
+    initModule();
     if (basedir_==curbasedir_ && survey_==cursurvey_)
         return;
-
-    if (modulepath_.empty())
-        setModulePath();
 
     SetCurBaseDataDirOverrule(basedir_.c_str());
     IOM().setDataSource(basedir_.c_str(), survey_.c_str(), true);

@@ -34,12 +34,12 @@ public:
     std::string surveyPath() const;
     void activate() const;
 
+    static void initModule();
+
 protected:
     SurveyInfo*	si_=nullptr;
     std::string	basedir_, survey_;
     static std::string curbasedir_, cursurvey_, modulepath_;
-
-    static void setModulePath();
 
 };
 

@@ -8,6 +8,7 @@ install_manifest.txt
 mistie_report.h
 .directory
 __pycache__
+build/*
 # Compiled Object files
 *.slo
 *.lo
