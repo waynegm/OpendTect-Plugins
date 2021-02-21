@@ -47,19 +47,19 @@ std::string wmSurvey::modulepath_;
 
 void init_wmodpy_survey(py::module_& m) {
     m.def("get_surveys", [](const char* basedir) {
-	    wmSurvey::initModule();
-	    py::list list;
-	    if (!IOMan::isValidDataRoot(basedir))
-    	     return list;
-		DirList dl(basedir, File::DirsInDir);
-	    for (int idx=0; idx<dl.size(); idx++) {
-	        const BufferString& dirnm = dl.get(idx);
-	        const FilePath fp(basedir, dirnm);
-	        const BufferString fpstr = fp.fullPath();
-	        if (File::exists(fpstr) && IOMan::isValidSurveyDir(fpstr))
-                list.append(std::string(dirnm));
-	    }
+	wmSurvey::initModule();
+	py::list list;
+	if (!IOMan::isValidDataRoot(basedir))
 	    return list;
+	DirList dl(basedir, File::DirsInDir);
+	for (int idx=0; idx<dl.size(); idx++) {
+	    const BufferString& dirnm = dl.get(idx);
+	    const FilePath fp(basedir, dirnm);
+	    const BufferString fpstr = fp.fullPath();
+	    if (File::exists(fpstr) && IOMan::isValidSurveyDir(fpstr))
+		list.append(std::string(dirnm));
+	}
+	return list;
     }, "Return list of survey names in given survey data root",
 	py::arg("survey_data_root"));
 
@@ -74,8 +74,8 @@ void init_wmodpy_survey(py::module_& m) {
 
 void wmSurvey::initModule()
 {
-	if (!modulepath_.empty())
-		return;
+    if (!modulepath_.empty())
+	return;
 
     py::gil_scoped_acquire acquire;
     py::object wmodpy = py::module::import("wmodpy");
