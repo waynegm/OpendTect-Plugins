@@ -13,10 +13,10 @@ set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 
 if((NOT ${EIGEN3_INCLUDE_DIR}) OR (NOT EXISTS ${EIGEN3_INCLUDE_DIR}))
     message("Unable to find system Eigen install - will use local")
-    execute_process(COMMAND git submodule update --init -- eigen-git-mirror
+    execute_process(COMMAND git submodule update --init -- eigen
                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external)
-    file( COPY ${CMAKE_SOURCE_DIR}/external/eigen-git-mirror/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
-    file( COPY ${CMAKE_SOURCE_DIR}/external/eigen-git-mirror/unsupported/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include/unsupported )
+    file( COPY ${CMAKE_SOURCE_DIR}/external/eigen/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
+    file( COPY ${CMAKE_SOURCE_DIR}/external/eigen/unsupported/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include/unsupported )
     set(EIGEN3_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
 endif()
 
