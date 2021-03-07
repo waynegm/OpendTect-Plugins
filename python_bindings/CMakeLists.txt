@@ -15,11 +15,11 @@ if (UNIX)
     SET(CMAKE_INSTALL_RPATH "\$ORIGIN/")
     SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
-if (UNIX)
-    set(PYTHON_EXECUTABLE ${OpendTect_DIR}/../Python/bin/python)
-else()
-    set(PYTHON_EXECUTABLE ${OpendTect_DIR}/../Python/pythonw)
-endif()
+#if (UNIX)
+#    set(PYTHON_EXECUTABLE ${OpendTect_DIR}/../Python/bin/python)
+#else()
+#    set(PYTHON_EXECUTABLE ${OpendTect_DIR}/../Python/pythonw)
+#endif()
 
 
 #

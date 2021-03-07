@@ -54,4 +54,7 @@ x64
 *.pyd
 *.exp
 .vs/
+*.cmd
+*checkpoint.ipynb
+
 

@@ -72,6 +72,9 @@ void init_wmodpy_survey(py::module_& m) {
 	.def("epsg", &wmSurvey::epsgCode, "Return the survey CRS EPSG code");
 }
 
+#ifdef __win__
+extern "C" { mGlobal(Basic) void SetExecutablePathOverrule(const char*); }
+#endif
 void wmSurvey::initModule()
 {
     if (!modulepath_.empty())
@@ -80,7 +83,9 @@ void wmSurvey::initModule()
     py::gil_scoped_acquire acquire;
     py::object wmodpy = py::module::import("wmodpy");
     modulepath_ = wmodpy.attr("__file__").cast<std::string>();
-
+#ifdef __win__
+    SetExecutablePathOverrule(modulepath_.c_str());
+#endif
     OS::MachineCommand mc;
     mc.addArg(modulepath_.c_str());
     int argc = mc.args().size();
