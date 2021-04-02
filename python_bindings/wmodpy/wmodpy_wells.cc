@@ -43,27 +43,27 @@ using namespace pybind11::literals;
 void init_wmodpy_wells(py::module_& m) {
     py::class_<wmWells>(m, "Wells", "Encapsulates the wells in an OpendTect survey")
 	.def(py::init<const wmSurvey&>())
-	.def("get_well_names", &wmWells::getWellNames,
+	.def("names", &wmWells::getWellNames,
 	     "Return list of all well names in the survey")
-	.def("get_well_info", &wmWells::getWellInfo,
+	.def("info", &wmWells::getWellInfo,
 	     "Return dict with basic information for all wells in the survey")
-	.def("get_well_info_df", &wmWells::getWellInfoDF,
+	.def("info_df", &wmWells::getWellInfoDF,
 	     "Return Pandas dataframe with basic information for all wells in the survey - requires Pandas")
-	.def("get_well_info_gdf", &wmWells::getWellInfoGDF,
+	.def("info_gdf", &wmWells::getWellInfoGDF,
 	     "Return GeoPandas geodataframe with basic information for all wells in the survey - requires GeoPandas")
-	.def("get_well_log_names", &wmWells::getWellLogNames,
+	.def("log_names", &wmWells::getWellLogNames,
 	     "Return list of all log names in the specified well")
-	.def("get_well_log_info", &wmWells::getWellLogInfo,
+	.def("log_info", &wmWells::getWellLogInfo,
 	     "Return dict with basic information for all logs in the specified well")
-	.def("get_well_log_info_df", &wmWells::getWellLogInfoDF,
+	.def("log_info_df", &wmWells::getWellLogInfoDF,
 	     "Return Pandas dataframe with basic information for all logs in the specified well - requires Pandas")
-	.def("get_markers", &wmWells::getMarkers,
+	.def("markers", &wmWells::getMarkers,
 	     "Return dict with marker information for the specified well")
-	.def("get_markers_df", &wmWells::getMarkersDF,
+	.def("markers_df", &wmWells::getMarkersDF,
 	     "Return Pandas dataframe with marker information for the specified well - requires Pandas")
-	.def("get_track", &wmWells::getTrack,
+	.def("track", &wmWells::getTrack,
 	     "Return dict with MD, TVDSS, X and Y for the specified well")
-	.def("get_track_df", &wmWells::getTrackDF,
+	.def("track_df", &wmWells::getTrackDF,
 	     "Return Pandas dataframe with track information for the specified well - requires Pandas");
 
 }

@@ -13,8 +13,8 @@ set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 
 if((NOT ${EIGEN3_INCLUDE_DIR}) OR (NOT EXISTS ${EIGEN3_INCLUDE_DIR}))
     message("Unable to find system Eigen install - will use local")
-    execute_process(COMMAND git submodule update --init -- eigen
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external)
+    execute_process(COMMAND git submodule update --init -- external/eigen
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     file( COPY ${CMAKE_SOURCE_DIR}/external/eigen/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
     file( COPY ${CMAKE_SOURCE_DIR}/external/eigen/unsupported/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include/unsupported )
     set(EIGEN3_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
@@ -22,8 +22,8 @@ endif()
 
 if((NOT ${NANOFLANN_INCLUDE_DIR}) OR (NOT EXISTS ${NANOFLANN_INCLUDE_DIR}))
     message("Unable to find system nanoflann install - will use local")
-    execute_process(COMMAND git submodule update --init -- nanoflann
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external)
+    execute_process(COMMAND git submodule update --init -- external/nanoflann
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
     file( COPY ${CMAKE_SOURCE_DIR}/external/nanoflann/include/nanoflann.hpp DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
     file( RENAME ${CMAKE_SOURCE_DIR}/external/include/nanoflann.hpp ${CMAKE_SOURCE_DIR}/external/include/nanoflann.h )
@@ -32,8 +32,8 @@ endif()
 
 if((NOT ${MBA_INCLUDE_DIR}) OR (NOT EXISTS ${MBA_INCLUDE_DIR}))
     message("Unable to find system mba install - will use local")
-    execute_process(COMMAND git submodule update --init -- mba
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external)
+    execute_process(COMMAND git submodule update --init -- external/mba
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
     file( COPY ${CMAKE_SOURCE_DIR}/external/mba/mba/mba.hpp DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
     set(MBA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
@@ -41,8 +41,8 @@ endif()
 
 if(NOT ${CMAKE_SOURCE_DIR}/python_bindings/pybind11)
     message("Unable to find system pybind11 - will use local")
-    execute_process(COMMAND git submodule update --init -- pybind11
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/python_bindings)
+    execute_process(COMMAND git submodule update --init -- python_bindings/pybind11
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
     file( COPY ${CMAKE_SOURCE_DIR}/python_bindings/pybind11/include/pybind11 DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
     set(PYBIND11_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)

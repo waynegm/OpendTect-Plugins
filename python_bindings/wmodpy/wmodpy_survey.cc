@@ -25,18 +25,16 @@
 #include "file.h"
 #include "filepath.h"
 #include "genc.h"
-#include "iodir.h"
-#include "ioobj.h"
-#include "iodirentry.h"
 #include "ioman.h"
 #include "iopar.h"
-#include "multiid.h"
+#include "moddepmgr.h"
 #include "oddirs.h"
+#include "odruncontext.h"
 #include "oscommand.h"
+#include "plugins.h"
 #include "ptrman.h"
 #include "safefileio.h"
 #include "survinfo.h"
-#include "wellman.h"
 
 
 namespace py = pybind11;
@@ -66,9 +64,9 @@ void init_wmodpy_survey(py::module_& m) {
     py::class_<wmSurvey>(m, "Survey", "Encapsulates an OpendTect survey")
 	.def(py::init<const std::string&, const std::string&>())
 	.def("name", &wmSurvey::name, "Return the survey name")
-	.def("isok", &wmSurvey::isOK, "Return if the survey is properly setup and accessible")
-	.def("has2d", &wmSurvey::has2D, "Return if the survey contains 2D seismic data")
-	.def("has3d", &wmSurvey::has3D, "Return if the the survey contains 3D seismic data")
+	.def("isok", &wmSurvey::isOK, "Return True if the survey is properly setup and accessible")
+	.def("has2d", &wmSurvey::has2D, "Return True if the survey contains 2D seismic data")
+	.def("has3d", &wmSurvey::has3D, "Return True if the the survey contains 3D seismic data")
 	.def("epsg", &wmSurvey::epsgCode, "Return the survey CRS EPSG code");
 }
 
@@ -83,6 +81,8 @@ void wmSurvey::initModule()
     py::gil_scoped_acquire acquire;
     py::object wmodpy = py::module::import("wmodpy");
     modulepath_ = wmodpy.attr("__file__").cast<std::string>();
+
+    OD::SetRunContext(OD::BatchProgCtxt);
 #ifdef __win__
     SetExecutablePathOverrule(modulepath_.c_str());
 #endif
@@ -96,6 +96,9 @@ void wmSurvey::initModule()
     }
     argv[argc] = 0;
     SetProgramArgs( argc, argv);
+    
+    OD::ModDeps().ensureLoaded("Well");
+    OD::ModDeps().ensureLoaded("EarthModel");
 }
 
 wmSurvey::wmSurvey(const std::string& basedir, const std::string& surveynm)

@@ -1,3 +1,4 @@
+#pragma once
 /*Copyright (C) 2021 Wayne Mogg All rights reserved.
  *
  * This file may be used either under the terms of:
@@ -12,24 +13,35 @@
  * ________________________________________________________________________
  *
  * Author:        Wayne Mogg
- * Date:          January 2021
+ * Date:          March 2021
  * ________________________________________________________________________
  *
  */
 #include "pybind11/pybind11.h"
-
 namespace py = pybind11;
 
-void init_wmodpy_survey(py::module_&);
-void init_wmodpy_wells(py::module_&);
-void init_wmodpy_horizons(py::module_&);
 
+class wmSurvey;
 
-PYBIND11_MODULE(wmodpy, m) {
-    m.doc() = "pybind11 wmodpy plugin for OpendTect";
+class wmHorizons3D {
+public:
+    wmHorizons3D( const wmSurvey& thesurvey );
 
-    init_wmodpy_survey(m);
-    init_wmodpy_wells(m);
-    init_wmodpy_horizons(m);
-}
+    py::list    getNames() const;
+    py::tuple   getZ(const std::string& name) const;
 
+protected:
+    const wmSurvey& survey_;
+
+};
+
+class wmHorizons2D {
+public:
+    wmHorizons2D( const wmSurvey& thesurvey );
+
+    py::list getNames() const;
+
+protected:
+    const wmSurvey& survey_;
+
+};
