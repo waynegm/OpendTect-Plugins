@@ -8,6 +8,10 @@
 
 cmake_minimum_required (VERSION 3.0)
 project(OpendTect_Plugins)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 set ( OD_SUBSYSTEM "waynegm_plugin" )
 set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 
@@ -60,6 +64,8 @@ option ( OD_BUILD_LOCAL "Build in local directory" ON )
 #Find OpendTect
 list(APPEND CMAKE_MODULE_PATH "${OpendTect_DIR}/CMakeModules")
 find_package( OpendTect )
+get_filename_component( OpendTect_DIR "${OpendTect_DIR}" REALPATH )
+get_filename_component( OD_BINARY_BASEDIR "${OD_BINARY_BASEDIR}" REALPATH )
 
 #Setup the modules
 set ( PLUGINS uiWGMHelp
@@ -78,27 +84,22 @@ OD_ADD_MODULES( plugins ${PLUGINS} )
 
 #Add the plugins
 foreach ( plugin ${PLUGINS} )
+    get_filename_component( OD_${plugin}_RUNTIMEPATH "${OD_${PLUGIN}_RUNTIMEPATH}" REALPATH CACHE )
     list( APPEND RUNTIMEPATH ${OD_${plugin}_RUNTIMEPATH} )
 endforeach()
 
+list ( APPEND RUNTIMEPATH ${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH} )
 list ( APPEND RUNTIMEPATH ${OD_BINARY_BASEDIR}/${OD_EXEC_OUTPUT_RELPATH} )
 list ( REMOVE_DUPLICATES RUNTIMEPATH )
 
 if( OD_CREATE_LAUNCHERS )
-    set ( OD_LAUNCHERS od_main od_process_attrib od_process_volume )
+	set ( OD_LAUNCHERS od_main od_process_attrib od_process_volume )
+    set ( ENV{DTECT_BINDIR} "${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH}" )
     foreach ( LAUNCHER ${OD_LAUNCHERS} )
 	add_custom_target( ${LAUNCHER} ALL )
-	foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
-	    set_target_properties( ${LAUNCHER}
-		    PROPERTIES
-		    LOCATION_${CONFIG}
-	${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH}/${CONFIG}/${LAUNCHER}${OD_EXECUTABLE_EXTENSION} )
-	endforeach()
-
 	create_target_launcher( ${LAUNCHER}
-	    RUNTIME_LIBRARY_DIRS
-	 ${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH}
-	 ${OD_BINARY_BASEDIR}/${OD_EXEC_OUTPUT_RELPATH}
+	    COMMAND "${LAUNCHER}${OD_EXECUTABLE_EXTENSION}"
+	    RUNTIME_LIBRARY_DIRS "${RUNTIMEPATH}"
 	    ENVIRONMENT
 	    DTECT_APPL=${OpendTect_DIR}
 	    WORK=${OpendTect_DIR} )
@@ -106,7 +107,6 @@ if( OD_CREATE_LAUNCHERS )
 endif( OD_CREATE_LAUNCHERS )
 
 OD_WRITE_ALOFILES( ${CMAKE_CURRENT_BINARY_DIR} )
-message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 
 install(FILES LICENSE.txt DESTINATION ${CMAKE_INSTALL_PREFIX} RENAME wmplugin_LICENSE.txt)
 install(FILES CHANGES.MD DESTINATION ${CMAKE_INSTALL_PREFIX}/doc/ReleaseInfo RENAME RELEASE.wmplugins.txt)
