@@ -56,5 +56,7 @@ x64
 .vs/
 *.cmd
 *checkpoint.ipynb
+*.pdb
+*.ilk
 
 
