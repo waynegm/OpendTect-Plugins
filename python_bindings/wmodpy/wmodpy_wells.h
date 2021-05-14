@@ -31,19 +31,22 @@ namespace Well{
 
 class wmWells {
 public:
+    enum Mode { Upscale, Sample };
     wmWells( const wmSurvey& thesurvey );
 
-    py::list getWellNames() const;
-    py::dict getWellInfo() const;
-    py::object getWellInfoDF() const;
-    py::object getWellInfoGDF() const;
-    py::list getWellLogNames(const std::string& wellnm) const;
-    py::dict getWellLogInfo(const std::string& wellnm) const;
-    py::object getWellLogInfoDF(const std::string& wellnm) const;
-    py::dict getMarkers(const std::string& wellnm) const;
-    py::object getMarkersDF(const std::string& wellnm) const;
-    py::dict getTrack(const std::string& wellnm) const;
-    py::object getTrackDF(const std::string& wellnm) const;
+    py::list    getWellNames() const;
+    py::dict    getWellInfo() const;
+    py::object  getWellInfoDF() const;
+    py::object  getWellInfoGDF() const;
+    py::list    getWellLogNames(const std::string& wellnm) const;
+    py::dict    getWellLogInfo(const std::string& wellnm) const;
+    py::object  getWellLogInfoDF(const std::string& wellnm) const;
+    py::dict    getMarkers(const std::string& wellnm) const;
+    py::object  getMarkersDF(const std::string& wellnm) const;
+    py::dict    getTrack(const std::string& wellnm) const;
+    py::object  getTrackDF(const std::string& wellnm) const;
+    py::dict    getWellLogs(const std::string& wellnm, py::list lognms,
+			    float zstep, Mode samplemode=Upscale);
 
 
 protected:

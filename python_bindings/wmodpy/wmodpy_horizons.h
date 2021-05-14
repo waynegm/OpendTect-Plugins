@@ -28,6 +28,8 @@ public:
     wmHorizons3D( const wmSurvey& thesurvey );
 
     py::list    getNames() const;
+    py::dict    getInfo() const;
+    py::object  getInfoDF() const;
     py::tuple   getZ(const std::string& name) const;
 
 protected:

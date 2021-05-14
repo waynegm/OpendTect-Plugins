@@ -38,280 +38,287 @@ ________________________________________________________________________
 namespace Attrib
 {
 
-	mAttrDefCreateInstance(ExternalAttrib)
+    mAttrDefCreateInstance(ExternalAttrib)
 
-	ExtProc* ExternalAttrib::dProc_ = NULL;
-	BufferString ExternalAttrib::exdir_ = "";
+    ExtProc* ExternalAttrib::dProc_ = NULL;
+    BufferString ExternalAttrib::exdir_ = "";
 
 void ExternalAttrib::initClass()
 {
-	mAttrStartInitClassWithUpdate
+    mAttrStartInitClassWithUpdate
 
-	StringParam* interpfilepar = new StringParam( interpFileStr() );
-	FilePath pypath;
-	interpfilepar->setDefaultValue( uiWGMHelp::GetPythonInterpPath().fullPath() );
-	desc->addParam( interpfilepar );
-	
-	StringParam* exfilepar = new StringParam( exFileStr() );
-	desc->addParam( exfilepar );
+    StringParam* interpfilepar = new StringParam( interpFileStr() );
+    FilePath pypath;
+    interpfilepar->setDefaultValue( uiWGMHelp::GetPythonInterpPath().fullPath() );
+    desc->addParam( interpfilepar );
 
-	IntGateParam* zMargin = new IntGateParam( zmarginStr() );
-	zMargin->setLimits( Interval<int>(-1000,1000) );
-	zMargin->setDefaultValue( Interval<int>(-10, 10) );
-	desc->addParam( zMargin );
-	
-	BinIDParam* stepout = new BinIDParam( stepoutStr() );
-	stepout->setDefaultValue( BinID(0,0) );
-	desc->addParam( stepout );
+    StringParam* exfilepar = new StringParam( exFileStr() );
+    desc->addParam( exfilepar );
 
-	IntParam* selection = new IntParam( selectStr() );
+    IntGateParam* zMargin = new IntGateParam( zmarginStr() );
+    zMargin->setLimits( Interval<int>(-1000,1000) );
+    zMargin->setDefaultValue( Interval<int>(-10, 10) );
+    desc->addParam( zMargin );
+
+    BinIDParam* stepout = new BinIDParam( stepoutStr() );
+    stepout->setDefaultValue( BinID(0,0) );
+    desc->addParam( stepout );
+
+    IntParam* selection = new IntParam( selectStr() );
     desc->addParam( selection );
-	selection->setDefaultValue(0);
+    selection->setDefaultValue(0);
 
-	for (int i=0; i<cNrParams; i++) {
-		FloatParam* par = new FloatParam( BufferString(parStr()).add(i) );
-		desc->addParam( par );
-		par->setDefaultValue(0);
+    for (int i=0; i<cNrParams; i++) {
+	FloatParam* par = new FloatParam( BufferString(parStr()).add(i) );
+	desc->addParam( par );
+	par->setDefaultValue(0);
+    }
+
+    StringParam* base64pars = new StringParam( base64ParStr() );
+    desc->addParam( base64pars );
+
+    desc->addInput(InputSpec("Input data", true));
+    desc->addOutputDataType( Seis::UnknowData );
+
+    if ( GetEnvVarYN("OD_EX_DIR") )
+	exdir_ = GetEnvVar("OD_EX_DIR");
+    else {
+	FilePath fp( GetScriptDir(),"python","wmpy" );
+	if ( fp.exists() )
+	    exdir_ = fp.fullPath();
+
+	if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
+	    FilePath ufp( GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", "python", "wmpy" );
+	    if ( ufp.exists() )
+		exdir_ = ufp.fullPath();
 	}
-	
-	desc->addInput(InputSpec("Input data", true));
-	desc->addOutputDataType( Seis::UnknowData );
-	
-	if ( GetEnvVarYN("OD_EX_DIR") )
-	    exdir_ = GetEnvVar("OD_EX_DIR");
-	else {
-	    FilePath fp( GetScriptDir(),"python","wmpy" );
-	    if ( fp.exists() )
-		exdir_ = fp.fullPath();
-
-	    if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
-		FilePath ufp( GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", "python", "wmpy" );
-		if ( ufp.exists() )
-		    exdir_ = ufp.fullPath();
-	    }
-	}
-
-	
-	mAttrEndInitClass
+    }
+    mAttrEndInitClass
 }
 
 void ExternalAttrib::updateDesc( Desc& desc )
 {
 
-	BufferString iname = desc.getValParam( interpFileStr() )->getStringValue();
-	BufferString fname = desc.getValParam( exFileStr() )->getStringValue();
-	fname.replace( "%OD_EX_DIR%", ExternalAttrib::exdir_ );
-#ifdef __win__
-	fname.replace("/","\\");
-#endif
-	
-	if (dProc_) {
-        if (dProc_->getFile() != fname) {
-            delete dProc_;
-            dProc_ = new ExtProc(fname.str(), iname.str());
-		}
-	} else {
-        dProc_ = new ExtProc(fname.str(), iname.str());
-	}
+    BufferString iname = desc.getValParam( interpFileStr() )->getStringValue();
+    BufferString fname = desc.getValParam( exFileStr() )->getStringValue();
+    fname.replace( "%OD_EX_DIR%", ExternalAttrib::exdir_ );
+    #ifdef __win__
+    fname.replace("/","\\");
+    #endif
 
-	desc.setParamEnabled(zmarginStr(), dProc_->hasZMargin());
-	desc.setParamEnabled(stepoutStr(), dProc_->hasStepOut());
-	desc.setParamEnabled(selectStr(), dProc_->hasSelect());
-	for (int i=0; i<cNrParams; i++) {
-		desc.setParamEnabled(BufferString(parStr()).add(i), dProc_->hasParam(i));
+    if (dProc_) {
+	if (dProc_->getFile() != fname) {
+	    delete dProc_;
+	    dProc_ = new ExtProc(fname.str(), iname.str());
 	}
-	
-	if (dProc_->hasOutput())
-		desc.setNrOutputs(Seis::UnknowData, dProc_->numOutput());
-	else
-		desc.setNrOutputs(Seis::UnknowData, 1);
+    } else {
+	dProc_ = new ExtProc(fname.str(), iname.str());
+    }
+
+    desc.setParamEnabled(zmarginStr(), dProc_->hasZMargin());
+    desc.setParamEnabled(stepoutStr(), dProc_->hasStepOut());
+    desc.setParamEnabled(selectStr(), dProc_->hasSelect());
+    for (int i=0; i<cNrParams; i++) {
+	desc.setParamEnabled(BufferString(parStr()).add(i), dProc_->hasParam(i));
+    }
+    desc.setParamEnabled(base64ParStr(), dProc_->hasNewParams());
+
+    if (dProc_->hasOutput())
+	desc.setNrOutputs(Seis::UnknowData, dProc_->numOutput());
+    else
+	desc.setNrOutputs(Seis::UnknowData, 1);
 
     if ( desc.nrInputs() != dProc_->numInput() ) {
-		while ( desc.nrInputs() )
-			desc.removeInput(0);
-		for ( int idx=0; idx<dProc_->numInput(); idx++ ) {
-			BufferString bfs = "Input "; bfs += idx+1;
-			desc.addInput( InputSpec(bfs, true) );
-		}
+	while ( desc.nrInputs() )
+	    desc.removeInput(0);
+	for ( int idx=0; idx<dProc_->numInput(); idx++ ) {
+	    BufferString bfs = "Input "; bfs += idx+1;
+	    desc.addInput( InputSpec(bfs, true) );
+	}
     }
-	
-	if (dProc_->hasStepOut())
-		desc.setLocality(Desc::MultiTrace);
-	else
-		desc.setLocality(Desc::SingleTrace);
+
+    if (dProc_->hasStepOut())
+	desc.setLocality(Desc::MultiTrace);
+    else
+	desc.setLocality(Desc::SingleTrace);
+
 }
 
 ExternalAttrib::ExternalAttrib( Desc& desc )
     : Provider( desc )
-	, stepout_(0,0)
-	, zmargin_(0,0)
+    , stepout_(0,0)
+    , zmargin_(0,0)
 {
-	if ( !isOK() ) return;
+    if ( !isOK() ) return;
 
-	indata_.allowNull(true);
-	
-	mGetString( interpfile_, interpFileStr() );
-	mGetString( exfile_, exFileStr() );
-	exfile_.replace( "%OD_EX_DIR%", ExternalAttrib::exdir_ );
-#ifdef __win__
-	exfile_.replace("/","\\");
-#endif
-	
-	proc_= new ExtProc( exfile_.str(), interpfile_.str() );
-	
-	if (proc_) {
-		if (proc_->hasZMargin()) {
-			mGetIntInterval( zmargin_, zmarginStr() );
-			proc_->setZMargin(zmargin_);
-		}
-		if (proc_->hasStepOut()) {
-			mGetBinID( stepout_, stepoutStr() );
-			proc_->setStepOut(stepout_);
-		} else {
-			stepout_ = BinID(0,0);
-		}
-		if (proc_->hasSelect()) {
+    indata_.allowNull(true);
+
+    mGetString( interpfile_, interpFileStr() );
+    mGetString( exfile_, exFileStr() );
+    exfile_.replace( "%OD_EX_DIR%", ExternalAttrib::exdir_ );
+    #ifdef __win__
+    exfile_.replace("/","\\");
+    #endif
+
+    proc_= new ExtProc( exfile_.str(), interpfile_.str() );
+
+    if (proc_) {
+	if (proc_->hasZMargin()) {
+	    mGetIntInterval( zmargin_, zmarginStr() );
+	    proc_->setZMargin(zmargin_);
+	}
+	if (proc_->hasStepOut()) {
+	    mGetBinID( stepout_, stepoutStr() );
+	    proc_->setStepOut(stepout_);
+	} else {
+	    stepout_ = BinID(0,0);
+	}
+	if (proc_->hasSelect()) {
             mGetInt( selection_, selectStr());
             proc_->setSelection( selection_);
         }
         par_.setSize(cNrParams);
-		for (int i=0; i<cNrParams; i++) {
-			if (proc_->hasParam(i)) {
-				BufferString s(parStr());
-				s.add(i);
-				mGetFloat(par_[i], s);
-				proc_->setParam(i, par_[i]);
-			}
-		}
-		nrout_ = proc_->numOutput();
-		nrin_ = proc_->numInput();
-		getTrcPos();
-		int ninl = stepout_.inl()*2 + 1;
-		int ncrl = stepout_.crl()*2 + 1;
-		proc_->setSeisInfo( ninl, ncrl, inlDist()*SI().inlStep(), crlDist()*SI().crlStep(), zFactor(), dipFactor() );
-	} else 
-		ErrMsg("ExternalAttrib::ExternalAttrib - error creating extrenal procedure");
+	for (int i=0; i<cNrParams; i++) {
+	    if (proc_->hasParam(i)) {
+		BufferString s(parStr());
+		s.add(i);
+		mGetFloat(par_[i], s);
+		proc_->setParam(i, par_[i]);
+	    }
+	}
+	if (proc_->hasNewParams()) {
+	    BufferString base64str;
+	    mGetString(base64str, base64ParStr());
+	    proc_->setParamsBase64Str(base64str);
+	}
+
+	nrout_ = proc_->numOutput();
+	nrin_ = proc_->numInput();
+	getTrcPos();
+	int ninl = stepout_.inl()*2 + 1;
+	int ncrl = stepout_.crl()*2 + 1;
+	proc_->setSeisInfo( ninl, ncrl, inlDist()*SI().inlStep(), crlDist()*SI().crlStep(), zFactor(), dipFactor() );
+    } else
+	ErrMsg("ExternalAttrib::ExternalAttrib - error creating extrenal procedure");
 }
 
 ExternalAttrib::~ExternalAttrib()
 {
-	if (proc_)
-		delete proc_;
+    if (proc_)
+	delete proc_;
 }
 
 bool ExternalAttrib::allowParallelComputation() const
 {
-	return proc_->doParallel(); }
+    return proc_->doParallel();
+}
 
 bool ExternalAttrib::getTrcPos()
 {
-	trcpos_.erase();
+    trcpos_.erase();
     int trcidx = 0;
     centertrcidx_ = 0;
-	BinID bid;
-	for ( bid.inl()=-stepout_.inl(); bid.inl()<=stepout_.inl(); bid.inl()++ ) {
-		for ( bid.crl()=-stepout_.crl(); bid.crl()<=stepout_.crl(); bid.crl()++ ) {
+    BinID bid;
+    for ( bid.inl()=-stepout_.inl(); bid.inl()<=stepout_.inl(); bid.inl()++ ) {
+	for ( bid.crl()=-stepout_.crl(); bid.crl()<=stepout_.crl(); bid.crl()++ ) {
       	    if ( !bid.inl() && !bid.crl() )
                 centertrcidx_ = trcidx;
-			trcpos_ += bid;
+	    trcpos_ += bid;
             trcidx++;
         }
     }
-	return true;
+    return true;
 }
 
 void ExternalAttrib::getCompNames( BufferStringSet& nms ) const
 {
-	if (proc_->hasOutput()) {
-		nms.erase();
-		for (int i = 0; i<proc_->numOutput();i++)
-		{
-			BufferString nm = proc_->outputName(i);
-			nms.add(nm.buf());
-		}
-	} else 
-		Provider::getCompNames( nms ); 
+    if (proc_->hasOutput()) {
+	nms.erase();
+	for (int i = 0; i<proc_->numOutput();i++)
+	{
+	    BufferString nm = proc_->outputName(i);
+	    nms.add(nm.buf());
+	}
+    } else
+	Provider::getCompNames( nms );
 }
 
-bool ExternalAttrib::getInputData( const BinID& relpos, int zintv ) 
+bool ExternalAttrib::getInputData( const BinID& relpos, int zintv )
 {
-	while ( indata_.size() < trcpos_.size()*nrin_ ) {
-		indata_ += 0;
-	}
-	while (indataidx_.size() < nrin_) {
-		indataidx_.add(-1);
-	}
+    while ( indata_.size() < trcpos_.size()*nrin_ ) {
+	indata_ += 0;
+    }
+    while (indataidx_.size() < nrin_) {
+	indataidx_.add(-1);
+    }
 
-	const BinID bidstep = inputs_[0]->getStepoutStep();
-	for (int iin=0; iin<nrin_; iin++) {
-		for ( int idx=0; idx<trcpos_.size(); idx++ )
-		{
-			BinID pos = relpos + trcpos_[idx] * bidstep;
-			const DataHolder* data = inputs_[iin]->getData( pos, zintv );
-			if ( !data ) {
+    const BinID bidstep = inputs_[0]->getStepoutStep();
+    for (int iin=0; iin<nrin_; iin++) {
+	for ( int idx=0; idx<trcpos_.size(); idx++ ) {
+	    BinID pos = relpos + trcpos_[idx] * bidstep;
+	    const DataHolder* data = inputs_[iin]->getData( pos, zintv );
+	    if ( !data ) {
                 pos = relpos + trcpos_[centertrcidx_]*bidstep;
                 data = inputs_[iin]->getData( pos, zintv );
                 if ( !data ) return false;
-			}
-			indata_.replace( iin*trcpos_.size()+idx, data );
-		}
-		indataidx_[iin] = getDataIndex(iin);
+	    }
+	    indata_.replace( iin*trcpos_.size()+idx, data );
 	}
-	
-	return true;
+	indataidx_[iin] = getDataIndex(iin);
+    }
+
+    return true;
 }
 
 bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos, int z0, int nrsamples, int threadid ) const
 {
-	if ( indata_.isEmpty() || output.isEmpty() )
-		return false;
-	if (proc_->isOK()) {
-		const int nrtraces = trcpos_.size();
-		const int sz = zmargin_.width() + nrsamples;
-		ProcInst* pi = proc_->getIdleInst( sz );
-		BinID bin = getCurrentPosition();
-		for (int iin = 0; iin<nrin_; iin++) {
-			for (int trcidx=0; trcidx<nrtraces; trcidx++)
-			{
-				const DataHolder* data = indata_[iin*nrtraces+trcidx];
-				for ( int idx=0; idx<sz; idx++ )
-				{
-					float val = getInputValue(*data, indataidx_[iin], zmargin_.start+idx, z0);
-					val = mIsUdf(val)?0.0f:val;
-					proc_->setInput( pi, iin, trcidx, idx, val );
-				}
-			}
+    if ( indata_.isEmpty() || output.isEmpty() )
+	return false;
+    if (proc_->isOK()) {
+	const int nrtraces = trcpos_.size();
+	const int sz = zmargin_.width() + nrsamples;
+	ProcInst* pi = proc_->getIdleInst( sz );
+	BinID bin = getCurrentPosition();
+	for (int iin = 0; iin<nrin_; iin++) {
+	    for (int trcidx=0; trcidx<nrtraces; trcidx++) {
+		const DataHolder* data = indata_[iin*nrtraces+trcidx];
+		for ( int idx=0; idx<sz; idx++ ) {
+		    float val = getInputValue(*data, indataidx_[iin], zmargin_.start+idx, z0);
+		    val = mIsUdf(val)?0.0f:val;
+		    proc_->setInput( pi, iin, trcidx, idx, val );
 		}
+	    }
+	}
 
-		proc_->compute( pi, z0, bin.inl(), bin.crl() );
-		for (int iout = 0; iout<nrout_; iout++) {
-			if (outputinterest_[iout]) {
-				for ( int idx=0; idx<nrsamples; idx++ ) {
-					float val = proc_->getOutput( pi, iout, idx-zmargin_.start);
-					setOutputValue( output, iout, idx, z0, val );
-				}
-			}
+	proc_->compute( pi, z0, bin.inl(), bin.crl() );
+	for (int iout = 0; iout<nrout_; iout++) {
+	    if (outputinterest_[iout]) {
+		for ( int idx=0; idx<nrsamples; idx++ ) {
+		    float val = proc_->getOutput( pi, iout, idx-zmargin_.start);
+		    setOutputValue( output, iout, idx, z0, val );
 		}
-		proc_->setInstIdle( pi );
-		return true;
-	} else
-		return false;
+	    }
+	}
+	proc_->setInstIdle( pi );
+	return true;
+    } else
+	return false;
 }
 
-const Interval<int>*	ExternalAttrib::desZSampMargin(int,int) const
-{ 
-	if (zmargin_ == Interval<int>(0,0))
-		return 0;
-	else
-		return &zmargin_; 
+const Interval<int>* ExternalAttrib::desZSampMargin(int,int) const
+{
+    if (zmargin_ == Interval<int>(0,0))
+	return nullptr;
+    else
+	return &zmargin_;
 }
 
 const BinID* ExternalAttrib::desStepout(int input,int output) const
-{ 
-	if (stepout_ == BinID(0,0))
-		return 0;
-	else
-		return &stepout_;
+{
+    if (stepout_ == BinID(0,0))
+	return nullptr;
+    else
+	return &stepout_;
 }
 }; //namespace
 

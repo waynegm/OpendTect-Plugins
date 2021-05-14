@@ -31,59 +31,73 @@ class ProcInst;
 
 mExpClass(ExternalAttrib) ExtProc {
 public:
-	ExtProc( const char* exFile , const char* inFile );
+    ExtProc( const char* exFile , const char* inFile );
     ~ExtProc();
 	
-	BufferString	getFile();
-	void			setFile( const char* exFile, const char* inFile );
+    BufferString	getFile() const;
+    void		setFile( const char* exFile, const char* inFile );
 	
-	bool			isOK();
-	void			setSeisInfo( int niln, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor );
-	ProcInst*		getIdleInst( int nrsamples );
-	void			setInstIdle( ProcInst* pi );
-	void			setInput( ProcInst* pi, int input, int trc, int idx, float val );
-	float			getOutput( ProcInst* pi, int output, int idx );
-	bool			compute( ProcInst* pi, int z0, int inl, int crl );
+    bool		isOK();
+    void		setSeisInfo( int niln, int ncrl, float inlDist, float crlDist,
+				     float zFactor, float dipFactor );
+    ProcInst*		getIdleInst( int nrsamples );
+    void		setInstIdle( ProcInst* pi );
+    void		setInput( ProcInst* pi, int input, int trc, int idx, float val );
+    float		getOutput( ProcInst* pi, int output, int idx );
+    bool		compute( ProcInst* pi, int z0, int inl, int crl );
 	
-	bool				hasInput();
-	bool				hasInputs();
-	int					numInput();
-	BufferString		inputName( int inum = 0 );
+    BufferStringSet	getInputNames() const;
+    BufferStringSet	getOutputNames() const;
+    bool		hasInput() const;
+    bool		hasInputs() const;
+    int			numInput() const;
+    BufferString	inputName( int inum = 0 ) const;
 	
-	bool				hasOutput();
-	int					numOutput();
-	BufferString		outputName( int onum = 0 );
+    bool		hasOutput() const;
+    int			numOutput() const;
+    BufferString	outputName( int onum = 0 ) const;
 
-	bool				hasZMargin();
-	bool				hideZMargin();
-	bool				zSymmetric();
-	Interval<int>		z_minimum();
-	Interval<int>		zmargin();
-	void				setZMargin(Interval<int> zint);
+    bool		hasZMargin() const;
+    bool		hideZMargin() const;
+    bool		zSymmetric() const;
+    Interval<int>	z_minimum() const;
+    Interval<int>	zmargin() const;
+    void		setZMargin(Interval<int> zint);
 
-	bool				hasStepOut();
-	bool				hideStepOut();
-	bool				so_same();
-	BinID				so_minimum();
-	BinID				stepout();
-	void				setStepOut(BinID s);
+    bool		hasStepOut() const;
+    bool		hideStepOut() const;
+    bool		so_same();
+    BinID		so_minimum();
+    BinID		stepout() const;
+    void		setStepOut(BinID s);
     
-	bool                hasSelect();
-	BufferString		selectName();
+    bool               	hasSelect() const;
+    BufferString	selectName();
     BufferString     	selectOpt( int snum );
-	int					numSelect();
+    int			numSelect();
     int                 selectValue();
     void                setSelection(int val);
 	
-	bool				hasParam( int pnum );
-	BufferString		paramName( int pnum );
-	float				paramValue( int pnum );
-	void				setParam( int pnum, float val );
+    bool		hasParam( int pnum ) const;
+    BufferString	paramName( int pnum );
+    float		paramValue( int pnum );
+    void		setParam( int pnum, float val );
 	
-	bool				hasHelp();
-	BufferString		helpValue();
+    bool		hasHelp() const;
+    BufferString	helpValue() const;
 	
-	bool				doParallel();
+    bool		doParallel();
+    
+    bool		hasNewParams() const;
+    BufferStringSet	paramKeys() const;
+    BufferString	getParamType(const char*) const;
+    float		getParamFValue(const char* key, const char* subkey="Value") const;
+    void		setParamFValue(const char*, float);
+    BufferString	getParamStrValue(const char* key, const char* subkey="Value") const;
+    void		setParamStrValue(const char*, const char*);
+    BufferStringSet	getParamStrLstValue(const char* key, const char* subkey="Value") const;
+    BufferString	getParamsBase64Str();
+    bool		setParamsBase64Str(const BufferString&);
 	
 protected:
 	ExtProcImpl*	pD;

@@ -10,7 +10,7 @@
 # Date: 		March, 2016
 # Homepage:		http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/
 #
-import sys, getopt, os, json
+import sys, getopt, os, json, ast
 import numpy as np
 
 import logging
@@ -115,7 +115,7 @@ def run(argv):
 				logH.error("Fatal error in getpar", exc_info=True)
 		elif opt in ("-c", "--compute"):
 			try:
-				readPar(arg)
+				readPar(ast.literal_eval(arg))
 				preCompute()
 				doCompute()
 				sys.exit()

@@ -1,5 +1,20 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.8
+### External Attributes
+- remove frame around data entry UI
+- add new "params" format for attribute UI definition (legacy style still supported)
+- add input file selection new style "param"
+- allow "param" keys with spaces
+- add Pylops/ex_prestack_modelling.py external attribute script
+
+### wmodpy - OpendTect Python Bindings
+- improve Windows build support
+- standardise python command naming
+- add methods to python Wells object to get well log data
+- add Horizon3D python object for working with OpendTect 3D horizons (names, info and z values)
+- add Horizon2D python object for working with OpendTect 2D horizons (names only)
+
 ## Release 6.6.7
 ### uiWMTools
 - Ensure DataExtentHorizons conforms to survey definition

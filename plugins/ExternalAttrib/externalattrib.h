@@ -41,53 +41,53 @@ static const int cNrInputs = 6;
 mExpClass(ExternalAttrib) ExternalAttrib : public Provider
 {
 public:
-	static void		initClass();
-				ExternalAttrib(Desc&);
+    static void		initClass();
+			ExternalAttrib(Desc&);
 
-	static const char*	attribName()	{ return "ExternalAttrib"; }
-	void			getCompNames(BufferStringSet&) const;
+    static const char*	attribName()	{ return "ExternalAttrib"; }
+    void		getCompNames(BufferStringSet&) const;
 	
-	static const char*	interpFileStr()	{ return "interpfile"; }
-	static const char*	exFileStr()		{ return "exfile"; }
-	static const char*	zmarginStr() 	{ return "zmargin"; }
-	static const char*	stepoutStr()	{ return "stepout"; }
-	static const char*      selectStr()  	{ return "selection"; }
-	static const char*		parStr()		{ return "par"; }
+    static const char*	interpFileStr()	{ return "interpfile"; }
+    static const char*	exFileStr()	{ return "exfile"; }
+    static const char*	base64ParStr()	{ return "base64pars"; }
+    static const char*	zmarginStr() 	{ return "zmargin"; }
+    static const char*	stepoutStr()	{ return "stepout"; }
+    static const char*	selectStr()  	{ return "selection"; }
+    static const char*	parStr()	{ return "par"; }
 	
-	static BufferString		exdir_;
-	static BufferString		interp_;
+    static BufferString		exdir_;
+    static BufferString		interp_;
 	
 protected:
-							~ExternalAttrib();
-	static Provider*		createInstance(Desc&);
-	static void				updateDesc(Desc&);
-    static ExtProc*         dProc_;
+			~ExternalAttrib();
+    static Provider*	createInstance(Desc&);
+    static void		updateDesc(Desc&);
+    static ExtProc*	dProc_;
 	
-	bool					allowParallelComputation() const;
-	const Interval<int>*	desZSampMargin(int,int) const;
-	const BinID*			desStepout(int input,int output) const;
-	bool					getTrcPos();
+    bool		allowParallelComputation() const;
+    const Interval<int>*	desZSampMargin(int,int) const;
+    const BinID*	desStepout(int input,int output) const;
+    bool		getTrcPos();
 	
-	bool					getInputData(const BinID&,int zintv);
-	bool					computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const;
+    bool		getInputData(const BinID&,int zintv);
+    bool		computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const;
 
-				
-	BufferString			interpfile_;
-	BufferString			exfile_;
-	Interval<int>			zmargin_;
-	BinID					stepout_;
-    int                     selection_;
-	TypeSet<float>			par_;
-	TypeSet<BinID>			trcpos_;
-    int						centertrcidx_;
+    BufferString	interpfile_;
+    BufferString	exfile_;
+    Interval<int>	zmargin_;
+    BinID		stepout_;
+    int			selection_;
+    TypeSet<float>	par_;
+    TypeSet<BinID>	trcpos_;
+    int			centertrcidx_;
 	
-	TypeSet<int>					indataidx_;
+    TypeSet<int>	indataidx_;
 
-	ObjectSet<const DataHolder>		indata_;
+    ObjectSet<const DataHolder>	indata_;
 	
-	ExtProc*				proc_;
-	int						nrin_;
-	int						nrout_;
+    ExtProc*		proc_;
+    int			nrin_;
+    int			nrout_;
 };
 
 }; // namespace Attrib

@@ -26,6 +26,8 @@ ________________________________________________________________________
 #include "uitable.h"
 #include "json.h"
 #include "wmparamsetget.h"
+#include <map>
+#include <string>
 
 class uiAttrSel;
 class uiGenInput;
@@ -33,19 +35,47 @@ class uiFileInput;
 class uiToolButton;
 class ExtProc;
 class uiExt_StepOutSel;
+class ChangeTracker;
 
 /*! \brief External Attribute description editor */
 
 class uiExternalAttribInp : public uiTable
 {mODTextTranslationClass(uiExternalAttribInp);
 public:
-    uiExternalAttribInp(uiParent*,const uiTable::Setup&);
+    uiExternalAttribInp(uiParent*);
     ~uiExternalAttribInp();
 
+    void	makeUI(const Attrib::DescSet*, bool is2d);
+    void	makeInputUI(const Attrib::DescSet*, bool is2d);
+    void	makeOutputUI();
+    void	makeZSamplingUI();
+    void	makeStepoutUI(bool is2d);
+    void	makeLegacyUI();
+    void	makeNewUI();
 
+    void	setExtProc(ExtProc* extproc);
+    const ExtProc*	getExtProc();
 protected:
-    ObjectSet<uiAttrSel>		inpflds_;
-    uiGenInput*				outputfld_;
+    friend class		uiExternalAttrib;
+    ExtProc*			extproc_ = nullptr;
+    ObjectSet<uiAttrSel>	inpflds_;
+    uiGenInput*			outputfld_;
+    uiGenInput*			zmarginfld_;
+    uiExt_StepOutSel*		stepoutfld_;
+    uiGenInput*			selectfld_;
+    ObjectSet<uiGenInput>	parflds_;
+    std::map<std::string,uiGenInput*>	fields_;
+
+    void	doZmarginCheck(CallBacker*);
+    void	doStepOutCheck(CallBacker*);
+
+    bool	setParameters(const Attrib::Desc&);
+    bool	getParameters(Attrib::Desc&, ChangeTracker&);
+    bool	setOutput(const Attrib::Desc&);
+    void	addField(const char*, uiGenInput*);
+    
+    bool	setNewParams(const BufferString&);
+    BufferString	getNewParams(Attrib::Desc&, ChangeTracker&);
 };
 
 class uiExternalAttrib : public uiAttrDescEd
@@ -57,16 +87,9 @@ public:
     
 protected:
 
-    ExtProc*			extproc_;
     uiFileInput*		exfilefld_;
     uiFileInput*		interpfilefld_;
     uiExternalAttribInp*	uiinp_;
-    ObjectSet<uiAttrSel>	inpflds_;
-    uiGenInput*			zmarginfld_;
-    uiExt_StepOutSel*		stepoutfld_;
-    uiGenInput*			outputfld_;
-    uiGenInput*			selectfld_;
-    ObjectSet<uiGenInput>	parflds_;
     uiToolButton*		help_;
     uiToolButton*		refinterp_;
 	
@@ -76,15 +99,12 @@ protected:
     BufferString	getExFileName();
     bool		setParameters(const Attrib::Desc&);
     bool		setInput(const Attrib::Desc&);
+    bool		setOutput(const Attrib::Desc&);
     bool		getParameters(Attrib::Desc&);
     bool		getInput(Attrib::Desc&);
-
-    bool		setOutput(const Attrib::Desc&);
     bool		getOutput(Attrib::Desc&);
 
     void		doHelp( CallBacker* cb );
-    void		doZmarginCheck( CallBacker* cb );
-    void		doStepOutCheck( CallBacker* cb );
     void		updateinterpCB( CallBacker* );
     void		initGrp(CallBacker*);
 	

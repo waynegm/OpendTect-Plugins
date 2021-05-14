@@ -38,6 +38,7 @@
 
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 std::string wmSurvey::curbasedir_;
 std::string wmSurvey::cursurvey_;
@@ -64,6 +65,12 @@ void init_wmodpy_survey(py::module_& m) {
     py::class_<wmSurvey>(m, "Survey", "Encapsulates an OpendTect survey")
 	.def(py::init<const std::string&, const std::string&>())
 	.def("name", &wmSurvey::name, "Return the survey name")
+    .def("info", &wmSurvey::getSurveyInfo,
+	     "Return dict with basic information for the survey")
+	.def("info_df", &wmSurvey::getSurveyInfoDF,
+	     "Return Pandas dataframe with basic information for the survey - requires Pandas")
+	.def("info_gdf", &wmSurvey::getSurveyInfoGDF,
+	     "Return GeoPandas geodataframe with basic information for the survey - requires GeoPandas")
 	.def("isok", &wmSurvey::isOK, "Return True if the survey is properly setup and accessible")
 	.def("has2d", &wmSurvey::has2D, "Return True if the survey contains 2D seismic data")
 	.def("has3d", &wmSurvey::has3D, "Return True if the the survey contains 3D seismic data")
@@ -122,6 +129,56 @@ std::string wmSurvey::name() const
     return si_ ? std::string(si_->name()) : std::string();
 }
 
+py::dict wmSurvey::getSurveyInfo() const
+{
+    py::dict dict;
+    py::list names, crs, survtype;
+    if (si_) {
+        names.append(std::string(si_->name()));
+        crs.append(epsgCode());
+        BufferString tmp;
+        if (has2D()) tmp.add("2D");
+        if (has3D()) tmp.add("3D");
+        survtype.append(std::string(tmp));
+    }
+    dict["Name"] = names;
+    dict["Type"] = survtype;
+    dict["crs"] = crs;
+
+    return dict;
+}
+
+py::object wmSurvey::getSurveyInfoDF() const
+{
+    auto PDF = py::module::import("pandas").attr("DataFrame");
+    return PDF(getSurveyInfo());
+}
+
+py::object wmSurvey::getSurveyInfoGDF() const
+{
+    auto GDF = py::module::import("geopandas").attr("GeoDataFrame");
+    auto Polygon = py::module::import("shapely.geometry").attr("Polygon");
+    py::dict info = getSurveyInfo();
+    py::list points, polys;
+    if (si_) {
+        const StepInterval<int> inlrg = si_->inlRange( false );
+        const StepInterval<int> crlrg = si_->crlRange( false );
+        Coord coord;
+        coord = si_->transform(BinID(inlrg.start,crlrg.start));
+        points.append(py::make_tuple(coord.x, coord.y));
+        coord = si_->transform(BinID(inlrg.start,crlrg.stop));
+        points.append(py::make_tuple(coord.x, coord.y));
+        coord = si_->transform(BinID(inlrg.stop,crlrg.stop));
+        points.append(py::make_tuple(coord.x, coord.y));
+        coord = si_->transform(BinID(inlrg.stop,crlrg.start));
+        points.append(py::make_tuple(coord.x, coord.y));
+    }
+    polys.append(Polygon(points));
+    info["geometry"] = polys;
+    return GDF(info, "crs"_a=epsgCode());
+}
+
+
 bool wmSurvey::isOK() const
 {
     return si_;
@@ -150,7 +207,7 @@ std::string wmSurvey::epsgCode() const
             astream.next();
             const IOPar survpar( astream );
             PtrMan<IOPar> coordsystempar = survpar.subselect( sKey::CoordSys() );
-            if ( !coordsystempar )
+            if ( si_ && !coordsystempar )
 	            coordsystempar = si_->pars().subselect( sKey::CoordSys() );
             if ( coordsystempar )
             {

@@ -18,6 +18,7 @@
  *
  */
 #include "pybind11/pybind11.h"
+namespace py = pybind11;
 
 class SurveyInfo;
 
@@ -27,6 +28,9 @@ public:
     ~wmSurvey();
 
     std::string name() const;
+    py::dict getSurveyInfo() const;
+    py::object getSurveyInfoDF() const;
+    py::object getSurveyInfoGDF() const;
     bool isOK() const;
     bool has2D() const;
     bool has3D() const;

@@ -41,30 +41,36 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 void init_wmodpy_wells(py::module_& m) {
-    py::class_<wmWells>(m, "Wells", "Encapsulates the wells in an OpendTect survey")
-	.def(py::init<const wmSurvey&>())
-	.def("names", &wmWells::getWellNames,
-	     "Return list of all well names in the survey")
-	.def("info", &wmWells::getWellInfo,
-	     "Return dict with basic information for all wells in the survey")
-	.def("info_df", &wmWells::getWellInfoDF,
-	     "Return Pandas dataframe with basic information for all wells in the survey - requires Pandas")
-	.def("info_gdf", &wmWells::getWellInfoGDF,
-	     "Return GeoPandas geodataframe with basic information for all wells in the survey - requires GeoPandas")
-	.def("log_names", &wmWells::getWellLogNames,
-	     "Return list of all log names in the specified well")
-	.def("log_info", &wmWells::getWellLogInfo,
-	     "Return dict with basic information for all logs in the specified well")
-	.def("log_info_df", &wmWells::getWellLogInfoDF,
-	     "Return Pandas dataframe with basic information for all logs in the specified well - requires Pandas")
-	.def("markers", &wmWells::getMarkers,
-	     "Return dict with marker information for the specified well")
-	.def("markers_df", &wmWells::getMarkersDF,
-	     "Return Pandas dataframe with marker information for the specified well - requires Pandas")
-	.def("track", &wmWells::getTrack,
-	     "Return dict with MD, TVDSS, X and Y for the specified well")
-	.def("track_df", &wmWells::getTrackDF,
-	     "Return Pandas dataframe with track information for the specified well - requires Pandas");
+    py::class_<wmWells> wells(m, "Wells", "Encapsulates the wells in an OpendTect survey");
+
+    py::enum_<wmWells::Mode>(wells, "Mode")
+        .value("Upscale", wmWells::Mode::Upscale)
+        .value("Sample", wmWells::Mode::Sample)
+        .export_values();
+
+	wells.def(py::init<const wmSurvey&>())
+	    .def("names", &wmWells::getWellNames,
+	         "Return list of all well names in the survey")
+	    .def("info", &wmWells::getWellInfo,
+	         "Return dict with basic information for all wells in the survey")
+	    .def("info_df", &wmWells::getWellInfoDF,
+	         "Return Pandas dataframe with basic information for all wells in the survey - requires Pandas")
+	    .def("info_gdf", &wmWells::getWellInfoGDF,
+	         "Return GeoPandas geodataframe with basic information for all wells in the survey - requires GeoPandas")
+	    .def("log_names", &wmWells::getWellLogNames,
+	         "Return list of all log names in the specified well")
+	    .def("log_info", &wmWells::getWellLogInfo,
+	         "Return dict with basic information for all logs in the specified well")
+	    .def("log_info_df", &wmWells::getWellLogInfoDF,
+	         "Return Pandas dataframe with basic information for all logs in the specified well - requires Pandas")
+	    .def("markers", &wmWells::getMarkers,
+	         "Return dict with marker information for the specified well")
+	    .def("markers_df", &wmWells::getMarkersDF,
+	         "Return Pandas dataframe with marker information for the specified well - requires Pandas")
+	    .def("track", &wmWells::getTrack,
+	         "Return dict with MD, TVDSS, X and Y for the specified well")
+	    .def("track_df", &wmWells::getTrackDF,
+	         "Return Pandas dataframe with track information for the specified well - requires Pandas");
 
 }
 
@@ -172,21 +178,21 @@ py::dict wmWells::getWellLogInfo(const std::string& wellnm) const {
     Well::LoadReqs lreq = Well::LoadReqs(Well::LogInfos);
     auto* wd = getWD(wellnm, lreq);
     if (wd) {
-	const Well::LogSet& ls = wd->logs();
-	for (int il=0; il<ls.size(); il++) {
-	    const Well::Log& log = ls.getLog(il);
-	    names.append(std::string(log.name()));
-	    mnemonic.append(std::string(log.mnemLabel()));
-	    uom.append(std::string(log.unitMeasLabel()));
-	    py::tuple dahrg(2);
-	    dahrg[0] = log.dahRange().start;
-	    dahrg[1] = log.dahRange().stop;
-	    dahrange.append(dahrg);
-	    py::tuple valrg(2);
-	    valrg[0] = log.valueRange().start;
-	    valrg[1] = log.valueRange().stop;
-	    valrange.append(valrg);
-	}
+	    const Well::LogSet& ls = wd->logs();
+    	for (int il=0; il<ls.size(); il++) {
+	        const Well::Log& log = ls.getLog(il);
+	        names.append(std::string(log.name()));
+	        mnemonic.append(std::string(log.mnemLabel()));
+	        uom.append(std::string(log.unitMeasLabel()));
+	        py::tuple dahrg(2);
+	        dahrg[0] = log.dahRange().start;
+	        dahrg[1] = log.dahRange().stop;
+	        dahrange.append(dahrg);
+	        py::tuple valrg(2);
+	        valrg[0] = log.valueRange().start;
+	        valrg[1] = log.valueRange().stop;
+	        valrange.append(valrg);
+        }
     }
     dict["Name"] = names;
     dict["Mnem"] = mnemonic;
@@ -263,6 +269,44 @@ py::dict wmWells::getTrack(const std::string& wellnm) const {
 py::object wmWells::getTrackDF(const std::string& wellnm) const {
     auto PDF = py::module::import("pandas").attr("DataFrame");
     return PDF( getTrack(wellnm) );
+}
+
+py::dict wmWells::getWellLogs(const std::string& wellnm, py::list lognames, float zstep, Mode sampmode)
+{
+    py::dict dict;
+    survey_.activate();
+    Well::LoadReqs lreq = Well::LoadReqs(Well::LogInfos);
+    auto* wd = getWD(wellnm, lreq);
+    StepInterval<float> dahrg;
+    dahrg.step = zstep;
+    for (auto logname : lognames) {
+        auto* log = wd->logs().getLog(py::cast<std::string>(logname).c_str());
+        if (log)
+            dahrg.include(log->dahRange());
+    }
+    dahrg.stop = Math::Floor(dahrg.stop/dahrg.step) * dahrg.step;
+    dahrg.start = (Math::Floor(dahrg.start/dahrg.step)+1) * dahrg.step;
+    const int nr = dahrg.nrSteps() + 1;
+    py::array_t<float> depths = py::array_t<float>(nr);
+    auto depths_data = depths.mutable_data();
+
+    for (auto logname : lognames) {
+        auto* log = wd->getLog(py::cast<std::string>(logname).c_str());
+        if (log) {
+            py::array_t<float> outarr = py::array_t<float>(nr);
+            auto outarr_data = outarr.mutable_data();
+            Well::Log* outlog;
+            if (sampmode==Upscale)
+                outlog = log->upScaleLog(dahrg);
+            else
+                outlog = log->sampleLog(dahrg);
+            for (int idx=0; idx<nr;idx++)
+                outarr_data[idx] = mIsUdf(outlog->value(idx)) ? nanf("") : outlog->value(idx);
+            dict[logname] = outarr;
+            delete outlog;
+        }
+    }
+    return dict;
 }
 
 const Well::Data* wmWells::getWD(const std::string& wellnm, Well::LoadReqs lreqs) const {
