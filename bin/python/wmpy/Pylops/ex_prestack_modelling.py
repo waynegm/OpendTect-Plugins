@@ -17,7 +17,7 @@ import extattrib as xa
 # The attribute parameters
 #
 xa.params = {
-  'Inputs': ['DT (us/m)', 'DTS(us/m)', 'RHOB(g/cc)'],
+  'Inputs': ['DT(us/m)', 'DTS(us/m)', 'RHOB(g/cc)'],
   'Wavelet' : {'Type': 'File', 'Value': 'Seismics/*.wvlt'},
   'Angle (deg)' : {'Type': 'Number', 'Value': 6},
   'Method' : {'Type': 'Select', 'Options': ['akirich', 'fatti'], 'Value': 'akirich'},
@@ -48,7 +48,7 @@ def doCompute():
 #
 #   Find first and last non-zero data in each input
 #
-    DT = np.array(xa.Input['DT (us/m)'].reshape(-1))
+    DT = np.array(xa.Input['DT(us/m)'].reshape(-1))
     nzdt = np.nonzero(DT)[0]
     DTS = np.array(xa.Input['DTS(us/m)'].reshape(-1))
     nzdts = np.nonzero(DTS)[0]
@@ -87,6 +87,8 @@ def doCompute():
 #
       result = PPop_const *model.flatten()
       result = result.reshape(-1)
+      result[0:nzdt[0]] = xa.undef
+      result[nzdt[-1]:] = xa.undef
 #
 #   Save the results
 #

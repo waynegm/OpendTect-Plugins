@@ -176,7 +176,7 @@ void ExtProcImpl::addQuotesIfNeeded(BufferStringSet& args)
 	BufferString& str = args.get(idx);
 	if (!str.find(' '))
 	    continue;
-	if (str[0] == '"')
+	if ((str.first()=='"' && str.last()=='"') || (str.first()=='\'' && str.last()=='\''))
 	    continue;
 	const char* quote = "\'";
 	str.insertAt(0, quote);
@@ -201,6 +201,9 @@ void ExtProcImpl::startInst( ProcInst* pi )
 
     runargs.add(exfile_);
     runargs.add("-c");
+    const char* quote = "\'";
+    params.insertAt(0, quote);
+    params.add(quote);
     runargs.add(params);
     addQuotesIfNeeded(runargs);
 
@@ -717,7 +720,8 @@ float ExtProc::getParamFValue(const char* key, const char* subkey) const
 
 void ExtProc::setParamFValue(const char* key, float val)
 {
-    pD->jsonpar_[key]["Value"] = val;
+    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(key))
+	pD->jsonpar_[key]["Value"] = val;
 }
 
 BufferString ExtProc::getParamStrValue(const char* key, const char* subkey) const
@@ -732,7 +736,8 @@ BufferString ExtProc::getParamStrValue(const char* key, const char* subkey) cons
 
 void ExtProc::setParamStrValue(const char* key, const char* val)
 {
-    pD->jsonpar_[key]["Value"] = val;
+    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(key))
+	pD->jsonpar_[key]["Value"] = val;
 }
 
 BufferStringSet ExtProc::getParamStrLstValue(const char* key, const char* subkey) const

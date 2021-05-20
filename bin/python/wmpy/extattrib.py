@@ -26,6 +26,7 @@ Input = {}
 Output = {}
 TI = {}
 SI = {}
+undef = 1e30
 
 def doCompute():
     global Output
@@ -49,8 +50,10 @@ def doOutput():
 	global Output
 	if 'Output' in params:
 	  for out in params['Output']:
+	    Output[out][np.isnan(Output[out])] = undef
 	    sys.stdout.write(Output[out].astype(np.float32,copy=False).tobytes())
 	else:
+	    Output[np.isnan(Output)] = undef
 	    sys.stdout.write(Output.astype(np.float32,copy=False).tobytes())
 	sys.stdout.flush()
 	
@@ -115,6 +118,7 @@ def run(argv):
 				logH.error("Fatal error in getpar", exc_info=True)
 		elif opt in ("-c", "--compute"):
 			try:
+				logH.error(arg)
 				readPar(ast.literal_eval(arg))
 				preCompute()
 				doCompute()

@@ -7,6 +7,8 @@
 - add input file selection new style "param"
 - allow "param" keys with spaces
 - add Pylops/ex_prestack_modelling.py external attribute script
+- fix noise added by ex_addnoise.py
+- replace NaN's in output with OpendTect undefined (1e30)
 
 ### wmodpy - OpendTect Python Bindings
 - improve Windows build support

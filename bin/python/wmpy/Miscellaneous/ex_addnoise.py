@@ -26,7 +26,7 @@ xa.params = {
 	'Inputs': ['Input'],
 	'ZSampMargin' : {'Value': [-5,5], 'Hidden': True, 'Symmetric': True},
 	'Par_0' : {'Name': 'S/N Ratio', 'Value': 1},
-	'Parallel' : True,
+	'Parallel' : False,
 	'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/Add_Noise.html'
 }
 #
@@ -36,8 +36,7 @@ def doCompute():
 #
 #	Initialise some constants from the attribute parameters 
 #
-	zw = xa.params['ZSampMargin']['Value'][1] - xa.params['ZSampMargin']['Value'][0] + 1
-#
+	snratio = xa.params['Par_0']['Value']
 #	This is the trace processing loop
 #
 	while True:
@@ -47,13 +46,12 @@ def doCompute():
 #   Compute noise
 #
 		vardata  = np.var(data)
-		noise = np.random.randn(data.shape[-1])
-		varnoise = np.var(noise)
-		scale = vardata/(varnoise*xa.params['Par_0']['Value'])
+		scale = np.sqrt(vardata/snratio)
+		noise = np.random.normal(0, scale, data.shape[-1])
 #
 #	Output
 #
-		xa.Output = data + scale*noise
+		xa.Output = data + noise
 		xa.doOutput()
 #
 # Assign the compute function to the attribute
