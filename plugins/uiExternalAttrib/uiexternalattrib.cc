@@ -134,10 +134,10 @@ void uiExternalAttribInp::makeNewUI()
     }
 }
 
-bool uiExternalAttribInp::setNewParams(const BufferString& base64str)
+bool uiExternalAttribInp::setNewParams(const BufferString& encodedstr)
 {
 //Decode
-    if (extproc_->setParamsBase64Str(base64str)) {
+    if (extproc_->setParamsEncodedStr(encodedstr)) {
 	for (const auto& kv : fields_) {
 	    const BufferString key(kv.first.c_str());
 	    uiGenInput* field = kv.second;
@@ -181,7 +181,7 @@ BufferString uiExternalAttribInp::getNewParams(Attrib::Desc& desc, ChangeTracker
 	} else if (field && keytype=="Select")
 	    extproc_->setParamStrValue(key, field->text());
     }
-    return extproc_->getParamsBase64Str();
+    return extproc_->getParamsEncodedStr();
 }
 
 void uiExternalAttribInp::makeInputUI(const Attrib::DescSet* ads,
@@ -353,7 +353,7 @@ bool uiExternalAttribInp::setParameters(const Attrib::Desc& desc)
 	}
     }
 
-    mIfGetString(ExternalAttrib::base64ParStr(),base64str, setNewParams(base64str));
+    mIfGetString(ExternalAttrib::encodedParStr(),encodedstr, setNewParams(encodedstr));
     return true;
 }
 
@@ -396,7 +396,7 @@ bool uiExternalAttribInp::getParameters(Attrib::Desc& desc, ChangeTracker& chtr_
 	}
     }
 
-    mSetString( ExternalAttrib::base64ParStr(), getNewParams(desc, chtr_) );
+    mSetString( ExternalAttrib::encodedParStr(), getNewParams(desc, chtr_) );
     return true;
 }
 

@@ -96,8 +96,8 @@ public:
     BufferString	getParamStrValue(const char* key, const char* subkey="Value") const;
     void		setParamStrValue(const char*, const char*);
     BufferStringSet	getParamStrLstValue(const char* key, const char* subkey="Value") const;
-    BufferString	getParamsBase64Str();
-    bool		setParamsBase64Str(const BufferString&);
+    BufferString	getParamsEncodedStr();
+    bool		setParamsEncodedStr(const BufferString&);
 	
 protected:
 	ExtProcImpl*	pD;

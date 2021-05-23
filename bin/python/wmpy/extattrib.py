@@ -10,7 +10,7 @@
 # Date: 		March, 2016
 # Homepage:		http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/
 #
-import sys, getopt, os, json, ast
+import sys, getopt, os, json, urllib
 import numpy as np
 
 import logging
@@ -59,7 +59,7 @@ def doOutput():
 	
 def writePar():
 	try:
-		json.dump(params, sys.stdout)
+		print(urllib.parse.quote(json.dumps(params)), file=sys.stdout)
 		sys.stdout.flush()
 	except (TypeError, ValueError) as err:
 		logH.error('Error exporting parameter string: %s'% err)
@@ -68,7 +68,7 @@ def writePar():
 def readPar(jsonStr):
 	global params
 	try:
-		params.update(json.loads(jsonStr))
+		params.update(json.loads(urllib.parse.unquote(jsonStr)))
 	except (TypeError, ValueError) as err:
 		logH.error('Error decoding parameter string: %s' % err)
 		sys.exit(1)
@@ -118,8 +118,7 @@ def run(argv):
 				logH.error("Fatal error in getpar", exc_info=True)
 		elif opt in ("-c", "--compute"):
 			try:
-				logH.error(arg)
-				readPar(ast.literal_eval(arg))
+				readPar(arg)
 				preCompute()
 				doCompute()
 				sys.exit()

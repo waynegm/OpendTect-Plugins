@@ -74,8 +74,8 @@ void ExternalAttrib::initClass()
 	par->setDefaultValue(0);
     }
 
-    StringParam* base64pars = new StringParam( base64ParStr() );
-    desc->addParam( base64pars );
+    StringParam* encodedpars = new StringParam( encodedParStr() );
+    desc->addParam( encodedpars );
 
     desc->addInput(InputSpec("Input data", true));
     desc->addOutputDataType( Seis::UnknowData );
@@ -121,7 +121,7 @@ void ExternalAttrib::updateDesc( Desc& desc )
     for (int i=0; i<cNrParams; i++) {
 	desc.setParamEnabled(BufferString(parStr()).add(i), dProc_->hasParam(i));
     }
-    desc.setParamEnabled(base64ParStr(), dProc_->hasNewParams());
+    desc.setParamEnabled(encodedParStr(), dProc_->hasNewParams());
 
     if (dProc_->hasOutput())
 	desc.setNrOutputs(Seis::UnknowData, dProc_->numOutput());
@@ -187,9 +187,9 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 	    }
 	}
 	if (proc_->hasNewParams()) {
-	    BufferString base64str;
-	    mGetString(base64str, base64ParStr());
-	    proc_->setParamsBase64Str(base64str);
+	    BufferString encodedstr;
+	    mGetString(encodedstr, encodedParStr());
+	    proc_->setParamsEncodedStr(encodedstr);
 	}
 
 	nrout_ = proc_->numOutput();

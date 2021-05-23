@@ -29,7 +29,7 @@ ________________________________________________________________________
 #include "filepath.h"
 #include "envvars.h"
 #include "procinst.h"
-#include "base64.h"
+#include "urllib.h"
 
 
 static const char* LegacyKeys[] =
@@ -176,9 +176,9 @@ void ExtProcImpl::addQuotesIfNeeded(BufferStringSet& args)
 	BufferString& str = args.get(idx);
 	if (!str.find(' '))
 	    continue;
-	if ((str.first()=='"' && str.last()=='"') || (str.first()=='\'' && str.last()=='\''))
+	if ((str.first()=='"' && str.last()=='"'))
 	    continue;
-	const char* quote = "\'";
+	const char* quote = "\"'";
 	str.insertAt(0, quote);
 	str.add(quote);
     }
@@ -201,10 +201,7 @@ void ExtProcImpl::startInst( ProcInst* pi )
 
     runargs.add(exfile_);
     runargs.add("-c");
-    const char* quote = "\'";
-    params.insertAt(0, quote);
-    params.add(quote);
-    runargs.add(params);
+    runargs.add(urllib::urlencode(params.str()).c_str());
     addQuotesIfNeeded(runargs);
 
     if (!pi->start( runargs, seisinfo_ ))
@@ -239,7 +236,7 @@ bool ExtProcImpl::getParam()
 	result = false;
     }
     if (result) {
-	jsonpar_ = json::Deserialize(params.str());
+	jsonpar_ = json::Deserialize(urllib::urldecode(std::string(params.str())));
 	if (jsonpar_.GetType() == json::NULLVal) {
 	    ErrMsg("ExtProcImpl::getParam - parameter output of external attribute is not valid JSON");
 	    if (!params.isEmpty())
@@ -752,18 +749,18 @@ BufferStringSet ExtProc::getParamStrLstValue(const char* key, const char* subkey
     return res;
 }
 
-BufferString ExtProc::getParamsBase64Str()
+BufferString ExtProc::getParamsEncodedStr()
 {
     json::Object jobj;
     for (auto* key : pD->newparamkeys_)
 	jobj[key->str()] = pD->jsonpar_[key->str()];
 
-    return base64::base64_encode(json::Serialize(jobj)).c_str();
+    return BufferString(urllib::urlencode(json::Serialize(jobj)).c_str());
 }
 
-bool ExtProc::setParamsBase64Str(const BufferString& base64str)
+bool ExtProc::setParamsEncodedStr(const BufferString& encodedstr)
 {
-    json::Value jsonval = json::Deserialize(base64::base64_decode(std::string(base64str)));
+    json::Value jsonval = json::Deserialize(urllib::urldecode(std::string(encodedstr)));
     if (jsonval.GetType()!=json::NULLVal) {
 	const json::Object jobj = jsonval.ToObject();
 	for (auto it=jobj.begin(); it!=jobj.end(); ++it) {

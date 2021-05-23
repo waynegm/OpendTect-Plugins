@@ -49,7 +49,7 @@ public:
 	
     static const char*	interpFileStr()	{ return "interpfile"; }
     static const char*	exFileStr()	{ return "exfile"; }
-    static const char*	base64ParStr()	{ return "base64pars"; }
+    static const char*	encodedParStr()	{ return "encodedpars"; }
     static const char*	zmarginStr() 	{ return "zmargin"; }
     static const char*	stepoutStr()	{ return "stepout"; }
     static const char*	selectStr()  	{ return "selection"; }
