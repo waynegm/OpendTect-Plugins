@@ -37,12 +37,14 @@ inline unsigned char to_hex(unsigned char x) {
 
 inline const std::string urlencode(const std::string& s) {
     std::stringstream os;
-
     for ( std::string::const_iterator ci = s.begin(); ci != s.end(); ++ci ) {
-	if ( (*ci >= 'a' && *ci <= 'z') || (*ci >= 'A' && *ci <= 'Z') || (*ci >= '0' && *ci <= '9') )
-	    os << *ci;
-	else
-	    os << '%' << to_hex(*ci >> 4) << to_hex(*ci % 16);
+        if ((*ci >= 'a' && *ci <= 'z') || (*ci >= 'A' && *ci <= 'Z') || (*ci >= '0' && *ci <= '9'))
+            os << *ci;
+        else if (*ci == '\\')
+            os << "%5C%5C";
+        else {
+            os << '%' << to_hex(*ci >> 4) << to_hex(*ci % 16);
+        }
     }
 
     return os.str();
@@ -69,6 +71,8 @@ inline const std::string urldecode (const std::string& str) {
 	    const unsigned char ch2 = from_hex(str[i+2]);
 	    const unsigned char ch = (ch1 << 4) | ch2;
 	    result += ch;
+        if (ch == '\\')
+            result += ch;
 	    i += 2;
 	} else
 	    result += str[i];

@@ -187,10 +187,6 @@ void ExtProcImpl::addQuotesIfNeeded(BufferStringSet& args)
 void ExtProcImpl::startInst( ProcInst* pi )
 {
     BufferString params(json::Serialize(jsonpar_).c_str());
-#ifdef __win__
-    params.replace("\"","\"\"");
-    params.embed('"','"');
-#endif
     BufferStringSet runargs;
     if ( !infile_.isEmpty() && !exfile_.isEmpty() )
 	runargs = getInterpreterArgs();
@@ -765,8 +761,10 @@ bool ExtProc::setParamsEncodedStr(const BufferString& encodedstr)
 	const json::Object jobj = jsonval.ToObject();
 	for (auto it=jobj.begin(); it!=jobj.end(); ++it) {
 	    const std::string key = it->first;
-	    if (it->second.HasKey("Value") && pD->jsonpar_.HasKey(key) && pD->jsonpar_[key].HasKey("Value"))
-		pD->jsonpar_[key]["Value"] = it->second["Value"];
+        if (it->second.HasKey("Value") && pD->jsonpar_.HasKey(key) && pD->jsonpar_[key].HasKey("Value"))
+        {
+            pD->jsonpar_[key]["Value"] = it->second["Value"];
+        }
 	}
 	return true;
     } else
