@@ -17,7 +17,7 @@ import extattrib as xa
 # The attribute parameters - keep what you need
 #
 xa.params = {
-  'Inputs' : ['Seismic'],
+  'Inputs' : ['Seismic','Background Model'],
   'Output' : ['Impedance', 'Residual'],
   'Wavelet' : {'Type': 'File', 'Value': 'Seismics/*.wvlt'},
   'Regularization (%)'  : {'Type': 'Number', 'Value': 1},
@@ -50,6 +50,7 @@ def doCompute():
 #   Collect the input data
 #
     indata = xa.Input['Seismic'][0,0,:]
+    backgr = xa.Input['Background Model'][0,0,:]
     if not epsI:
       epsI = reg * np.max(indata)
 #
@@ -60,7 +61,7 @@ def doCompute():
 #
 #   Invert
 #
-    minv, residual = pylops.avo.poststack.PoststackInversion(indata, wavelet/2, m0=np.zeros_like(indata),
+    minv, residual = pylops.avo.poststack.PoststackInversion(indata, wavelet/2, m0=backgr,
                                           explicit=True, simultaneous=False, epsI=epsI)
 #
 #   Save the results

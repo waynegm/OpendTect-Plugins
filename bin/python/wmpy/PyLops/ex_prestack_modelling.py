@@ -22,7 +22,7 @@ xa.params = {
   'Angle (deg)' : {'Type': 'Number', 'Value': 6},
   'Method' : {'Type': 'Select', 'Options': ['akirich', 'fatti'], 'Value': 'akirich'},
   'Parallel' : False,
-  'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/'
+  'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/PyLops.html'
 }
 #
 # Define the compute function
