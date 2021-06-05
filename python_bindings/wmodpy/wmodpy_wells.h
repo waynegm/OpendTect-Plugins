@@ -31,7 +31,8 @@ namespace Well{
 
 class wmWells {
 public:
-    enum Mode { Upscale, Sample };
+    enum SampleMode { Upscale, Sample };
+    enum ZMode { MD, TVD, TVDSS, TWT };
     wmWells( const wmSurvey& thesurvey );
 
     py::list    getWellNames() const;
@@ -46,7 +47,9 @@ public:
     py::dict    getTrack(const std::string& wellnm) const;
     py::object  getTrackDF(const std::string& wellnm) const;
     py::dict    getWellLogs(const std::string& wellnm, py::list lognms,
-			    float zstep, Mode samplemode=Upscale);
+			    float zstep, SampleMode samplemode=Upscale) const;
+    py::object  getWellLogsDF(const std::string& wellnm, py::list lognms,
+			    float zstep, SampleMode samplemode=Upscale) const;
 
 
 protected:

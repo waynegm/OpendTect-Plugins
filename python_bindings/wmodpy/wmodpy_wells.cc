@@ -43,9 +43,9 @@ using namespace pybind11::literals;
 void init_wmodpy_wells(py::module_& m) {
     py::class_<wmWells> wells(m, "Wells", "Encapsulates the wells in an OpendTect survey");
 
-    py::enum_<wmWells::Mode>(wells, "Mode")
-        .value("Upscale", wmWells::Mode::Upscale)
-        .value("Sample", wmWells::Mode::Sample)
+    py::enum_<wmWells::SampleMode>(wells, "SampleMode")
+        .value("Upscale", wmWells::SampleMode::Upscale)
+        .value("Sample", wmWells::SampleMode::Sample)
         .export_values();
 
 	wells.def(py::init<const wmSurvey&>())
@@ -63,6 +63,10 @@ void init_wmodpy_wells(py::module_& m) {
 	         "Return dict with basic information for all logs in the specified well")
 	    .def("log_info_df", &wmWells::getWellLogInfoDF,
 	         "Return Pandas dataframe with basic information for all logs in the specified well - requires Pandas")
+        .def("log_data", &wmWells::getWellLogs,
+             "Return dict with well log data")
+        .def("log_data_df", &wmWells::getWellLogsDF,
+             "Return Pandas dataframe with well log data - requires Pandas")
 	    .def("markers", &wmWells::getMarkers,
 	         "Return dict with marker information for the specified well")
 	    .def("markers_df", &wmWells::getMarkersDF,
@@ -271,42 +275,56 @@ py::object wmWells::getTrackDF(const std::string& wellnm) const {
     return PDF( getTrack(wellnm) );
 }
 
-py::dict wmWells::getWellLogs(const std::string& wellnm, py::list lognames, float zstep, Mode sampmode)
+py::dict wmWells::getWellLogs(const std::string& wellnm, py::list lognames, float zstep, SampleMode sampmode) const
 {
     py::dict dict;
     survey_.activate();
     Well::LoadReqs lreq = Well::LoadReqs(Well::LogInfos);
     auto* wd = getWD(wellnm, lreq);
     StepInterval<float> dahrg;
+    dahrg.setUdf();
     dahrg.step = zstep;
     for (auto logname : lognames) {
         auto* log = wd->logs().getLog(py::cast<std::string>(logname).c_str());
         if (log)
             dahrg.include(log->dahRange());
     }
-    dahrg.stop = Math::Floor(dahrg.stop/dahrg.step) * dahrg.step;
-    dahrg.start = (Math::Floor(dahrg.start/dahrg.step)+1) * dahrg.step;
-    const int nr = dahrg.nrSteps() + 1;
-    py::array_t<float> depths = py::array_t<float>(nr);
-    auto depths_data = depths.mutable_data();
 
+    bool first = true;
     for (auto logname : lognames) {
         auto* log = wd->getLog(py::cast<std::string>(logname).c_str());
         if (log) {
-            py::array_t<float> outarr = py::array_t<float>(nr);
-            auto outarr_data = outarr.mutable_data();
             Well::Log* outlog;
             if (sampmode==Upscale)
                 outlog = log->upScaleLog(dahrg);
             else
                 outlog = log->sampleLog(dahrg);
-            for (int idx=0; idx<nr;idx++)
+            
+            py::array_t<float> outarr = py::array_t<float>(outlog->size());
+            auto outarr_data = outarr.mutable_data();
+
+            for (int idx=0; idx<outlog->size();idx++)
                 outarr_data[idx] = mIsUdf(outlog->value(idx)) ? nanf("") : outlog->value(idx);
-            dict[logname] = outarr;
+	        
+            if (first) {
+                py::array_t<float> depths = py::array_t<float>(outlog->size());
+                auto depths_data = depths.mutable_data();
+                for (int idx=0; idx<outlog->size(); idx++)
+                    depths_data[idx] = outlog->dah(idx);
+
+                dict["MD"] = depths;
+                first = false;
+            }
+	        dict[logname] = outarr;
             delete outlog;
         }
     }
     return dict;
+}
+
+py::object wmWells::getWellLogsDF(const std::string& wellnm, py::list lognames, float zstep, SampleMode sampmode) const {
+    auto PDF = py::module::import("pandas").attr("DataFrame");
+    return PDF( getWellLogs(wellnm, lognames, zstep, sampmode) );
 }
 
 const Well::Data* wmWells::getWD(const std::string& wellnm, Well::LoadReqs lreqs) const {
