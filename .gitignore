@@ -58,5 +58,6 @@ x64
 *checkpoint.ipynb
 *.pdb
 *.ilk
-
+# VS Code
+.vscode
 

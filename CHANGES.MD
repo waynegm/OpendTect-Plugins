@@ -10,6 +10,7 @@
 - add Pylops/ex_poststack_inversion.py external attribute script
 - fix noise added by ex_addnoise.py
 - replace NaN's in output with OpendTect undefined (1e30)
+- fix for read/write errors for large data
 
 ### wmodpy - OpendTect Python Bindings
 - improve Windows build support
@@ -115,7 +116,7 @@
 ### DataExtentHorizon
 - No longer a separate plugin, now included in uiWMTools plugin
 
-### uiGrid2D3DHorizon 
+### uiGrid2D3DHorizon
 - fixed 3D survey data used even if 3D survey toggle is unchecked
 - add Multi-level B-Spline gridding option
 - revise implementation of Inverse Distance Weighted gridding, include option to just use specified number of nearest neighbour points
@@ -138,7 +139,7 @@
 - fix issues with offset gates
 
 ### LTFAttrib
-- plugin removed and code moved to LocalAttrib plugin 
+- plugin removed and code moved to LocalAttrib plugin
 
 ## Release 6.4.7
 
@@ -184,11 +185,11 @@
 - GH-27: fix for failure to trap lack of Horizon output layer name on Windows
 - GH-28: fix for survey box export toggle
 - GH-29: fix detection of anchor point based x-y coordinate system - only support projected CRS
-- GH-30: fix spatial reference system table issues by adding EPSG code to CRS information 
+- GH-30: fix spatial reference system table issues by adding EPSG code to CRS information
 - GH-31: explicitly initialise pointers to nullptr for Windows to fix crash on Horizon tab
 - GH-32: add export of well tracks and markers
 - GH-33: add option to export well marker depths in feet
- 
+
 ## Release 6.4.2
 
 ###  GeopackageExport plugin
@@ -262,7 +263,7 @@
 - Add local polynomial approximation external attribute examples
 - Add dipFactor and zFactor items to the SeismicInfo block exported to external attribute scripts (note changes to extattrib.py)
 - Add "Symmetric" tag to the "ZSampMargin' JSON parameter string tag. The value of the tag is a boolean constant (True/False). If set True the UI will show a single entry box. Input sets the 'ZSampMargin.Value' array to [-Input, Input]. Default is 'ZSampMargin.Symmetric': False for which the UI displays entry boxes for both the window start and stop.
-- Bugfix: ensure number of samples provided to external attribute includes ZSampMargin - fixes calculation failure on horizons and slices 
+- Bugfix: ensure number of samples provided to external attribute includes ZSampMargin - fixes calculation failure on horizons and slices
 
 #### MLVFilterttrib
 - Add example color table for mlv_elements

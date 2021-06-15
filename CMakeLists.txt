@@ -59,7 +59,7 @@ add_subdirectory(python_bindings)
 include_directories(SYSTEM external/include plugins/wm_include)
 
 #Setup output directory
-option ( OD_BUILD_LOCAL "Build in local directory" ON )
+option ( OD_BUILD_LOCAL "Build in local directory" OFF )
 
 #Find OpendTect
 list(APPEND CMAKE_MODULE_PATH "${OpendTect_DIR}/CMakeModules")
