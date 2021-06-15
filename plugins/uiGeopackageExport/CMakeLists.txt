@@ -1,11 +1,11 @@
 list( APPEND OD_MODULE_INCLUDESYSPATH ${OpendTect_DIR}/plugins/CRS )
 
 if (UNIX)
-    list( APPEND OD_MODULE_EXTERNAL_LIBS ${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH}/libCRS.so )
+#    list( APPEND OD_MODULE_EXTERNAL_LIBS ${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH}/libCRS.so )
     SET(CMAKE_INSTALL_RPATH "\$ORIGIN/")
     SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 else()
-    list( APPEND OD_MODULE_EXTERNAL_LIBS ${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH}/Release/CRS.lib )
+#    list( APPEND OD_MODULE_EXTERNAL_LIBS ${OpendTect_DIR}/${OD_EXEC_OUTPUT_RELPATH}/Release/CRS.lib )
 endif()
 SET(OD_MODULE_DEPS uiODMain uiWGMHelp)
 
@@ -17,12 +17,12 @@ SET(OD_MODULE_SOURCES
     uigeotiffwriter.cc
     uigeopackageexportmainwin.cc
     uigeopackageexportpi.cc
-    uigeopackagewriter.cc 
-    uisurveygrp.cc 
-    ui2dlinesgrp.cc 
-    uirandomlinesgrp.cc 
-    uiwellsgrp.cc 
-    uipolylinesgrp.cc 
+    uigeopackagewriter.cc
+    uisurveygrp.cc
+    ui2dlinesgrp.cc
+    uirandomlinesgrp.cc
+    uiwellsgrp.cc
+    uipolylinesgrp.cc
     uihorizongrp.cc )
 
 find_package(GDAL)
