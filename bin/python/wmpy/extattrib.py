@@ -38,25 +38,25 @@ def doCompute():
 def doInput():
 	global Input
 	global TI
-	TI = np.frombuffer(sys.stdin.read(dt_trcInfo.itemsize), dtype=dt_trcInfo, count=1)[0]
+	TI = np.frombuffer(sys.__stdin__.buffer.read(dt_trcInfo.itemsize), dtype=dt_trcInfo, count=1)[0]
 	nrsamples = TI['nrsamp']*SI['nrtraces']
 	if 'Inputs' in params:
 		for inp in params['Inputs']:
-			Input[inp] = np.reshape(np.frombuffer(sys.stdin.read(nrsamples*4), dtype="f4", count=nrsamples),(SI['nrinl'],SI['nrcrl'],TI['nrsamp']))
+			Input[inp] = np.reshape(np.frombuffer(sys.__stdin__.buffer.read(nrsamples*4), dtype="f4", count=nrsamples),(SI['nrinl'],SI['nrcrl'],TI['nrsamp']))
 	else:
-		Input = np.reshape(np.frombuffer(sys.stdin.read(nrsamples*4), dtype="f4", count=nrsamples),(SI['nrinl'],SI['nrcrl'],TI['nrsamp']))
+		Input = np.reshape(np.frombuffer(sys.__stdin__.buffer.read(nrsamples*4), dtype="f4", count=nrsamples),(SI['nrinl'],SI['nrcrl'],TI['nrsamp']))
 
 def doOutput():
 	global Output
 	if 'Output' in params:
 	  for out in params['Output']:
 	    Output[out][np.isnan(Output[out])] = undef
-	    sys.stdout.write(Output[out].astype(np.float32,copy=False).tobytes())
+	    sys.__stdout__.buffer.write(Output[out].astype(np.float32,copy=False).tobytes())
 	else:
 	    Output[np.isnan(Output)] = undef
-	    sys.stdout.write(Output.astype(np.float32,copy=False).tobytes())
-	sys.stdout.flush()
-	
+	    sys.__stdout__.buffer.write(Output.astype(np.float32,copy=False).tobytes())
+	sys.__stdout__.flush()
+
 def writePar():
 	try:
 		print(urllib.parse.quote(json.dumps(params)), file=sys.stdout)
@@ -64,7 +64,7 @@ def writePar():
 	except (TypeError, ValueError) as err:
 		logH.error('Error exporting parameter string: %s'% err)
 		sys.exit(1)
-  
+
 def readPar(jsonStr):
 	global params
 	try:
@@ -78,8 +78,6 @@ def preCompute():
 	global SI
 	global Output
 	Output = {}
-	sys.stdin = os.fdopen(sys.stdin.fileno(), 'rb', 0) 
-	sys.stdout = os.fdopen(sys.stdout.fileno(), 'wb', 0)
 	dt_trcInfo = np.dtype([	('nrsamp','i4'),
 							('z0','i4'),
 							('inl','i4'),
@@ -94,7 +92,7 @@ def preCompute():
 							('crldist','f4'),
 							('zFactor','f4'),
 							('dipFactor','f4')])
-	SI = np.frombuffer(sys.stdin.read(dt_seisInfo.itemsize), dtype=dt_seisInfo, count=1)[0]
+	SI = np.frombuffer(sys.__stdin__.buffer.read(dt_seisInfo.itemsize), dtype=dt_seisInfo, count=1)[0]
 
 def usage():
 	print("Usage: %s \n" % sys.argv[0])
@@ -125,5 +123,5 @@ def run(argv):
 			except Exception:
 				logH.error("Fatal error in compute", exc_info=True)
 
-  
+
 
