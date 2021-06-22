@@ -65,6 +65,7 @@ uiExternalAttribInp::uiExternalAttribInp(uiParent* p)
     setBackgroundColor( this->backgroundColor() );
     showOuterFrame( false );
     setRowResizeMode( uiTable::ResizeToContents );
+    setColumnResizeMode( uiTable::ResizeToContents );
 }
 
 uiExternalAttribInp::~uiExternalAttribInp()

@@ -28,15 +28,17 @@ public:
     ~wmSurvey();
 
     std::string name() const;
-    py::dict getSurveyInfo() const;
-    py::object getSurveyInfoDF() const;
-    py::object getSurveyInfoGDF() const;
-    bool isOK() const;
-    bool has2D() const;
-    bool has3D() const;
+    std::string type() const;
+    py::dict    getSurveyInfo() const;
+    py::object  getSurveyInfoDF() const;
+    py::object  getSurveyInfoGDF() const;
+    py::list    getSurveyPoints(bool towgs=false) const;
+    bool        isOK() const;
+    bool        has2D() const;
+    bool        has3D() const;
     std::string epsgCode() const;
     std::string surveyPath() const;
-    void activate() const;
+    void        activate() const;
 
     static void initModule();
 

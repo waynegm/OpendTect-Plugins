@@ -27,6 +27,7 @@
 #include "genc.h"
 #include "ioman.h"
 #include "iopar.h"
+#include "latlong.h"
 #include "moddepmgr.h"
 #include "oddirs.h"
 #include "odruncontext.h"
@@ -44,8 +45,7 @@ std::string wmSurvey::curbasedir_;
 std::string wmSurvey::cursurvey_;
 std::string wmSurvey::modulepath_;
 
-void init_wmodpy_survey(py::module_& m) {
-    m.def("get_surveys", [](const char* basedir) {
+py::list GetSurveys(const char* basedir) {
 	wmSurvey::initModule();
 	py::list list;
 	if (!IOMan::isValidDataRoot(basedir))
@@ -59,11 +59,80 @@ void init_wmodpy_survey(py::module_& m) {
 		list.append(std::string(dirnm));
 	}
 	return list;
-    }, "Return list of survey names in given survey data root",
-	py::arg("survey_data_root"));
+}
+
+py::dict GetSurveyInfo(const char* basedir, py::list surveys) {
+    wmSurvey::initModule();
+    py::dict dict;
+    py::list names, types, crs;
+    py::list use;
+    if (surveys.empty())
+        use = GetSurveys(basedir);
+    else {
+        for (auto survnm : surveys)
+            use.append(survnm);
+    }
+
+    for (auto survnm : use) {
+        wmSurvey survey(basedir, py::cast<std::string>(survnm));
+        names.append(std::string(survey.name()));
+        types.append(std::string(survey.type()));
+        crs.append(survey.epsgCode());
+    }
+    dict["Name"] = names;
+    dict["Type"] = types;
+    dict["crs"] = crs;
+    return dict;
+}
+
+py::object GetSurveyInfoGDF(const char* basedir, py::list surveys) {
+	wmSurvey::initModule();
+    auto GDF = py::module::import("geopandas").attr("GeoDataFrame");
+    auto Polygon = py::module::import("shapely.geometry").attr("Polygon");
+    py::dict res;
+    py::list names, types, polys;
+    py::list use;
+    if (surveys.empty())
+        use = GetSurveys(basedir);
+    else {
+        for (auto survnm : surveys)
+            use.append(survnm);
+    }
+
+    for (auto survnm : use) {
+        wmSurvey survey(basedir, py::cast<std::string>(survnm));
+        if (!survey.epsgCode().empty()) {
+            names.append(std::string(survey.name()));
+            types.append(std::string(survey.type()));
+            polys.append(Polygon(survey.getSurveyPoints(true)));
+        }
+    }
+    res["Name"] = names;
+    res["Type"] = types;
+    res["geometry"] = polys;
+    return GDF(res, "crs"_a="EPSG:4326");
+}
+
+void init_wmodpy_survey(py::module_& m) {
+    m.def("get_surveys", &GetSurveys, 
+        "Return list of survey names in given survey data root", "data_root"_a);
+
+    m.def("get_survey_info", &GetSurveyInfo,
+        "Return a python dictionary with basic information for the surveys in the list",
+        "data_root"_a, "surveys"_a=py::list());
+
+    m.def("get_survey_info_df", [](const char* basedir, py::list surveys) {
+        auto PDF = py::module::import("pandas").attr("DataFrame");
+        return PDF(GetSurveyInfo(basedir, surveys));
+    }, "Return a Pandas dataframe with basic information for the surveys in the list",
+    "data_root"_a, "surveys"_a=py::list());
+
+    m.def("get_survey_info_gdf", &GetSurveyInfoGDF,
+        "Return a GeoPandas GeoDataFrame with basic information for the surveys in the list",
+        "data_root"_a, "surveys"_a=py::list());
 
     py::class_<wmSurvey>(m, "Survey", "Encapsulates an OpendTect survey")
-	.def(py::init<const std::string&, const std::string&>())
+	.def(py::init<const std::string&, const std::string&>(), "data_root"_a, "survey_name"_a)
 	.def("name", &wmSurvey::name, "Return the survey name")
     .def("info", &wmSurvey::getSurveyInfo,
 	     "Return dict with basic information for the survey")
@@ -71,7 +140,9 @@ void init_wmodpy_survey(py::module_& m) {
 	     "Return Pandas dataframe with basic information for the survey - requires Pandas")
 	.def("info_gdf", &wmSurvey::getSurveyInfoGDF,
 	     "Return GeoPandas geodataframe with basic information for the survey - requires GeoPandas")
-	.def("isok", &wmSurvey::isOK, "Return True if the survey is properly setup and accessible")
+	.def("points", &wmSurvey::getSurveyPoints,
+        "Return a list of tuples defining the survey extent in the survey CRS or optionally in WGS84", "towgs"_a=false)
+    .def("isok", &wmSurvey::isOK, "Return True if the survey is properly setup and accessible")
 	.def("has2d", &wmSurvey::has2D, "Return True if the survey contains 2D seismic data")
 	.def("has3d", &wmSurvey::has3D, "Return True if the the survey contains 3D seismic data")
 	.def("epsg", &wmSurvey::epsgCode, "Return the survey CRS EPSG code");
@@ -106,6 +177,7 @@ void wmSurvey::initModule()
     
     OD::ModDeps().ensureLoaded("Well");
     OD::ModDeps().ensureLoaded("EarthModel");
+    OD::ModDeps().ensureLoaded("CRS");
 }
 
 wmSurvey::wmSurvey(const std::string& basedir, const std::string& surveynm)
@@ -126,24 +198,34 @@ wmSurvey::~wmSurvey()
 
 std::string wmSurvey::name() const
 {
+    activate();
     return si_ ? std::string(si_->name()) : std::string();
+}
+
+std::string wmSurvey::type() const
+{
+    std::string res;
+    activate();
+    if (si_) {
+        if (has2D()) res += "2D";
+        if (has3D()) res += "3D";
+    }
+    return res;
 }
 
 py::dict wmSurvey::getSurveyInfo() const
 {
     py::dict dict;
-    py::list names, crs, survtype;
+    activate();
     if (si_) {
-        names.append(std::string(si_->name()));
+        py::list names, types, crs;
+        names.append(name());
+        types.append(type());
         crs.append(epsgCode());
-        BufferString tmp;
-        if (has2D()) tmp.add("2D");
-        if (has3D()) tmp.add("3D");
-        survtype.append(std::string(tmp));
+        dict["Name"] = names;
+        dict["Type"] = types;
+        dict["crs"] = crs;
     }
-    dict["Name"] = names;
-    dict["Type"] = survtype;
-    dict["crs"] = crs;
 
     return dict;
 }
@@ -159,25 +241,36 @@ py::object wmSurvey::getSurveyInfoGDF() const
     auto GDF = py::module::import("geopandas").attr("GeoDataFrame");
     auto Polygon = py::module::import("shapely.geometry").attr("Polygon");
     py::dict info = getSurveyInfo();
-    py::list points, polys;
-    if (si_) {
-        const StepInterval<int> inlrg = si_->inlRange( false );
-        const StepInterval<int> crlrg = si_->crlRange( false );
-        Coord coord;
-        coord = si_->transform(BinID(inlrg.start,crlrg.start));
-        points.append(py::make_tuple(coord.x, coord.y));
-        coord = si_->transform(BinID(inlrg.start,crlrg.stop));
-        points.append(py::make_tuple(coord.x, coord.y));
-        coord = si_->transform(BinID(inlrg.stop,crlrg.stop));
-        points.append(py::make_tuple(coord.x, coord.y));
-        coord = si_->transform(BinID(inlrg.stop,crlrg.start));
-        points.append(py::make_tuple(coord.x, coord.y));
-    }
-    polys.append(Polygon(points));
+    py::list polys;
+    polys.append(Polygon(getSurveyPoints(false)));
     info["geometry"] = polys;
     return GDF(info, "crs"_a=epsgCode());
 }
 
+
+py::list wmSurvey::getSurveyPoints(bool towgs) const
+{
+    py::list points;
+    activate();
+    if (si_) {
+        const StepInterval<int> inlrg = si_->inlRange( false );
+        const StepInterval<int> crlrg = si_->crlRange( false );
+        Coord coord[4];
+        const Coords::CoordSystem* coordsys = si_->getCoordSystem();
+        coord[0] = si_->transform(BinID(inlrg.start,crlrg.start));
+        coord[1] = si_->transform(BinID(inlrg.start,crlrg.stop));
+        coord[2] = si_->transform(BinID(inlrg.stop,crlrg.stop));
+        coord[3] = si_->transform(BinID(inlrg.stop,crlrg.start));
+        for (int i=0; i<4; i++) {
+            if (towgs) {
+                const LatLong ll( LatLong::transform(coord[i], true, coordsys) );
+                points.append(py::make_tuple(ll.lng_, ll.lat_));
+            } else
+                points.append(py::make_tuple(coord[i].x, coord[i].y));
+        }
+    }
+    return points;
+}
 
 bool wmSurvey::isOK() const
 {
