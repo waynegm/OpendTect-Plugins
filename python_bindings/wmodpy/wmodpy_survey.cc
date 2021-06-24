@@ -85,12 +85,12 @@ py::dict GetSurveyInfo(const char* basedir, py::list surveys) {
     return dict;
 }
 
-py::object GetSurveyInfoGDF(const char* basedir, py::list surveys) {
-	wmSurvey::initModule();
-    auto GDF = py::module::import("geopandas").attr("GeoDataFrame");
-    auto Polygon = py::module::import("shapely.geometry").attr("Polygon");
-    py::dict res;
-    py::list names, types, polys;
+py::object GetSurveyFeatures(const char* basedir, py::list surveys) {
+    wmSurvey::initModule();
+    auto jsondumps = py::module::import("json").attr("dumps");
+
+    py::dict result;
+    py::list features;
     py::list use;
     if (surveys.empty())
         use = GetSurveys(basedir);
@@ -101,20 +101,16 @@ py::object GetSurveyInfoGDF(const char* basedir, py::list surveys) {
 
     for (auto survnm : use) {
         wmSurvey survey(basedir, py::cast<std::string>(survnm));
-        if (!survey.epsgCode().empty()) {
-            names.append(std::string(survey.name()));
-            types.append(std::string(survey.type()));
-            polys.append(Polygon(survey.getSurveyPoints(true)));
-        }
+        if (!survey.epsgCode().empty())
+	    features.append(survey.getSurveyFeature(true));
     }
-    res["Name"] = names;
-    res["Type"] = types;
-    res["geometry"] = polys;
-    return GDF(res, "crs"_a="EPSG:4326");
+    result["type"] = "FeatureCollection";
+    result["features"] = features;
+    return jsondumps(result);
 }
 
 void init_wmodpy_survey(py::module_& m) {
-    m.def("get_surveys", &GetSurveys, 
+    m.def("get_surveys", &GetSurveys,
         "Return list of survey names in given survey data root", "data_root"_a);
 
     m.def("get_survey_info", &GetSurveyInfo,
@@ -127,8 +123,8 @@ void init_wmodpy_survey(py::module_& m) {
     }, "Return a Pandas dataframe with basic information for the surveys in the list",
     "data_root"_a, "surveys"_a=py::list());
 
-    m.def("get_survey_info_gdf", &GetSurveyInfoGDF,
-        "Return a GeoPandas GeoDataFrame with basic information for the surveys in the list",
+    m.def("get_survey_features", &GetSurveyFeatures,
+        "Return basic information for the surveys in the list as a GeoJSON Feature Collection",
         "data_root"_a, "surveys"_a=py::list());
 
     py::class_<wmSurvey>(m, "Survey", "Encapsulates an OpendTect survey")
@@ -138,10 +134,10 @@ void init_wmodpy_survey(py::module_& m) {
 	     "Return dict with basic information for the survey")
 	.def("info_df", &wmSurvey::getSurveyInfoDF,
 	     "Return Pandas dataframe with basic information for the survey - requires Pandas")
-	.def("info_gdf", &wmSurvey::getSurveyInfoGDF,
-	     "Return GeoPandas geodataframe with basic information for the survey - requires GeoPandas")
+	.def("feature", &wmSurvey::getSurveyFeature,
+	     "Return a GeoJSON-like feature (just a Python dict) for the survey")
 	.def("points", &wmSurvey::getSurveyPoints,
-        "Return a list of tuples defining the survey extent in the survey CRS or optionally in WGS84", "towgs"_a=false)
+        "Return a list of coordinate lists defining the survey extent in the survey CRS or optionally in WGS84", "towgs"_a=false)
     .def("isok", &wmSurvey::isOK, "Return True if the survey is properly setup and accessible")
 	.def("has2d", &wmSurvey::has2D, "Return True if the survey contains 2D seismic data")
 	.def("has3d", &wmSurvey::has3D, "Return True if the the survey contains 3D seismic data")
@@ -174,7 +170,7 @@ void wmSurvey::initModule()
     }
     argv[argc] = 0;
     SetProgramArgs( argc, argv);
-    
+
     OD::ModDeps().ensureLoaded("Well");
     OD::ModDeps().ensureLoaded("EarthModel");
     OD::ModDeps().ensureLoaded("CRS");
@@ -236,15 +232,23 @@ py::object wmSurvey::getSurveyInfoDF() const
     return PDF(getSurveyInfo());
 }
 
-py::object wmSurvey::getSurveyInfoGDF() const
+py::dict wmSurvey::getSurveyFeature(bool towgs) const
 {
-    auto GDF = py::module::import("geopandas").attr("GeoDataFrame");
-    auto Polygon = py::module::import("shapely.geometry").attr("Polygon");
-    py::dict info = getSurveyInfo();
-    py::list polys;
-    polys.append(Polygon(getSurveyPoints(false)));
-    info["geometry"] = polys;
-    return GDF(info, "crs"_a=epsgCode());
+    py::dict result, geom, props;
+    py::list coords;
+    activate();
+    if (si_) {
+	result["type"] = "Feature";
+	props["Name"] = name();
+	props["Type"] = type();
+	props["crs"] = epsgCode();
+	result["properties"] = props;
+	geom["type"] = "Polygon";
+	coords.append(getSurveyPoints(towgs));
+	geom["coordinates"] = coords;
+	result["geometry"] = geom;
+    }
+    return result;
 }
 
 
@@ -262,12 +266,19 @@ py::list wmSurvey::getSurveyPoints(bool towgs) const
         coord[2] = si_->transform(BinID(inlrg.stop,crlrg.stop));
         coord[3] = si_->transform(BinID(inlrg.stop,crlrg.start));
         for (int i=0; i<4; i++) {
+	        py::list point;
             if (towgs) {
                 const LatLong ll( LatLong::transform(coord[i], true, coordsys) );
-                points.append(py::make_tuple(ll.lng_, ll.lat_));
-            } else
-                points.append(py::make_tuple(coord[i].x, coord[i].y));
+		        point.append(ll.lng_);
+		        point.append(ll.lat_);
+                points.append(point);
+            } else {
+		        point.append(coord[i].x);
+		        point.append(coord[i].y);
+                points.append(point);
+	        }
         }
+        points.append(points[0]);
     }
     return points;
 }

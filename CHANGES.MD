@@ -18,6 +18,8 @@
 - add methods to python Wells object to get well log data
 - add Horizon3D python object for working with OpendTect 3D horizons (names, info and z values)
 - add Horizon2D python object for working with OpendTect 2D horizons (names only)
+- remove dependency on GeoPandas
+- add methods to generate GeoJSON Feature Collections
 
 ## Release 6.6.7
 ### uiWMTools

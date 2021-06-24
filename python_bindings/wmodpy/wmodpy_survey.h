@@ -31,7 +31,7 @@ public:
     std::string type() const;
     py::dict    getSurveyInfo() const;
     py::object  getSurveyInfoDF() const;
-    py::object  getSurveyInfoGDF() const;
+    py::dict	getSurveyFeature(bool towgs=false) const;
     py::list    getSurveyPoints(bool towgs=false) const;
     bool        isOK() const;
     bool        has2D() const;
@@ -39,6 +39,7 @@ public:
     std::string epsgCode() const;
     std::string surveyPath() const;
     void        activate() const;
+    SurveyInfo* si() const { return si_; }
 
     static void initModule();
 

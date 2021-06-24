@@ -27,6 +27,7 @@
 #include "iodir.h"
 #include "ioobj.h"
 #include "ioman.h"
+#include "latlong.h"
 #include "multiid.h"
 
 #include "welldata.h"
@@ -55,8 +56,9 @@ void init_wmodpy_wells(py::module_& m) {
 	         "Return dict with basic information for all wells in the survey")
 	    .def("info_df", &wmWells::getWellInfoDF,
 	         "Return Pandas dataframe with basic information for all wells in the survey - requires Pandas")
-	    .def("info_gdf", &wmWells::getWellInfoGDF,
-	         "Return GeoPandas geodataframe with basic information for all wells in the survey - requires GeoPandas")
+	    .def("features", &wmWells::getWellFeatures,
+             "Return basic information for all wells as a GeoJSON Feature Collection",
+             "towgs"_a=false)
 	    .def("log_names", &wmWells::getWellLogNames,
 	         "Return list of all log names in the specified well")
 	    .def("log_info", &wmWells::getWellLogInfo,
@@ -144,19 +146,53 @@ py::object wmWells::getWellInfoDF() const {
     return PDF( getWellInfo() );
 }
 
-py::object wmWells::getWellInfoGDF() const {
-    auto GDF = py::module::import("geopandas").attr("GeoDataFrame");
-    auto Point = py::module::import("shapely.geometry").attr("Point");
+py::object wmWells::getWellFeatures(bool towgs) const {
+    auto jsondumps = py::module::import("json").attr("dumps");
+    survey_.activate();
+    py::dict result;
+    if (survey_.epsgCode().empty())
+	    return jsondumps(result);
+
     py::dict info = getWellInfo();
-    py::list xs = info["X"];
-    py::list ys = info["Y"];
-    py::list points;
-    for (int idx=0; idx<xs.size(); idx++) {
-	py::object p = Point(xs[idx], ys[idx]);
-	points.append(p);
+    py::list name = info["Name"];
+    py::list uwid = info["UWID"];
+    py::list state = info["State"];
+    py::list county = info["County"];
+    py::list type = info["WellType"] ;
+    py::list x = info["X"];
+    py::list y = info["Y"];
+    py::list features;
+
+    const SurveyInfo* si = survey_.si();
+    const Coords::CoordSystem* coordsys = si->getCoordSystem();
+    for (int idx=0; idx<name.size(); idx++) {
+        py::dict feature, props, geom;
+        feature["type"] = "Feature";
+        props["Name"] = name[idx];
+        props["UWID"] = uwid[idx];
+        props["State"] = state[idx];
+        props["County"] = county[idx];
+        props["WellType"] = type[idx];
+        feature["properties"] = props;
+        py::list point;
+        Coord::OrdType xc = py::cast<Coord::OrdType>(x[idx]);
+        Coord::OrdType yc = py::cast<Coord::OrdType>(y[idx]);
+        if (towgs) {
+            const LatLong ll( LatLong::transform(Coord(xc, yc), true, coordsys) );
+		    point.append(ll.lng_);
+		    point.append(ll.lat_);
+        } else {
+            point.append(xc);
+		    point.append(yc);
+        }
+        geom["type"] = "Point";
+        geom["coordinates"] = point;
+        feature["geometry"] = geom;
+    	features.append(feature);
     }
-    info["geometry"] = points;
-    return GDF(info, "crs"_a=survey_.epsgCode());
+    result["type"] = "FeatureCollection";
+    result["features"] = features;
+    return jsondumps(result);
 }
 
 py::list wmWells::getWellLogNames(const std::string& wellnm) const {
@@ -299,13 +335,13 @@ py::dict wmWells::getWellLogs(const std::string& wellnm, py::list lognames, floa
                 outlog = log->upScaleLog(dahrg);
             else
                 outlog = log->sampleLog(dahrg);
-            
+
             py::array_t<float> outarr = py::array_t<float>(outlog->size());
             auto outarr_data = outarr.mutable_data();
 
             for (int idx=0; idx<outlog->size();idx++)
                 outarr_data[idx] = mIsUdf(outlog->value(idx)) ? nanf("") : outlog->value(idx);
-	        
+
             if (first) {
                 py::array_t<float> depths = py::array_t<float>(outlog->size());
                 auto depths_data = depths.mutable_data();
