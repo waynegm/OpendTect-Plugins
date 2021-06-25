@@ -172,8 +172,8 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	}
 
 // Convert the HANDLES to C FILE*
-	int fileInNo = _open_osfhandle((LONG)g_hChildStd_IN_Wr, 0);
-	int fileOutNo = _open_osfhandle((LONG)g_hChildStd_OUT_Rd, 0);
+	int fileInNo = _open_osfhandle((intptr_t)g_hChildStd_IN_Wr, 0);
+	int fileOutNo = _open_osfhandle((intptr_t)g_hChildStd_OUT_Rd, 0);
 
 	if (fileInNo == -1 || fileOutNo == -1) {
 			ErrMsg("ProcInst::start - unable to get file number for child stdin/stdout");
@@ -183,7 +183,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 			CloseHandle( g_hChildStd_OUT_Wr ); 
 			return false;
 	}
-	pD->read_fd = fdopen(fileOutNo, "r");
+	pD->read_fd = _fdopen(fileOutNo, "r");
 	if (!pD->read_fd) {
 		pD->read_fd = NULL;
 		pD->write_fd = NULL;
@@ -194,7 +194,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		ErrMsg("ExtProcImpl::start - open read_fd failed");
 		return false;
 	}
-	pD->write_fd = fdopen(fileInNo, "w");
+	pD->write_fd = _fdopen(fileInNo, "w");
 	if (!pD->write_fd) {
 		fclose(pD->read_fd);
 		pD->read_fd = NULL;
@@ -205,8 +205,8 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		ErrMsg("ProcInst::start - open write_fd failed");
 		return false;
 	}
-	setbuf( pD->read_fd, NULL );
-	setbuf( pD->write_fd, NULL);
+	setvbuf( pD->read_fd, NULL, _IONBF, 0 );
+	setvbuf( pD->write_fd, NULL, _IONBF, 0 );
 //
 // Open the error log file. 
 	HANDLE herr = CreateFile(	logFileName().getCStr(),
@@ -221,13 +221,6 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		return false;
 	}
 //	
-// Get path to the shell
-	char* cmd_path = NULL;
-	cmd_path = getenv("ComSpec");
-	if (!cmd_path) {
-		ErrMsg("ProcInst::start - ComSpec is not defined");
-		return false;
-	}
 // Build the command line
 	BufferString cmd;
 	cmd.add(runargs.cat(" "));
@@ -236,6 +229,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	PROCESS_INFORMATION pi;
 	GetStartupInfo(&si);      
 	si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
+
 	si.wShowWindow = SW_HIDE;
 	si.hStdError = herr;
 	si.hStdOutput = g_hChildStd_OUT_Wr;
