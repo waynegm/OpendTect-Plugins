@@ -178,7 +178,7 @@ void ExtProcImpl::addQuotesIfNeeded(BufferStringSet& args)
 	    continue;
 	if ((str.first()=='"' && str.last()=='"'))
 	    continue;
-	const char* quote = "\"'";
+	const char* quote = "\"";
 	str.insertAt(0, quote);
 	str.add(quote);
     }
