@@ -1,5 +1,13 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.9
+### RSpecAttrib
+- Add UI option to display time frequency panel for a user selected trace
+
+### LocalAttrib
+- LTFAttrib - Add UI option to display time frequency panel for a user selected trace
+
+
 ## Release 6.6.8
 ### External Attributes
 - remove frame around data entry UI

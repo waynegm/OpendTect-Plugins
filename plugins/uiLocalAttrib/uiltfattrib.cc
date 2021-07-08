@@ -25,6 +25,7 @@
 #include "uiattribfactory.h"
 #include "uiattrsel.h"
 #include "uigeninput.h"
+#include "uibutton.h"
 #include "uispinbox.h"
 #include "trckeyzsampling.h"
 #include "uimsg.h"
@@ -38,13 +39,13 @@ mInitAttribUI(uiLTFAttrib,LTFAttrib,"Spectral Decomposition by Local Attribute",
 
 uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
 : uiAttrDescEd(p,is2d,HelpKey("wgm", "ltf"))
-
+, TestPanelAdaptor()
 {
     inpfld_ = createInpFld( is2d );
 
     gatefld_ = new uiGenInput( this, gateLabel(), DoubleInpIntervalSpec().setName("Z start",0).setName("Z stop",1) );
     gatefld_->attach( alignedBelow, inpfld_ );
-    
+
     uiString lbl;
     const bool zistime = SI().zDomain().isTime();
     const bool zismeter = SI().zDomain().isDepth() && !SI().depthsInFeet();
@@ -62,37 +63,40 @@ uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
     stepfld_ = new uiLabeledSpinBox( this, uiStrings::sStep(), 1 );
     stepfld_->attach( rightTo, freqfld_ );
     stepfld_->box()->valueChanged.notify(mCB(this,uiLTFAttrib,stepChg));
-    
-    stepChg(0);
-    
+
 //	smoothfld_ = new uiLabeledSpinBox( this, tr("Smoothing Radius (samples)") );
 //	smoothfld_->box()->setMinValue( 2 );
 //	smoothfld_->box()->setStep( 1, true );
 //	smoothfld_->attach( alignedBelow, freqfld_ );
-	
-	niterfld_ = new uiLabeledSpinBox( this, tr("Iterations") );
-	niterfld_->box()->setMinValue( 50 );
-	niterfld_->box()->setStep( 10, true );
-	niterfld_->attach( alignedBelow, freqfld_ );
-	
+
+    niterfld_ = new uiLabeledSpinBox( this, tr("Iterations") );
+    niterfld_->box()->setMinValue( 50 );
+    niterfld_->box()->setStep( 10, true );
+    niterfld_->attach( alignedBelow, freqfld_ );
+
 //	marginfld_ = new uiLabeledSpinBox( this, tr("Margin (samples)") );
 //	marginfld_->box()->setMinValue( 0 );
 //	marginfld_->box()->setStep( 1, true );
 //	marginfld_->attach( alignedBelow, niterfld_ );
-	
-	setHAlignObj( inpfld_ );
+
+    uiString tfstr = tr("Display Time/Frequency panel");
+    tfpanelbut_ = new uiPushButton( this, tfstr, mCB(this, uiLTFAttrib, showPosDlgCB), true );
+    tfpanelbut_->attach( alignedBelow, niterfld_ );
+
+    stepChg(0);
+    setHAlignObj( inpfld_ );
 }
 
 void uiLTFAttrib::inputSel( CallBacker* )
 {
 	if ( !*inpfld_->getInput() ) return;
-	
+
 	TrcKeyZSampling cs;
 	if ( !inpfld_->getRanges(cs) )
 		cs.init(true);
-	
+
 	const float nyqfreq = 0.5f / cs.zsamp_.step;
-	
+
 	const float freqscale = zIsTime() ? 1.f : 1000.f;
 	const float scalednyqfreq = nyqfreq * freqscale;
     stepfld_->box()->setInterval( (float)0.5, scalednyqfreq/2 );
@@ -131,7 +135,7 @@ bool uiLTFAttrib::setParameters( const Attrib::Desc& desc )
 {
 	if ( desc.attribName() != LTFAttrib::attribName() )
 		return false;
-	
+
     mIfGetFloatInterval(LTFAttrib::gateStr(), gate, gatefld_->setValue(gate));
     const float freqscale = zIsTime() ? 1.f : 1000.f;
     mIfGetFloat(LTFAttrib::stepStr(), step, stepfld_->box()->setValue(step*freqscale) );
@@ -163,16 +167,16 @@ bool uiLTFAttrib::getParameters( Attrib::Desc& desc )
 {
 	if ( desc.attribName() != LTFAttrib::attribName() )
 		return false;
-	
+
     mSetFloatInterval( LTFAttrib::gateStr(), gatefld_->getFInterval() );
     const float freqscale = zIsTime() ? 1.f : 1000.f;
     mSetFloat( LTFAttrib::stepStr(), stepfld_->box()->getFValue()/freqscale );
-    
+
 //    mSetFloat( LTFAttrib::freqStr(), freqfld_->box()->getValue() );
 //	mSetInt( LTFAttrib::smoothStr(), smoothfld_->box()->getValue() );
 	mSetInt( LTFAttrib::niterStr(), niterfld_->box()->getIntValue() );
 //	mSetInt( LTFAttrib::marginStr(), marginfld_->box()->getValue() );
-	
+
 	return true;
 }
 
@@ -211,4 +215,38 @@ void uiLTFAttrib::checkOutValSnapped() const
         "and will be snapped to nearest suitable frequency");
         uiMSG().warning( wmsg );
     }
+}
+
+void uiLTFAttrib::showPosDlgCB( CallBacker* )
+{
+    if ( inpfld_->attribID() == DescID::undef() )
+    {
+	uiMSG().error( tr("Please fill in the Input Data field") );
+	return;
+    }
+    delete( testpanel_ );
+    testpanel_ = new uiAttribTestPanel<uiLTFAttrib>( *this,
+				     "Compute all frequencies for a single trace",
+				     "Spectral Decomposition time/frequency spectrum",
+				     "Time Frequency spectrum" );
+
+    testpanel_->showPosDlg();
+}
+
+#define mSetParam( type, nm, str, fn )\
+{ \
+    mDynamicCastGet(type##Param*, nm, desc->getValParam(str))\
+    nm->setValue( fn );\
+}
+
+void uiLTFAttrib::fillTestParams( Attrib::Desc* desc ) const
+{
+    mSetParam(ZGate,gate, LTFAttrib::gateStr(), gatefld_->getFInterval())
+    mSetParam(Int,niter, LTFAttrib::niterStr(), niterfld_->box()->getIntValue())
+
+    //show Frequencies with a step of 1 in Time and 1e-3 in Depth,
+    //independently of what the user can have specified previously
+    //in the output/step fields
+    //little trick to have correct axes annotation (at least in time)
+    mSetParam(Float,dfreq,LTFAttrib::stepStr(), zIsTime() ? 1.f : 0.001f )
 }
