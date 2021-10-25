@@ -30,6 +30,7 @@ def doCompute():
 	inlFactor = xa.SI['zstep']/xa.SI['inldist'] * xa.SI['dipFactor']
 	crlFactor = xa.SI['zstep']/xa.SI['crldist'] * xa.SI['dipFactor']
 	zw = xa.params['ZSampMargin']['Value'][1] - xa.params['ZSampMargin']['Value'][0] + 1
+	zw = max(zw, 3)
 	filt = xa.params['Select']['Selection']
 	filtFunc = jit(xl.vecmean) if filt==0 else  jit(xl.vmf_l1) if filt==1 else jit(xl.vmf_l2)
 	while True:
@@ -58,4 +59,4 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+

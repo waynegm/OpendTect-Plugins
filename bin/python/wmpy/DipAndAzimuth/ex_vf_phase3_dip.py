@@ -40,7 +40,7 @@ def doCompute():
 	inlFactor = xa.SI['zstep']/xa.SI['inldist'] * xa.SI['dipFactor']
 	crlFactor = xa.SI['zstep']/xa.SI['crldist'] * xa.SI['dipFactor']
 	band = xa.params['Par_1']['Value']
-	zw = min(2*int(xa.params['Par_0']['Value'])+1,3)
+	zw = max(2*int(xa.params['Par_0']['Value'])+1,3)
 	N = xa.params['ZSampMargin']['Value'][1]
 	kernel = xl.hilbert_kernel(N, band)
 	while True:
@@ -61,7 +61,7 @@ def doCompute():
 		shx = xl.kroon3( si, axis=0 )
 		shy = xl.kroon3( si, axis=1 )
 		shz = xl.kroon3( si, axis=2 )
-		
+
 		px = sr[1:xs-1,1:ys-1,:] * shx[1:xs-1,1:ys-1,:] - si[1:xs-1,1:ys-1,:] * sx[1:xs-1,1:ys-1,:]
 		py = sr[1:xs-1,1:ys-1,:] * shy[1:xs-1,1:ys-1,:] - si[1:xs-1,1:ys-1,:] * sy[1:xs-1,1:ys-1,:]
 		pz = sr[1:xs-1,1:ys-1,:] * shz[1:xs-1,1:ys-1,:] - si[1:xs-1,1:ys-1,:] * sz[1:xs-1,1:ys-1,:]
@@ -83,7 +83,7 @@ def doCompute():
 		xa.Output['Dip Azimuth'] = np.degrees(np.arctan2(xa.Output['Inl_dip'],xa.Output['Crl_dip']))
 
 		xa.doOutput()
-	
+
 
 #
 # Assign the compute function to the attribute
@@ -93,4 +93,4 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+
