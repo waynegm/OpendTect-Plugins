@@ -107,14 +107,14 @@ uidehMainWin::~uidehMainWin()
 
 void uidehMainWin::lineselCB(CallBacker*)
 {
-    if (lineselfld_==nullptr)
+    if (!lineselfld_)
         return;
     TypeSet<Pos::GeomID> geomids;
     lineselfld_->getChosen(geomids);
     if (geomids.size()==0) {
         TrcKeySampling hs;
         rangefld_->setTrcKeySampling(hs);
-        include3DCB(0);
+        include3DCB(nullptr);
         return;
     }
     Interval<float> inlrg, crlrg;
@@ -141,7 +141,7 @@ void uidehMainWin::lineselCB(CallBacker*)
 
 void uidehMainWin::include3DCB(CallBacker*)
 {
-    if (include3Dfld_!=nullptr && include3Dfld_->isChecked()) {
+    if (include3Dfld_ && include3Dfld_->isChecked()) {
         TrcKeySampling hs = rangefld_->getTrcKeySampling();
         hs.include(SI().sampling(false).hsamp_, false);
         rangefld_->setTrcKeySampling(hs);

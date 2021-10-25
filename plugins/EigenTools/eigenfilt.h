@@ -1,5 +1,4 @@
-#ifndef eigenfilt_h
-#define eigenfilt_h
+#pragma once
 
 /*
  *   Eigen Filter functions
@@ -21,7 +20,7 @@
 
 #include "Eigen/Core"
 
-namespace EigenFilter{
+namespace EigenFilt{
 /*
  * Apply single pass recursive digital filter, arrays assumed to be 1D, works for complex filters
  */
@@ -32,7 +31,7 @@ void iirfilt(const Eigen::ArrayBase<X>& input, const Eigen::ArrayBase<X>& num, c
     const int nn = num.size();
     const int nd = den.size();
     eigen_assert(ns == output.size());
-    
+
     X inpad(ns+nn-1);
     inpad.setZero();
     inpad.tail(ns) = input;
@@ -51,8 +50,8 @@ void iirfilt(const Eigen::ArrayBase<X>& input, const Eigen::ArrayBase<X>& num, c
     for (int i=nd; i<ns; i++){
         output[i] -= (revden * output.segment(i-nd,nd)).sum();
     }
-}    
-    
+}
+
 /*
  * Apply forward and reverse pass of recursive digital filter, arrays assumed to be 1D, non-complex datatype
  */
@@ -81,74 +80,4 @@ void iirfiltfilt(const Eigen::ArrayXcd& input, const Eigen::ArrayXcd& num, const
     iirfilt(work, cnum, cden, outRef);
     outRef.reverseInPlace();
 }
-};
-/*
-namespace EigenDeriv{
-
-// 3 point 1st derivative finite difference along rows
-void dr_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
-{
-    output.resizeLike(input);
-    int cols = input.cols();
-    Eigen::ArrayXXd in_m1(input.rows(), cols());
-    in_m1.leftCols(cols-1) = input.rightCols(cols-1);
-    in_m1.col(col-1) = 0.0;
-    Eigen::ArrayXXd in_p1(input.rows(), cols);
-    in_p1.rightCols(cols-1) = input.leftCols(cols-1);
-    in_p1.col(0) = 0.0;
-    output = in_p1 - in_m1;
-} 
-    
-// 3 point 1st derivative finite difference along cols
-void dc_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
-{
-    output.resizeLike(input);
-    int rows = input.rows();
-    Eigen::ArrayXXd in_m1(rows, input.cols());
-    in_m1.topRows(rows-1) = input.bottomRows(rows-1);
-    in_m1.row(rows-1) = 0.0;
-    Eigen::ArrayXXd in_p1(rows, input.cols());
-    in_p1.bottomRows(rows-1) = input.topRows(rows-1);
-    in_p1.row(0) = 0.0;
-    output = in_p1 - in_m1;
 }
-    
-// 3 point 2nd derivative finite difference along columns
-void dcc_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
-{
-    output.resizeLike(input);
-    int rows = input.rows();
-    Eigen::ArrayXXd in_m1(rows, input.cols());
-    in_m1.topRows(rows-1) = input.bottomRows(rows-1);
-    in_m1.row(rows-1) = 0.0;
-    Eigen::ArrayXXd in_p1(rows, input.cols());
-    in_p1.bottomRows(rows-1) = input.topRows(rows-1);
-    in_p1.row(0) = 0.0;
-    output = -2.0*input + in_m1 + in_p1;
-} 
-
-// 3 point 2nd derivative finite difference along rows
-void drr_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
-{
-    output.resizeLike(input);
-    int cols = input.cols();
-    Eigen::ArrayXXd in_m1(input.rows(), cols());
-    in_m1.leftCols(cols-1) = input.rightCols(cols-1);
-    in_m1.col(col-1) = 0.0;
-    Eigen::ArrayXXd in_p1(input.rows(), cols);
-    in_p1.rightCols(cols-1) = input.leftCols(cols-1);
-    in_p1.col(0) = 0.0;
-    output = -2.0*input + in_m1 + in_p1;
-} 
-
-
-// 3 point 2nd cross derivative finite difference
-void drc_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
-{
-    Eigen::ArrayXXd tmp;
-    derivEigen::dr_3(input, tmp);
-    derivEigen::dc_3(tmp, output);
-} 
-
-}*/
-#endif 
