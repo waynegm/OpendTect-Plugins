@@ -31,8 +31,8 @@ ________________________________________________________________________
 namespace Attrib
 {
 
-mAttrDefCreateInstance(GradientAttrib)    
-    
+mAttrDefCreateInstance(GradientAttrib)
+
 
 void GradientAttrib::initClass()
 {
@@ -81,7 +81,7 @@ GradientAttrib::GradientAttrib( Desc& desc )
     mGetEnum( optype_, operatorStr() );
 	float*	skernel = NULL;
 	float*	dkernel = NULL;
-	
+
 	switch(optype_)
 	{
 		case Kroon_3:	size_ = 3;
@@ -103,7 +103,7 @@ GradientAttrib::GradientAttrib( Desc& desc )
 						OD::memCopy( dkernel, farid_7_d, size_*sizeof(float) );
 						break;
 	};
-	
+
 	ikernel_ = new float[size_];
 	xkernel_ = new float[size_];
 	zkernel_ = new float[size_];
@@ -121,9 +121,9 @@ GradientAttrib::GradientAttrib( Desc& desc )
 	};
 	delete [] skernel;
 	delete [] dkernel;
-	
+
 	const int hsz = size_/2;
-	
+
     stepout_ = is2D() ? BinID(0,hsz) : BinID(hsz,hsz);
     getTrcPos();
     zmargin_ = Interval<int>(-hsz, hsz);
@@ -161,11 +161,11 @@ bool GradientAttrib::getInputData( const BinID& relpos, int zintv )
 {
 	while ( inputdata_.size() < trcpos_.size() )
 		inputdata_ += 0;
-	
+
 	const BinID bidstep = inputs_[0]->getStepoutStep();
 	for ( int idx=0; idx<trcpos_.size(); idx++ )
 	{
-		const DataHolder* data = 
+		const DataHolder* data =
 		inputs_[0]->getData( relpos+trcpos_[idx]*bidstep, zintv );
         if ( !data ) {
             const BinID pos = relpos + trcpos_[centertrcidx_]*bidstep;
@@ -174,22 +174,22 @@ bool GradientAttrib::getInputData( const BinID& relpos, int zintv )
         }
 		inputdata_.replace( idx, data );
 	}
-	
+
 	dataidx_ = getDataIndex( 0 );
-	
+
 	return true;
 }
 
-bool GradientAttrib::computeData(	const DataHolder& output, const BinID& relpos, 
-									int z0, int nrsamples, int threadid ) const
+bool GradientAttrib::computeData( const DataHolder& output, const BinID& relpos,
+				  int z0, int nrsamples, int threadid ) const
 {
-	
+
 	if ( inputdata_.isEmpty() ) return false;
 
 	const int sz = zmargin_.width() + nrsamples;
 	Array1DImpl<float> vals( sz );
 	const int hsz = size_/2;
-	
+
 	for ( int idx=0; idx<sz; idx++ ) {
 		float reso = 0.0;
 		for (int iln=0; iln<size_; iln++) {
@@ -217,7 +217,7 @@ bool GradientAttrib::computeData(	const DataHolder& output, const BinID& relpos,
 
 
 const BinID* GradientAttrib::desStepout( int inp, int out ) const
-{ return inp ? 0 : &stepout_; }
+{ return &stepout_; }
 
 
 }; //namespace

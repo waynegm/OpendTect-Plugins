@@ -34,41 +34,41 @@ namespace Attrib
 mExpClass(RSpecAttrib) RSpecAttrib : public Provider
 {
 public:
-    static void			initClass();
-						RSpecAttrib(Desc&);
-    static const char*	attribName()			{ return "RSpecAttrib"; }
-    static const char*	stepStr()				{ return "step"; }
-    static const char*	gateStr()				{ return "gate"; }
+    static void		initClass();
+			RSpecAttrib(Desc&);
+    static const char*	attribName()		{ return "RSpecAttrib"; }
+    static const char*	stepStr()		{ return "step"; }
+    static const char*	gateStr()		{ return "gate"; }
     static const char*  reassignStr()           { return "reassign"; }
-    
-    void				getCompNames(BufferStringSet&) const;
-	bool				prepPriorToOutputSetup();
-    
+
+    void		getCompNames(BufferStringSet&) const;
+    bool		prepPriorToOutputSetup();
+
 protected:
 
 							~RSpecAttrib() {}
-    static Provider*		createInstance(Desc&);
-	static void				updateDesc(Desc&);
-    static void				updateDefaults(Desc&);
-	
-    bool					allowParallelComputation() const { return true; }
+    static Provider*	createInstance(Desc&);
+    static void		updateDesc(Desc&);
+    static void		updateDefaults(Desc&);
+
+    bool		allowParallelComputation() const { return true; }
 
     const Interval<int>*	desZSampMargin(int,int) const { return &zsampMargin_; }
-    
-    bool					getInputData(const BinID&,int zintv);
-    bool					computeData(const DataHolder&,const BinID& relpos, int z0,int nrsamples,int threadid) const;
 
-	bool					areAllOutputsEnabled() const;
-	
-	Interval<float>		gate_;
-	float				window_; // effective time window
-	float				step_; // frequency spacing
-	bool               reassign_;
+    bool		getInputData(const BinID&,int zintv);
+    bool		computeData(const DataHolder&,const BinID& relpos, int z0,int nrsamples,int threadid) const;
 
-	const DataHolder*	indata_;
-	int					indataidx_;
-	Interval<int>		zsampMargin_;
-	
+    bool		areAllOutputsEnabled() const;
+
+    Interval<float>	gate_;
+    float		window_; // effective time window
+    float		step_; // frequency spacing
+    bool		reassign_;
+
+    const DataHolder*	indata_;
+    int			indataidx_;
+    Interval<int>	zsampMargin_;
+
 };
 
 }; // namespace Attrib

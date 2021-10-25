@@ -32,8 +32,8 @@ ________________________________________________________________________
 namespace Attrib
 {
 
-mAttrDefCreateInstance(MLVFilter)    
-    
+mAttrDefCreateInstance(MLVFilter)
+
 
 void MLVFilter::initClass()
 {
@@ -48,7 +48,7 @@ void MLVFilter::initClass()
     sdevs->setLimits( StepInterval<float>(0.5, 6.0, 0.5) );
     sdevs->setDefaultValue(3);
     desc->addParam( sdevs );
-    
+
     EnumParam* out_type = new EnumParam( outputStr() );
     out_type->addEnum( "Average" );
     out_type->addEnum( "Median" );
@@ -128,9 +128,9 @@ bool MLVFilter::getElements()
 	pnorms.set(10, PlanePoint(  1,  0,  0 ));
 	pnorms.set(11, PlanePoint(  1, -1,  0 ));
 	pnorms.set(12, PlanePoint( -1, -1,  0 ));
-	
+
 	for ( int ielem=0; ielem<nrelem; ielem++ ) {
-		SamplePointSet pset; 
+		SamplePointSet pset;
 		for ( int trcidx=0; trcidx<trcpos_.size(); trcidx++ ) {
 			const BinID bid = trcpos_[trcidx];
 			for ( int zidx=dessampgate_.start; zidx<=dessampgate_.stop; zidx++ ) {
@@ -150,11 +150,11 @@ bool MLVFilter::getInputData( const BinID& relpos, int zintv )
 {
 	while ( inputdata_.size() < trcpos_.size() )
 		inputdata_ += 0;
-	
+
 	const BinID bidstep = inputs_[0]->getStepoutStep();
 	for ( int idx=0; idx<trcpos_.size(); idx++ )
 	{
-		const DataHolder* data = 
+		const DataHolder* data =
 		inputs_[0]->getData( relpos+trcpos_[idx]*bidstep, zintv );
         if ( !data ) {
             const BinID pos = relpos + trcpos_[centertrcidx_]*bidstep;
@@ -163,9 +163,9 @@ bool MLVFilter::getInputData( const BinID& relpos, int zintv )
         }
 		inputdata_.replace( idx, data );
 	}
-	
+
 	dataidx_ = getDataIndex( 0 );
-	
+
 	return true;
 }
 
@@ -205,18 +205,18 @@ int MLVFilter::findLeastVarianceElement( int idx, int z0, float* result,  wmStat
 	return minelem;
 }
 
-bool MLVFilter::computeData( const DataHolder& output, const BinID& relpos, 
+bool MLVFilter::computeData( const DataHolder& output, const BinID& relpos,
 				int z0, int nrsamples, int threadid ) const
 {
-	
+
 	if ( inputdata_.isEmpty() ) return false;
-	
+
 	wmStats::StatCalc<float> elemStats;
 	float value=0;
 	int elem=0;
 	for ( int idx=0; idx<nrsamples; idx++ )
 	{
-		elem = findLeastVarianceElement( idx, z0, &value, elemStats ); 
+		elem = findLeastVarianceElement( idx, z0, &value, elemStats );
 		if ( outtype_ == Element ) {
 			setOutputValue( output, 0, idx, z0, (float) elem );
 		} else {
@@ -228,7 +228,7 @@ bool MLVFilter::computeData( const DataHolder& output, const BinID& relpos,
 
 
 const BinID* MLVFilter::desStepout( int inp, int out ) const
-{ return inp ? 0 : &stepout_; }
+{ return &stepout_; }
 
 
 

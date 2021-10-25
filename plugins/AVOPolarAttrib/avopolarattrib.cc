@@ -26,24 +26,24 @@ void AVOPolarAttrib::initClass()
     Interval<float> defgateBG( -200, 200 );
     gateBG->setDefaultValue( defgateBG );
     desc->addParam( gateBG );
- 
+
     BinIDParam* stepout = new BinIDParam( stepoutStr() );
     stepout->setDefaultValue( BinID(1,1) );
     stepout->setLimits(Interval<int>(1,10),Interval<int>(1,10)),
     desc->addParam( stepout );
-    
+
     ZGateParam* gate = new ZGateParam( gateStr() );
     gate->setLimits( Interval<float>(-100,100) );
     Interval<float> defgate( -20, 20 );
     gate->setDefaultValue( defgate );
     desc->addParam( gate );
-    
+
     desc->addInput( InputSpec("Intercept",true) );
     desc->addInput( InputSpec("Gradient",true) );
-    
+
     desc->setNrOutputs( Seis::UnknowData, 6 );
     desc->setLocality(Desc::MultiTrace);
-    
+
     mAttrEndInitClass
 }
 
@@ -55,7 +55,7 @@ void AVOPolarAttrib::updateDefaults( Desc& desc )
     if ( roundedzstep > 0 )
         roundedzstep = Math::Floor( roundedzstep );
     zgateBG->setDefaultValue( Interval<float>(-roundedzstep*50, roundedzstep*50) );
-    
+
     ValParam* paramgate = desc.getValParam( gateStr() );
     mDynamicCastGet(ZGateParam*,zgate,paramgate)
     zgate->setDefaultValue( Interval<float>(-roundedzstep*5, roundedzstep*5) );
@@ -65,17 +65,17 @@ AVOPolarAttrib::AVOPolarAttrib( Desc& desc )
 : Provider( desc )
 {
     if ( !isOK() ) return;
-    
+
     mGetFloatInterval( gateBG_, gateBGStr() );
     gateBG_.scale( 1.f/zFactor() );
     mGetBinID( stepout_, stepoutStr() );
-    
+
     mGetFloatInterval( gate_, gateStr() );
     gate_.scale( 1.f/zFactor() );
-    
+
     intercept_.allowNull( true );
     gradient_.allowNull( true );
-    
+
     getTrcPos();
 }
 
@@ -95,7 +95,7 @@ bool AVOPolarAttrib::getTrcPos()
             trcidx++;
         }
     }
-    
+
     return true;
 }
 
@@ -108,24 +108,24 @@ void AVOPolarAttrib::prepPriorToBoundsCalc()
 
 const BinID* AVOPolarAttrib::desStepout( int inp, int outp ) const
 {
-    return inp ? 0: &stepout_;
+    return &stepout_;
 }
 
 const Interval<int>* AVOPolarAttrib::desZSampMargin( int inp, int outp ) const
 {
-    return inp ? 0: &sampgateBG_;
+    return &sampgateBG_;
 }
 
 bool AVOPolarAttrib::getInputData( const BinID& relpos, int zintv )
 {
     intercept_.erase();
     gradient_.erase();
-    
+
     while ( intercept_.size() < trcpos_.size() ) {
         intercept_ += 0;
         gradient_ += 0;
     }
-    
+
     const BinID bidstep = inputs_[0]->getStepoutStep();
     if ( bidstep != inputs_[1]->getStepoutStep() ) {
         ErrMsg("getInputData - mismatch in stepout step between input attributes.");
@@ -152,7 +152,7 @@ bool AVOPolarAttrib::getInputData( const BinID& relpos, int zintv )
     }
     intercept_idx_ = getDataIndex(0);
     gradient_idx_ = getDataIndex(1);
-    
+
     return true;
 }
 
@@ -163,7 +163,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
 
     const int sz = sampgateBG_.width() + nrsamples;
     const int ntraces = trcpos_.size();
-    
+
     Eigen::ArrayXXd A(sz, ntraces);
     for (int trcidx=0; trcidx<ntraces; trcidx++) {
         const DataHolder* data = intercept_[trcidx];
@@ -172,7 +172,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
             A(idx, trcidx) = mIsUdf(val)?0.0f:val;
         }
     }
-    
+
     Eigen::ArrayXXd B(sz, ntraces);
     for (int trcidx=0; trcidx<ntraces; trcidx++) {
         const DataHolder* data = gradient_[trcidx];
@@ -181,25 +181,25 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
             B(idx, trcidx) = mIsUdf(val)?0.0f:val;
         }
     }
-    
+
     Eigen::ArrayXd bgAngle(0);
     Eigen::ArrayXd evAngle(0);
     Eigen::ArrayXd quality(0);
     Eigen::ArrayXd angleDiff(0);
     Eigen::ArrayXd strength(0);
-    
+
     if (isOutputEnabled(BGAngle)) {
         computeBackgroundAngle( A, B, bgAngle );
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,BGAngle, idx, z0, bgAngle[idx-sampgateBG_.start]);
     }
-    
+
     if (isOutputEnabled(EventAngle)) {
         computeEventAngle( A, B, evAngle, quality );
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,EventAngle, idx, z0, evAngle[idx-sampgateBG_.start]);
     }
-    
+
     if (isOutputEnabled(Difference)) {
         if (bgAngle.size()==0)
             computeBackgroundAngle( A, B, bgAngle );
@@ -209,13 +209,13 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,Difference, idx, z0, angleDiff[idx-sampgateBG_.start]);
     }
-    
+
     if (isOutputEnabled(Strength)) {
         computeStrength( A, B, strength );
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,Strength, idx, z0, strength[idx-sampgateBG_.start]);
     }
-    
+
     if (isOutputEnabled(Product)) {
         if (strength.size()==0)
             computeStrength( A, B, strength );
@@ -230,14 +230,14 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,Product, idx, z0, prod[idx-sampgateBG_.start]);
     }
-    
+
     if (isOutputEnabled(Quality)) {
         if (evAngle.size()==0)
             computeEventAngle( A, B, evAngle, quality );
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,Quality, idx, z0, quality[idx-sampgateBG_.start]);
     }
-    
+
     return true;
 }
 
@@ -246,21 +246,23 @@ void AVOPolarAttrib::computeEventAngle(  const Eigen::ArrayXXd& A, const Eigen::
     const int sz = A.rows();
     angle.resize(sz);
     qual.resize(sz);
-    
+    const int winsamples = sampgateBG_.width()+1;
+
+
     Eigen::ArrayXd A2 = A.col(centertrcidx_)*A.col(centertrcidx_);
     Eigen::ArrayXd B2 = B.col(centertrcidx_)*B.col(centertrcidx_);
     Eigen::ArrayXd AB = A.col(centertrcidx_)*B.col(centertrcidx_);
-    
+
     Eigen::ArrayXd A2win(sz);
-    windowedOpsEigen::sum( A2, sampgate_.width(), A2win );
+    windowedOpsEigen::sum( A2, winsamples, A2win );
     Eigen::ArrayXd B2win(sz);
-    windowedOpsEigen::sum( B2, sampgate_.width(), B2win );
+    windowedOpsEigen::sum( B2, winsamples, B2win );
     Eigen::ArrayXd ABwin(sz);
-    windowedOpsEigen::sum( AB, sampgate_.width(), ABwin );
-    
+    windowedOpsEigen::sum( AB, winsamples, ABwin );
+
     Eigen::ArrayXd A2mB2 = A2win - B2win;
     Eigen::ArrayXd del = (4.0*ABwin.square() + A2mB2.square()).sqrt().eval();
-    
+
     angle = (2.0*ABwin/(A2mB2 + del)).atan()/M_PI*180.0;
     qual = del / (A2win + B2win);
 }
@@ -269,35 +271,36 @@ void AVOPolarAttrib::computeBackgroundAngle(  const Eigen::ArrayXXd& A, const Ei
 {
     const int sz = A.rows();
     result.resize(sz);
-    
+    const int winsamples = sampgateBG_.width()+1;
+
     Eigen::ArrayXd A2 = A.square().rowwise().sum();
     Eigen::ArrayXd B2 = B.square().rowwise().sum();
     Eigen::ArrayXd AB = (A*B).rowwise().sum();
-    
+
     Eigen::ArrayXd A2win(sz);
-    windowedOpsEigen::sum( A2, sampgateBG_.width(), A2win );
+    windowedOpsEigen::sum( A2, winsamples, A2win );
     Eigen::ArrayXd B2win(sz);
-    windowedOpsEigen::sum( B2, sampgateBG_.width(), B2win );
+    windowedOpsEigen::sum( B2, winsamples, B2win );
     Eigen::ArrayXd ABwin(sz);
-    windowedOpsEigen::sum( AB, sampgateBG_.width(), ABwin );
-    
+    windowedOpsEigen::sum( AB, winsamples, ABwin );
+
     Eigen::ArrayXd A2mB2 = A2win - B2win;
-    
     result = (2.0*ABwin/(A2mB2 + (4.0*ABwin.square() + A2mB2.square()).sqrt())).atan()/M_PI*180.0;
 }
 
 void AVOPolarAttrib::computeStrength(  const Eigen::ArrayXXd& A, const Eigen::ArrayXXd& B, Eigen::ArrayXd& result ) const
-{        
+{
     const int sz = A.rows();
     result.resize(sz);
-    
+    const int winsamples = sampgateBG_.width()+1;
+
     Eigen::ArrayXi imax(sz);
     Eigen::ArrayXd Amax(sz);
-    windowedOpsEigen::max( A.col(centertrcidx_), sampgate_.width(), Amax, imax); 
+    windowedOpsEigen::max( A.col(centertrcidx_), winsamples, Amax, imax);
     Eigen::ArrayXi imin(sz);
     Eigen::ArrayXd Amin(sz);
-    windowedOpsEigen::min( A.col(centertrcidx_), sampgate_.width(), Amin, imin); 
-    
+    windowedOpsEigen::min( A.col(centertrcidx_), winsamples, Amin, imin);
+
     for (int idx=0; idx<sz;idx++) {
         double bmin = B(imin[idx],centertrcidx_);
         double bmax = B(imax[idx],centertrcidx_);
@@ -305,9 +308,9 @@ void AVOPolarAttrib::computeStrength(  const Eigen::ArrayXXd& A, const Eigen::Ar
     }
 }
 } // Attrib
-    
-    
-    
 
 
-    
+
+
+
+
