@@ -16,8 +16,11 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "eigen_toolsmod.h"
+#include "eigentoolsmod.h"
+#include "odplugin.h"
+#include "wmplugins.h"
 
+mDefODPluginEarlyLoad(EigenTools)
 mDefODPluginInfo(EigenTools)
 {
     mDefineStaticLocalObject( PluginInfo, retpi,(

@@ -4,7 +4,7 @@
 # 	August 2014	Wayne Mogg
 #_______________________________________________________________________________
 
-SET(OD_MODULE_DEPS AttributeEngine)
+SET(OD_MODULE_DEPS EigenTools AttributeEngine)
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
 	rspecattrib.cc

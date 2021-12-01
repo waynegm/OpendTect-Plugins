@@ -18,123 +18,133 @@
 #include "efd.h"
 
 #include <Eigen/Core>
+#include <unsupported/Eigen/FFT>
 #include "eigentools.h"
 
-EFD::EFD(int maxmodes)
-    , maxnrmodes_(maxmodes)
+#include "commondefs.h"
+#include <iostream>
+
+using namespace Eigen;
+
+EFD::EFD(int maxmodes, PadMode padmode, int tapersz)
+    : maxnrmodes_(maxmodes)
+    , padmode_(padmode)
+    , tapersz_(tapersz)
 {
 }
 
 EFD::~EFD()
 {}
 
-bool EFD::validMode(int modenum)
+bool EFD::validMode(int modenum) const
 {
-    return modenum>=0 && modenum<modes_.cols();
+    return modenum>=0 && modenum<centralfreqs_.size();
 }
 
-void EFD::setInput(const Eigen::ArrayXd& input)
+void EFD::setInput(const ArrayXf& input)
 {
-    modes_.resize(input.size(), maxnrmodes_);
     computeFreq(input);
-    computeSegments();
+    computeFreqSegments();
 }
 
-bool EFD::getMode(int modenum, Eigen::ArrayXd& mode) const
+void EFD::setMaxModes(int maxmodes)
 {
-    if (!validMode(modenum) || !modes_.rows())
+    if (maxmodes==maxnrmodes_)
+	return;
+    maxnrmodes_ = maxmodes;
+    if (inputfreq_.size())
+	computeFreqSegments();
+}
+
+void EFD::setEmpty()
+{
+    inputfreq_.resize(0);
+    centralfreqs_.resize(0);
+    segbounds_.resize(0);
+    rankidx_.resize(0);
+}
+
+bool EFD::getMode(int modenum, ArrayXf& mode)
+{
+    if (!centralfreqs_.size() || !validMode(modenum))
 	return false;
 
-    mode.resize(modes_.rows());
-    mode = modes_.col(modenum);
+    const Index fsz = inputfreq_.size();
+    const Index start = segbounds_(modenum)==0 ? segbounds_(modenum) : segbounds_(modenum)+1;
+    const Index stop = segbounds_(modenum+1);
+    VectorXcf modefreq = VectorXcf::Zero(inputfreq_.size());
+    modefreq(seq(start,stop)) = inputfreq_(seq(start,stop));
+    modefreq(seq(fsz-start,fsz-stop)) = inputfreq_(seq(fsz-start,fsz-stop));
+    VectorXf modevec(fsz);
+    fft_.inv(modevec, modefreq);
+    const Index ns = fsz/2;
+    const Index pivot = ns%2==0 ? ns/2 : (ns+1)/2;
+    mode.resize(ns);
+    mode = modevec(seqN(ns-pivot,ns)).array();
+    return true;
 }
 
-void EFD::computeFreq(const Eigen::ArrayXd& input)
+bool EFD::getModeByRank(int ranknum, ArrayXf& mode)
 {
-    Eigen::ArrayXd padded_input(input.size()*2);
-    mirrorPad(input, padded_input);
-    inputfreq_.resize(padded_input.size());
+    if (!centralfreqs_.size() || !validMode(ranknum))
+	return false;
+
+    return getMode(rankidx_(ranknum), mode);
+}
+
+void EFD::computeFreq(const ArrayXf& input)
+{
+    int pinsz = padmode_==None ? input.size() : input.size()*2;
+    VectorXf padded_input(pinsz);
+    if (padmode_==None)
+	padded_input << input;
+    else if (padmode_==Mirror)
+	EigenTools::mirrorPad(input, padded_input);
+    else if (padmode_==Symmetric)
+	EigenTools::symmetricPad(input, padded_input);
+
+    if (tapersz_>0)
+	EigenTools::cosTaper(tapersz_, padded_input);
+
+    inputfreq_.resize(pinsz);
     fft_.fwd(inputfreq_, padded_input);
 }
 
-void EFD::computeSegments()
+void EFD::computeFreqSegments()
 {
     const int ampsz = inputfreq_.size()/2;
-    Eigen::ArrayXd amp = inputfreq_.head(ampsz).abs();
-    Eigen::ArrayXd locmax = Eigen::ArrayXd::Zero(ampsz);
+    ArrayXf amp = inputfreq_.head(ampsz).array().abs();
+    ArrayXf locmax = ArrayXf::Zero(ampsz);
     const int sz = ampsz-2;
     locmax(seqN(1, sz)) = (amp.head(sz)<amp(seqN(1,sz)) && amp(seqN(1,sz))>amp(seqN(2,sz))).select(amp(seqN(1,sz)), 0);
-    locmax(0) = amp(0);
-    locmax(ampsz-1) = amp(ampsz-1);
 
-    Eigen::ArrayXi srtidx = Eigen::ArrayXi::LinSpaced(ampsz, 0, ampsz);
+    VectorXi srtidx = VectorXi::LinSpaced(ampsz, 0, ampsz);
     std::sort(srtidx.begin(), srtidx.end(), [&](int i,int j){return locmax(i)>locmax(j);});
-    std::vector<Eigen::Index> idxmax;
+    std::vector<Index> idxmax;
     for (int idx=0; idx<srtidx.size(); idx++) {
-	Eigen::Index eidx = srtidx(idx);
+	Index eidx = srtidx(idx);
 	if (locmax(eidx)==0.0 || idx>=maxnrmodes_)
 	    break;
-	idxmax.push_back(eidx)
+	idxmax.push_back(eidx);
     }
+    rankidx_.resize(idxmax.size());
+    for (int idx=0; idx<idxmax.size(); idx++)
+	rankidx_(idx) = idxmax[idx];
+
     std::sort(idxmax.begin(), idxmax.end());
 
     const int M = idxmax.size()+1;
-    seqbounds_ = Eigen::ArrayXi::Zero(M);
+    segbounds_ = VectorXi::Zero(M);
     int index;
-    seqbounds_(0) = 0;
-    seqbounds_(M-1) = ampsz-1;
+    segbounds_(0) = 0;
+    segbounds_(M-1) = ampsz;
     for (int idx=1; idx<M-1; idx++) {
-	amp(seq(idxmax(idx-1), idxmax(idx))).minCoeff(index);
-	seqbounds_(idx) = index;
+	amp(seq(idxmax[idx-1], idxmax[idx])).minCoeff(&index);
+	segbounds_(idx) = index + idxmax[idx-1];
     }
-    centralfreqs_ = idxmax*mPI/ampsz;
+    centralfreqs_.resize(idxmax.size());
+    const float freqstep = 2.0f*M_PI/inputfreq_.size();
+    for (int idx=0; idx<idxmax.size(); idx++ )
+	centralfreqs_(idx)= idxmax[idx]*freqstep;
 }
 
-void EFD::computeModes(const Eigen::ArrayXd& input)
-{
-    double fs = 1.0/input.size();
-    Eigen::ArrayXd padded_input(input.size()*2);
-    mirrorPad(input, padded_input);
-    int T = padded_input.size();
-    Eigen::ArrayXd t = Eigen::ArrayXd::LinSpaced(T, 1.0, T)/T;
-    Eigen::ArrayXd freqs = t - 0.5 - (1/T);
-
-    Eigen::ArrayXcd freqvec(T);
-    fft_.fwd(freqvec, padded_input);
-    Eigen::ArrayXcd f_hat(T);
-    fftshift(freqvec, f_hat);
-    Eigen::ArrayXcd f_hat_plus = f_hat;
-    f_hat_plus.head(T/2) = 0;
-
-    auto Alpha = alpha_ * Eigen::ArrayXd::Ones(nrmodes_);
-    auto omega_plus = Eigen::ArrayXXd::Zero(nrmodes_);
-
-    if (omega==Uniform)
-	    omega_plus.row(0) = 0.5/nrmodes_* Eigen::ArrayXd::LinSpaced(nrmodes_,0,nrmodes_-1);
-    else if (omega==Random)
-	omega_plus.row(0) = (Eigen::ArrayXd::Random(nrmodes_)+1.0)/4.0;
-    else
-	omega_plus.row(0) = 0.0;
-
-    if (makeDC_)
-	omega_plus(0,0) = 0.0;
-
-    auto lambda_hat = Eigen::ArrayXXcd::Zero(freqs.size());
-    double udiff = tol_ + ;
-    int n = 0;
-    auto sum_uk = Eigen::ArrayXd::Zero(freqs.size()); //Check size and initialisation
-    auto u_hat_plus = Eigen::ArrayXXcd::Zero(freqs.size, nrmodes_);
-
-    while (uDiff>tol && n<niter_-1) {
-	int k = 0;
-	sum_uk += u_hat_plus.col(nrmodes_-1) - u_hat_plus.col(0);
-	u_hat_plus.col(k) = (f_hat_plus - sum_uk - lambda_hat/2.0)/(1.0+Alpha(k)*(freqs-omega_plus(k))**2);
-	if (!makeDC_)
-	    omega_plus =
-
-	for (int imode=0; imode<nrmodes_, imode++) {
-	    sum_uk += u_hat_plus.col
-	}
-    }
-
-}

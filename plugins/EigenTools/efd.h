@@ -1,3 +1,4 @@
+
 #pragma once
 /*
  *   EigenTools Plugin -  Empirical Fourier Decomposition
@@ -23,25 +24,32 @@
 class EFD
 {
 public:
-    EFD(int maxmodes=5);
+    enum PadMode { None, Mirror, Symmetric };
+
+    EFD(int maxmodes=5, PadMode padmode=None, int tapersz=0);
     ~EFD();
 
-    void		setInput(const Eigen::ArrayXd& input);
-    bool		getMode(int modenum, Eigen::ArrayXd& mode) const;
+    void		setInput(const Eigen::ArrayXf& input);
+    void                setMaxModes(int maxmodes);
+    void                setEmpty();
+    bool		getMode(int modenum, Eigen::ArrayXf& mode);
+    bool		getModeByRank(int ranknum, Eigen::ArrayXf& mode);
     bool		validMode(int modenum) const;
 
 
 protected:
     int			maxnrmodes_;
-    Eigen::ArrayXd	centralfreqs_;
-    Eigen::ArrayXi	segbounds_;
-    Eigen::ArrayXXd	modes_;
-    Eigen::ArrayXcd	inputfreq_;
+    PadMode		padmode_;
+    int			tapersz_ = 0;
+    Eigen::VectorXf	centralfreqs_;
+    Eigen::VectorXi	rankidx_;
+    Eigen::VectorXi	segbounds_;
+    Eigen::VectorXcf	inputfreq_;
 
-    Eigen::FFT<double>	fft_;
-    void		computeFreq(const Eigen::ArrayXd& input);
+    Eigen::FFT<float>	fft_;
+    void		computeFreq(const Eigen::ArrayXf& input);
     void		computeFreqSegments();
-    void		computeModes(const Eigen::ArrayXd& input);
+    void		computeModes();
 
 };
 

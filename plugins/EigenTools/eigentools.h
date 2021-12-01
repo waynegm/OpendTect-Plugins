@@ -23,15 +23,27 @@
 namespace EigenTools{
 
 template <typename X>
-void mirrorPad(const Eigen::ArrayBase<X>& input, Eigen::ArrayBase<X>& output)
+void cosTaper(int width, Eigen::DenseBase<X>& data)
+{
+    if (data.size()<2*width)
+	return;
+
+    X taper = X::LinSpaced(width, -M_PI, 0.f);
+    taper << (taper.array().cos()+1.f)/2.f;
+    data.head(width) = data.head(width).array() * taper.array();
+    data.tail(width) = data.tail(width).array() * taper.reverse().array();
+}
+
+template <typename X, typename Y>
+void mirrorPad(const Eigen::DenseBase<X>& input, Eigen::DenseBase<Y>& output)
 {
     const int ns = input.size();
     const int pivot = ns%2==0 ? ns/2 : (ns+1)/2;
     output << input.head(ns-pivot).reverse(), input, input.tail(pivot).reverse();
 }
 
-template <typename X>
-void symmetricPad(const Eigen::ArrayBase<X>& input, Eigen::ArrayBase<X>& output)
+template <typename X, typename Y>
+void symmetricPad(const Eigen::DenseBase<X>& input, Eigen::DenseBase<Y>& output)
 {
     const int ns = input.size();
     const int pivot = ns%2==0 ? ns/2 : (ns+1)/2;
@@ -39,8 +51,8 @@ void symmetricPad(const Eigen::ArrayBase<X>& input, Eigen::ArrayBase<X>& output)
     output << trinput.head(ns-pivot).reverse(), input, trinput.tail(pivot).reverse();
 }
 
-template <typename X>
-void fftshift(const Eigen::ArrayBase<X>& input, Eigen::ArrayBase<X>& output)
+template <typename X, typename Y>
+void fftshift(const Eigen::DenseBase<X>& input, Eigen::DenseBase<Y>& output)
 {
     const int ns = input.size();
     const int pivot = ns%2==0 ? ns/2 : (ns+1)/2;

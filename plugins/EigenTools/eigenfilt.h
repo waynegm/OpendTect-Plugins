@@ -20,7 +20,7 @@
 
 #include "Eigen/Core"
 
-namespace EigenFilt{
+namespace EigenFilter{
 /*
  * Apply single pass recursive digital filter, arrays assumed to be 1D, works for complex filters
  */

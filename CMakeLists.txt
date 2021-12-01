@@ -69,6 +69,7 @@ get_filename_component( OD_BINARY_BASEDIR "${OD_BINARY_BASEDIR}" REALPATH )
 
 #Setup the modules
 set ( PLUGINS uiWGMHelp
+	    EigenTools
             uiWMTools
             uiGeopackageExport
             uiGrid2D3DHorizon
@@ -79,7 +80,9 @@ set ( PLUGINS uiWGMHelp
             AVOAttrib uiAVOAttrib
             ExternalAttrib uiExternalAttrib
             GradientAttrib uiGradientAttrib
-            LocalAttrib uiLocalAttrib )
+            LocalAttrib uiLocalAttrib
+#            VMDAttrib uiVMDAttrib
+            EFDAttrib uiEFDAttrib )
 OD_ADD_MODULES( plugins ${PLUGINS} )
 
 #Add the plugins

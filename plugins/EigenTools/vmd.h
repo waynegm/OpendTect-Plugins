@@ -1,6 +1,6 @@
 #pragma once
 /*
- *   VMDAttrib Plugin -  Variational Mode Decomposition
+ *   EigenTools Plugin -  Variational Mode Decomposition
  *   Copyright (C) 2021  Wayne Mogg
  *
  *   This program is free software: you can redistribute it and/or modify

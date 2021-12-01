@@ -1,4 +1,4 @@
-SET(OD_MODULE_DEPS AttributeEngine EigenTools)
+SET(OD_MODULE_DEPS EigenTools AttributeEngine)
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
     avopolarattribpi.cc
