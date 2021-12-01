@@ -1,12 +1,28 @@
 # OpendTect Plugins Release Notes
 
 ## Release 6.6.9
+### AVOPolarAttrib
+-  Fix attribute calculation on time slices and horizons
+
+### GradientAttrib
+-  Fix attribute calculation on time slices and horizons
+
+### MLVFilterAttrib
+-  Fix attribute calculation on time slices and horizons
+
 ### RSpecAttrib
-- Add UI option to display time frequency panel for a user selected trace
+-  Add UI option to display time frequency panel for a user selected trace
+-  Fix attribute calculation on time slices and horizons
 
 ### LocalAttrib
-- LTFAttrib - Add UI option to display time frequency panel for a user selected trace
+-  LTFAttrib - Add UI option to display time frequency panel for a user selected trace
 
+### External Attributes
+--  Fix z window sample size ex_vf_gradient3_dip.py, ex_vf_phase3_dip.py and ex_vector_filter_dip.py
+
+### wmodpy - OpendTect Python Bindings
+-  revamp notebook examples
+-  add pytest test script
 
 ## Release 6.6.8
 ### External Attributes
