@@ -79,7 +79,7 @@ uidehMainWin::uidehMainWin( uiParent* p )
         include3Dfld_->attach(ensureBelow, lblxt);
         include3Dfld_->setChecked(true);
         lastfld = (uiObject*) include3Dfld_;
-        include3Dfld_->activated.notify(mCB(this, uidehMainWin, include3DCB));
+        mAttachCB(include3Dfld_->activated, uidehMainWin::include3DCB);
     }
 
     uiSeparator* outsep = new uiSeparator(this, "Output");

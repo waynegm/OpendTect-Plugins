@@ -62,7 +62,7 @@ uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
 
     stepfld_ = new uiLabeledSpinBox( this, uiStrings::sStep(), 1 );
     stepfld_->attach( rightTo, freqfld_ );
-    stepfld_->box()->valueChanged.notify(mCB(this,uiLTFAttrib,stepChg));
+    mAttachCB(stepfld_->box()->valueChanged, uiLTFAttrib::stepChg);
 
 //	smoothfld_ = new uiLabeledSpinBox( this, tr("Smoothing Radius (samples)") );
 //	smoothfld_->box()->setMinValue( 2 );
@@ -87,18 +87,23 @@ uiLTFAttrib::uiLTFAttrib( uiParent* p, bool is2d )
     setHAlignObj( inpfld_ );
 }
 
+uiLTFAttrib::~uiLTFAttrib()
+{
+    detachAllNotifiers();
+}
+
 void uiLTFAttrib::inputSel( CallBacker* )
 {
-	if ( !*inpfld_->getInput() ) return;
+    if ( !*inpfld_->getInput() ) return;
 
-	TrcKeyZSampling cs;
-	if ( !inpfld_->getRanges(cs) )
-		cs.init(true);
+    TrcKeyZSampling cs;
+    if ( !inpfld_->getRanges(cs) )
+	cs.init(true);
 
-	const float nyqfreq = 0.5f / cs.zsamp_.step;
+    const float nyqfreq = 0.5f / cs.zsamp_.step;
 
-	const float freqscale = zIsTime() ? 1.f : 1000.f;
-	const float scalednyqfreq = nyqfreq * freqscale;
+    const float freqscale = zIsTime() ? 1.f : 1000.f;
+    const float scalednyqfreq = nyqfreq * freqscale;
     stepfld_->box()->setInterval( (float)0.5, scalednyqfreq/2 );
     stepfld_->box()->setStep( (float)0.5, true );
     freqfld_->box()->setMinValue( stepfld_->box()->getFValue() );

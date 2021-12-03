@@ -14,7 +14,7 @@
 *
 *   You should have received a copy of the GNU General Public License
 *   along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/ 
+*/
 #include "uigeopackagetreeitem.h"
 #include "uigeopackagereader.h"
 
@@ -51,8 +51,8 @@
 /*
  *  Calculate intersection points between a line and rectangular grid
  *  Gird assumed to start at the origin, endpoints are included in output
- * 
- */ 
+ *
+ */
 
 bool makeLine( const Coord& start, const Coord& stop, const Coord& step, TypeSet<Coord>& output )
 {
@@ -83,7 +83,7 @@ bool makeLine( const Coord& start, const Coord& stop, const Coord& step, TypeSet
         dtY = ((gridY-1)*step.y-start.y)/dir.y;
     }
     float ddtY = dgridY*step.y/dir.y;
-    
+
     float t = 0.0;
 	float tlast = -1.0;
     while (t<1.0) {
@@ -102,7 +102,7 @@ bool makeLine( const Coord& start, const Coord& stop, const Coord& step, TypeSet
     }
     output += stop;
     return true;
-}    
+}
 
 class Hor3DTool
 {
@@ -112,7 +112,7 @@ public:
 
     float interpZat( float inl, float crl, bool applZtransform=true ) const;
     void profile( const ODPolygon<Pos::Ordinate_Type> path, ManagedObjectSet<TypeSet<Coord3>>& prof, bool applZtransform=true );
-    
+
 protected:
     const EM::Horizon3D*    hor_;
     const ZAxisTransform*   ztrans_;
@@ -125,11 +125,11 @@ Hor3DTool::Hor3DTool( const EM::Horizon3D* hor3d, const ZAxisTransform* ztran )
 , ztrans_(ztran)
 {
     TrcKeySampling range = hor3d->range();
-    StepInterval<int> r = range.inlRange(); 
+    StepInterval<int> r = range.inlRange();
     inlrg_.set(r.start, r.stop, r.step);
     r = range.crlRange();
     crlrg_.set(r.start, r.stop, r.step);
-    inlrg_.sort(); 
+    inlrg_.sort();
     crlrg_.sort();
 }
 
@@ -140,7 +140,7 @@ float Hor3DTool::interpZat( float inl, float crl, bool applyZtransform ) const
 {
     if (applyZtransform && !ztrans_)
         return mUdf(float);
-    
+
     if (inlrg_.includes(inl, false) && crlrg_.includes(crl, false)) {
         Interpolate::LinearReg2D<float> interp;
         float fx = floor(inl/inlrg_.step)*inlrg_.step;
@@ -212,39 +212,41 @@ public:
         filefld_->setDefaultExtension( "gpkg" );
         if (reader_.fileName())
             filefld_->setFileName(reader_.fileName());
-        filefld_->valuechanged.notify(mCB(this, uiGeopackageParsDlg, fileChgCB));
-        
+        mAttachCB(filefld_->valuechanged, uiGeopackageParsDlg::fileChgCB);
+
         layerfld_ = new uiComboBox(this, "Layer");
         layerfld_->attach (alignedBelow, filefld_);
         layerfld_->setReadOnly(true);
-        layerfld_->selectionChanged.notify(mCB(this, uiGeopackageParsDlg, layerChgCB));
-        
-		shiftfld_ = new uiLabeledSpinBox(this, tr("Float layer above by"));
-		shiftfld_->box()->setInterval(-10, 10, 1);
-		shiftfld_->box()->setValue(shift);
-		shiftfld_->attach(alignedBelow, layerfld_);
+        mAttachCB(layerfld_->selectionChanged, uiGeopackageParsDlg::layerChgCB);
 
-		uiLabel* lbl = new uiLabel(this, SI().zDomain().uiUnitStr(true));
-		lbl->attach(rightOf, shiftfld_);
+	shiftfld_ = new uiLabeledSpinBox(this, tr("Float layer above by"));
+	shiftfld_->box()->setInterval(-10, 10, 1);
+	shiftfld_->box()->setValue(shift);
+	shiftfld_->attach(alignedBelow, layerfld_);
 
-        uiSelLineStyle::Setup lssu; 
+	uiLabel* lbl = new uiLabel(this, SI().zDomain().uiUnitStr(true));
+	lbl->attach(rightOf, shiftfld_);
+
+        uiSelLineStyle::Setup lssu;
         lssu.drawstyle(false);
         lsfld_ = new uiSelLineStyle( this, ls, lssu );
         lsfld_->attach(alignedBelow, shiftfld_);
-        
+
         setOkCancelText( uiStrings::sApply(), uiStrings::sClose() );
         fileChgCB(0);
     }
+    ~uiGeopackageParsDlg()
+    { detachAllNotifiers(); }
 
     const OD::LineStyle& getLineStyle() const { return lsfld_->getStyle(); }
-	int		getShift() const { return shiftfld_->box()->getIntValue();  }
+    int		getShift() const { return shiftfld_->box()->getIntValue();  }
 
 protected:
     bool acceptOK( CallBacker* )
     {
         return true;
     }
-    
+
     void fillLayers()
     {
         if (layerfld_) {
@@ -254,7 +256,7 @@ protected:
             layerfld_->addItems(layerNames);
         }
     }
-    
+
     void fileChgCB( CallBacker* )
     {
         if (reader_.open(filefld_->fileName())) {
@@ -268,19 +270,19 @@ protected:
         }
         layerChgCB(0);
     }
-    
+
     void layerChgCB( CallBacker* )
     {
         reader_.setLayer(layerfld_->text());
     }
-    
+
     uiFileInput*                    filefld_;
     uiComboBox*                     layerfld_;
 	uiLabeledSpinBox*				shiftfld_;
 	uiSelLineStyle*                 lsfld_;
     uiGeopackageReader&             reader_;
 };
-    
+
 const char* uiGeopackageTreeItem::sKeyGeopackageDefString(){ return "Geopackage Display";}
 const char* uiGeopackageTreeItem::sKeyGeopkg() { return "Geopkg";}
 const char* uiGeopackageTreeItem::sKeyGeopkgNr() { return "Nr Geopkg";}
@@ -288,7 +290,7 @@ const char* uiGeopackageTreeItem::sKeyGeopkgStart() { return "Start";}
 
 void uiGeopackageTreeItem::initClass()
 {
-    uiODDataTreeItem::factory().addCreator( create, 0 ); 
+    uiODDataTreeItem::factory().addCreator( create, 0 );
 }
 
 uiGeopackageTreeItem::uiGeopackageTreeItem( const char* parenttype )
@@ -303,7 +305,7 @@ uiGeopackageTreeItem::uiGeopackageTreeItem( const char* parenttype )
 {
     reader_ = new uiGeopackageReader();
     optionsmenuitem_.iconfnm = "disppars";
-    
+
     mAttachCB( ODMainWin()->sessionSave, uiGeopackageTreeItem::sessionSaveCB );
     mAttachCB( ODMainWin()->sessionRestore, uiGeopackageTreeItem::sessionRestoreCB );
 }
@@ -312,17 +314,7 @@ uiGeopackageTreeItem::~uiGeopackageTreeItem()
 {
     if (reader_)
         delete reader_;
-    
-    visSurvey::HorizonDisplay* hordisp = getHorDisp();
-    if ( hordisp )
-        hordisp->getMovementNotifier()->remove(mCB(this,uiGeopackageTreeItem,checkCB));
-        
-    ODMainWin()->applMgr().visServer()->removeAllNotifier().remove(mCB(this,uiGeopackageTreeItem,visClosingCB) );
-        
-    if ( !parent_ )
-            return;
-        
-    parent_->checkStatusChange()->remove(mCB(this,uiGeopackageTreeItem,checkCB));
+
     detachAllNotifiers();
 }
 
@@ -346,12 +338,11 @@ bool uiGeopackageTreeItem::init()
 {
     if ( !uiODDataTreeItem::init() )
         return false;
-    
+
     uitreeviewitem_->setChecked( true );
-    parent_->checkStatusChange()->notify( mCB(this,uiGeopackageTreeItem,checkCB) );
-    
-    ODMainWin()->applMgr().visServer()->removeAllNotifier().notify(mCB(this,uiGeopackageTreeItem,visClosingCB) );
-    
+    mAttachCB(parent_->checkStatusChange(), uiGeopackageTreeItem::checkCB);
+    mAttachCB(&ODMainWin()->applMgr().visServer()->removeAllNotifier(), uiGeopackageTreeItem::visClosingCB);
+
     return true;
 }
 
@@ -361,7 +352,7 @@ uiODDataTreeItem* uiGeopackageTreeItem::create( const Attrib::SelSpec& as, const
     if ( defstr != sKeyGeopackageDefString() )
 	return 0;
 
-    
+
     uiGeopackageTreeItem* gpitem = new uiGeopackageTreeItem(parenttype);
     return gpitem ? (uiODDataTreeItem*) gpitem : 0;
 }
@@ -371,24 +362,24 @@ void uiGeopackageTreeItem::checkCB( CallBacker* )
     bool newstatus = uitreeviewitem_->isChecked();
     if ( newstatus && parent_ )
         newstatus = parent_->isChecked();
-    
+
     visSurvey::HorizonDisplay* hordisp = getHorDisp();
     if ( !hordisp ) return;
-    
+
     const bool display = newstatus && hordisp && !hordisp->displayedOnlyAtSections();
-    
-    if ( lines_ ) 
+
+    if ( lines_ )
         lines_->turnOn( display );
-    
+
 }
 
 bool uiGeopackageTreeItem::doubleClick( uiTreeViewItem* item )
 {
     if ( item != uitreeviewitem_ )
         return uiTreeItem::doubleClick( item );
-    
+
     if ( !select() ) return false;
-    
+
     showPropertyDlg();
     return true;
 }
@@ -424,10 +415,10 @@ void uiGeopackageTreeItem::handleMenuCB( CallBacker* cb )
     uiODDataTreeItem::handleMenuCB( cb );
     mCBCapsuleUnpackWithCaller( int, mnuid, caller, cb );
     mDynamicCastGet(MenuHandler*,menu,caller);
-    
+
     if ( mnuid==-1 || menu->isHandled() )
         return;
-    
+
     if ( mnuid==optionsmenuitem_.id )
     {
         menu->setIsHandled( true );
@@ -441,7 +432,7 @@ void uiGeopackageTreeItem::showPropertyDlg()
     uiGeopackageParsDlg propdlg( ODMainWin(), *reader_, ls, zshift_ );
     if (!propdlg.go())
         return;
-    
+
 	zshift_ = propdlg.getShift();
     OD::LineStyle nls = propdlg.getLineStyle();
     if (!drawstyle_) {
@@ -456,7 +447,7 @@ void uiGeopackageTreeItem::showPropertyDlg()
     material_->setColor( nls.color_ );
     color_ = nls.color_;
     linewidth_ = nls.width_;
-    
+
     setName(createDisplayName());
     updateColumnText(uiODSceneMgr::cNameColumn());
     updateColumnText(uiODSceneMgr::cColorColumn());
@@ -469,14 +460,14 @@ bool uiGeopackageTreeItem::createPolyLines()
         removeOldLinesFromScene();
         return true;
     }
-    
+
     if ( ( lines_ = visBase::PolyLine::create() ) == 0 )
         return false;
 
     lines_->ref();
     lines_->setPickable( false, false );
     applMgr()->visServer()->addObject( lines_, sceneID(), false );
-    
+
     OD::LineStyle ls( OD::LineStyle::Solid, linewidth_, color_ );
     if ( !drawstyle_ ) {
         drawstyle_ = new visBase::DrawStyle;
@@ -515,7 +506,7 @@ void uiGeopackageTreeItem::showLayer()
         ZAxisTransform* ztransform = scene ? scene->getZAxisTransform() : 0;
 
 	float zshift = zshift_ / (float) scene->zDomainUserFactor();
-        
+
         Hor3DTool h3t(hor3d, ztransform);
         ManagedObjectSet<ODPolygon<Pos::Ordinate_Type>> polys;
         removeOldLinesFromScene();
@@ -561,11 +552,11 @@ void uiGeopackageTreeItem::updateColumnText( int col )
         uitreeviewitem_->setPixmap(uiODSceneMgr::cColorColumn(), color_);
     else if (col == uiODSceneMgr::cNameColumn())
 	uiODDataTreeItem::updateColumnText( col );
-    
+
     uiVisPartServer* visserv = applMgr()->visServer();
     visSurvey::HorizonDisplay* hordisp = getHorDisp();
     if ( !hordisp ) return;
-                   
+
     if (lines_) {
         const bool solomode = visserv->isSoloMode();
         const bool turnon = !hordisp->displayedOnlyAtSections() && ( (solomode && hordisp->isOn()) || (!solomode && hordisp->isOn() && isChecked()) );
@@ -603,7 +594,7 @@ bool uiGeopackageTreeItem::fillPar(IOPar& par) const
     gppar.set(sKey::Target(), reader_->layerName());
     gppar.set(sKey::Color(), color_);
     gppar.set(sKey::Weight(), linewidth_);
-    
+
     BufferString key = sKeyGeopkg();
     key.add(".").add(id).add(".").add(nrGP);
     par.set(nrkey, nrGP);

@@ -35,6 +35,7 @@ mExpClass(uiLocalAttrib) uiLTFAttrib : public uiAttrDescEd, public TestPanelAdap
 public:
 
     uiLTFAttrib(uiParent*,bool);
+    ~uiLTFAttrib();
 
     void		getEvalParams(TypeSet<EvalParam>&) const;
     int			getOutputIdx(float) const;

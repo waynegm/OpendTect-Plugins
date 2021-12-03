@@ -38,6 +38,7 @@ class uiMLVFilterAttrib : public uiAttrDescEd
 public:
 
 			uiMLVFilterAttrib(uiParent*,bool);
+			~uiMLVFilterAttrib();
 
     void		getEvalParams(TypeSet<EvalParam>&) const;
 
@@ -52,7 +53,7 @@ protected:
     bool		setInput(const Attrib::Desc&);
     bool		getParameters(Attrib::Desc&);
     bool		getInput(Attrib::Desc&);
-    
+
     void        outChgCB(CallBacker*);
     void        sdevsChgCB(CallBacker*);
 

@@ -43,7 +43,7 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
 	su.withinserters(false);
 	su.seltxt(tr("Input 2D Data Type/Attribute"));
 	seisselfld_ = new uiSeisSel( this,uiSeisSel::ioContext(Seis::Line,true), su );
-	seisselfld_->selectionDone.notify(mCB(this,uiMistieEstimateBySeismic,seisselCB));
+	mAttachCB(seisselfld_->selectionDone, uiMistieEstimateBySeismic::seisselCB);
 
 	lineselfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
 	lineselfld_->attach(hCentered);
@@ -56,7 +56,7 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
 	if (lastfld)
 	    use3dfld_->attach(alignedBelow, lastfld);
 	use3dfld_->setChecked(false);
-	use3dfld_->activated.notify(mCB(this, uiMistieEstimateBySeismic, use3DCB));
+	mAttachCB(use3dfld_->activated, uiMistieEstimateBySeismic::use3DCB);
 
 	uiSeisSel::Setup sud(Seis::Vol);
 	sud.seltxt(tr("Input 3D Data Type/Attribute"));
@@ -88,13 +88,13 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
     zr.limitTo(SI().zRange(false));
     float zfac = SI().showZ2UserFactor();
     gatefld_->setValue(ZGate(zr.start*zfac, zr.stop*zfac));
-    gatefld_->valuechanged.notify(mCB(this,uiMistieEstimateBySeismic,gatefldchangeCB));
+    mAttachCB(gatefld_->valuechanged, uiMistieEstimateBySeismic::gatefldchangeCB);
 
     onlyzfld_ = new uiCheckBox(this, tr("Only estimate Z misties"));
     onlyzfld_->attach(alignedBelow, lagfld_);
     onlyzfld_->setChecked(false);
 
-    postFinalise().notify(mCB(this,uiMistieEstimateBySeismic,seisselCB));
+    mAttachCB(postFinalise(), uiMistieEstimateBySeismic::seisselCB);
 }
 
 uiMistieEstimateBySeismic::~uiMistieEstimateBySeismic()
@@ -201,7 +201,7 @@ uiMistieEstimateByHorizon::uiMistieEstimateByHorizon(uiParent* p )
     horinpgrp_ = new WMLib::uiHorInputGrp(this, has2Dhorizon, has3Dhorizon, false);
     if (has3Dhorizon)
     {
-	horinpgrp_->exp3D_->activated.notify(mCB(this, uiMistieEstimateByHorizon, use3DCB));
+	mAttachCB(horinpgrp_->exp3D_->activated, uiMistieEstimateByHorizon::use3DCB);
         trcstepfld_ = new uiGenInput(this, tr("2D Trace Step"), IntInpSpec(100));
 	trcstepfld_->attach(rightOf, horinpgrp_->exp3D_);
 	trcstepfld_->attach(ensureBelow, horinpgrp_);
@@ -290,7 +290,7 @@ uiMistieEstimateMainWin::uiMistieEstimateMainWin(uiParent* p)
 
     BoolInpSpec bis(true, tr("Seismic Traces"), tr("Horizon Interpretation"));
     fromseisfld_ = new uiGenInput(this, tr("Estimate misties from"), bis);
-    fromseisfld_->valuechanged.notify(mCB(this,uiMistieEstimateMainWin,modeCB));
+    mAttachCB(fromseisfld_->valuechanged, uiMistieEstimateMainWin::modeCB);
 
     seisgrp_ = new uiMistieEstimateBySeismic(this);
     seisgrp_->attach(alignedBelow, fromseisfld_);
@@ -298,7 +298,7 @@ uiMistieEstimateMainWin::uiMistieEstimateMainWin(uiParent* p)
     horgrp_ = new uiMistieEstimateByHorizon( this );
     horgrp_->attach(alignedBelow, fromseisfld_);
 
-    postFinalise().notify(mCB(this,uiMistieEstimateMainWin,initCB));
+    mAttachCB(postFinalise(), uiMistieEstimateMainWin::initCB);
 }
 
 uiMistieEstimateMainWin::~uiMistieEstimateMainWin()

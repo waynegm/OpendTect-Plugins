@@ -16,7 +16,7 @@ WMLib::uiBufferStringSetSelGrp::uiBufferStringSetSelGrp( uiParent* p, OD::Choice
     listfld_->setName("String(s)");
     BufferStringSet lnms;
     setInput(lnms);
-    listfld_->selectionChanged.notify(mCB(this, uiBufferStringSetSelGrp, selChgCB));
+    mAttachCB(listfld_->selectionChanged, uiBufferStringSetSelGrp::selChgCB);
 }
 
 WMLib::uiBufferStringSetSelGrp::uiBufferStringSetSelGrp( uiParent* p, OD::ChoiceMode cm, const BufferStringSet& lnms)
@@ -27,7 +27,7 @@ WMLib::uiBufferStringSetSelGrp::uiBufferStringSetSelGrp( uiParent* p, OD::Choice
     init(cm);
     listfld_->setName("String(s)");
     setInput( lnms );
-    listfld_->selectionChanged.notify(mCB(this, uiBufferStringSetSelGrp, selChgCB));
+    mAttachCB(listfld_->selectionChanged, uiBufferStringSetSelGrp::selChgCB);
 }
 
 WMLib::uiBufferStringSetSelGrp::~uiBufferStringSetSelGrp()
@@ -47,7 +47,7 @@ void WMLib::uiBufferStringSetSelGrp::init( OD::ChoiceMode cm )
     }
     setHAlignObj( listfld_ );
 }
-    
+
 void WMLib::uiBufferStringSetSelGrp::setInput( const BufferStringSet& lnms )
 {
     clear();

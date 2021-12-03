@@ -19,8 +19,8 @@ class uiInputGrp : public uiDlgGroup
 { mODTextTranslationClass(uiHorizonGrp);
 public:
     uiInputGrp(uiParent*, bool has2Dhorizon=false, bool has3Dhorizon=false );
-    ~uiInputGrp() {}
-    
+    ~uiInputGrp();
+
     void        getHorIds( MultiID& hor2Did, MultiID& hor3Did ) const;
     void        getInputRange( Interval<int>& inlrg, Interval<int>& crlrg );
     int         num2DLinesChosen();
@@ -29,7 +29,7 @@ public:
     void        update();
     bool        fillPar(IOPar&) const;
     void        usePar(const IOPar&);
-    
+
 protected:
     uiIOObjSel*                 hor2Dfld_;
     WMLib::uiSeis2DLineSelGrp*  lines2Dfld_;

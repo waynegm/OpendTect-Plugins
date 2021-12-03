@@ -424,7 +424,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     #endif
     interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), su );
     interpfilefld_->setFileName(uiWGMHelp::GetPythonInterpPath().fullPath());
-    interpfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
+    mAttachCB(interpfilefld_->valuechanged, uiExternalAttrib::exfileChanged);
 
     CallBack cb1 = mCB(this,uiExternalAttrib,updateinterpCB);
     refinterp_ = new uiToolButton( this, "refresh", uiStrings::sReset(), cb1 );
@@ -432,7 +432,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     refinterp_->display(true);
 
     exfilefld_ = new uiFileInput( this, tr("External File"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).defseldir(ExternalAttrib::exdir_) );
-    exfilefld_->valuechanged.notify(mCB(this,uiExternalAttrib,exfileChanged) );
+    mAttachCB(exfilefld_->valuechanged, uiExternalAttrib::exfileChanged);
     exfilefld_->attach(alignedBelow, interpfilefld_);
 
     CallBack cb2 = mCB(this,uiExternalAttrib,doHelp);
@@ -443,7 +443,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     makeUI();
 
     setHAlignObj( uiinp_ );
-    postFinalise().notify( mCB(this,uiExternalAttrib,initGrp) );
+    mAttachCB(postFinalise(), uiExternalAttrib::initGrp);
 }
 
 uiExternalAttrib::~uiExternalAttrib()

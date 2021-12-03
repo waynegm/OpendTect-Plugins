@@ -19,12 +19,12 @@ WMLib::uiPolygonParSel::uiPolygonParSel( uiParent* p, const uiString& caption, b
     , selChange(this)
     , multisel_(multisel)
 {
-    butPush.notify( mCB(this, uiPolygonParSel, doDlg) );
-    
+    mAttachCB(butPush, uiPolygonParSel::doDlg);
+
     clearbut_ = new uiPushButton(this, uiStrings::sClear(), true);
-    clearbut_->activated.notify( mCB(this, uiPolygonParSel, clearPush) );
+    mAttachCB(clearbut_->activated, uiPolygonParSel::clearPush);
     clearbut_->attach( rightOf, selbut_ );
-    
+
     txtfld_->setElemSzPol( uiObject::Wide );
     setHAlignObj( txtfld_ );
 }
@@ -47,7 +47,7 @@ void WMLib::uiPolygonParSel::setSelectedPolygons( const TypeSet<MultiID>& ids )
     {
         PtrMan<IOObj> ioobj = IOM().get( ids[idx] );
         if ( !ioobj ) continue;
-        
+
         selpolygonnms_.add( ioobj->name() );
         selpolygonids_ += ids[idx];
     }
@@ -72,14 +72,14 @@ void WMLib::uiPolygonParSel::doDlg( CallBacker* )
     uiIOObjSelDlg dlg( this, sdsu, *ctio );
     dlg.selGrp()->getListField()->setChosen( selpolygonnms_ );
     if ( !dlg.go() ) return;
-        
+
     selpolygonnms_.erase();
     selpolygonids_.erase();
     uiIOObjSelGrp* selgrp = dlg.selGrp();
     selgrp->getListField()->getChosen( selpolygonnms_ );
     for ( int idx=0; idx<selpolygonnms_.size(); idx++ )
         selpolygonids_ += selgrp->chosenID(idx);
-    
+
     selChange.trigger();
 }
 

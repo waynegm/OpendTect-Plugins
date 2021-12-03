@@ -39,36 +39,36 @@ uiGridGrp::uiGridGrp( uiParent* p )
 {
     scopefld_ = new uiGenInput(this, tr("Grid Extent"), StringListInpSpec(wmGridder2D::ScopeNames));
     scopefld_->setValue( wmGridder2D::ConvexHull );
-    scopefld_->valuechanged.notify( mCB(this,uiGridGrp,scopeChgCB));
-    
+    mAttachCB(scopefld_->valuechanged, uiGridGrp::scopeChgCB);
+
     uiSurfaceRead::Setup swsu(EM::Horizon3D::typeStr());
     swsu.withsubsel(false).withattribfld(false).withsectionfld(false);
     horfld_ = new uiSurfaceRead(this, swsu);
     horfld_->getObjSel()->setLabelText(uiString::emptyString());
     horfld_->attach( rightOf, scopefld_ );
-    horfld_->inpChange.notify( mCB(this,uiGridGrp,horChgCB));
-    
+    mAttachCB(horfld_->inpChange, uiGridGrp::horChgCB);
+
     gridfld_ = new WMLib::ui3DRangeGrp(this, tr("Grid Area"), false);
     gridfld_->setSensitive(false, true);
     gridfld_->attach(alignedBelow, scopefld_);
     TrcKeySampling tks = SI().sampling(true).hsamp_;
     tks.step_ = tks.step_ * 5;
     gridfld_->setTrcKeySampling( tks );
-    
+
     methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
     methodfld_->attach( alignedBelow, gridfld_ );
-    methodfld_->valuechanged.notify( mCB(this,uiGridGrp,methodChgCB) );
+    mAttachCB(methodfld_->valuechanged, uiGridGrp::methodChgCB);
     methodfld_->setValue(wmGridder2D::LTPS);
-    
+
     polycropfld_ = new WMLib::uiPolygonParSel(this, tr("Cropping Polygon"), false);
     polycropfld_->attach( alignedBelow, methodfld_ );
-    
+
     faultpolyfld_ = new WMLib::uiPolygonParSel(this, tr("Fault Polygons"), true);
     faultpolyfld_->attach( alignedBelow, polycropfld_ );
 
 //	faultsurffld_ = new uiFaultParSel( this, false );
 //	faultsurffld_->attach( alignedBelow, faultpolyfld_);
-    
+
     for ( int idx=0; wmGridder2D::MethodNames[idx]; idx++ )
     {
 	ui2D3DInterpol* methodgrp = ui2D3DInterpol::create( wmGridder2D::MethodNames[idx], this );
@@ -149,10 +149,10 @@ bool uiGridGrp::fillPar( IOPar& par ) const
     if ( scope == wmGridder2D::Horizon ) {
         const IOObj* horObj = horfld_->selIOObj();
         if (horObj)
-            par.set( wmGridder2D::sKeyScopeHorID(), horObj->key() ); 
+            par.set( wmGridder2D::sKeyScopeHorID(), horObj->key() );
     }
-    
-    const TypeSet<MultiID>& croppolytids = polycropfld_->selPolygonIDs(); 
+
+    const TypeSet<MultiID>& croppolytids = polycropfld_->selPolygonIDs();
     if (croppolytids.size()==1)
         par.set( wmGridder2D::sKeyClipPolyID(), croppolytids[0] );
 
@@ -164,7 +164,7 @@ bool uiGridGrp::fillPar( IOPar& par ) const
 		par.set( IOPar::compKey(wmGridder2D::sKeyFaultPolyID(),idx), selpolytids[idx] );
 	}
     }
-    
+
 //    const TypeSet<MultiID>& selfaultids = fltselfld_->selFaultIDs();
 //    par.set( wmGridder2D::sKeyFaultNr(), selfaultids.size() );
 //    for ( int idx=0; idx<selfaultids.size(); idx++ )
@@ -178,7 +178,7 @@ bool uiGridGrp::fillPar( IOPar& par ) const
         return false;
     }
     gridfld_->fillPar( par );
-    
+
     const int methodidx = methodfld_->getIntValue( 0 );
     par.set( wmGridder2D::sKeyMethod(), wmGridder2D::MethodNames[methodidx] );
     return methodgrps_[methodidx]->fillPar( par );
@@ -189,11 +189,11 @@ void uiGridGrp::usePar( const IOPar& par )
     int scope = 0;
     if (par.get(wmGridder2D::sKeyScopeType(), scope))
         scopefld_->setValue(scope);
-    
+
     MultiID horID;
     if (par.get(wmGridder2D::sKeyScopeHorID(), horID))
         horfld_->setInput(horID);
-    
+
     MultiID clipPolyID;
     polycropfld_->setEmpty();
     if (par.get(wmGridder2D::sKeyClipPolyID(), clipPolyID)) {
@@ -201,7 +201,7 @@ void uiGridGrp::usePar( const IOPar& par )
         polyIDs += clipPolyID;
         polycropfld_->setSelectedPolygons(polyIDs);
     }
-    
+
     int nrfaultpoly = 0;
     faultpolyfld_->setEmpty();
     if (par.get(wmGridder2D::sKeyFaultPolyNr(), nrfaultpoly)) {
@@ -216,14 +216,14 @@ void uiGridGrp::usePar( const IOPar& par )
             faultpolyfld_->setSelectedPolygons(polyIDs);
         }
     }
-    
+
     gridfld_->usePar(par);
-    
+
     BufferStringSet strs( wmGridder2D::MethodNames );
     int methodidx = strs.indexOf(par.find(wmGridder2D::sKeyMethod()));
     methodfld_->setValue( methodidx );
     methodgrps_[methodidx]->usePar( par );
-            
+
     update();
 }
 
@@ -341,4 +341,4 @@ uiNearestNeighbour::uiNearestNeighbour(uiParent* p)
 : ui2D3DInterpol(p)
 {}
 
-  
+

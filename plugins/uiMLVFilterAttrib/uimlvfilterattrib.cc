@@ -58,18 +58,23 @@ uiMLVFilterAttrib::uiMLVFilterAttrib( uiParent* p, bool is2d )
     sizefld_->box()->setMinValue( cMinVal );
     sizefld_->box()->setStep( cStepVal, true );
     sizefld_->attach( alignedBelow, inpfld_ );
- 
+
     outfld_ = new uiGenInput( this, tr("Output statistic"),
 	    			   StringListInpSpec(outstr) );
     outfld_->attach( alignedBelow, sizefld_ );
-    outfld_->valuechanged.notify(mCB(this,uiMLVFilterAttrib,outChgCB));
-    
+    mAttachCB(outfld_->valuechanged, uiMLVFilterAttrib::outChgCB);
+
     sdevsfld_ = new uiGenInput( this, tr("Trim to"), FloatInpSpec(3.0) );
     sdevsfld_->attach( alignedBelow, outfld_  );
-    sdevsfld_->valuechanged.notify(mCB(this,uiMLVFilterAttrib,sdevsChgCB));
-    
+    mAttachCB(sdevsfld_->valuechanged, uiMLVFilterAttrib::sdevsChgCB);
+
     setHAlignObj( outfld_ );
     outChgCB(0);
+}
+
+uiMLVFilterAttrib::~uiMLVFilterAttrib()
+{
+    detachAllNotifiers();
 }
 
 void uiMLVFilterAttrib::outChgCB(CallBacker*)
@@ -112,7 +117,7 @@ bool uiMLVFilterAttrib::getParameters( Attrib::Desc& desc )
     mSetInt( MLVFilter::sizeStr(), sizefld_->box()->getIntValue() );
     mSetEnum(MLVFilter::outputStr(),outfld_->getIntValue());
     mSetFloat( MLVFilter::sdevsStr(), sdevsfld_->getFValue() );
-    
+
     return true;
 }
 

@@ -42,16 +42,16 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     setShrinkAllowed(true);
 
     tabstack_ = new uiTabStack( this, "Tab" );
-    tabstack_->selChange().notify( mCB(this,uiGeopackageExportMainWin,tabSel) );
+    mAttachCB(&tabstack_->selChange(), uiGeopackageExportMainWin::tabSel);
     tabstack_->attach(hCentered);
-    
+
     uiParent* tabparent = tabstack_->tabGroup();
     if (SI().has3D()) {
         surveygrp_ = new uiSurveyGrp( tabparent );
         surveygrp_->attach(hCentered);
         tabstack_->addTab( surveygrp_ );
     }
-    
+
     if (SI().has2D()) {
         BufferStringSet lnms;
         TypeSet<Pos::GeomID> geomids;
@@ -61,7 +61,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
             tabstack_->addTab( linesgrp_ );
         }
     }
-    
+
     if (SI().has3D()) {
         CtxtIOObj ctio(RandomLineSetTranslatorGroup::ioContext());
         const IODir iodir( ctio.ctxt_.getSelKey() );
@@ -71,7 +71,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
             tabstack_->addTab( randomgrp_ );
         }
     }
-    
+
     {
         CtxtIOObj ctio(WellTranslatorGroup::ioContext());
         const IODir iodir( ctio.ctxt_.getSelKey() );
@@ -81,7 +81,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
             tabstack_->addTab( wellsgrp_ );
         }
     }
-    
+
     {
         CtxtIOObj ctio(PickSetTranslatorGroup::ioContext());
         ctio.ctxt_.toselect_.require_.set( sKey::Type(), sKey::Polygon() );
@@ -92,7 +92,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
             tabstack_->addTab( polygrp_ );
         }
     }
-    
+
     {
         CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
         const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
@@ -107,24 +107,24 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
             tabstack_->addTab( horgrp_ );
         }
     }
-    
+
     BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
     filefld_ = new uiFileInput( this, tr("Output file"),
                                 uiFileInput::Setup(uiFileDialog::Gen)
                                 .forread(false).filter("*.gpkg").defseldir(defseldir).allowallextensions(false) );
     filefld_->setDefaultExtension( "gpkg" );
     filefld_->attach( stretchedBelow, tabstack_ );
-    
+
     appendfld_ = new uiCheckBox( this, tr("Append to Output") );
     appendfld_->attach(alignedBelow, filefld_);
     appendfld_->setChecked(false);
-    
+
     tabSel(0);
 }
 
 uiGeopackageExportMainWin::~uiGeopackageExportMainWin()
 {
-    
+    detachAllNotifiers();
 }
 
 void uiGeopackageExportMainWin::tabSel( CallBacker* )
@@ -165,9 +165,9 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
             return false;
         }
     }
-        
+
     uiGeopackageWriter gpgWriter(filefld_->fileName(), appendfld_->isChecked());
-    if (SI().has3D()) 
+    if (SI().has3D())
         if( surveygrp_->doExport() ) {
             setCaption(tr("Exporting 3D Survey"));
             gpgWriter.writeSurvey();
@@ -185,7 +185,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
             gpgWriter.write2DStations( geomids );
         }
     }
-        
+
     if (randomgrp_!=nullptr) {
         if (randomgrp_->doLineExport()) {
             setCaption(tr("Exporting Random Lines"));
@@ -224,7 +224,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
             gpgWriter.writePolyLines( lineids );
         }
     }
-        
+
     if (horgrp_!=nullptr) {
         if (horgrp_->doHorizonExport()) {
             setCaption(tr("Exporting horizon"));
@@ -234,10 +234,10 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
             horgrp_->getGeoMids(geomids);
             TrcKeyZSampling env;
             horgrp_->get3Dsel(env);
-            gpgWriter.writeHorizon(horgrp_->outputName(), hor2Did, horgrp_->attrib2D(), geomids, hor3Did, horgrp_->attrib3D(), env); 
+            gpgWriter.writeHorizon(horgrp_->outputName(), hor2Did, horgrp_->attrib2D(), geomids, hor3Did, horgrp_->attrib3D(), env);
         }
     }
-    
+
     return true;
 }
 

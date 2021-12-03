@@ -66,7 +66,7 @@ uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )
 
     stepfld_ = new uiLabeledSpinBox( this, uiStrings::sStep(), 1 );
     stepfld_->attach( rightTo, freqfld_ );
-    stepfld_->box()->valueChanged.notify(mCB(this,uiRSpecAttrib,stepChg));
+    mAttachCB(stepfld_->box()->valueChanged, uiRSpecAttrib::stepChg);
 
     reassignbut_ = new uiCheckBox(this, tr("With Reassignment"));
     reassignbut_->attach(alignedBelow, freqfld_);
@@ -78,6 +78,11 @@ uiRSpecAttrib::uiRSpecAttrib( uiParent* p, bool is2d )
 
     stepChg(0);
     setHAlignObj( inpfld_ );
+}
+
+uiRSpecAttrib::~uiRSpecAttrib()
+{
+    detachAllNotifiers();
 }
 
 void uiRSpecAttrib::inputSel( CallBacker* )

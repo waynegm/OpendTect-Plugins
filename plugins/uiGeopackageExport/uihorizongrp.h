@@ -18,8 +18,8 @@ class uiHorizonGrp : public uiDlgGroup
 { mODTextTranslationClass(uiHorizonGrp);
 public:
     uiHorizonGrp(uiParent*, bool has2Dhorizon=false, bool has3Dhorizon=false );
-    ~uiHorizonGrp() {}
-    
+    ~uiHorizonGrp();
+
     bool        doHorizonExport();
     const char* outputName();
     void        getHorIds( MultiID& hor2Did, MultiID& hor3Did );
@@ -28,7 +28,7 @@ public:
     void        get3Dsel( TrcKeyZSampling& envelope );
     const char* attrib2D();
     const char* attrib3D();
-    
+
     void update();
 
 protected:
@@ -41,12 +41,12 @@ protected:
     uiIOObjSel*                 hor3Dfld_;
     uiPosSubSel*                subsel3Dfld_;
 //    uiLabeledComboBox*  attrib3Dfld_;
-    
+
     void                hor2Dsel(CallBacker*);
     void                hor3Dsel(CallBacker*);
     void                exp2Dsel(CallBacker*);
     void                exp3Dsel(CallBacker*);
-    
+
 };
 
 

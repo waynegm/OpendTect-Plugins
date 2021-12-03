@@ -29,11 +29,11 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
   hor3Dfld_(nullptr), subsel3Dfld_(nullptr)
 {
     uiObject* lastfld = nullptr;
-    
+
     if (has2Dhorizon) {
 	hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), uiStrings::s2DHorizon());
-        hor2Dfld_->selectionDone.notify( mCB(this, uiInputGrp, hor2DselCB));
-        
+	mAttachCB(hor2Dfld_->selectionDone, uiInputGrp::hor2DselCB);
+
         lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
         lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
 
@@ -44,12 +44,12 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         if (lastfld!=nullptr)
             exp3D_->attach(alignedBelow, lastfld);
         exp3D_->setChecked(true);
-        exp3D_->activated.notify(mCB(this, uiInputGrp, exp3DselCB));
-        
+	mAttachCB(exp3D_->activated, uiInputGrp::exp3DselCB);
+
         hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon());
         hor3Dfld_->attach(alignedBelow, exp3D_);
-        hor3Dfld_->selectionDone.notify( mCB(this, uiInputGrp, hor3DselCB));
-        
+	mAttachCB(hor3Dfld_->selectionDone, uiInputGrp::hor3DselCB);
+
         subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
         subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
@@ -60,6 +60,11 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
     contpolyfld_->attach( alignedBelow, lastfld );
 
     update();
+}
+
+uiInputGrp::~uiInputGrp()
+{
+    detachAllNotifiers();
 }
 
 void uiInputGrp::exp3DselCB(CallBacker*)
@@ -102,7 +107,7 @@ bool uiInputGrp::fillPar( IOPar& par ) const
 void uiInputGrp::usePar( const IOPar& par )
 {
     MultiID hor2Did, hor3Did;
-    
+
     hor3Did.setUdf();
     if (par.get(wmGridder2D::sKey3DHorizonID(), hor3Did)) {
         if (hor3Dfld_ && subsel3Dfld_ && exp3D_) {
@@ -173,7 +178,7 @@ void uiInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
     getHorIds( hor2Did, hor3Did );
     inlrg.setUdf();
     crlrg.setUdf();
-    
+
     if (!hor2Did.isUdf() && num2DLinesChosen()>0) {
         EM::IOObjInfo eminfo(hor2Did);
         if (!eminfo.isOK()) {
@@ -217,7 +222,7 @@ void uiInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
             crlrg.stop = bin.crl()>crlrg.stop ? bin.crl() : crlrg.stop;
         }
     }
-    
+
     if (!hor3Did.isUdf()) {
         EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3Did);
         if (obj==nullptr) {
@@ -283,13 +288,13 @@ void uiInputGrp::hor2DselCB(CallBacker* )
         }
         TypeSet<Pos::GeomID> mids;
         getGeoMids(mids);
-        
+
         BufferStringSet lnms;
-        TypeSet<Pos::GeomID> geomids; 
+        TypeSet<Pos::GeomID> geomids;
         eminfo.getLineNames(lnms);
         eminfo.getGeomIDs(geomids);
         lines2Dfld_->setInput( lnms, geomids );
-        
+
         lines2Dfld_->setChosen(mids);
     }
 }

@@ -24,15 +24,15 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         exp2D_ = new uiCheckBox(this, uiStrings::phrExport(uiStrings::s2DHorizon()));
         exp2D_->attach(alignedBelow, namefld_);
         exp2D_->setChecked(false);
-        exp2D_->activated.notify(mCB(this, uiHorizonGrp, exp2Dsel));
-        
+        mAttachCB(exp2D_->activated,  uiHorizonGrp::exp2Dsel);
+
         hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), uiStrings::s2DHorizon());
         hor2Dfld_->attach(alignedBelow, exp2D_);
-        hor2Dfld_->selectionDone.notify( mCB(this, uiHorizonGrp, hor2Dsel));
-        
+        mAttachCB(hor2Dfld_->selectionDone, uiHorizonGrp::hor2Dsel);
+
         lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
         lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
-        
+
 //        attrib2Dfld_ = new uiLabeledComboBox( this, uiStrings::s2D().append(uiStrings::sAttribute()) );
 //        attrib2Dfld_->attach(alignedBelow, lines2Dfld_);
 
@@ -45,12 +45,12 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
 	exp3D_ = new uiCheckBox(this, uiStrings::phrExport(uiStrings::s3DHorizon()));
         exp3D_->attach(alignedBelow, lastfld);
         exp3D_->setChecked(false);
-        exp3D_->activated.notify(mCB(this, uiHorizonGrp, exp3Dsel));
+        mAttachCB(exp3D_->activated, uiHorizonGrp::exp3Dsel);
 
 	hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon());
         hor3Dfld_->attach(alignedBelow, exp3D_);
-        hor3Dfld_->selectionDone.notify( mCB(this, uiHorizonGrp, hor3Dsel));
-        
+        mAttachCB(hor3Dfld_->selectionDone, uiHorizonGrp::hor3Dsel);
+
         subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
         subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
@@ -59,6 +59,11 @@ uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
         hor3Dsel(0);
         exp3Dsel(0);
     }
+}
+
+uiHorizonGrp::~uiHorizonGrp()
+{
+    detachAllNotifiers();
 }
 
 bool uiHorizonGrp::doHorizonExport()
@@ -162,11 +167,11 @@ void uiHorizonGrp::hor2Dsel(CallBacker* )
             return;
         }
         BufferStringSet lnms;
-        TypeSet<Pos::GeomID> geomids; 
+        TypeSet<Pos::GeomID> geomids;
         eminfo.getLineNames(lnms);
         eminfo.getGeomIDs(geomids);
         lines2Dfld_->setInput( lnms, geomids );
-/*        
+/*
         uiString msg;
         EM::SurfaceIOData emdata;
         if (!eminfo.getSurfaceData( emdata, msg )) {
@@ -215,7 +220,7 @@ void uiHorizonGrp::hor3Dsel(CallBacker*)
         TrcKeyZSampling cs;
         cs.hsamp_ = emdata.rg;
         subsel3Dfld_->setInput( cs );
-        
+
 /*
         attrib3Dfld_->box()->setEmpty();
         attrib3Dfld_->box()->addItem( tr("Z values") );
@@ -241,5 +246,5 @@ void uiHorizonGrp::exp3Dsel(CallBacker*)
     hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
     subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
 //    attrib3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-    
+
 }

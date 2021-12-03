@@ -26,12 +26,12 @@ static int sMnuID = 0;
 
 uiCorrViewer::uiCorrViewer( uiParent* p, const MistieCorrectionData& corrs )
     : uiDialog(p, uiDialog::Setup(getCaptionStr(),mNoDlgTitle,mNoHelpKey))
-    , saveitem_(uiStrings::sSave(), "save", "", mCB(this,uiCorrViewer,saveCB), sMnuID++) 
+    , saveitem_(uiStrings::sSave(), "save", "", mCB(this,uiCorrViewer,saveCB), sMnuID++)
     , saveasitem_(uiStrings::sSaveAs(), "saveas", "", mCB(this,uiCorrViewer,saveasCB), sMnuID++)
     , corrs_(corrs)
 {
     createToolBar();
-    
+
     table_ = new uiTable( this, uiTable::Setup().rowgrow(false).selmode(uiTable::NoSelection),"Mistie Correction Table" );
     uiStringSet lbls;
     lbls.add(tr("Line/Dataset")).add(tr("Z Shift (%1)").arg(SI().getZUnitString()))
@@ -47,12 +47,12 @@ uiCorrViewer::uiCorrViewer( uiParent* p, const MistieCorrectionData& corrs )
     fillTable();
     setCtrlStyle(CloseOnly);
     setModal(false);
-    windowClosed.notify(mCB(this,uiCorrViewer,closeCB));
+    mAttachCB(windowClosed, uiCorrViewer::closeCB);
 }
 
 uiCorrViewer::~uiCorrViewer()
 {
-    
+    detachAllNotifiers();
 }
 
 void uiCorrViewer::newCorrData()
@@ -72,7 +72,7 @@ void uiCorrViewer::fillTable()
 {
     table_->clearTable();
     table_->setNrRows(corrs_.size());
-    
+
     BufferString line;
     float zcor, phasecor, ampcor;
     for (int idx=0; idx<corrs_.size(); idx++) {
@@ -108,7 +108,7 @@ void uiCorrViewer::saveCB( CallBacker* )
 {
     if (filename_.isEmpty())
         saveasCB(0);
-    
+
     if (!corrs_.write( filename_))
         ErrMsg("uiCorrViewer::saveCB - error saving mistie corrections to file");
 }
@@ -124,7 +124,7 @@ void uiCorrViewer::saveasCB( CallBacker* )
     dlg.setSelectedFilter(MistieCorrectionData::filtStr());
     if (!dlg.go())
         return;
-    
+
     filename_ = dlg.fileName();
     raise();
     saveCB(0);

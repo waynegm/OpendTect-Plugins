@@ -38,7 +38,7 @@ public:
                                                                     .defseldir(defseldir)
                                                                     .filter(MistieCorrectionData::filtStr()) );
         filefld_->setElemSzPol(uiObject::WideVar);
-        
+
         actiongrp_ = new uiButtonGroup( this, "", OD::Horizontal );
         actiongrp_->setExclusive( true );
         actiongrp_->attach( alignedBelow, filefld_ );
@@ -47,13 +47,13 @@ public:
         replacebut_ = new uiCheckBox( actiongrp_, tr("Replace existing") );
         uiLabel* lbl = new uiLabel( this, tr("Merge and ") );
         lbl->attach( centeredLeftOf, actiongrp_ );
-        
+
         setOkText(uiStrings::sMerge());
     }
-    
+
     BufferString    fileName() const { return filefld_->fileName(); }
     bool            replace() const { return replacebut_->isChecked(); }
-    
+
 protected:
     bool acceptOK( CallBacker* )
     {
@@ -63,7 +63,7 @@ protected:
         }
         return true;
     }
-    
+
     uiFileInput*    filefld_;
     uiButtonGroup*  actiongrp_;
     uiCheckBox*     keepbut_;
@@ -72,16 +72,16 @@ protected:
 
 uiMistieCorrMainWin::uiMistieCorrMainWin( uiParent* p )
     : uiMainWin(p, getCaptionStr() )
-    , newitem_(uiStrings::sNew(), "new", "", mCB(this,uiMistieCorrMainWin,newCB), sMnuID++) 
-    , openitem_(uiStrings::sOpen(), "open", "", mCB(this,uiMistieCorrMainWin,openCB), sMnuID++) 
-    , saveitem_(uiStrings::sSave(), "save", "", mCB(this,uiMistieCorrMainWin,saveCB), sMnuID++) 
+    , newitem_(uiStrings::sNew(), "new", "", mCB(this,uiMistieCorrMainWin,newCB), sMnuID++)
+    , openitem_(uiStrings::sOpen(), "open", "", mCB(this,uiMistieCorrMainWin,openCB), sMnuID++)
+    , saveitem_(uiStrings::sSave(), "save", "", mCB(this,uiMistieCorrMainWin,saveCB), sMnuID++)
     , saveasitem_(uiStrings::sSaveAs(), "saveas", "", mCB(this,uiMistieCorrMainWin,saveasCB), sMnuID++)
     , mergeitem_(uiStrings::sMerge(), "plus", "", mCB(this,uiMistieCorrMainWin,mergeCB), sMnuID++)
-    , helpitem_(tr("Help"), "contexthelp", "", mCB(this,uiMistieCorrMainWin,helpCB), sMnuID++) 
-    
+    , helpitem_(tr("Help"), "contexthelp", "", mCB(this,uiMistieCorrMainWin,helpCB), sMnuID++)
+
 {
     createToolBar();
-    
+
     table_ = new uiTable( this, uiTable::Setup().rowgrow(true)
                                                 .selmode(uiTable::Multi),
                           "Mistie Correction Table" );
@@ -94,20 +94,20 @@ uiMistieCorrMainWin::uiMistieCorrMainWin( uiParent* p )
     table_->setLeftHeaderHidden( true );
     table_->setPrefWidthInChars(50);
     table_->setPrefHeightInRows(50);
-    table_->rowInserted.notify( mCB(this,uiMistieCorrMainWin,newrowCB) );
+    mAttachCB(table_->rowInserted, uiMistieCorrMainWin::newrowCB);
 
     locknames_ = new uiCheckBox(this, tr("Lock line/dataset column"));
     locknames_->attach(alignedBelow, table_);
     locknames_->setChecked(true);
-    locknames_->activated.notify(mCB(this, uiMistieCorrMainWin, locknamesCB));
-    
+    mAttachCB(locknames_->activated, uiMistieCorrMainWin::locknamesCB);
+
     newCB(0);
     locknamesCB(0);
 }
 
 uiMistieCorrMainWin::~uiMistieCorrMainWin()
 {
-    
+    detachAllNotifiers();
 }
 
 void uiMistieCorrMainWin::createToolBar()
@@ -142,13 +142,13 @@ void uiMistieCorrMainWin::mergeCB( CallBacker* )
     uiMergeCorDlg dlg(this);
     if (!dlg.go())
         return;
-    
+
     MistieCorrectionData merge;
     if (!merge.read(dlg.fileName())) {
         ErrMsg("uiMistieCorrMainWin::mergeCB - error reading misite correction file");
         return;
     }
-    
+
     BufferStringSet existing;
     TypeSet<int> row;
     for (int idx=0; idx<table_->nrRows(); idx++) {
@@ -225,11 +225,11 @@ void uiMistieCorrMainWin::saveCB( CallBacker* )
 {
     if (filename_.isEmpty())
         saveasCB(0);
-    
+
     MistieCorrectionData misties;
     for (int idx=0; idx<table_->nrRows(); idx++) {
         BufferString lnm(table_->text(RowCol(idx, lineCol)));
-        if (!lnm.isEmpty()) 
+        if (!lnm.isEmpty())
             misties.set( lnm, table_->getFValue(RowCol(idx,shiftCol)), table_->getFValue(RowCol(idx, phaseCol)),  table_->getFValue(RowCol(idx, ampCol)) );
     }
     if (!misties.write( filename_))
@@ -247,7 +247,7 @@ void uiMistieCorrMainWin::saveasCB( CallBacker* )
     dlg.setSelectedFilter(MistieCorrectionData::filtStr());
     if (!dlg.go())
         return;
-    
+
     filename_ = dlg.fileName();
     raise();
     saveCB(0);

@@ -88,11 +88,7 @@ uiAttribTestPanel<T>::uiAttribTestPanel( T& uiattrib, const char* procname, cons
 template<class T>
 uiAttribTestPanel<T>::~uiAttribTestPanel()
 {
-        if ( posdlg_ )
-    {
-	posdlg_->windowClosed.remove( mCB(this,uiAttribTestPanel<T>,showPanelCB) );
-	deleteAndZeroPtr( posdlg_ );
-    }
+    detachAllNotifiers();
     delete testpanel_;
 }
 
@@ -115,7 +111,7 @@ void uiAttribTestPanel<T>::showPosDlg()
 {
     if ( posdlg_ )
     {
-	posdlg_->windowClosed.remove( mCB(this,uiAttribTestPanel<T>,showPanelCB) );
+	mDetachCB(posdlg_->windowClosed, uiAttribTestPanel<T>::showPanelCB);
 	delete posdlg_;
     }
 
@@ -135,7 +131,7 @@ void uiAttribTestPanel<T>::showPosDlg()
 
     setPrevSel();
     posdlg_->show();
-    posdlg_->windowClosed.notify( mCB(this,uiAttribTestPanel<T>,showPanelCB) );
+    mAttachCB(posdlg_->windowClosed, uiAttribTestPanel<T>::showPanelCB);
 }
 
 template<class T>

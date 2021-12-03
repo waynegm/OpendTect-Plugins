@@ -18,7 +18,7 @@
 -  LTFAttrib - Add UI option to display time frequency panel for a user selected trace
 
 ### External Attributes
---  Fix z window sample size ex_vf_gradient3_dip.py, ex_vf_phase3_dip.py and ex_vector_filter_dip.py
+-  Fix z window sample size ex_vf_gradient3_dip.py, ex_vf_phase3_dip.py and ex_vector_filter_dip.py
 
 ### wmodpy - OpendTect Python Bindings
 -  revamp notebook examples

@@ -30,18 +30,18 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     setCtrlStyle( OkAndCancel );
     setOkText( tr("Grid") );
     setShrinkAllowed(true);
-    
+
     tabstack_ = new uiTabStack( this, "Tab" );
-    tabstack_->selChange().notify( mCB(this,uiGrid2D3DHorizonMainWin,tabSelCB) );
+    mAttachCB(tabstack_->selChange(), uiGrid2D3DHorizonMainWin::tabSelCB);
     tabstack_->attach(hCentered);
     uiParent* tabparent = tabstack_->tabGroup();
-    
+
     {
         CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
         const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
         const IODirEntryList entries2D( iodir2D, ctio2D.ctxt_ );
         bool has2Dhorizon = SI().has2D() && entries2D.size()>0;
-        
+
         CtxtIOObj ctio3D(EMHorizon3DTranslatorGroup::ioContext());
         const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
         const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
@@ -52,16 +52,16 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
             tabstack_->addTab( inputgrp_ );
         }
     }
-    
+
     gridgrp_ = new uiGridGrp( tabparent );
     tabstack_->addTab( gridgrp_ );
-    
+
     uiSurfaceWrite::Setup swsu(EM::Horizon3D::typeStr(), EM::Horizon3D::userTypeStr());
     swsu.withsubsel(false);
     outfld_ = new uiSurfaceWrite(this, swsu);
     outfld_->attach(stretchedBelow, tabstack_);
     enableSaveButton(tr("Display after create"));
-    
+
     IOPar par;
     if (par.read(getParFileName(),0)) {
         if (inputgrp_)
@@ -88,7 +88,7 @@ void uiGrid2D3DHorizonMainWin::tabSelCB( CallBacker* )
 {
     if ( !tabstack_ )
         return;
-    
+
     uiGroup* grp = tabstack_->currentPage();
     if ( !grp ) return;
     if (grp->name() == "Input Data")
@@ -106,7 +106,7 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
     par.dumpPretty(tmp);
     ErrMsg(tmp);
     par.write(getParFileName(), 0);
-    
+
     FixedString method = par.find( wmGridder2D::sKeyMethod() );
     PtrMan<wmGridder2D> interpolator = wmGridder2D::create( method );
     if ( !interpolator ) {
@@ -117,7 +117,7 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error in interpolation parameters.");
         return false;
     }
-    
+
     EM::IOObjInfo eminfo( outfld_->selIOObj()->key() );
     if (eminfo.isOK()) {
         uiString msg = tr("Horizon: %1\nalready exists."
@@ -125,15 +125,15 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         if ( !uiMSG().askOverwrite(msg) )
             return false;
     }
-    
+
     {
         if (!interpolator->prepareForGridding())
             return false;
-	uiTaskRunner uitr(this); 
+	uiTaskRunner uitr(this);
 	uitr.setCaption(tr("Gridding"));
 	interpolator->executeGridding(&uitr);
     }
-    
+
     RefMan<EM::Horizon3D> hor3d = EM::Horizon3D::createWithConstZ(0.0, interpolator->getTrcKeySampling());
     if (!hor3d) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - creation of output horizon failed");
@@ -143,7 +143,7 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error converting grid to horizon");
         return false;
     }
-    
+
     {
         uiTaskRunner uitr(this);
         hor3d->setMultiID(outfld_->selIOObj()->key());

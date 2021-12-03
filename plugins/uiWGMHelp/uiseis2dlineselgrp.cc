@@ -21,7 +21,7 @@ WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm )
     TypeSet<Pos::GeomID> geomid;
     SeisIOObjInfo::getLinesWithData( lnms, geomid );
     setInput(lnms, geomid);
-    listfld_->selectionChanged.notify(mCB(this, uiSeis2DLineSelGrp, selChgCB));
+    mAttachCB(listfld_->selectionChanged, uiSeis2DLineSelGrp::selChgCB);
 }
 
 WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm, const BufferStringSet& lnms,const TypeSet<Pos::GeomID>& geomids)
@@ -32,7 +32,7 @@ WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm, c
     init(cm);
     listfld_->setName("Line(s)");
     setInput( lnms, geomids );
-    listfld_->selectionChanged.notify(mCB(this, uiSeis2DLineSelGrp, selChgCB));
+    mAttachCB(listfld_->selectionChanged, uiSeis2DLineSelGrp::selChgCB);
 }
 
 WMLib::uiSeis2DLineSelGrp::~uiSeis2DLineSelGrp()
@@ -49,12 +49,12 @@ void WMLib::uiSeis2DLineSelGrp::init( OD::ChoiceMode cm )
     filtfld_->setItems( lnms_ );
     if ( isMultiChoice(cm) ) {
         lbchoiceio_ = new uiListBoxChoiceIO( *listfld_, "Geometry" );
-        lbchoiceio_->readDone.notify(mCB(this,uiSeis2DLineSelGrp,readChoiceDone));
-        lbchoiceio_->storeRequested.notify(mCB(this,uiSeis2DLineSelGrp,writeChoiceReq));
+        mAttachCB(lbchoiceio_->readDone, uiSeis2DLineSelGrp::readChoiceDone);
+        mAttachCB(lbchoiceio_->storeRequested, uiSeis2DLineSelGrp::writeChoiceReq);
     }
     setHAlignObj( listfld_ );
 }
-    
+
 void WMLib::uiSeis2DLineSelGrp::setInput( const BufferStringSet& lnms, const TypeSet<Pos::GeomID>& geomid )
 {
     clear();
@@ -82,7 +82,7 @@ int WMLib::uiSeis2DLineSelGrp::nrChosen() const
 void WMLib::uiSeis2DLineSelGrp::getChosen( TypeSet<Pos::GeomID>& chids ) const
 {
     chids.setEmpty();
-    TypeSet<int> chidxs; 
+    TypeSet<int> chidxs;
     filtfld_->getChosen( chidxs );
     for ( int idx=0; idx<chidxs.size(); idx++ )
         chids += geomids_[ chidxs[idx] ];
@@ -157,14 +157,14 @@ void WMLib::uiSeis2DLineSelGrp::writeChoiceReq( CallBacker* )
 {
     MultiID mid = IOObjContext::getStdDirData(IOObjContext::Geom)->id_;
     mid.add( 0 );
-    
+
     lbchoiceio_->keys().setEmpty();
     for ( int idx=0; idx<listfld_->size(); idx++ )
     {
         const int idxof = lnms_.indexOf( listfld_->textOfItem(idx) );
         if ( idxof < 0 )
         { pErrMsg("Huh"); continue; }
-        
+
         mid.setID( 1, geomids_[idxof] );
         lbchoiceio_->keys().add( mid.buf() );
     }

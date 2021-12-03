@@ -15,12 +15,12 @@ WMLib::ui3DRangeGrp::ui3DRangeGrp( uiParent* p, const uiString& caption, bool sn
     iis.setLimits( startstoprg, -1 ).setLimits( steprg, 2 );
     iis.setName("Inl Start",0).setName("Inl Stop",1).setName("Inl step",2);
     inlfld_ = new uiGenInput(this, uiStrings::phrInline(uiStrings::sRange()), iis);
-    inlfld_->valuechanged.notify( mCB(this,ui3DRangeGrp,rangeChg) );
+    mAttachCB(inlfld_->valuechanged, ui3DRangeGrp::rangeChg);
 
     iis.setName("Crl Start",0).setName("Crl Stop",1).setName("Crl step",2);
     crlfld_ = new uiGenInput( this, tr("Cross-line range"), iis );
     crlfld_->attach(alignedBelow, inlfld_);
-    crlfld_->valuechanged.notify( mCB(this,ui3DRangeGrp,rangeChg) );
+    mAttachCB(crlfld_->valuechanged, ui3DRangeGrp::rangeChg);
 
     setHAlignObj( inlfld_ );
 }

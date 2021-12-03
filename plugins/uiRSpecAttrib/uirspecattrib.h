@@ -38,6 +38,7 @@ mExpClass(uiRSpecAttrib) uiRSpecAttrib : public uiAttrDescEd, public TestPanelAd
 public:
 
 			uiRSpecAttrib(uiParent*,bool);
+			~uiRSpecAttrib();
 
     void		getEvalParams(TypeSet<EvalParam>&) const;
     int			getOutputIdx(float) const;
