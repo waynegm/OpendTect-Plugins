@@ -1,5 +1,12 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.10
+###AVOPolarAttrib
+-  Replace Nans and Infs with Undefined
+
+### External Attributes
+- add ex_test_gradient.py to generate a synthetic gradient volume for testing AVO attributes
+
 ## Release 6.6.9
 ### AVOPolarAttrib
 -  Fix attribute calculation on time slices and horizons

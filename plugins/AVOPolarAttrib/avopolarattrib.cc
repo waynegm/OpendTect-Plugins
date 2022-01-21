@@ -8,6 +8,7 @@
 #include "attribparamgroup.h"
 #include "survinfo.h"
 #include <math.h>
+#include "math2.h"
 #include "errmsg.h"
 #include "bufstring.h"
 
@@ -190,14 +191,16 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
 
     if (isOutputEnabled(BGAngle)) {
         computeBackgroundAngle( A, B, bgAngle );
+	Eigen::ArrayXd out = (bgAngle.isFinite()).select(bgAngle,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,BGAngle, idx, z0, bgAngle[idx-sampgateBG_.start]);
+            setOutputValue(output,BGAngle, idx, z0, out[idx-sampgateBG_.start]);
     }
 
     if (isOutputEnabled(EventAngle)) {
         computeEventAngle( A, B, evAngle, quality );
+	Eigen::ArrayXd out = (bgAngle.isFinite()).select(bgAngle,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,EventAngle, idx, z0, evAngle[idx-sampgateBG_.start]);
+            setOutputValue(output,EventAngle, idx, z0, out[idx-sampgateBG_.start]);
     }
 
     if (isOutputEnabled(Difference)) {
@@ -206,14 +209,16 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
         if (evAngle.size()==0)
             computeEventAngle( A, B, evAngle, quality );
         angleDiff = evAngle - bgAngle;
+	Eigen::ArrayXd out = (angleDiff.isFinite()).select(angleDiff,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,Difference, idx, z0, angleDiff[idx-sampgateBG_.start]);
+            setOutputValue(output,Difference, idx, z0, out[idx-sampgateBG_.start]);
     }
 
     if (isOutputEnabled(Strength)) {
         computeStrength( A, B, strength );
+	Eigen::ArrayXd out = (strength.isFinite()).select(strength,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,Strength, idx, z0, strength[idx-sampgateBG_.start]);
+            setOutputValue(output,Strength, idx, z0, out[idx-sampgateBG_.start]);
     }
 
     if (isOutputEnabled(Product)) {
@@ -227,6 +232,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
             angleDiff = evAngle - bgAngle;
         }
         Eigen::ArrayXd prod = angleDiff*strength;
+	Eigen::ArrayXd out = (prod.isFinite()).select(prod,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,Product, idx, z0, prod[idx-sampgateBG_.start]);
     }
@@ -234,8 +240,10 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
     if (isOutputEnabled(Quality)) {
         if (evAngle.size()==0)
             computeEventAngle( A, B, evAngle, quality );
+
+	Eigen::ArrayXd out = (quality.isFinite()).select(quality,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,Quality, idx, z0, quality[idx-sampgateBG_.start]);
+            setOutputValue(output,Quality, idx, z0, out[idx-sampgateBG_.start]);
     }
 
     return true;
