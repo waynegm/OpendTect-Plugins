@@ -1,0 +1,20 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: wmPlugins
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Wayne
+    family-names: Mogg
+    email: wayne.mogg@gmail.com
+repository-code: 'https://github.com/waynegm/OpendTect-Plugins'
+url: 'http://waynegm.github.io/OpendTect-Plugin-Docs/'
+abstract: >-
+  This is the source code for a collection of plugins
+  for the open source seismic interpretation system
+  OpendTect
+license: GPL-3.0-or-later
