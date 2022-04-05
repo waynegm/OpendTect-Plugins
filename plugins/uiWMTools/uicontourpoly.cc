@@ -50,14 +50,14 @@ uiContourPoly::uiContourPoly( uiParent* p )
     setCtrlStyle( OkAndCancel );
     setOkText( tr("Create") );
     setShrinkAllowed(true);
-    
+
     namefld_ = new uiGenInput(this, tr("Name for new polygon"));
-    
+
     uiString lbl = tr("Z Value ");
     lbl.append( SI().getUiZUnitString() );
     zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start*SI().zDomain().userFactor()) );
-    zfld_->attach( rightOf, namefld_ ); 
-    
+    zfld_->attach( rightOf, namefld_ );
+
     colorfld_ = new uiColorInput(this, uiColorInput::Setup(getRandStdDrawColor()).
     lbltxt(uiStrings::sColor()) );
     colorfld_->attach(alignedBelow, namefld_);
@@ -77,8 +77,9 @@ bool uiContourPoly::acceptOK( CallBacker*)
 	uiMSG().error( tr("Please specify a name for the polygon") );
 	return false;
     }
-    
+
     PtrMan<CtxtIOObj> ctio = mMkCtxtIOObj(PickSet);
+    if (!ctio) return false;
     ctio->setName( polyname_ );
     const IODir iodir( ctio->ctxt_.getSelKey() );
     if ( iodir.get( polyname_, ctio->ctxt_.trgroup_->groupName() ) ) {
@@ -86,19 +87,19 @@ bool uiContourPoly::acceptOK( CallBacker*)
 	if ( !uiMSG().askOverwrite(msg) )
 	    return false;
     }
-    
+
     float zval = zfld_->getFValue();
     if (mIsUdf(zval)) {
 	uiMSG().error( tr("Z value is undefined. Please enter a valid value") );
 	return false;
     }
-    
+
     z_ = zval / SI().zDomain().userFactor();
     if (!SI().zRange(false).includes(z_,false)) {
 	const bool res = uiMSG().askContinue( tr("Z Value is outside survey Z range") );
 	if ( !res ) return false;
     }
-    
+
     return true;
 }
 
@@ -111,6 +112,7 @@ uiString uiContourPoly::getCaptionStr() const
 Pick::Set* uiContourPoly::getPolygonPickSet() const
 {
     Pick::Set* ps = new Pick::Set;
+    if (!ps) return nullptr;
     ps->setName( polyname_ );
     ps->disp_.color_ = colorfld_->color();
     ps->disp_.linestyle_ = OD::LineStyle(OD::LineStyle::Solid, 1, colorfld_->color());

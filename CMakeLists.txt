@@ -55,7 +55,7 @@ endif()
 
 
 add_subdirectory(external)
-add_subdirectory(python_bindings)
+#add_subdirectory(python_bindings)
 include_directories(SYSTEM external/include plugins/wm_include)
 
 #Setup output directory

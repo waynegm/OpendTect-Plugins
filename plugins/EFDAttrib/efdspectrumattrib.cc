@@ -35,10 +35,10 @@ void EFDSpectrumAttrib::initClass()
 {
     mAttrStartInitClassWithDescAndDefaultsUpdate
 
-    IntParam* nmodes = new IntParam( modesStr() );
-    nmodes->setLimits( 1, 10 );
-    nmodes->setDefaultValue( 5 );
-    desc->addParam( nmodes );
+    IntParam* nrmodes = new IntParam( nrmodesStr() );
+    nrmodes->setLimits( 1, 20 );
+    nrmodes->setDefaultValue( 5 );
+    desc->addParam( nrmodes );
 
     FloatParam* step = new FloatParam( stepStr() );
     step->setRequired( false );
@@ -69,11 +69,11 @@ EFDSpectrumAttrib::EFDSpectrumAttrib( Desc& desc )
 {
     if ( !isOK() ) return;
 
-    mGetInt( nmodes_, modesStr() );
-
+    mGetInt( nrmodes_, nrmodesStr() );
     mGetFloat( step_, stepStr() );
 
-    float refstep = getRefStep();
+    dessampgate_ =  Interval<int>( -(1024-1), 1024-1 );
+    efdobj_ = new EFD(nrmodes_, EFD::OneSided, false, 0);
 }
 
 bool EFDSpectrumAttrib::getInputData( const BinID& relpos, int zintv )
@@ -121,23 +121,37 @@ bool EFDSpectrumAttrib::computeData( const DataHolder& output, const BinID& relp
     const int ns = nrsamples;
     const int nfreq = outputinterest_.size();
 
-    Eigen::ArrayXd input(ns);
+    Eigen::ArrayXf input(ns);
     for (int idx=0; idx<ns; idx++) {
 	float val = getInputValue(*indata_, indataidx_, idx, z0);
 	input(idx) = mIsUdf(val)?0.0f:val;
     }
 
-
+    efdobj_->setInput(input);
+    Eigen::ArrayXXf freqdata = Eigen::ArrayXXf::Zero(nfreq, ns);
+    for (int imode=0; imode<nrmodes_; imode++) {
+	auto modespec = efdobj_->getModeHTInstFrequency(imode, refstep_);
+//	modespec.row(1) = (modespec.row(1).isFinite()).select(modespec.row(1),0.f);
+//	modespec.row(0) = (modespec.row(0).isFinite()).select(modespec.row(0),0.f);
+	float minv = modespec.row(0).minCoeff();
+	float maxv = modespec.row(0).maxCoeff();
+	BufferString msg;
+	msg.add("Min: ").add(minv).add(" Max: ").add(maxv);
+	ErrMsg(msg);
+	for (int idf=0; idf<nfreq; idf++) {
+	    if (!outputinterest_[idf])
+		continue;
+	    const float freq = step_ * (idf+1);
+	    freqdata.row(idf) += (modespec.row(0)>=freq-step_/2.f && modespec.row(0)<freq+step_/2).select(modespec.row(1), 0.f);
+	}
+    }
     for (int idf=0; idf<nfreq; idf++) {
-        if (!outputinterest_[idf])
-            continue;
-        float freq = step_ * (idf+1);
-        float w = freq * 2.0 * M_PIf;
-
-        for (int idx=0; idx<nrsamples; idx++) {
-            float outVal = mUdf(float);
-            setOutputValue( output, idf, idx, z0, outVal );
-        }
+	if (!outputinterest_[idf])
+	    continue;
+	for (int idx=0; idx<nrsamples; idx++) {
+	    float outVal = freqdata(idf, idx);
+	    setOutputValue( output, idf, idx, z0, outVal );
+	}
     }
     return true;
 }

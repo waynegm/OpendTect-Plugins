@@ -16,7 +16,7 @@ ________________________________________________________________________
  Date:          May 2015
  ________________________________________________________________________
 
--*/ 
+-*/
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -28,6 +28,7 @@ ________________________________________________________________________
 #include "procinst.h"
 #include "filepath.h"
 #include "file.h"
+#include "uistringset.h"
 
 
 #ifdef __win__
@@ -51,18 +52,19 @@ struct ProcInstImpl {
 public:
 	ProcInstImpl();
 	~ProcInstImpl() {}
-	
+
 	float*			input;
 	float*			output;
-	int				nrSamples;
-	int				nrTraces;
-	int				nrOutput;
-	int				nrInput;
+	int			nrSamples;
+	int			nrTraces;
+	int			nrOutput;
+	int			nrInput;
 	TrcInfo			trcInfo;
-	
+
 	FILE*			read_fd;
 	FILE*			write_fd;
-	BufferString	logFile;
+	BufferString		logFile;
+	uiRetVal		uirv;
 #ifdef __win__
 	HANDLE			hChildProcess;
 	HANDLE			hChildThread;
@@ -144,30 +146,30 @@ bool ProcInst::start( const BufferStringSet& runargs)
 #ifdef __win__
 	if (pD->hChildProcess != NULL)
 	{
-		ErrMsg("ProcInst::start - already in use");
+		repError("ProcInst::start - already in use");
 		return false;
 	}
 	HANDLE g_hChildStd_IN_Rd = NULL;
 	HANDLE g_hChildStd_IN_Wr = NULL;
 	HANDLE g_hChildStd_OUT_Rd = NULL;
-	HANDLE g_hChildStd_OUT_Wr = NULL; 
-	
+	HANDLE g_hChildStd_OUT_Wr = NULL;
+
 	SECURITY_ATTRIBUTES saAttr;
-	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
-	saAttr.bInheritHandle = TRUE; 
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+	saAttr.bInheritHandle = TRUE;
 	saAttr.lpSecurityDescriptor = NULL;
-	
-// Create a pipe for the child process's STDOUT. 
+
+// Create a pipe for the child process's STDOUT.
 	if (!CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0) ||
 		!SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0)) {
-			ErrMsg("ProcInst::start - opening stdout failed");
+			repError("ProcInst::start - opening stdout failed");
 			return false;
 	}
-	
-// Create a pipe for the child process's STDIN. 
+
+// Create a pipe for the child process's STDIN.
 	if (!CreatePipe(&g_hChildStd_IN_Rd, &g_hChildStd_IN_Wr, &saAttr, 0) ||
 		!SetHandleInformation(g_hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0)) {
-			ErrMsg("ProcInst::start - opening stdin failed");
+			repError("ProcInst::start - opening stdin failed");
 			return false;
 	}
 
@@ -176,11 +178,11 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	int fileOutNo = _open_osfhandle((intptr_t)g_hChildStd_OUT_Rd, 0);
 
 	if (fileInNo == -1 || fileOutNo == -1) {
-			ErrMsg("ProcInst::start - unable to get file number for child stdin/stdout");
+			repError("ProcInst::start - unable to get file number for child stdin/stdout");
 			CloseHandle( g_hChildStd_IN_Rd );
 			CloseHandle( g_hChildStd_IN_Wr );
 			CloseHandle( g_hChildStd_OUT_Rd );
-			CloseHandle( g_hChildStd_OUT_Wr ); 
+			CloseHandle( g_hChildStd_OUT_Wr );
 			return false;
 	}
 	pD->read_fd = _fdopen(fileOutNo, "r");
@@ -190,8 +192,8 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		CloseHandle( g_hChildStd_IN_Rd );
 		CloseHandle( g_hChildStd_IN_Wr );
 		CloseHandle( g_hChildStd_OUT_Rd );
-		CloseHandle( g_hChildStd_OUT_Wr ); 
-		ErrMsg("ExtProcImpl::start - open read_fd failed");
+		CloseHandle( g_hChildStd_OUT_Wr );
+		repError("ExtProcImpl::start - open read_fd failed");
 		return false;
 	}
 	pD->write_fd = _fdopen(fileInNo, "w");
@@ -201,14 +203,14 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		pD->write_fd = NULL;
 		CloseHandle( g_hChildStd_IN_Rd );
 		CloseHandle( g_hChildStd_OUT_Rd );
-		CloseHandle( g_hChildStd_OUT_Wr ); 
-		ErrMsg("ProcInst::start - open write_fd failed");
+		CloseHandle( g_hChildStd_OUT_Wr );
+		repError("ProcInst::start - open write_fd failed");
 		return false;
 	}
 	setvbuf( pD->read_fd, NULL, _IONBF, 0 );
 	setvbuf( pD->write_fd, NULL, _IONBF, 0 );
 //
-// Open the error log file. 
+// Open the error log file.
 	HANDLE herr = CreateFile(	logFileName().getCStr(),
 								GENERIC_WRITE,
 								FILE_SHARE_READ,
@@ -217,17 +219,17 @@ bool ProcInst::start( const BufferStringSet& runargs)
 								FILE_ATTRIBUTE_NORMAL,
 								NULL );
 	if (herr == INVALID_HANDLE_VALUE) {
-		ErrMsg("ProcInst::start - unable to open error log file %s", logFileName().getCStr());
+		repError(BufferString("ProcInst::start - unable to open error log file ", logFileName().getCStr()));
 		return false;
 	}
-//	
+//
 // Build the command line
 	BufferString cmd;
 	cmd.add(runargs.cat(" "));
 // Spawn the child process
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
-	GetStartupInfo(&si);      
+	GetStartupInfo(&si);
 	si.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
 
 	si.wShowWindow = SW_HIDE;
@@ -235,8 +237,8 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	si.hStdOutput = g_hChildStd_OUT_Wr;
 	si.hStdInput = g_hChildStd_IN_Rd;
 	ZeroMemory(&pi, sizeof(pi));
-	
-	bool res = CreateProcess( 	NULL, 
+
+	bool res = CreateProcess( 	NULL,
 								cmd.getCStr(),
 								NULL,
 								NULL,
@@ -246,13 +248,13 @@ bool ProcInst::start( const BufferStringSet& runargs)
 								NULL,
 								&si,
 								&pi );
-							  
+
 	if (!res) {
 		ErrMsg("ProcInst::start - CreateProcess failed");
 		CloseHandle( g_hChildStd_IN_Rd );
 		CloseHandle( g_hChildStd_IN_Wr );
 		CloseHandle( g_hChildStd_OUT_Rd );
-		CloseHandle( g_hChildStd_OUT_Wr ); 
+		CloseHandle( g_hChildStd_OUT_Wr );
 		CloseHandle( herr );
 		return false;
 	}
@@ -267,14 +269,14 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	envp[0] = (char*) "IFS= \t\n";
 	envp[1] = (char*) "PATH=" _PATH_STDPATH;
 	envp[2] = 0;
-	
+
 	if (pD->child_pid != -1)
 	{
-		ErrMsg("ProcInst::start - already in use");
+		repError("ProcInst::start - already in use");
 		return false;
 	}
 	int	stdin_pipe[2], stdout_pipe[2];
-	
+
 	if (pipe(stdin_pipe) == -1) {
 		return false;
 	}
@@ -291,7 +293,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		close(stdout_pipe[0]);
 		close(stdin_pipe[1]);
 		close(stdin_pipe[0]);
-		ErrMsg("ProcInst::start - open read_fd failed");
+		repError("ProcInst::start - open read_fd failed");
 		return false;
 	}
 	pD->write_fd = fdopen(stdin_pipe[1], "w");
@@ -302,7 +304,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		close(stdout_pipe[1]);
 		close(stdin_pipe[1]);
 		close(stdin_pipe[0]);
-		ErrMsg("ProcInst::start - open write_fd failed");
+		repError("ProcInst::start - open write_fd failed");
 		return false;
 	}
 	setbuf( pD->read_fd, NULL );
@@ -318,7 +320,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		close(stdin_pipe[1]);
 		return false;
 	}
-	
+
 	if (!pD->child_pid) {
 //	This is the child process
 //	close open files other than stdin, stdout and stderr
@@ -351,20 +353,21 @@ bool ProcInst::start( const BufferStringSet& runargs)
 		argv[runargs.size()] = 0;
 		execve(argv[0], argv, envp);
 //	Should never get here
-		ErrMsg("ProcInst::start - child process not started");
+		repError("ProcInst::start - child process not started");
 		return false;
 	}
-	
+
 	close(stdout_pipe[1]);
 	close(stdin_pipe[0]);
 	return true;
-#endif	
+#endif
 }
 
 
 bool ProcInst::start( const BufferStringSet& runargs, SeisInfo& si )
 {
 	bool 	result = false;
+	pD->uirv.setEmpty();
 	if (start( runargs )) {
 // Check for errors
 		result = writeSeisInfo( si );
@@ -376,15 +379,16 @@ bool ProcInst::start( const BufferStringSet& runargs, SeisInfo& si )
 
 void ProcInst::processLog()
 {
-	BufferString log;
-	if (!pD->logFile.isEmpty()) {
-		File::getContent(pD->logFile.getCStr(), log);
-		if (!log.isEmpty())
-			UsrMsg(log);
-		File::remove(pD->logFile.getCStr());
-	}
+    BufferString logmsg;
+    if (!pD->logFile.isEmpty()) {
+	File::getContent(pD->logFile.getCStr(), logmsg);
+	if (!logmsg.isEmpty())
+	    repError(logmsg);
+
+	File::remove(pD->logFile.getCStr());
+    }
 }
-	
+
 int ProcInst::finish() {
 	int result = 0;
 #ifdef __win__
@@ -394,7 +398,7 @@ int ProcInst::finish() {
 			if (status == STILL_ACTIVE) {
 				WaitForInputIdle( pD->hChildProcess, INFINITE );
 				TerminateProcess( pD->hChildProcess, 0 );
-				WaitForSingleObject( pD->hChildProcess, INFINITE ); 
+				WaitForSingleObject( pD->hChildProcess, INFINITE );
 			}
 		} else {
 			ErrMsg("ProcInst::finish - GetExitCodeProcess failed");
@@ -417,7 +421,7 @@ int ProcInst::finish() {
 #else
 	int   status;
 	pid_t pid = -1;
-	
+
 	if (pD->child_pid != -1) {
 		kill( pD->child_pid, SIGKILL );
 		do {
@@ -434,15 +438,15 @@ int ProcInst::finish() {
 		pD->read_fd = NULL;
 	}
 	pD->child_pid=-1;
-	if (pid != -1 && WIFEXITED(status)) 
+	if (pid != -1 && WIFEXITED(status))
 		result = WEXITSTATUS(status);
-	else 
+	else
 		result = (pid == -1 ? -1 : 0);
-#endif	
+#endif
 	processLog();
 	return result;
-}	
-	
+}
+
 
 BufferString ProcInst::readAllStdOut()
 {
@@ -452,7 +456,7 @@ BufferString ProcInst::readAllStdOut()
 		while (1) {
 			size_t count = fread( (void*) buffer, 1, sizeof(buffer-1), pD->read_fd );
 			if (count == -1) {
-				if (errno == EINTR) 
+				if (errno == EINTR)
 					continue;
 				else {
 					ErrMsg("ProcInst::readAllStdOut- read error");
@@ -467,7 +471,7 @@ BufferString ProcInst::readAllStdOut()
 		}
 	} else
 		ErrMsg("ProcInst::readAllStdOut - no stdout");
-	
+
 	return result;
 }
 
@@ -478,7 +482,7 @@ bool ProcInst::compute( int z0, int inl, int crl )
 	result |= writeTrcInfo( z0, inl, crl );
 // 	Send input array to process stdin
 	result |= writeData();
-// 	Read output array from process stdout 
+// 	Read output array from process stdout
 	result |= readData();
 	return result;
 }
@@ -512,7 +516,7 @@ bool ProcInst::writeTrcInfo(int z0, int inl, int crl)
 		ti.inl = inl;
 		ti.crl = crl;
 		ti.nrSamples = pD->nrSamples;
-		
+
 		size_t nbytes = sizeof(ti);
 		size_t res = fwrite((void*) &ti, nbytes, 1, pD->write_fd);
 		if (res != 1) {
@@ -526,7 +530,7 @@ bool ProcInst::writeTrcInfo(int z0, int inl, int crl)
 		return false;
 	}
 }
-	
+
 bool ProcInst::writeData()
 {
 	if (pD->write_fd) {
@@ -555,11 +559,27 @@ bool ProcInst::readData()
 			ErrMsg("ProcInst::readData - error reading from external attribute");
 			return false;
 		}
-		return true;	
-		
+		return true;
+
 	} else {
-		ErrMsg("ProcInst::readData - no stdout");	
-		
+		ErrMsg("ProcInst::readData - no stdout");
+
 		return false;
 	}
+}
+
+uiRetVal ProcInst::errMsg()
+{
+    return pD->uirv;
+}
+
+bool ProcInst::isOK()
+{
+    return pD->uirv.isOK();
+}
+
+void ProcInst::repError(const char* msg)
+{
+    ErrMsg(msg);
+    pD->uirv.add(toUiString(msg));
 }

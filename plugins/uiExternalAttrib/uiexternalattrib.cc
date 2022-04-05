@@ -26,6 +26,7 @@ ________________________________________________________________________
 #include "attribdesc.h"
 #include "attribdescset.h"
 #include "attribparam.h"
+#include "file.h"
 #include "filepath.h"
 #include "pythonaccess.h"
 #include "settings.h"
@@ -461,8 +462,8 @@ void uiExternalAttrib::updateinterpCB(CallBacker*)
     BufferString newinterpfile = uiWGMHelp::GetPythonInterpPath().fullPath();
     if (newinterpfile!=interpfilefld_->fileName()) {
 	interpfilefld_->setFileName(newinterpfile);
-	exfileChanged(0);
     }
+    exfileChanged(nullptr);
 }
 
 void uiExternalAttrib::makeUI()
@@ -490,10 +491,12 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
     BufferString iname(interpfilefld_->fileName());
     BufferString fname(exfilefld_->fileName());
     if (!fname.isEmpty()) {
-	if ( !uiinp_->getExtProc() || fname != uiinp_->getExtProc()->getFile() )
 	    uiinp_->setExtProc(new ExtProc(fname.str(), iname.str()));
-
-	makeUI();
+	if (uiinp_->getExtProc()->isOK())
+	    makeUI();
+	else
+	    uiMSG().errorWithDetails( uiinp_->getExtProc()->errMsg(),
+				 tr("Error encountered running script file"));
     }
 }
 
@@ -522,8 +525,14 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
     if ( desc.attribName() != ExternalAttrib::attribName())
 	return false;
 
-    mIfGetString(ExternalAttrib::interpFileStr(),interpfile, interpfilefld_->setFileName(interpfile) )
-    mIfGetString(ExternalAttrib::exFileStr(),exfile, setExFileName(exfile) )
+    mIfGetString(ExternalAttrib::interpFileStr(),interpfile, interpfilefld_->setFileName(interpfile))
+    if (!File::isExecutable(interpfilefld_->fileName()))
+	interpfilefld_->setFileName(uiWGMHelp::GetPythonInterpPath().fullPath());
+
+    mIfGetString(ExternalAttrib::exFileStr(),exfile, setExFileName(exfile))
+    if (!File::isReadable(exfilefld_->fileName()))
+	exfilefld_->setFileName(BufferString::empty());
+
     exfileChanged(nullptr);
     return uiinp_->setParameters(desc);
 }
@@ -531,7 +540,7 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 bool uiExternalAttrib::setInput( const Attrib::Desc& desc )
 {
     const ExtProc* extproc = uiinp_->getExtProc();
-    if (!extproc)
+    if (!extproc || !extproc->isOK())
 	return false;
 
     const int nrflds = extproc->numInput();
@@ -560,7 +569,7 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
 bool uiExternalAttrib::getInput( Attrib::Desc& desc )
 {
     const ExtProc* extproc = uiinp_->getExtProc();
-    if (!extproc)
+    if (!extproc|| !extproc->isOK())
 	return false;
 
     const int nrflds = extproc->numInput();
@@ -574,7 +583,7 @@ bool uiExternalAttrib::getInput( Attrib::Desc& desc )
 bool uiExternalAttrib::getOutput( Desc& desc )
 {
     const ExtProc* extproc = uiinp_->getExtProc();
-    if (!extproc)
+    if (!extproc|| !extproc->isOK())
 	return false;
 
     if (extproc->hasOutput())
@@ -585,7 +594,7 @@ bool uiExternalAttrib::getOutput( Desc& desc )
 void uiExternalAttrib::doHelp( CallBacker* cb )
 {
     const ExtProc* extproc = uiinp_->getExtProc();
-    if (extproc && extproc->hasHelp())
+    if (extproc && extproc->isOK() && extproc->hasHelp())
 	uiDesktopServices::openUrl(extproc->helpValue());
 
 }

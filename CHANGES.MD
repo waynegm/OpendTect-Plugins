@@ -4,8 +4,19 @@
 ###AVOPolarAttrib
 -  Replace Nans and Infs with Undefined
 
+### EFDAttrib
+- add EFD (Emprirical Fourier Decomposition) modes and spectral decomposition attributes
+
 ### External Attributes
+- fix crash when loading attribute set with non existent interpreter or attribute script
+- add UI error reporting when loading the script into the UI
 - add ex_test_gradient.py to generate a synthetic gradient volume for testing AVO attributes
+- fix various issues with scripts related to Python module updates
+- move common functions into extlib.py
+- add Jupyter notebook to demo/test extlib.py functions
+
+### Mistie Analysis
+- fix crash when estimating misties for depth surveys
 
 ## Release 6.6.9
 ### AVOPolarAttrib

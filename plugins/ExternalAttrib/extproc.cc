@@ -29,6 +29,7 @@ ________________________________________________________________________
 #include "filepath.h"
 #include "envvars.h"
 #include "procinst.h"
+#include "uistringset.h"
 #include "urllib.h"
 
 
@@ -64,6 +65,7 @@ public:
     void		setFile(const char* fname, const char* iname);
     BufferStringSet	getInterpreterArgs() const;
     void		addQuotesIfNeeded(BufferStringSet& args);
+    void		repError(const char*);
 
     bool		isok_;
     SeisInfo		seisinfo_;
@@ -73,6 +75,7 @@ public:
     BufferStringSet	newparamkeys_;
     ObjectSet<ProcInst> idleinsts_;
     Threads::Mutex	idleinstslock_;
+    uiRetVal		uirv_;
 };
 
 ExtProcImpl::ExtProcImpl(const char* fname, const char* iname)
@@ -93,6 +96,7 @@ ExtProcImpl::~ExtProcImpl()
 void ExtProcImpl::setFile(const char* fname, const char* iname)
 {
     exfile_ = fname;
+    uirv_.setEmpty();
     if (File::isFile(exfile_)) {
 	infile_ = BufferString(iname).trimBlanks();
 	if (infile_.startsWith("%") && infile_.endsWith("%")) {
@@ -107,9 +111,11 @@ void ExtProcImpl::setFile(const char* fname, const char* iname)
 		newparamkeys_.setEmpty();
 	}
 	else
-	    ErrMsg("ExtProcImpl::setFile - interpreter setting is not a valid executable file");
+	    repError("ExtProcImpl::setFile - interpreter setting is not a valid executable file");
     } else
-	ErrMsg("ExtProcImpl::setFile - external attribute is not a valid file");
+	repError("ExtProcImpl::setFile - external attribute is not a valid file");
+
+    isok_ = uirv_.isOK();
 }
 
 void ExtProcImpl::updateNewParamKeys()
@@ -191,7 +197,7 @@ void ExtProcImpl::startInst( ProcInst* pi )
     if ( !infile_.isEmpty() && !exfile_.isEmpty() )
 	runargs = getInterpreterArgs();
     else if ( exfile_.isEmpty() ) {
-	ErrMsg("ExtProcImpl::startInst - no external attribute file provided");
+	repError("ExtProcImpl::startInst - no external attribute file provided");
 	return;
     }
 
@@ -201,7 +207,13 @@ void ExtProcImpl::startInst( ProcInst* pi )
     addQuotesIfNeeded(runargs);
 
     if (!pi->start( runargs, seisinfo_ ))
-	ErrMsg("ExtProcImpl::startInst - run error");
+	repError("ExtProcImpl::startInst - run error");
+}
+
+void ExtProcImpl::repError(const char* msg)
+{
+    ErrMsg(msg);
+    uirv_.add(toUiString(msg));
 }
 
 bool ExtProcImpl::getParam()
@@ -213,7 +225,7 @@ bool ExtProcImpl::getParam()
     if (!infile_.isEmpty() && !exfile_.isEmpty())
 	runargs = getInterpreterArgs();
     else if (exfile_.isEmpty()) {
-	ErrMsg("ExtProcImpl::startInst - no external attribute file provided");
+	repError("ExtProcImpl::getParam - no external attribute file provided");
 	return false;
     }
 
@@ -224,22 +236,28 @@ bool ExtProcImpl::getParam()
     if (pi.start( runargs )) {
 	params = pi.readAllStdOut();
 	if (pi.finish() != 0 ) {
-	    ErrMsg("ExtProcImpl::getParam - external attribute exited abnormally");
+	    repError("ExtProcImpl::getParam - external attribute exited abnormally");
 	    result = false;
 	}
     } else {
-	ErrMsg("ExtProcImpl::getParam - run error");
+	repError("ExtProcImpl::getParam - run error");
 	result = false;
     }
     if (result) {
-	jsonpar_ = json::Deserialize(urllib::urldecode(std::string(params.str())));
-	if (jsonpar_.GetType() == json::NULLVal) {
-	    ErrMsg("ExtProcImpl::getParam - parameter output of external attribute is not valid JSON");
-	    if (!params.isEmpty())
-		UsrMsg(params);
+	if (!params.isEmpty()) {
+	    jsonpar_ = json::Deserialize(urllib::urldecode(std::string(params.str())));
+	    if (jsonpar_.GetType() == json::NULLVal) {
+		repError("ExtProcImpl::getParam - parameter output of external attribute is not valid JSON");
+		if (!params.isEmpty())
+		    repError(params);
+		result = false;
+	    }
+	} else {
+	    repError("ExtProcImpl::getParam - no JSON parameter string returned");
 	    result = false;
 	}
     }
+    uirv_.add(pi.errMsg());
     isok_ = result;
     return result;
 }
@@ -254,9 +272,9 @@ ExtProc::~ExtProc()
     delete pD;
 }
 
-bool ExtProc::isOK()
+bool ExtProc::isOK() const
 {
-    return pD->isok_;
+    return pD->isok_ && pD->uirv_.isOK();
 }
 
 void ExtProc::setSeisInfo( int ninl, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor )
@@ -293,7 +311,7 @@ ProcInst* ExtProc::getIdleInst( int nrsamples )
     if (pi==NULL) {
 	pi = new ProcInst();
 	if (pi==NULL)
-	    ErrMsg( "ExtProc::getIdleInst - error allocating new ProcInst" );
+	    pD->repError( "ExtProc::getIdleInst - error allocating new ProcInst" );
 	else {
 	    pD->startInst( pi );
 	    pi->resize( nrsamples );
@@ -771,3 +789,7 @@ bool ExtProc::setParamsEncodedStr(const BufferString& encodedstr)
 	return false;
 }
 
+uiRetVal ExtProc::errMsg() const
+{
+    return pD->uirv_;
+}

@@ -3,14 +3,14 @@ This a collection of [External Attribute](http://waynegm.github.io/OpendTect-Plu
 
 | PLUGIN | DESCRIPTION |
 |--------|-------------|
-| ex_dip.py | True (Pola) dip and Dip Azimuth from inline and crossline dip |
-| ex_gradient_dip.py | Orientation from inline, crossline and z gradients |
-| ex_vf_gradient3_dip.py | Orientation using the vector filtered gradient with gradients by Kroon's 3 point operator |
-| ex_gradient3_st_dip.py | Orientation using the gradient structure tensor with gradients by Kroon's 3 point operator|
-| ex_gradient5_st_dip.py | Orientation using the gradient structure tensor with gradients by Farid's 5 point operator|
-| ex_phase3_dip.py | Orientation using the 3D complex trace phase with gradients by Kroon's 3 point operator |
-| ex_vf_phase3_dip.py | Orientation using the vector filtered 3D complex trace phase with gradients by Kroon's 3 point operator |
-| ex_weighted_phase3_st_dip.py | Orientation using the 3D complex trace envelope weighted phase structure tensor with gradients by Kroon's 3 point operator |
+| [ex_dip.py] | True (Polar) dip and Dip Azimuth from inline and crossline dip |
+| [ex_gradient_dip.py] | Orientation from inline, crossline and z gradients |
+| [ex_vf_gradient3_dip.py] | Orientation using the vector filtered gradient with gradients by Kroon's 3 point operator |
+| [ex_gradient3_st_dip.py] | Orientation using the gradient structure tensor with gradients by Kroon's 3 point operator|
+| [ex_gradient5_st_dip.py] | Orientation using the gradient structure tensor with gradients by Farid's 5 point operator|
+| [ex_phase3_dip.py] | Orientation using the 3D complex trace phase with gradients by Kroon's 3 point operator |
+| [ex_vf_phase3_dip.py] | Orientation using the vector filtered 3D complex trace phase with gradients by Kroon's 3 point operator |
+| [ex_weighted_phase3_st_dip.py] | Orientation using the 3D complex trace envelope weighted phase structure tensor with gradients by Kroon's 3 point operator |
 
 All scripts will estimate at least the following attributes:
 

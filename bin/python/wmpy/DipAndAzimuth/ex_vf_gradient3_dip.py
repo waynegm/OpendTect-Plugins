@@ -5,7 +5,7 @@
 #
 import sys,os
 import numpy as np
-from numba import autojit
+from numba import jit
 #
 # Import the module with the I/O scaffolding of the External Attribute
 #
@@ -32,7 +32,7 @@ def doCompute():
 	zs = xa.params['ZSampMargin']['Value'][1] - xa.params['ZSampMargin']['Value'][0] + 1
 	zw = max(zs-2, 3)
 	filt = xa.params['Select']['Selection']
-	filtFunc = autojit(xl.vecmean) if filt==0 else  autojit(xl.vmf_l1) if filt==1 else autojit(xl.vmf_l2) if filt==2 else autojit(xl.vmf_x3)
+	filtFunc = jit(xl.vecmean) if filt==0 else  jit(xl.vmf_l1) if filt==1 else jit(xl.vmf_l2) if filt==2 else jit(xl.vmf_x3)
 	inlFactor = xa.SI['zstep']/xa.SI['inldist'] * xa.SI['dipFactor']
 	crlFactor = xa.SI['zstep']/xa.SI['crldist'] * xa.SI['dipFactor']
 	while True:

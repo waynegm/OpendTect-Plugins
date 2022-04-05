@@ -22,6 +22,7 @@
 #include "uiodmain.h"
 #include "odplugin.h"
 
+#include "uiefdmodesattrib.h"
 #include "uiefdspectrumattrib.h"
 #include "wmplugins.h"
 
@@ -39,6 +40,7 @@ mDefODPluginInfo(uiEFDAttrib)
 mDefODInitPlugin(uiEFDAttrib)
 {
     uiEFDSpectrumAttrib::initClass();
+    uiEFDModesAttrib::initClass();
 
     return 0;
 }

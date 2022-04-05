@@ -57,11 +57,17 @@ uiWMPolygonParentTreeItem::~uiWMPolygonParentTreeItem()
 bool uiWMPolygonParentTreeItem::addNewPolygon(Pick::Set* ps, bool warnifexist)
 {
     PtrMan<CtxtIOObj> ctio = mMkCtxtIOObj(PickSet);
+    if (!ctio || !ps)
+	return false;
+
     ctio->setName( ps->name() );
     BufferString errmsg;
     if ( uiIOObj::fillCtio(*ctio, warnifexist) )
     {
 	PtrMan<IOObj> ioobj = ctio->ioobj_;
+	if (!ioobj)
+	    return false;
+
 	IOM().commitChanges( *ioobj );
 	if ( !PickSetTranslator::store( *ps, ioobj, errmsg ) ) {
 	    uiMSG().error(tr("%1").arg(errmsg));
@@ -73,14 +79,15 @@ bool uiWMPolygonParentTreeItem::addNewPolygon(Pick::Set* ps, bool warnifexist)
 	return true;
     }
     delete ps;
-    ps = 0;
+    ps = nullptr;
     return false;
 }
 
 void uiWMPolygonParentTreeItem::addPolygon(Pick::Set* ps )
 {
-    if ( !ps ) return;
+    if (!ps) return;
     uiWMPolygonTreeItem* item = new uiWMPolygonTreeItem( -1, *ps );
+    if (!item) return;
     addChild( item, true );
     lastAddedChild = item;
 }
@@ -174,10 +181,10 @@ uiTreeItem* uiWMPolygonTreeItemFactory::createForVis(int visid, uiTreeItem*) con
     mDynamicCastGet(visSurvey::PickSetDisplay*,psd,
 		    ODMainWin()->applMgr().visServer()->getObject(visid));
     if ( !psd || !psd->isPolygon() )
-	return 0;
+	return nullptr;
 
     Pick::Set* pickset = psd->getSet();
-    return new uiWMPolygonTreeItem(visid,*pickset);
+    return pickset ? new uiWMPolygonTreeItem(visid,*pickset) : nullptr;
 }
 
 uiWMPolygonTreeItem::uiWMPolygonTreeItem(int dispid,Pick::Set& ps)

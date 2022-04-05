@@ -19,8 +19,9 @@ ________________________________________________________________________
  Date:          May 2015
  ________________________________________________________________________
 
--*/ 
+-*/
 #include "bufstring.h"
+#include "uistringset.h"
 
 struct SeisInfo
 {
@@ -29,11 +30,11 @@ struct SeisInfo
 	int		nrOutput;
 	int		nrInl;
 	int		nrCrl;
-	float	zStep;
-	float	inlDistance;
-	float	crlDistance;
-	float	zFactor;
-	float	dipFactor;
+	float		zStep;
+	float		inlDistance;
+	float		crlDistance;
+	float		zFactor;
+	float		dipFactor;
 };
 
 struct ProcInstImpl;
@@ -42,7 +43,7 @@ class ProcInst {
 public:
 	ProcInst();
 	~ProcInst();
-	
+
 	void			setInput( int input, int trc, int idx, float val );
 	float			getOutput( int output, int idx );
 	void			resize( int nrsamples );
@@ -50,19 +51,22 @@ public:
 	bool			start( const BufferStringSet& runargs);
 	bool			start( const BufferStringSet& runargs, SeisInfo& si );
 	int				finish();
-	BufferString	logFileName();
-	BufferString	readAllStdOut();
+	BufferString		logFileName();
+	BufferString		readAllStdOut();
 	bool			compute( int z0, int inl, int crl );
 
 	void			processLog();
-	
+	uiRetVal		errMsg();
+	bool			isOK();
+
 protected:
 	bool			writeSeisInfo(SeisInfo& si);
 	bool			writeTrcInfo( int z0, int inl, int crl );
 	bool			writeData();
 	bool			readData();
-	
-	ProcInstImpl*	pD;
+	void			repError(const char*);
+
+	ProcInstImpl*		pD;
 
 };
 

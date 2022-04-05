@@ -60,4 +60,7 @@ x64
 *.ilk
 # VS Code
 .vscode
+# Jupyter
+Untitled*.ipynb
+working.ipynb
 

@@ -24,23 +24,35 @@
 class EFD
 {
 public:
-    enum PadMode { None, Mirror, Symmetric };
+    enum PadMode { None, OneSided, Mirror, Symmetric };
 
-    EFD(int maxmodes=5, PadMode padmode=None, int tapersz=0);
+    EFD(int maxmodes=5, PadMode padmode=OneSided, bool deramp=true, int tapersz=0);
     ~EFD();
+
+    bool		isEmpty() const		{ return inputfreq_.size()==0; }
+    void		setEmpty();
+
+    int			freqsize() const	{ return inputfreq_.size(); }
+    int			outsize() const		{ return padmode_==None ? freqsize() : freqsize()/2; }
 
     void		setInput(const Eigen::ArrayXf& input);
     void                setMaxModes(int maxmodes);
-    void                setEmpty();
-    bool		getMode(int modenum, Eigen::ArrayXf& mode);
-    bool		getModeByRank(int ranknum, Eigen::ArrayXf& mode);
-    bool		validMode(int modenum) const;
+    Eigen::ArrayXf	getMode(int modenum);
+    Eigen::ArrayXcf	getModeAnalyticSignal(int modenum);
+    Eigen::Array2Xf	getModeHTInstFrequency(int modenum, float dt);
+    Eigen::Array2Xf	getModeTKInstFrequency(int modenum, float dt);
+    Eigen::ArrayXf	getModeByRank(int ranknum);
+    bool		getRamp(float& rampst, float& rampend) const;
+    bool		isValidMode(int modenum) const;
 
-
+    static Eigen::ArrayXf	TKEO(const Eigen::ArrayXf& input);
 protected:
     int			maxnrmodes_;
     PadMode		padmode_;
     int			tapersz_ = 0;
+    bool		deramp_;
+    float		rampst_ = 0.f;
+    float		rampend_ = 0.f;
     Eigen::VectorXf	centralfreqs_;
     Eigen::VectorXi	rankidx_;
     Eigen::VectorXi	segbounds_;
@@ -50,6 +62,10 @@ protected:
     void		computeFreq(const Eigen::ArrayXf& input);
     void		computeFreqSegments();
     void		computeModes();
+    Eigen::VectorXcf	computeModeSpectrum(int modenum);
+    Eigen::VectorXcf	computeAnalyticSignalSpectrum(int modenum);
+    int			pivot() const
+			{ const int ns = outsize(); return padmode_==None||padmode_==OneSided ? ns : ns%2==0 ? ns/2 : (ns+1)/2; }
 
 };
 

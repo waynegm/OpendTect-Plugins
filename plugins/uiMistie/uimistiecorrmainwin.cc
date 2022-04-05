@@ -86,7 +86,7 @@ uiMistieCorrMainWin::uiMistieCorrMainWin( uiParent* p )
                                                 .selmode(uiTable::Multi),
                           "Mistie Correction Table" );
     uiStringSet lbls;
-    lbls.add(tr("Line/Dataset")).add(tr("Z Shift (%1)").arg(SI().getZUnitString()))
+    lbls.add(tr("Line/Dataset")).add(tr("Z Shift (%1)").arg(SI().getZUnitString(false)))
         .add(tr("Phase Rotation (deg)")).add(tr("Amplitude Scalar"));
 
     table_->setColumnLabels( lbls);

@@ -34,7 +34,7 @@ uiCorrViewer::uiCorrViewer( uiParent* p, const MistieCorrectionData& corrs )
 
     table_ = new uiTable( this, uiTable::Setup().rowgrow(false).selmode(uiTable::NoSelection),"Mistie Correction Table" );
     uiStringSet lbls;
-    lbls.add(tr("Line/Dataset")).add(tr("Z Shift (%1)").arg(SI().getZUnitString()))
+    lbls.add(tr("Line/Dataset")).add(tr("Z Shift (%1)").arg(SI().getZUnitString(false)))
         .add(tr("Phase Rotation (deg)")).add(tr("Amplitude Scalar"));
 
     table_->setColumnLabels( lbls);

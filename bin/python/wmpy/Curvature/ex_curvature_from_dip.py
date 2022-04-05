@@ -3,7 +3,7 @@
 #
 import sys,os
 import numpy as np
-from numba import autojit
+from numba import jit
 #
 # Import the module with the I/O scaffolding of the External Attribute
 #

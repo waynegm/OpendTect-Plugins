@@ -17,6 +17,7 @@
  */
 
 #include "efdspectrumattrib.h"
+#include "efdmodesattrib.h"
 #include "odplugin.h"
 
 #include "wmplugins.h"
@@ -37,6 +38,7 @@ mDefODPluginInfo(EFDAttrib)
 mDefODInitPlugin(EFDAttrib)
 {
     Attrib::EFDSpectrumAttrib::initClass();
+    Attrib::EFDModesAttrib::initClass();
 
     return nullptr;
 }

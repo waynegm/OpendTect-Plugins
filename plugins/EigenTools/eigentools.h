@@ -29,7 +29,7 @@ void cosTaper(int width, Eigen::DenseBase<X>& data)
 	return;
 
     X taper = X::LinSpaced(width, -M_PI, 0.f);
-    taper << (taper.array().cos()+1.f)/2.f;
+    taper << (taper.array().cos()+1)/2;
     data.head(width) = data.head(width).array() * taper.array();
     data.tail(width) = data.tail(width).array() * taper.reverse().array();
 }

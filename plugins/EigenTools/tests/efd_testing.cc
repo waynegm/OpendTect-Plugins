@@ -59,30 +59,30 @@ public:
 	return true;
     }
 
-    bool test_validMode()
+    bool test_isValidMode()
     {
-	if (validMode(-2)!=false)
+	if (isValidMode(-2)!=false)
 	{
 	    cout<<"test_validMode failed: negative mode number should be invalid\n";
 	    return false;
 	}
-	if (validMode(0)!=true)
+	if (isValidMode(0)!=true)
 	{
 	    cout<<"test_validMode failed: mode number of 0 should be valid\n";
 	    return false;
 	}
-	if (validMode(3)!=true)
+	if (isValidMode(3)!=true)
 	{
 	    cout<<"test_validMode failed: mode number of 3 should be valid\n";
 	    return false;
 	}
-	if (validMode(6)!=false)
+	if (isValidMode(6)!=false)
 	{
 	    cout<<"test_validMode failed: mode number of 6 should be invalid\n";
 	    return false;
 	}
 
-	cout<<"test_validMode: OK\n";
+	cout<<"test_isValidMode: OK\n";
 	return true;
     }
 
@@ -115,7 +115,7 @@ int mTestMainFnName( int argc, char** argv )
     EFD_test efdtester;
     if ( !efdtester.test_computeFreqSegments() )
 	return 1;
-    if ( !efdtester.test_validMode() )
+    if ( !efdtester.test_isValidMode() )
 	return 1;
     if ( !efdtester.test_signal() )
 	return 1;

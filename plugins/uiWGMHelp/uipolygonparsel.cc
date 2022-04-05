@@ -66,6 +66,7 @@ void WMLib::uiPolygonParSel::clearPush( CallBacker* )
 void WMLib::uiPolygonParSel::doDlg( CallBacker* )
 {
     PtrMan<CtxtIOObj> ctio = mMkCtxtIOObj(PickSet);
+    if (!ctio) return;
     ctio->ctxt_.toselect_.require_.set( sKey::Type(), sKey::Polygon() );
     uiIOObjSelDlg::Setup sdsu( tr("Select Polygons") );
     sdsu.multisel( multisel_ );

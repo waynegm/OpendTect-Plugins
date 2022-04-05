@@ -34,7 +34,7 @@
 
 using namespace Attrib;
 
-mInitAttribUI(uiEFDSpectrumAttrib,EFDSpectrumAttrib,"Spectral Decomposition by Empirical Fourier Decomposition",wmPlugins::sKeyWMPlugins())
+mInitAttribUI(uiEFDSpectrumAttrib,EFDSpectrumAttrib,"EFD Spectral Decomposition",wmPlugins::sKeyWMPlugins())
 
 
 uiEFDSpectrumAttrib::uiEFDSpectrumAttrib( uiParent* p, bool is2d )
@@ -43,7 +43,7 @@ uiEFDSpectrumAttrib::uiEFDSpectrumAttrib( uiParent* p, bool is2d )
 {
     inpfld_ = createInpFld( is2d );
 
-    modesfld_ = new uiGenInput( this, tr("Number of Modes"), IntInpSpec(5, 1, 10));
+    modesfld_ = new uiGenInput( this, tr("Number of Modes"), IntInpSpec(5, 1, 20));
     modesfld_->attach( alignedBelow, inpfld_ );
 
     uiString lbl;
@@ -74,16 +74,16 @@ uiEFDSpectrumAttrib::uiEFDSpectrumAttrib( uiParent* p, bool is2d )
 
 void uiEFDSpectrumAttrib::inputSel( CallBacker* )
 {
-	if ( !*inpfld_->getInput() ) return;
+    if ( !*inpfld_->getInput() ) return;
 
-	TrcKeyZSampling cs;
-	if ( !inpfld_->getRanges(cs) )
-		cs.init(true);
+    TrcKeyZSampling cs;
+    if ( !inpfld_->getRanges(cs) )
+	cs.init(true);
 
-	const float nyqfreq = 0.5f / cs.zsamp_.step;
+    const float nyqfreq = 0.5f / cs.zsamp_.step;
 
-	const float freqscale = zIsTime() ? 1.f : 1000.f;
-	const float scalednyqfreq = nyqfreq * freqscale;
+    const float freqscale = zIsTime() ? 1.f : 1000.f;
+    const float scalednyqfreq = nyqfreq * freqscale;
     stepfld_->box()->setInterval( (float)0.5, scalednyqfreq/2 );
     stepfld_->box()->setStep( (float)0.5, true );
     freqfld_->box()->setMinValue( stepfld_->box()->getFValue() );
@@ -121,7 +121,7 @@ bool uiEFDSpectrumAttrib::setParameters( const Attrib::Desc& desc )
     if ( desc.attribName() != EFDSpectrumAttrib::attribName() )
 	return false;
 
-    mIfGetInt(EFDSpectrumAttrib::modesStr(), nmodes, modesfld_->setValue(nmodes));
+    mIfGetInt(EFDSpectrumAttrib::nrmodesStr(), nrmodes, modesfld_->setValue(nrmodes));
     const float freqscale = zIsTime() ? 1.f : 1000.f;
     mIfGetFloat(EFDSpectrumAttrib::stepStr(), step, stepfld_->box()->setValue(step*freqscale) );
 
@@ -149,7 +149,7 @@ bool uiEFDSpectrumAttrib::getParameters( Attrib::Desc& desc )
     if ( desc.attribName() != EFDSpectrumAttrib::attribName() )
 	return false;
 
-    mSetInt( EFDSpectrumAttrib::modesStr(), modesfld_->getIntValue() );
+    mSetInt( EFDSpectrumAttrib::nrmodesStr(), modesfld_->getIntValue() );
     const float freqscale = zIsTime() ? 1.f : 1000.f;
     mSetFloat( EFDSpectrumAttrib::stepStr(), stepfld_->box()->getFValue()/freqscale );
     return true;
@@ -175,7 +175,7 @@ void uiEFDSpectrumAttrib::getEvalParams( TypeSet<EvalParam>& params ) const
 {
     EvalParam ep( "Frequency" ); ep.evaloutput_ = true;
     params += ep;
-    params += EvalParam( "Number of Modes", EFDSpectrumAttrib::modesStr() );
+    params += EvalParam( "Number of Modes", EFDSpectrumAttrib::nrmodesStr() );
 }
 
 void uiEFDSpectrumAttrib::checkOutValSnapped() const
@@ -216,7 +216,7 @@ void uiEFDSpectrumAttrib::showPosDlgCB( CallBacker* )
 
 void uiEFDSpectrumAttrib::fillTestParams( Attrib::Desc* desc ) const
 {
-    mSetParam(Int,nmodes, EFDSpectrumAttrib::modesStr(), modesfld_->getIntValue())
+    mSetParam(Int,nmodes, EFDSpectrumAttrib::nrmodesStr(), modesfld_->getIntValue())
 
     //show Frequencies with a step of 1 in Time and 1e-3 in Depth,
     //independently of what the user can have specified previously

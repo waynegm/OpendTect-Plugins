@@ -70,11 +70,26 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
 	use3DCB(nullptr);
     }
 
-    uiString lagLabel(tr("Maximum Timeshift "));
+    uiString lagLabel(tr("Maximum Shift "));
     lagLabel.append(SI().zDomain().uiUnitStr(true));
     lagfld_ = new uiLabeledSpinBox( this, lagLabel );
-    lagfld_->box()->setInterval(0, 250, 1);
-    lagfld_->box()->setValue(100.0);
+    if ( SI().zIsTime() )
+    {
+	lagfld_->box()->setInterval(0, 250, 1);
+	lagfld_->box()->setValue(100.0);
+    }
+    else if ( SI().zInMeter() )
+    {
+	lagfld_->box()->setInterval(0, 400, 1);
+	lagfld_->box()->setValue(150.0);
+    }
+    else
+    {
+	lagfld_->box()->setInterval(0,1300, 1);
+	lagfld_->box()->setValue(300.0);
+    }
+
+
     if (lastfld)
 	lagfld_->attach( ensureBelow, lastfld );
 
@@ -84,10 +99,17 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
     gateLabel.append(SI().zDomain().uiUnitStr(true));
     gatefld_ = new uiGenInput( this, gateLabel, FloatInpIntervalSpec().setName("Z start",0).setName("Z stop",1) );
     gatefld_->attach( rightOf, lagfld_ );
-    ZGate zr(0.5,1.5);
+    ZGate zr;
+    if ( SI().zIsTime() )
+	zr.set( 0.5, 1.5 );
+    else if ( SI().zInMeter() )
+	zr.set( 750, 2500 );
+    else
+	zr.set( 2400, 8200 );
+
     zr.limitTo(SI().zRange(false));
-    float zfac = SI().showZ2UserFactor();
-    gatefld_->setValue(ZGate(zr.start*zfac, zr.stop*zfac));
+    zr.scale( (float)SI().zDomain().userFactor() );
+    gatefld_->setValue( zr );
     mAttachCB(gatefld_->valuechanged, uiMistieEstimateBySeismic::gatefldchangeCB);
 
     onlyzfld_ = new uiCheckBox(this, tr("Only estimate Z misties"));

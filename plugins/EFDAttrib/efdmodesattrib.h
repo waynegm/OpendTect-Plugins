@@ -1,6 +1,6 @@
 #pragma once
 /*
- *   EFDAttrib Plugin -  Empirical Fourier Spectral Decomposition
+ *   EFDAttrib Plugin -  Empirical Fourier Decomposition Modes
  *   Copyright (C) 2021  Wayne Mogg
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -20,9 +20,10 @@
 #include "efdattribmod.h"
 #include "attribprovider.h"
 
-/*!\brief Empirical Fourier Decomposition Time-Frequency Attribute
 
-	Time-Frequency decomposition using Empirical Fourier Decomposition
+/*!\brief Empirical Fourier Mode Decomposition
+
+	Mode decomposition using Empirical Fourier Decomposition
 
 */
 
@@ -31,13 +32,12 @@ class EFD;
 namespace Attrib
 {
 
-mExpClass(EFDAttrib) EFDSpectrumAttrib : public Provider
+mExpClass(EFDAttrib) EFDModesAttrib : public Provider
 {
 public:
     static void		initClass();
-			EFDSpectrumAttrib(Desc&);
-    static const char*	attribName()		{ return "EFDSpectrumAttrib"; }
-    static const char*	stepStr()		{ return "step"; }
+			EFDModesAttrib(Desc&);
+    static const char*	attribName()		{ return "EFDModesAttrib"; }
     static const char*	nrmodesStr()		{ return "nrmodes"; }
 
     void		getCompNames(BufferStringSet&) const;
@@ -45,14 +45,14 @@ public:
 
 protected:
 
-				~EFDSpectrumAttrib() {}
+				~EFDModesAttrib() {}
     static Provider*		createInstance(Desc&);
     static void			updateDesc(Desc&);
     static void			updateDefaults(Desc&);
 
     bool			allowParallelComputation() const { return false; }
 
-    const Interval<int>*	desZSampMargin(int,int) const { return &dessampgate_; }
+    const Interval<int>*	desZSampMargin(int,int) const	{ return &dessampgate_; }
 
     bool			getInputData(const BinID&,int zintv);
     bool			computeData(const DataHolder&,const BinID& relpos, int z0,int nrsamples,int threadid) const;
@@ -60,8 +60,9 @@ protected:
     bool			areAllOutputsEnabled() const;
 
     int				nrmodes_;
-    float			step_; // frequency spacing
+    int				outmode_;
     EFD*			efdobj_;
+
 
     const DataHolder*		indata_;
     int				indataidx_;

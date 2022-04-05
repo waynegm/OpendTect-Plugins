@@ -1,18 +1,17 @@
 # Rectangular Spatial Filter
 #
 # Applies a Lowpass, Highpass, Band Reject or Bandpass rectangular spatial (k-k) filter
-# by convolution 
-# Note setting a stepout of 0 will apply the filter in a single direction 
+# by convolution
+# Note setting a stepout of 0 will apply the filter in a single direction
 #
 import sys,os
 import numpy as np
-import scipy.special as ss
 #
 # Import the module with the I/O scaffolding of the External Attribute
 #
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 import extattrib as xa
-
+import extlib as xl
 #
 # The attribute parameters
 #
@@ -38,7 +37,7 @@ def doCompute():
 	ifreq = xa.params['Par_0']['Value']
 	xfreq = xa.params['Par_1']['Value']
 	type = xa.params['Select']['Selection']
-	kernelFunc = lpKernel if type==0 else hpKernel if type==1 else bpKernel if type==2 else brKernel
+	kernelFunc = xl.lowpass_kernel if type==0 else xl.highpass_kernel if type==1 else xl.bandpass_kernel if type==2 else xl.nandreject_kernel
 	ikernel = np.ones((nil,1))
 	xkernel = np.ones((nxl,1))
 	Ni = nil//2
@@ -53,7 +52,9 @@ def doCompute():
 			xkernel[1:2*Nx+2] = kernelFunc(Nx,xfreq)
 		else:
 			xkernel = kernelFunc(Nx,xfreq)
-	kernel = np.dot(ikernel, xkernel.T).reshape(nil,nxl,1)
+	ikernel = ikernel.reshape(nil,1)
+	xkernel = xkernel.reshape(1,nxl)
+	kernel = np.dot(ikernel, xkernel).reshape(nil,nxl,1)
 #
 #	This is the trace processing loop
 #
@@ -71,81 +72,6 @@ def doCompute():
 #
 		xa.Output = outdata
 		xa.doOutput()
-
-def lpKernel(N, freq):
-#
-# Lowpass filter 1D MAXFLAT kernel generator
-#
-# N is the filter half-size, must be odd
-# freq is the normalised cutoff frequency
-#
-# Returns the filter kernel of size (2N+1)
-#
-	num = 2*N + 1
-	result = np.zeros((num,1))
-	for n in range(N+1):
-		i = n+N
-		im = N-n
-		if (n==0):
-			result[i] = freq
-		else:
-			p = n%2
-			val = (ss.factorial2(N)**2 * np.pi**(p-1) * np.sin(n*np.pi*freq)) / ( 2**p * n * ss.factorial2(i) * ss.factorial2(im) )
-			result[i] = val
-			result[im] = val
-	return result/np.sum(result)
-
-def hpKernel(N, freq):
-#
-# Highpass 1D MAXFLAT filter kernel generator
-#
-# N is the filter half-size, must be odd
-# freq is the normalised cutoff frequency
-#
-# Returns the filter kernel of size (2N+1)
-#
-	result = lpKernel(N, freq)
-	for n in range(-N,N+1):
-		i = n+N
-		if (n==0):
-			result[i] = 1-result[i]
-		else:
-			result[i] = -result[i]
-	return result
-
-def brKernel(N, freq, halfwidth=0.1):
-#
-# Band Reject 1D MAXFLAT filter kernel generator
-#
-# N is the filter half-size, must be odd
-# freq is the normalised centre frequency of the reject band
-# halfwidth controls the aperture of the reject band to freq +/- halfwidth
-#
-# Returns the filter kernel of size (2N+1)
-#
-	kernel_lp = lpKernel(N, freq-halfwidth)
-	kernel_hp = hpKernel(N, freq+halfwidth)
-	result = kernel_lp + kernel_hp
-	return result
-
-def bpKernel(N, freq , halfwidth=0.1):
-#
-# Bandpass 1D MAXFLAT filter kernel generator
-#
-# N is the filter half-size, must be odd
-# freq is the normalised centre frequency of the pass band
-# halfwidth controls the aperture of the pass band to freq +/- halfwidth
-#
-# Returns the filter kernel of size (2N+1)
-#
-	result = brKernel(N, freq, halfwidth)
-	for n in range(-N,N+1):
-		i = n+N
-		if (n==0):
-			result[i] = 1-result[i]
-		else:
-			result[i] = -result[i]
-	return result
 #
 # Assign the compute function to the attribute
 #
@@ -154,5 +80,5 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+
 

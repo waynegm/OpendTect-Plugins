@@ -15,11 +15,16 @@
 #include "attribdesc.h"
 #include "attribdescset.h"
 #include "attribfactory.h"
+#include "flatposdata.h"
+#include "flatview.h"
 #include "position.h"
 #include "survinfo.h"
 #include "trckeyzsampling.h"
 #include "uiattrdesced.h"
 #include "uicombobox.h"
+#include "uiflatviewer.h"
+#include "uiflatviewmainwin.h"
+#include "uiflatviewstdcontrol.h"
 #include "uispinbox.h"
 #include "uitrcpositiondlg.h"
 
@@ -41,24 +46,64 @@ class uiTestPanel : public uiAttribPanel
 { mODTextTranslationClass(uiTestPanel)
 public:
 				uiTestPanel( uiParent* p, const char* procname,
-					    const char* packname, const char* panelname )
+					    const char* packname,
+					    const char* panelname,
+					    const char* axisnm, bool wva )
 				    : uiAttribPanel( p )
 				    , procname_(procname)
 				    , packname_(packname)
-				    , panelname_(panelname)		{}
+				    , panelname_(panelname)
+				    , axisnm_(axisnm)
+				    , wva_(wva)	{}
 
     BufferString		panelname_;
+
 protected:
-    BufferString		procname_, packname_;
+    BufferString		procname_, packname_, axisnm_;
+    bool			wva_;
     virtual const char*		getProcName()	{ return procname_; }
     virtual const char*		getPackName()	{ return packname_; }
     virtual const char*		getPanelName()	{ return panelname_; }
+    void			createAndDisplay2DViewer(FlatDataPack*);
 };
+
+inline void uiTestPanel::createAndDisplay2DViewer( FlatDataPack* fdpack )
+{
+    if ( !fdpack )
+	return;
+
+    if ( flatvwin_ )
+	flatvwin_->viewer().setPack( wva_, fdpack->id() );
+    else
+    {
+	flatvwin_ = new uiFlatViewMainWin( parent_,
+			uiFlatViewMainWin::Setup(toUiString(getPanelName())));
+	uiFlatViewer& vwr = flatvwin_->viewer();
+	vwr.setInitialSize( uiSize(400,600) );
+	FlatView::Appearance& app = vwr.appearance();
+	app.annot_.setAxesAnnot( true );
+	app.annot_.x1_.sampling_ = fdpack->posData().range(true);
+	app.annot_.x2_.sampling_ = fdpack->posData().range(false);
+	app.annot_.x1_.name_ = axisnm_;
+	if ( wva_ )
+	    app.annot_.x1_.annotinint_ = true;
+	app.setDarkBG( false );
+	app.setGeoDefaults( true );
+	app.ddpars_.show( wva_, true );
+	vwr.setPack( wva_, fdpack->id() );
+	flatvwin_->addControl( new uiFlatViewStdControl(vwr,
+		uiFlatViewStdControl::Setup(nullptr).isvertical(true)) );
+	flatvwin_->setDeleteOnClose( false );
+    }
+
+    flatvwin_->show();
+}
 
 template <class T> class uiAttribTestPanel : public CallBacker
 {
 public:
-    uiAttribTestPanel(T&, const char*, const char*, const char*);
+    uiAttribTestPanel(T&, const char*, const char*, const char*,
+		      const char* axisnm="Frequency", bool wva=false);
     ~uiAttribTestPanel();
 
     void				showPosDlg();
@@ -80,9 +125,12 @@ protected:
 
 
 template<class T>
-uiAttribTestPanel<T>::uiAttribTestPanel( T& uiattrib, const char* procname, const char* packname, const char* panelname )
+uiAttribTestPanel<T>::uiAttribTestPanel( T& uiattrib, const char* procname,
+					 const char* packname,
+					 const char* panelname,
+					 const char* axisnm, bool wva )
     : uiattrib_(uiattrib)
-    , testpanel_(new uiTestPanel(&uiattrib, procname, packname, panelname))
+    , testpanel_(new uiTestPanel(&uiattrib, procname, packname, panelname, axisnm, wva))
 {}
 
 template<class T>

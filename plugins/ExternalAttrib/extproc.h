@@ -19,7 +19,7 @@ ________________________________________________________________________
  Date:          December 2014
  ________________________________________________________________________
 
--*/ 
+-*/
 
 #include "bufstring.h"
 #include "externalattribmod.h"
@@ -33,11 +33,11 @@ mExpClass(ExternalAttrib) ExtProc {
 public:
     ExtProc( const char* exFile , const char* inFile );
     ~ExtProc();
-	
+
     BufferString	getFile() const;
     void		setFile( const char* exFile, const char* inFile );
-	
-    bool		isOK();
+
+    bool		isOK() const;
     void		setSeisInfo( int niln, int ncrl, float inlDist, float crlDist,
 				     float zFactor, float dipFactor );
     ProcInst*		getIdleInst( int nrsamples );
@@ -45,14 +45,14 @@ public:
     void		setInput( ProcInst* pi, int input, int trc, int idx, float val );
     float		getOutput( ProcInst* pi, int output, int idx );
     bool		compute( ProcInst* pi, int z0, int inl, int crl );
-	
+
     BufferStringSet	getInputNames() const;
     BufferStringSet	getOutputNames() const;
     bool		hasInput() const;
     bool		hasInputs() const;
     int			numInput() const;
     BufferString	inputName( int inum = 0 ) const;
-	
+
     bool		hasOutput() const;
     int			numOutput() const;
     BufferString	outputName( int onum = 0 ) const;
@@ -70,24 +70,24 @@ public:
     BinID		so_minimum();
     BinID		stepout() const;
     void		setStepOut(BinID s);
-    
+
     bool               	hasSelect() const;
     BufferString	selectName();
     BufferString     	selectOpt( int snum );
     int			numSelect();
     int                 selectValue();
     void                setSelection(int val);
-	
+
     bool		hasParam( int pnum ) const;
     BufferString	paramName( int pnum );
     float		paramValue( int pnum );
     void		setParam( int pnum, float val );
-	
+
     bool		hasHelp() const;
     BufferString	helpValue() const;
-	
+
     bool		doParallel();
-    
+
     bool		hasNewParams() const;
     BufferStringSet	paramKeys() const;
     BufferString	getParamType(const char*) const;
@@ -98,10 +98,12 @@ public:
     BufferStringSet	getParamStrLstValue(const char* key, const char* subkey="Value") const;
     BufferString	getParamsEncodedStr();
     bool		setParamsEncodedStr(const BufferString&);
-	
+
+    uiRetVal		errMsg() const;
+
 protected:
 	ExtProcImpl*	pD;
-}; 
+};
 
 
 #endif

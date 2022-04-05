@@ -42,7 +42,7 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon,
     if (has3Dhorizon) {
 	if (has2Dhorizon) {
 	    exp3D_ = new uiCheckBox(this, tr("Include 3D horizon"));
-	    if (lastfld!=nullptr)
+	    if (lastfld)
 		exp3D_->attach(alignedBelow, lastfld);
 	    exp3D_->setChecked(true);
 	    mAttachCB(exp3D_->activated, uiHorInputGrp::exp3DselCB);
@@ -203,13 +203,13 @@ void uiHorInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
 
     if (!hor3Did.isUdf()) {
         EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3Did);
-        if (obj==nullptr) {
+        if (!obj) {
             ErrMsg("uiHorInputGrp::getInputRange - loading 3D horizon failed");
             return;
         }
         obj->ref();
         mDynamicCastGet(EM::Horizon3D*,hor,obj);
-        if (hor==nullptr) {
+        if (!hor) {
             ErrMsg("uiHorInputGrp::getInputRange - casting 3D horizon failed");
             obj->unRef();
             return;
@@ -307,9 +307,9 @@ void uiHorInputGrp::hor3DselCB(CallBacker*)
 void uiHorInputGrp::initGrp(CallBacker*)
 {
     if (hor2Dfld_)
-        hor2DselCB(0);
+        hor2DselCB(nullptr);
     if (hor3Dfld_) {
-        hor3DselCB(0);
-        exp3DselCB(0);
+        hor3DselCB(nullptr);
+        exp3DselCB(nullptr);
     }
 }

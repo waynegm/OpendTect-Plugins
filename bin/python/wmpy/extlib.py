@@ -13,56 +13,151 @@
 import numpy as np
 import scipy.ndimage as ndi
 import scipy.signal as ss
+import scipy.special as ssp
 from numba import jit, double
 
 
 #
 #
 def getOutput(output, input, shape=None):
-    if shape is None:
-        shape = input.shape
-    if output is None:
-        output = np.zeros(shape, dtype=input.dtype.name)
-    elif type(output) in [type(type), type(np.zeros((4,)).dtype)]:
-        output = np.zeros(shape, dtype=output)
-    elif isinstance(output, string_types):
-        output = np.typeDict[output]
-        output = np.zeros(shape, dtype=output)
-    elif output.shape != shape:
-        raise RuntimeError("output shape not correct")
-    return output
+	if shape is None:
+		shape = input.shape
+	if output is None:
+		output = np.zeros(shape, dtype=input.dtype.name)
+	elif type(output) in [type(type), type(np.zeros((4,)).dtype)]:
+		output = np.zeros(shape, dtype=output)
+	elif isinstance(output, string_types):
+		output = np.typeDict[output]
+		output = np.zeros(shape, dtype=output)
+	elif output.shape != shape:
+		raise RuntimeError("output shape not correct")
+	return output
 
-# 
+def check_axis(axis, rank):
+	if axis<0:
+		axis += rank
+	if axis<0 or axis>=rank:
+		raise ValueError('invalid axis')
+	return axis
 #
-def hilbert_kernel(N, band=0.9):
+#
+def hilbert_kernel(N, band=0.95):
 	"""Generate a Hilbert Transform kernel.
-	
+
 	Calculate a 2*N+1 length complex kernel to compute a Hilbert Transform as
 	per:
-	Turner, 2009: An efficient analytic signal generator
-	
+		Reilly etal, 1994: Analytic signal generation - tips and tricks
+	Convolving a signal with the kernel will give a complex output which approximates the 
+	analytic signal. The real part of the ouput will be a bandpass filtered version of the
+	input and the imaginary part will be a bandpass filtered Hilbert transform of the 
+	input.
+
 	Args:
-		N: the half-length of the transform kernel.
-		band: optional, specifies the bandwidth of the transform
-			in normalised frequency where 1.0 is the nyquist. Default is 0.9.
+	N:	the half-length of the transform kernel.
+	band:	optional, specifies the bandwidth of the transform in normalised frequency 
+		where 1.0 is the nyquist. Default and recommended maximum value is 0.95.
+		Higher values do not fully attenuate negative frequencies.
 
 	Returns:
-		A 2*N+1 long complex array with the kernel.
+	    A 2*N+1 long complex array with the kernel.
 	"""
 	x = np.linspace(-N,N,2*N+1) * np.pi /2.0 * 1j
-	result = ss.firwin(2*N+1,band/2, window="nuttall") * np.exp(x) * 2
+	result = ss.firwin(2*N+1,band/2, window="hamming") * np.exp(x) * 2
 	return result
 
-# 
+#
+#
+def lowpass_kernel(N, freq=0.5):
+	"""Generate a Lowpass filter kernel.
+
+	Calculate a 2*N+1 length Hamming filter kernel
+
+	Args:
+	N:	the half-length of the filter kernel.
+	freq:	optional, cutoff frequency in normalised frequency
+		where 1.0 is the nyquist. Default is 0.5.
+
+	Returns:
+		A 2*N+1 long array with the kernel.
+	"""
+	return ss.firwin(2*N+1, freq, window="hamming")
+#
+#
+def highpass_kernel(N, freq=0.5):
+	"""Generate a Highpass filter kernel.
+
+	Calculate a 2*N+1 length Hamming filter kernel
+
+	Args:
+	N:	the half-length of the filter kernel.
+	freq:	optional, cutoff frequency in normalised frequency
+		where 1.0 is the nyquist. Default is 0.5.
+
+	Returns:
+		A 2*N+1 long array with the kernel.
+	"""
+	result = lowpass_kernel(N, freq)
+	for n in range(-N,N+1):
+		i = n+N
+		if (n==0):
+			result[i] = 1-result[i]
+		else:
+			result[i] = -result[i]
+	return result
+#
+#
+def bandreject_kernel(N, freq, halfwidth=0.1):
+	"""Generate a Bandreject filter kernel.
+
+	Calculate a 2*N+1 length Hamming filter kernel
+
+	Args:
+	N:	the half-length of the filter kernel.
+	freq:	centre frequency of the reject band in normalised frequency
+		where 1.0 is the nyquist.
+	halfwidth:	aperture of the reject band - freq +/- halfwidth - default=0.1
+
+	Returns:
+		A 2*N+1 long array with the kernel.
+	"""
+	kernel_lp = lowpass_kernel(N, freq-halfwidth)
+	kernel_hp = highpass_kernel(N, freq+halfwidth)
+	result = kernel_lp + kernel_hp
+	return result
+#
+#
+def bandpass_kernel(N, freq , halfwidth=0.1):
+	"""Generate a Bandreject filter kernel.
+
+	Calculate a 2*N+1 length Hamming filter kernel
+
+	Args:
+	N:	the half-length of the filter kernel.
+	freq:	centre frequency of the pass band in normalised frequency
+		where 1.0 is the nyquist.
+	halfwidth:	aperture of the pass band - freq +/- halfwidth - default=0.1
+
+	Returns:
+		A 2*N+1 long array with the kernel.
+	"""
+	result = bandreject_kernel(N, freq, halfwidth)
+	for n in range(-N,N+1):
+		i = n+N
+		if (n==0):
+			result[i] = 1-result[i]
+		else:
+			result[i] = -result[i]
+	return result
+#
 #
 def scharr3( input, axis=-1, output=None, mode="reflect", cval=0.0):
 	"""Full block first derivative along an axis using a 3 point Scharr filter.
-	
+
 	Applies a 3 point Scharr first derivative filter along an axis of the input
-	array as per: 
+	array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
-	
+
 	Args:
 		input: the array to be filtered.
 		axis: optional, specifies the array axis to calculate the
@@ -72,15 +167,15 @@ def scharr3( input, axis=-1, output=None, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'.
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		derivative filtered array with same shape as input. Note for each array
-		dimension indices 1:-1 will be free of boundary effects. 
+		dimension indices 1:-1 will be free of boundary effects.
 	"""
 	input = np.asarray(input)
-	axis = ndi._ni_support._check_axis(axis, input.ndim)
+	axis = check_axis(axis, input.ndim)
 	output = getOutput(output, input)
 	ndi.correlate1d(input, [-0.5, 0, 0.5], axis, output, mode, cval, 0)
 	axes = [ii for ii in range(input.ndim) if ii != axis]
@@ -91,13 +186,13 @@ def scharr3( input, axis=-1, output=None, mode="reflect", cval=0.0):
 #
 def _separableFilterFull( input, weights, output=None, mode="reflect", cval=0.0):
 	"""Apply separable filter to the input trace buffer, full block output.
-	
+
 	Applies the filter described by weights. The input is assumed to be a
 	NxMxNS (N & M>=3 and odd) block of traces. The function returns the filter
 	output only over the full NxM block. A certain number of the outer traces
 	of the output block, determined by the dimensions of the weights array
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		weights: array with filter weights for each dimension of input
@@ -106,12 +201,12 @@ def _separableFilterFull( input, weights, output=None, mode="reflect", cval=0.0)
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
 
 	Returns:
 		filtered array with same shape as input. Note that the outer traces
-		will be affected by boundary effects. 
+		will be affected by boundary effects.
 	"""
 	input = np.asarray(input)
 	output = getOutput(output, input)
@@ -124,11 +219,11 @@ def _separableFilterFull( input, weights, output=None, mode="reflect", cval=0.0)
 #
 def _separableFilterSingle( input, weights, output=None, mode="reflect", cval=0.0):
 	"""Apply separable filter to the input trace buffer, single trace output.
-	
+
 	Applies the filter described by weights. The input is assumed to be a
 	NxMxNS (N & M>=3 and odd) block of traces. The function returns the filter
 	output only at the centre trace of the NxM block.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		weights: array with filter weights for each dimension of input
@@ -137,7 +232,7 @@ def _separableFilterSingle( input, weights, output=None, mode="reflect", cval=0.
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
 
 	Returns:
@@ -170,9 +265,9 @@ def _separableFilterSingle( input, weights, output=None, mode="reflect", cval=0.
 #
 def scharr3_dx( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point first derivative along the 1st (x) axis of input.
-	
+
 	Applies a 3 point Scharr first derivative filter along the 1st (x) axis
-	of the input array as per: 
+	of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -181,7 +276,7 @@ def scharr3_dx( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -191,9 +286,9 @@ def scharr3_dx( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -212,9 +307,9 @@ def scharr3_dx( input, output=None, full=True, mode="reflect", cval=0.0):
 #
 def scharr3_dy( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point first derivative along the 2nd (y) axis of input.
-	
+
 	Applies a 3 point Scharr first derivative filter along the 2nd (y) axis
-	of the input array as per: 
+	of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -223,7 +318,7 @@ def scharr3_dy( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -233,9 +328,9 @@ def scharr3_dy( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -254,9 +349,9 @@ def scharr3_dy( input, output=None, full=True, mode="reflect", cval=0.0):
 #
 def scharr3_dz( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point first derivative along the last (z) axis of input.
-	
+
 	Applies a 3 point Scharr first derivative filter along the last (z) axis
-	of the input array as per: 
+	of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -265,7 +360,7 @@ def scharr3_dz( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -275,9 +370,9 @@ def scharr3_dz( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -296,9 +391,9 @@ def scharr3_dz( input, output=None, full=True, mode="reflect", cval=0.0):
 #
 def scharr3_dxx( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point second derivative along the 1st (x) axis of input.
-	
+
 	Applies a 3 point Scharr second derivative filter along the 1st (x) axis
-	of the input array as per: 
+	of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -307,7 +402,7 @@ def scharr3_dxx( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -317,9 +412,9 @@ def scharr3_dxx( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -338,9 +433,9 @@ def scharr3_dxx( input, output=None, full=True, mode="reflect", cval=0.0):
 #
 def scharr3_dyy( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point second derivative along the 2nd (y) axis of input.
-	
+
 	Applies a 3 point Scharr second derivative filter along the 2nd (y) axis
-	of the input array as per: 
+	of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -349,7 +444,7 @@ def scharr3_dyy( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -359,9 +454,9 @@ def scharr3_dyy( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -380,9 +475,9 @@ def scharr3_dyy( input, output=None, full=True, mode="reflect", cval=0.0):
 #
 def scharr3_dzz( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point second derivative along the last (z) axis of input.
-	
+
 	Applies a 3 point Scharr second derivative filter along the last (z) axis
-	of the input array as per: 
+	of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -391,7 +486,7 @@ def scharr3_dzz( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -401,9 +496,9 @@ def scharr3_dzz( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -422,9 +517,9 @@ def scharr3_dzz( input, output=None, full=True, mode="reflect", cval=0.0):
 #
 def scharr3_dxy( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point first derivative along the 1st and 2nd (x and y) axis of input.
-	
-	Applies a 3 point Scharr first derivative filter along the 1st and 2nd 
-	(x and y) axis of the input array as per: 
+
+	Applies a 3 point Scharr first derivative filter along the 1st and 2nd
+	(x and y) axis of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -433,7 +528,7 @@ def scharr3_dxy( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -443,9 +538,9 @@ def scharr3_dxy( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -464,9 +559,9 @@ def scharr3_dxy( input, output=None, full=True, mode="reflect", cval=0.0):
 #
 def scharr3_dxz( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point first derivative along the 1st and last (x and z) axis of input.
-	
-	Applies a 3 point Scharr first derivative filter along the 1st and last 
-	(x and z) axis of the input array as per: 
+
+	Applies a 3 point Scharr first derivative filter along the 1st and last
+	(x and z) axis of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -475,7 +570,7 @@ def scharr3_dxz( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -485,9 +580,9 @@ def scharr3_dxz( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -506,9 +601,9 @@ def scharr3_dxz( input, output=None, full=True, mode="reflect", cval=0.0):
 #
 def scharr3_dyz( input, output=None, full=True, mode="reflect", cval=0.0):
 	"""Scharr 3 point first derivative along the 2nd and last (y and z) axis of input.
-	
-	Applies a 3 point Scharr first derivative filter along the 2nd and last 
-	(y and z) axis of the input array as per: 
+
+	Applies a 3 point Scharr first derivative filter along the 2nd and last
+	(y and z) axis of the input array as per:
 	Scharr, 2005: Optimal derivative filter families for transparent motion
 	estimation.
 	The input is assumed to be a NxMxNS (N & M>=3 and odd) block of traces
@@ -517,7 +612,7 @@ def scharr3_dyz( input, output=None, full=True, mode="reflect", cval=0.0):
 	derivative is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Args:
 		input: the array to be filtered - NxM (N & M>=3 and odd)block of traces.
 		output: optional, a 1D array to store the derivative filter output.
@@ -527,9 +622,9 @@ def scharr3_dyz( input, output=None, full=True, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'. Only applies along the last axis of the input
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		for full==True: derivative filtered array the same shape as the input
 		for full==False: derivative filtered 1D array with same length as last
@@ -555,7 +650,7 @@ def scharr3_Hessian( input, full=True, mode="reflect", cval=0.0):
 	Hessian is calculated for all traces but a certain number of the outer
 	traces in the output, determined by the dimensions of the weights array,
 	will be contaminated by boundary effects.
-	
+
 	Returns:
 		for full=True: Hessian array the same shape as input
 		for full=False: Hessian the same length as last dimension of the input.
@@ -566,20 +661,20 @@ def scharr3_Hessian( input, full=True, mode="reflect", cval=0.0):
 	hxy = scharr3_dxy(input, None, full, mode, cval)
 	hxz = scharr3_dxz(input, None, full, mode, cval)
 	hyz = scharr3_dyz(input, None, full, mode, cval)
-	
+
 	return np.array([[ hxx, hxy, hxz ],
                      [ hxy, hyy, hyz ],
                      [ hxz, hyz, hzz]])
-	
+
 #
 #
 def kroon3( input, axis=-1, output=None, mode="reflect", cval=0.0):
 	"""Full block first derivative along an axis using a 3 point Kroon filter.
-	
+
 	Applies a 3 point Kroon first derivative filter along an axis of the input
-	array as per: 
+	array as per:
 	Kroon, 2009: Numerical optimization of kernel based image derivatives.
-	
+
 	Args:
 		input: the array to be filtered.
 		axis: optional, specifies the array axis to calculate the
@@ -589,15 +684,15 @@ def kroon3( input, axis=-1, output=None, mode="reflect", cval=0.0):
 		mode: {'reflect', 'constant', 'nearest', 'mirror', 'wrap'} optional,
 			specifies how the array boundaries are filtered. Default is
 			'reflect'.
-		cval: optional, specified value to pad input array if mode is 
+		cval: optional, specified value to pad input array if mode is
 			'constant'. Default is 0.0.
-			
+
 	Returns:
 		derivative filtered array with same shape as input. Note for each array
-		dimension indices 1:-1 will be free of boundary effects. 
+		dimension indices 1:-1 will be free of boundary effects.
 	"""
 	input = np.asarray(input)
-	axis = ndi._ni_support._check_axis(axis, input.ndim)
+	axis = check_axis(axis, input.ndim)
 	output = getOutput( output, input)
 	ndi.correlate1d(input, [-0.5, 0, 0.5], axis, output, mode, cval, 0)
 	axes = [ii for ii in range(input.ndim) if ii != axis]
@@ -618,7 +713,7 @@ def farid2_( input, axis=-1, output=None, mode="reflect", cval=0.0):
 	%(cval)s
 	"""
 	input = np.asarray(input)
-	axis = ndi._ni_support._check_axis(axis, input.ndim)
+	axis = check_axis(axis, input.ndim)
 	output = getOutput(output, input)
 	ndi.correlate1d(input, [0.232905, 0.002668, -0.471147, 0.002668, 0.232905], axis, output, mode, cval, 0)
 	axes = [ii for ii in range(input.ndim) if ii != axis]
@@ -639,7 +734,7 @@ def farid5( input, axis=-1, output=None, mode="reflect", cval=0.0):
 	%(cval)s
 	"""
 	input = np.asarray(input)
-	axis = ndi._ni_support._check_axis(axis, input.ndim)
+	axis = check_axis(axis, input.ndim)
 	output = getOutput(output, input)
 	ndi.correlate1d(input, [-0.109604, -0.276691,  0.000000, 0.276691, 0.109604], axis, output, mode, cval, 0)
 	axes = [ii for ii in range(input.ndim) if ii != axis]
@@ -688,7 +783,7 @@ def sconvolve(arr, filt):
 def vecFilter(indata, window, filtFunc, outdata ):
     nz = indata.shape[3]
     half_win = window//2
-    outdata.fill(0.0) 
+    outdata.fill(0.0)
     for z in range(half_win,nz-half_win):
         pts = indata[:,:,:,z-half_win:z+half_win+1].reshape(3,-1)
         outdata[:,z] = filtFunc(pts)
@@ -698,7 +793,7 @@ def vecFilter(indata, window, filtFunc, outdata ):
         outdata[:,z] = outdata[:,nz-half_win-1]
 
 #
-#	Calculate the mean vector of the contents of the pts array 
+#	Calculate the mean vector of the contents of the pts array
 def vecmean(pts):
 	n = pts.shape[-1]
 	dist = np.zeros((n))

@@ -26,19 +26,20 @@
 
 using namespace Eigen;
 
-EFD::EFD(int maxmodes, PadMode padmode, int tapersz)
+EFD::EFD(int maxmodes, PadMode padmode, bool deramp, int tapersz)
     : maxnrmodes_(maxmodes)
     , padmode_(padmode)
     , tapersz_(tapersz)
+    , deramp_(deramp)
 {
 }
 
 EFD::~EFD()
 {}
 
-bool EFD::validMode(int modenum) const
+bool EFD::isValidMode(int modenum) const
 {
-    return modenum>=0 && modenum<centralfreqs_.size();
+    return centralfreqs_.size()>0 && modenum>=0 && modenum<centralfreqs_.size();
 }
 
 void EFD::setInput(const ArrayXf& input)
@@ -64,44 +65,108 @@ void EFD::setEmpty()
     rankidx_.resize(0);
 }
 
-bool EFD::getMode(int modenum, ArrayXf& mode)
+ArrayXf EFD::getMode(int modenum)
 {
-    if (!centralfreqs_.size() || !validMode(modenum))
-	return false;
-
-    const Index fsz = inputfreq_.size();
-    const Index start = segbounds_(modenum)==0 ? segbounds_(modenum) : segbounds_(modenum)+1;
-    const Index stop = segbounds_(modenum+1);
-    VectorXcf modefreq = VectorXcf::Zero(inputfreq_.size());
-    modefreq(seq(start,stop)) = inputfreq_(seq(start,stop));
-    modefreq(seq(fsz-start,fsz-stop)) = inputfreq_(seq(fsz-start,fsz-stop));
-    VectorXf modevec(fsz);
-    fft_.inv(modevec, modefreq);
-    const Index ns = fsz/2;
-    const Index pivot = ns%2==0 ? ns/2 : (ns+1)/2;
-    mode.resize(ns);
-    mode = modevec(seqN(ns-pivot,ns)).array();
-    return true;
+    ArrayXf mode;
+    if (isValidMode(modenum)) {
+	auto modespec = computeModeSpectrum(modenum);
+	const int fsz = inputfreq_.size();
+	const int ns = outsize();
+	const int piv = pivot();
+	VectorXf modevec(fsz);
+	fft_.inv(modevec, modespec);
+	mode = modevec(seqN(ns-piv,ns)).array();
+    }
+    return mode;
 }
 
-bool EFD::getModeByRank(int ranknum, ArrayXf& mode)
+ArrayXcf EFD::getModeAnalyticSignal(int modenum)
 {
-    if (!centralfreqs_.size() || !validMode(ranknum))
+    ArrayXcf mode_as;
+    auto modespec = computeAnalyticSignalSpectrum(modenum);
+    if (modespec.size()>0) {
+	const int fsz = freqsize();
+	const int ns = outsize();
+	const int piv = pivot();
+	VectorXcf modevec(fsz);
+	fft_.inv(modevec, modespec);
+	mode_as = modevec(seqN(ns-piv,ns)).array();
+    }
+    return mode_as;
+}
+
+Array2Xf EFD::getModeHTInstFrequency(int modenum, float dt)
+{
+    auto mode_as = getModeAnalyticSignal(modenum);
+    Array2Xf mif = Array2Xf::Zero(2, mode_as.size());
+    if (mode_as.size()>0) {
+	mif.row(1) = abs(mode_as);
+	const int ns = mode_as.size()-2;
+	mif.row(0)(seqN(0,ns)) = arg(mode_as(seqN(1,ns))*conj(mode_as(seqN(0,ns))));
+	mif(0,ns+1) = arg(mode_as(ns+1)*conj(mode_as(ns+1)));
+	mif = (mif<0.f).select(mif+M_PI, mif)/(M_2PI*dt);
+    }
+    return mif;
+}
+
+Array2Xf EFD::getModeTKInstFrequency(int modenum, float dt)
+{
+    auto mode = getMode(modenum);
+    const int ns = mode.size();
+    Array2Xf mif = Array2Xf::Zero(2, ns);
+    if (ns>0) {
+	const int nsm2 = ns-2;
+	ArrayXf mode_tk = TKEO(mode);
+	ArrayXf yn = mode;
+	yn(seq(1,ns-1)) = yn(seq(1,ns-1)) - mode(seq(0,nsm2));
+	ArrayXf ynp1 = mode;
+	ynp1(seq(0,nsm2)) = mode(seq(1,ns-1)) - ynp1(seq(0,nsm2));
+	auto desa_arg = 1.0f - (TKEO(yn)+TKEO(ynp1))/(4.0f*mode_tk);
+
+	mif.row(1) = (mode_tk/(1.0f-desa_arg.square())).sqrt();
+	mif.row(0) =  desa_arg.acos()/(M_2PI*dt);
+    }
+    return mif;
+}
+
+ArrayXf EFD::getModeByRank(int ranknum)
+{
+    ArrayXf mode;
+    if (isValidMode(ranknum))
+	mode = getMode(rankidx_(ranknum));
+
+    return mode;
+}
+
+bool EFD::getRamp(float& rampst, float& rampend) const
+{
+    if (!deramp_)
 	return false;
 
-    return getMode(rankidx_(ranknum), mode);
+    rampst = rampst_;
+    rampend = rampend_;
+    return true;
 }
 
 void EFD::computeFreq(const ArrayXf& input)
 {
     int pinsz = padmode_==None ? input.size() : input.size()*2;
     VectorXf padded_input(pinsz);
+    ArrayXf ramp;
+    if (deramp_) {
+	rampst_ = input(0);
+	rampend_ = input(input.size()-1);
+	ramp = ArrayXf::LinSpaced(input.size(), rampst_, rampend_);
+    }
+
     if (padmode_==None)
-	padded_input << input;
+	padded_input << (deramp_ ?  input-ramp : input);
+    else if (padmode_==OneSided)
+	padded_input << (deramp_ ?  input-ramp : input), ArrayXf::Zero(input.size());
     else if (padmode_==Mirror)
-	EigenTools::mirrorPad(input, padded_input);
+	EigenTools::mirrorPad((deramp_ ?  input-ramp : input), padded_input);
     else if (padmode_==Symmetric)
-	EigenTools::symmetricPad(input, padded_input);
+	EigenTools::symmetricPad((deramp_ ?  input-ramp : input), padded_input);
 
     if (tapersz_>0)
 	EigenTools::cosTaper(tapersz_, padded_input);
@@ -148,3 +213,41 @@ void EFD::computeFreqSegments()
 	centralfreqs_(idx)= idxmax[idx]*freqstep;
 }
 
+// Compute spectrum of the mode
+VectorXcf EFD::computeModeSpectrum(int modenum)
+{
+    VectorXcf spec;
+    if (isValidMode(modenum)) {
+	const int fsz = inputfreq_.size();
+	const Index start = segbounds_(modenum)==0 ? segbounds_(modenum) : segbounds_(modenum)+1;
+	const Index stop = segbounds_(modenum+1);
+	spec = VectorXcf::Zero(fsz);
+	spec(seq(start,stop)) = inputfreq_(seq(start,stop));
+	spec(seq(fsz-1-stop,fsz-1-start)) = inputfreq_(seq(fsz-1-stop,fsz-1-start));
+    }
+    return spec;
+}
+
+// Compute spectrum of the mode's analytic signal
+VectorXcf EFD::computeAnalyticSignalSpectrum(int modenum)
+{
+    VectorXcf spec;
+    auto modespec = computeModeSpectrum(modenum);
+    if (modespec.size()>0) {
+	const int fsz = inputfreq_.size();
+	spec = VectorXcf::Zero(fsz);
+	spec(0) = modespec(0);
+	spec(seq(1,fsz/2-1)) = modespec(seq(1,fsz/2-1))*2.f;
+	spec(fsz/2) = modespec(fsz/2);
+    }
+    return spec;
+}
+
+ArrayXf EFD::TKEO(const ArrayXf& input)
+{
+    const int ns = input.size();
+    const int nsm2 = ns-2;
+    ArrayXf result = input.square();
+    result(seq(1,nsm2)) = result(seq(1,nsm2)) - input(seq(0,nsm2-1))*input(seq(2,nsm2+1));
+    return result;
+}
