@@ -71,6 +71,7 @@ uiExternalAttribInp::uiExternalAttribInp(uiParent* p)
 
 uiExternalAttribInp::~uiExternalAttribInp()
 {
+    detachAllNotifiers();
     delete extproc_;
 }
 
@@ -504,6 +505,17 @@ void uiExternalAttrib::exfileRefresh( CallBacker* )
 {
     BufferString iname(interpfilefld_->fileName());
     BufferString fname(exfilefld_->fileName());
+    if (iname.isEmpty()) {
+	uiMSG().message(tr("Please select an interpreter"));
+	uiinp_->clearUI();
+	return;
+    }
+    if (fname.isEmpty()) {
+	uiMSG().message(tr("Please select a script file"));
+	uiinp_->clearUI();
+	return;
+    }
+
     uiinp_->setExtProc(new ExtProc(fname.str(), iname.str()));
     makeUI();
 }
@@ -512,13 +524,22 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
 {
     BufferString iname(interpfilefld_->fileName());
     BufferString fname(exfilefld_->fileName());
-    if (!fname.isEmpty()) {
-	const auto* xp = uiinp_->getExtProc();
-	if (!xp || fname != xp->getFile() || iname != xp->getInterpStr())
-	    exfileRefresh(nullptr);
-	else
-	    makeUI();
+    if (iname.isEmpty()) {
+	uiMSG().message(tr("Please select an interpreter"));
+	uiinp_->clearUI();
+	return;
     }
+    if (fname.isEmpty()) {
+	uiMSG().message(tr("Please select a script file"));
+	uiinp_->clearUI();
+	return;
+    }
+
+    const auto* xp = uiinp_->getExtProc();
+    if (!xp || fname != xp->getFile() || iname != xp->getInterpStr())
+	exfileRefresh(nullptr);
+    else
+	makeUI();
 }
 
 void uiExternalAttrib::setExFileName( const char* fname )
