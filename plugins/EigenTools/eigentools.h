@@ -19,6 +19,7 @@
  */
 
 #include "Eigen/Core"
+#include "commondefs.h"
 
 namespace EigenTools{
 

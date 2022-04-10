@@ -21,7 +21,7 @@
 #include "Eigen/Core"
 #include <unsupported/Eigen/FFT>
 
-class EFD
+mExpClass(EigenTools) EFD
 {
 public:
     enum PadMode { None, OneSided, Mirror, Symmetric };
