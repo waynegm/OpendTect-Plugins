@@ -20,6 +20,7 @@
 #include "eigentoolsmod.h"
 #include "Eigen/Core"
 #include <unsupported/Eigen/FFT>
+#include "commondefs.h"
 
 mExpClass(EigenTools) EFD
 {
