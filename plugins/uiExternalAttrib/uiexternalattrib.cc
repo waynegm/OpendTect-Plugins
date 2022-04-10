@@ -74,11 +74,16 @@ uiExternalAttribInp::~uiExternalAttribInp()
     delete extproc_;
 }
 
-void uiExternalAttribInp::makeUI(const Attrib::DescSet* ads, bool is2d)
+void uiExternalAttribInp::clearUI()
 {
     detachAllNotifiers();
     clearTable();
     setNrRows(0);
+}
+
+void uiExternalAttribInp::makeUI(const Attrib::DescSet* ads, bool is2d)
+{
+    clearUI();
     makeInputUI(ads, is2d);
     makeOutputUI();
     makeStepoutUI(is2d);
@@ -428,7 +433,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     mAttachCB(interpfilefld_->valuechanged, uiExternalAttrib::exfileChanged);
 
     CallBack cb1 = mCB(this,uiExternalAttrib,updateinterpCB);
-    refinterp_ = new uiToolButton( this, "refresh", uiStrings::sReset(), cb1 );
+    refinterp_ = new uiToolButton( this, "refresh", tr("Reset default interpreter"), cb1 );
     refinterp_->attach (rightTo, interpfilefld_);
     refinterp_->display(true);
 
@@ -436,9 +441,14 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     mAttachCB(exfilefld_->valuechanged, uiExternalAttrib::exfileChanged);
     exfilefld_->attach(alignedBelow, interpfilefld_);
 
-    CallBack cb2 = mCB(this,uiExternalAttrib,doHelp);
-    help_ = new uiToolButton( this, "contexthelp", uiStrings::sHelp(), cb2 );
-    help_->attach (rightTo, exfilefld_);
+    CallBack cb2 = mCB(this,uiExternalAttrib,exfileRefresh);
+    auto* exfileref = new uiToolButton( this, "refresh", tr("Force script reload"), cb2 );
+    exfileref->attach (rightTo, exfilefld_);
+    exfileref->display(true);
+
+    CallBack cb3 = mCB(this,uiExternalAttrib,doHelp);
+    help_ = new uiToolButton( this, "contexthelp", uiStrings::sHelp(), cb3 );
+    help_->attach (rightTo, exfileref);
     help_->display(false);
 
     makeUI();
@@ -462,8 +472,8 @@ void uiExternalAttrib::updateinterpCB(CallBacker*)
     BufferString newinterpfile = uiWGMHelp::GetPythonInterpPath().fullPath();
     if (newinterpfile!=interpfilefld_->fileName()) {
 	interpfilefld_->setFileName(newinterpfile);
+	exfileChanged(nullptr);
     }
-    exfileChanged(nullptr);
 }
 
 void uiExternalAttrib::makeUI()
@@ -472,18 +482,30 @@ void uiExternalAttrib::makeUI()
 	uiinp_ = new uiExternalAttribInp(this);
 	uiinp_->attach(alignedBelow, exfilefld_);
     }
-
-    if ( !uiinp_->getExtProc() )
+    const auto* extproc = uiinp_->getExtProc();
+    if ( !extproc )
 	return;
+    if (extproc->isOK()) {
+	uiinp_->makeUI(ads_, is2D());
 
-    uiinp_->makeUI(ads_, is2D());
+	uiinp_->selectRow(0);
+	if (uiinp_->getExtProc()->hasHelp())
+	    help_->display(true);
+	else
+	    help_->display(false);
+    } else {
+	uiMSG().errorWithDetails( extproc->errMsg(),
+				 tr("Error encountered running script file"));
+	uiinp_->clearUI();
+    }
+}
 
-    uiinp_->selectRow(0);
-    if (uiinp_->getExtProc()->hasHelp())
-	help_->display(true);
-    else
-	help_->display(false);
-
+void uiExternalAttrib::exfileRefresh( CallBacker* )
+{
+    BufferString iname(interpfilefld_->fileName());
+    BufferString fname(exfilefld_->fileName());
+    uiinp_->setExtProc(new ExtProc(fname.str(), iname.str()));
+    makeUI();
 }
 
 void uiExternalAttrib::exfileChanged( CallBacker* )
@@ -491,12 +513,11 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
     BufferString iname(interpfilefld_->fileName());
     BufferString fname(exfilefld_->fileName());
     if (!fname.isEmpty()) {
-	    uiinp_->setExtProc(new ExtProc(fname.str(), iname.str()));
-	if (uiinp_->getExtProc()->isOK())
-	    makeUI();
+	const auto* xp = uiinp_->getExtProc();
+	if (!xp || fname != xp->getFile() || iname != xp->getInterpStr())
+	    exfileRefresh(nullptr);
 	else
-	    uiMSG().errorWithDetails( uiinp_->getExtProc()->errMsg(),
-				 tr("Error encountered running script file"));
+	    makeUI();
     }
 }
 

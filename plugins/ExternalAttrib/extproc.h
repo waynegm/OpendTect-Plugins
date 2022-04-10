@@ -35,6 +35,7 @@ public:
     ~ExtProc();
 
     BufferString	getFile() const;
+    BufferString	getInterpStr() const;
     void		setFile( const char* exFile, const char* inFile );
 
     bool		isOK() const;

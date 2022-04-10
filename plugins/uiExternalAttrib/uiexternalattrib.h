@@ -45,6 +45,7 @@ public:
     uiExternalAttribInp(uiParent*);
     ~uiExternalAttribInp();
 
+    void	clearUI();
     void	makeUI(const Attrib::DescSet*, bool is2d);
     void	makeInputUI(const Attrib::DescSet*, bool is2d);
     void	makeOutputUI();
@@ -73,7 +74,7 @@ protected:
     bool	getParameters(Attrib::Desc&, ChangeTracker&);
     bool	setOutput(const Attrib::Desc&);
     void	addField(const char*, uiGenInput*);
-    
+
     bool	setNewParams(const BufferString&);
     BufferString	getNewParams(Attrib::Desc&, ChangeTracker&);
 };
@@ -84,7 +85,7 @@ public:
 
     uiExternalAttrib(uiParent*,bool);
     ~uiExternalAttrib();
-    
+
 protected:
 
     uiFileInput*		exfilefld_;
@@ -92,9 +93,10 @@ protected:
     uiExternalAttribInp*	uiinp_;
     uiToolButton*		help_;
     uiToolButton*		refinterp_;
-	
+
     void		makeUI();
     void		exfileChanged(CallBacker*);
+    void		exfileRefresh(CallBacker*);
     void		setExFileName( const char* );
     BufferString	getExFileName();
     bool		setParameters(const Attrib::Desc&);
@@ -107,7 +109,7 @@ protected:
     void		doHelp( CallBacker* cb );
     void		updateinterpCB( CallBacker* );
     void		initGrp(CallBacker*);
-	
+
     mDeclReqAttribUIFns
 };
 

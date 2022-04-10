@@ -70,6 +70,7 @@ public:
     bool		isok_;
     SeisInfo		seisinfo_;
     BufferString 	exfile_;
+    BufferString	infile_raw_;
     BufferString	infile_;
     json::Value		jsonpar_;
     BufferStringSet	newparamkeys_;
@@ -98,6 +99,7 @@ void ExtProcImpl::setFile(const char* fname, const char* iname)
     exfile_ = fname;
     uirv_.setEmpty();
     if (File::isFile(exfile_)) {
+	infile_raw_ = iname;
 	infile_ = BufferString(iname).trimBlanks();
 	if (infile_.startsWith("%") && infile_.endsWith("%")) {
 	    BufferString tmp = infile_.unEmbed('%','%');
@@ -691,6 +693,11 @@ bool ExtProc::doParallel()
 BufferString ExtProc::getFile() const
 {
     return pD->exfile_;
+}
+
+BufferString ExtProc::getInterpStr() const
+{
+    return pD->infile_raw_;
 }
 
 void ExtProc::setFile( const char* fname, const char* iname)
