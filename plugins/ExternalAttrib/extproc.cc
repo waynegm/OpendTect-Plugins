@@ -80,7 +80,7 @@ public:
 };
 
 ExtProcImpl::ExtProcImpl(const char* fname, const char* iname)
-:  idleinsts_(),isok_(true)
+:  idleinsts_(),isok_(false)
 {
     setFile(fname, iname);
 }
@@ -98,6 +98,7 @@ void ExtProcImpl::setFile(const char* fname, const char* iname)
 {
     exfile_ = fname;
     uirv_.setEmpty();
+    isok_ = false;
     if (File::isFile(exfile_)) {
 	infile_raw_ = iname;
 	infile_ = BufferString(iname).trimBlanks();

@@ -513,6 +513,7 @@ void uiExternalAttrib::exfileRefresh( CallBacker* )
     if (fname.isEmpty()) {
 	uiMSG().message(tr("Please select a script file"));
 	uiinp_->clearUI();
+	uiinp_->setExtProc( nullptr );
 	return;
     }
 
@@ -532,6 +533,7 @@ void uiExternalAttrib::exfileChanged( CallBacker* )
     if (fname.isEmpty()) {
 	uiMSG().message(tr("Please select a script file"));
 	uiinp_->clearUI();
+	uiinp_->setExtProc( nullptr );
 	return;
     }
 
@@ -576,7 +578,8 @@ bool uiExternalAttrib::setParameters( const Attrib::Desc& desc )
 	exfilefld_->setFileName(BufferString::empty());
 
     exfileChanged(nullptr);
-    return uiinp_->setParameters(desc);
+    BufferString exfilenm = exfilefld_->fileName();
+    return exfilenm.isEmpty() ? false : uiinp_->setParameters(desc);
 }
 
 bool uiExternalAttrib::setInput( const Attrib::Desc& desc )
