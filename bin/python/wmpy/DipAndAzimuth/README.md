@@ -1,5 +1,6 @@
 # Dip and Azimuth External Attribute Scripts
-This a collection of [External Attribute](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/) scripts for estimating orientation, ie dip or dip azimuth.
+This a collection of [External Attribute](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/) scripts for estimating
+orientation, ie dip or dip azimuth.
 
 | PLUGIN | DESCRIPTION |
 |--------|-------------|
@@ -25,4 +26,4 @@ Some scripts may offer additional outputs such as a measure of event coherency o
 
 All of the scripts require the numba Python package.
 
-For further details please see the [documentation](http://waynegm.github.io/OpendTect-Plugin-Docs/External_Attributes/DipAndAzimuth).
+For further details please see the [documentation](http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/).

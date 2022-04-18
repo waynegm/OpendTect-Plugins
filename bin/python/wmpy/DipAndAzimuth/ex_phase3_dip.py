@@ -22,7 +22,7 @@ xa.params = {
 	'Par_0' : {'Name': 'Band', 'Value': 0.9},
 	'StepOut' : {'Value': [1,1], 'Hidden': True},
 	'Parallel': True,
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/DipandAzimuth.html#orientation-from-the-3d-complex-trace-phase'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-from-the-3d-complex-trace-phase'
 }
 #
 # Define the compute function
@@ -53,10 +53,10 @@ def doCompute():
 		shx = xl.kroon3( si, axis=0 )[hxs,hys,:]
 		shy = xl.kroon3( si, axis=1 )[hxs,hys,:]
 		shz = xl.kroon3( si, axis=2 )[hxs,hys,:]
-		
-		px = sr[hxs,hys,:] * shx - si[hxs,hys,:] * sx 
-		py = sr[hxs,hys,:] * shy - si[hxs,hys,:] * sy 
-		pz = sr[hxs,hys,:] * shz - si[hxs,hys,:] * sz 
+
+		px = sr[hxs,hys,:] * shx - si[hxs,hys,:] * sx
+		py = sr[hxs,hys,:] * shy - si[hxs,hys,:] * sy
+		pz = sr[hxs,hys,:] * shz - si[hxs,hys,:] * sz
 #
 #	Calculate dips and output
 		xa.Output['Crl_dip'] = -py/pz*crlFactor
@@ -65,7 +65,7 @@ def doCompute():
 		xa.Output['Dip Azimuth'] = np.degrees(np.arctan2(xa.Output['Inl_dip'],xa.Output['Crl_dip']))
 
 		xa.doOutput()
-	
+
 
 #
 # Assign the compute function to the attribute
@@ -75,4 +75,4 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+

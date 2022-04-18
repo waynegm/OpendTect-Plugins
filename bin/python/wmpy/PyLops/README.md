@@ -1,5 +1,5 @@
 # PyLops External Attribute Scripts
-This a collection of [External Attribute](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/) scripts that
+This a collection of [External Attribute](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/) scripts that
 use the [PyLops](https://pylops.readthedocs.io/en/latest/index.html) linear operator library.
 
 | PLUGIN | DESCRIPTION |

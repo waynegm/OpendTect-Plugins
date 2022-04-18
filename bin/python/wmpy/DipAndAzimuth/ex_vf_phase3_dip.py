@@ -26,7 +26,7 @@ xa.params = {
 	'Par_0' : {'Name': 'Vector Filter ZStepOut', 'Value': 1},
 	'Par_1' : {'Name': 'Band', 'Value': 0.9},
 	'Select': {'Name': 'Filter', 'Values': ['Mean Dip', 'Vector L1 Median Dip', 'Vector L2 Median Dip'], 'Selection': 0},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/DipandAzimuth.html#orientation-from-vector-filtered-3d-complex-trace-phase'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-from-vector-filtered-3d-complex-trace-phase'
 }
 #
 # Define the compute function

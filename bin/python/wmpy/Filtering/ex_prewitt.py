@@ -11,7 +11,7 @@ xa.params = {
 	'ZSampMargin' : {'Value': [-1,1], 'Hidden': True},
 	'StepOut' : {'Value': [1,1], 'Hidden': True},
 	'Parallel' : False,
-	'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/'
+	'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/'
 }
 
 def doCompute():
@@ -24,12 +24,12 @@ def doCompute():
 		xa.Output['In-line gradient'] 		= prewitt(indata, axis=0)[inlpos,crlpos,:]
 		xa.Output['Cross-line gradient'] 	= prewitt(indata, axis=1)[inlpos,crlpos,:]
 		xa.Output['Z gradient'] 			= prewitt(indata, axis=2)[inlpos,crlpos,:]
-		xa.Output['Average Gradient']		= 	(	xa.Output['In-line gradient'] 
+		xa.Output['Average Gradient']		= 	(	xa.Output['In-line gradient']
 												+	xa.Output['Cross-line gradient']
 												+ xa.Output['Z gradient'] )/3
 		xa.doOutput()
 
 xa.doCompute = doCompute
 xa.run(sys.argv[1:])
-  
+
 

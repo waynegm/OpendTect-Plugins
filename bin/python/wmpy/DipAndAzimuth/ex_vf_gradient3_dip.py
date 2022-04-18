@@ -21,7 +21,7 @@ xa.params = {
 	'ZSampMargin' : {'Value':[-2,2], 'Minimum':[-2,2], 'Symmetric': True},
 	'StepOut' : {'Value': [2,2], 'Minimum': [2,2]},
 	'Select': {'Name': 'Filter', 'Values': ['Mean Dip', 'Vector L1 Median Dip', 'Vector L2 Median Dip', 'Vector X3 Median'], 'Selection': 0},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/DipandAzimuth.html#orientation-from-vector-filtered-gradients'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-from-vector-filtered-gradients'
 }
 #
 # Define the compute function

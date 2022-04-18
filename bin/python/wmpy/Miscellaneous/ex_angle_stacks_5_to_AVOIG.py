@@ -28,7 +28,7 @@ xa.params = {
 	'Par_2': {'Name': 'Far Angle', 'Value': 27},
 	'Par_3': {'Name': 'ExtraFar Angle', 'Value': 37},
 	'Par_4': {'Name': 'UltraFar Angle', 'Value': 49},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/AVO_IG.html'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/avo_ig/'
 }
 #
 # Define the compute function
@@ -51,7 +51,7 @@ def doCompute():
 		ufar = xa.Input['UltraFar'][0,0,:]
 		refl = np.array([near,mid,far,xfar,ufar])
 		ns = near.shape[0]
-    
+
 		G=np.zeros(ns)
 		I=np.zeros(ns)
 		Q=np.zeros(ns)

@@ -18,7 +18,7 @@ xa.params = {
 	'Output': ['Crl_dip', 'Inl_dip', 'True Dip', 'Dip Azimuth', 'Coherency'],
 	'ZSampMargin' : {'Value':[-3,3], 'Minimum': [-3,3], 'Symmetric': True},
 	'StepOut' : {'Value': [3,3], 'Minimum':[3,3], 'Symmetric': True},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/DipandAzimuth.html#orientation-by-the-gradient-structure-tensor'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-by-the-gradient-structure-tensor'
 }
 #
 # Define the compute function
@@ -71,10 +71,10 @@ def doCompute():
 		xa.Output['Inl_dip'] = -evecs[:,0]/evecs[:,2]*inlFactor
 		xa.Output['True Dip'] = np.sqrt(xa.Output['Crl_dip']*xa.Output['Crl_dip']+xa.Output['Inl_dip']*xa.Output['Inl_dip'])
 		xa.Output['Dip Azimuth'] = np.degrees(np.arctan2(xa.Output['Inl_dip'],xa.Output['Crl_dip']))
-		coh = (e1-e2)/(e1+e2) 
+		coh = (e1-e2)/(e1+e2)
 		xa.Output['Coherency'] = coh * coh
 		xa.doOutput()
-	
+
 #
 # Assign the compute function to the attribute
 #
@@ -83,4 +83,4 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+

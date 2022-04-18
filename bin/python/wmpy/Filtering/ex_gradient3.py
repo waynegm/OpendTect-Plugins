@@ -1,4 +1,4 @@
-# Compute Gradients 
+# Compute Gradients
 #
 # Prewitt External Attribute
 #
@@ -15,7 +15,7 @@ xa.params = {
     'StepOut' : {'Value': [1,1], 'Hidden': True},
     'Select': {'Name': 'Operator', 'Values': ['Scharr','Kroon'], 'Selection': 0},
     'Parallel' : False,
-    'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/'
+    'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/'
 }
 
 def doCompute():
@@ -34,13 +34,13 @@ def doCompute():
             xa.Output['In-line gradient']       = xl.kroon3(indata, axis=0)[inlpos,crlpos,:]
             xa.Output['Cross-line gradient']    = xl.kroon3(indata, axis=1)[inlpos,crlpos,:]
             xa.Output['Z gradient']             = xl.kroon3(indata, axis=-1)[inlpos,crlpos,:]
-            
-        xa.Output['Average Gradient']   =   (   xa.Output['In-line gradient'] 
+
+        xa.Output['Average Gradient']   =   (   xa.Output['In-line gradient']
                                             +   xa.Output['Cross-line gradient']
                                             +   xa.Output['Z gradient'] )/3
         xa.doOutput()
 
 xa.doCompute = doCompute
 xa.run(sys.argv[1:])
-  
+
 

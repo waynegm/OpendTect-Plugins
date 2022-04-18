@@ -16,7 +16,7 @@ import extattrib as xa
 xa.params = {
 	'Inputs': ['Crl_dip', 'Inl_dip'],
 	'Output': ['True Dip', 'Dip Azimuth'],
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/DipandAzimuth.html'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/'
 }
 #
 # Define the compute function
@@ -40,4 +40,4 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+

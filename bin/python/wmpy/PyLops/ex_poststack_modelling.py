@@ -19,7 +19,7 @@ xa.params = {
   'Inputs': ['Acoustic Impedance'],
   'Wavelet' : {'Type': 'File', 'Value': 'Seismics/*.wvlt'},
   'Parallel' : False,
-  'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/PyLops.html'
+  'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/pylops/'
 }
 #
 # Define the compute function
@@ -49,7 +49,7 @@ def doCompute():
 #
     result = np.zeros_like(logAI)
 #
-#     Replace any leading and trailing 0 values in the input 
+#     Replace any leading and trailing 0 values in the input
 #
     logAI[0:nzAI[0]] = logAI[nzAI[0]]
     logAI[nzAI[-1]:] = logAI[nzAI[-1]]
@@ -79,5 +79,5 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+
 

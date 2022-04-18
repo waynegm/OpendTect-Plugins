@@ -1,5 +1,5 @@
 # External Attribute Scripts to Create Test Data
-This a collection of [External Attribute](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/) scripts create
+This a collection of [External Attribute](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/) scripts create
 artificial data used to test other attributes in the wmPlugins.
 
 | PLUGIN | DESCRIPTION |

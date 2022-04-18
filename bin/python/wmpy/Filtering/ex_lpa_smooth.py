@@ -1,6 +1,6 @@
 # Local Polynomial Approximation Smoother using Numba JIT Acceleration
 #
-# Smooths the data by fitting a 2nd order polynomial to a small window around 
+# Smooths the data by fitting a 2nd order polynomial to a small window around
 # each data sample using gaussian weighted least squares. This implementation uses the Numba JIT to
 # accelerate the convolution.
 #
@@ -20,7 +20,7 @@ xa.params = {
 	'ZSampMargin' : {'Value':[-1,1], 'Symmetric': True},
 	'StepOut' : {'Value': [1,1]},
 	'Par_0': {'Name': 'Weight Factor', 'Value': 0.2},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/LPA_Smooth.html'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/lpasmooth/'
 }
 #
 # Define the compute function
@@ -32,7 +32,7 @@ def doCompute():
 		xa.doInput()
 		xa.Output = xl.sconvolve(xa.Input['Input'], kernel)
 		xa.doOutput()
-	
+
 
 #
 # Find the LPA solution for a 2nd order polynomial in 3D
@@ -62,4 +62,4 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+

@@ -19,7 +19,6 @@ xa.params = {
 	'Inputs': ['Intercept'],
 	'Angle (deg)' : {'Type': 'Number', 'Value': 30},
 	'Parallel' : False,
-	'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/'
 }
 #
 # Define the compute function

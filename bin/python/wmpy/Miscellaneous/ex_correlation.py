@@ -1,5 +1,5 @@
 #
-# Local cross-correlation to measure relative time delay between two inputs 
+# Local cross-correlation to measure relative time delay between two inputs
 #
 # Copyright (C) 2016 Wayne Mogg All rights reserved.
 #
@@ -27,7 +27,7 @@ xa.params = {
 	'Output': ['Shift', 'Quality'],
 	'ZSampMargin' : {'Value':[-10,10], 'Symmetric': True},
 	'Par_0': {'Name': 'Max Lag (samples)', 'Value': 5},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/Z_Delay_Est.html'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/zdelayest/'
 }
 #
 # Define the compute function
@@ -97,4 +97,4 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+

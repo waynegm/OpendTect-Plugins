@@ -1,5 +1,6 @@
 # Filtering External Attribute Scripts
-This a collection of [External Attribute](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/) scripts for filtering seismic data and attributes.
+This a collection of [External Attribute](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/) scripts for filtering seismic
+data and attributes.
 
 | PLUGIN | DESCRIPTION |
 |--------|-------------|

@@ -22,7 +22,7 @@ xa.params = {
   'Wavelet' : {'Type': 'File', 'Value': 'Seismics/*.wvlt'},
   'Regularization (%)'  : {'Type': 'Number', 'Value': 1},
   'Parallel' : False,
-  'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/PyLops.html'
+  'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/pylops/'
 }
 #
 # Define the compute function
@@ -78,5 +78,5 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+
 

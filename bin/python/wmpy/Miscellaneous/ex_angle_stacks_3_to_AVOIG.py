@@ -26,7 +26,7 @@ xa.params = {
 	'Par_0': {'Name': 'Near Angle', 'Value': 6},
 	'Par_1': {'Name': 'Mid Angle', 'Value': 17},
 	'Par_2': {'Name': 'Far Angle', 'Value': 27},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/AVO_IG.html'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/avo_ig/'
 }
 #
 # Define the compute function
@@ -45,7 +45,7 @@ def doCompute():
 		far = xa.Input['Far'][0,0,:]
 		refl = np.array([near,mid,far])
 		ns = near.shape[0]
-    
+
 		G=np.zeros(ns)
 		I=np.zeros(ns)
 		Q=np.zeros(ns)

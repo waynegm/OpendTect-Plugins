@@ -1,6 +1,6 @@
 # Create a pre-stack angle volume using the pylops.avo.avo.AVOLinearModelling operator
 #
-# Input: Log cubes with the compressional sonic (DT in us/m), shear sonic (DTS in us/m) 
+# Input: Log cubes with the compressional sonic (DT in us/m), shear sonic (DTS in us/m)
 #        and density (RHOB in g/cc) data to be modelled
 # Output: The reflectivity model at the specified angle filtered by the selected wavelet
 #
@@ -22,7 +22,7 @@ xa.params = {
   'Angle (deg)' : {'Type': 'Number', 'Value': 6},
   'Method' : {'Type': 'Select', 'Options': ['akirich', 'fatti'], 'Value': 'akirich'},
   'Parallel' : False,
-  'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/PyLops.html'
+  'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/pylops/'
 }
 #
 # Define the compute function
@@ -63,7 +63,7 @@ def doCompute():
 #
     if len(nzdt)>0 and len(nzdts)>0 and len(nzrhob)>0:
 #
-#     For each input replace any leading and trailing 0 values before computing the modeling input 
+#     For each input replace any leading and trailing 0 values before computing the modeling input
 #
       DT[0:nzdt[0]] = DT[nzdt[0]]
       DT[nzdt[-1]:] = DT[nzdt[-1]]
@@ -104,5 +104,5 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+
 

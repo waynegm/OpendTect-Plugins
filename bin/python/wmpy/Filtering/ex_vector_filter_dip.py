@@ -21,7 +21,7 @@ xa.params = {
 	'ZSampMargin' : {'Value':[-3,3], 'Symmetric': True},
 	'StepOut' : {'Value': [3,3], 'Symmetric': True},
 	'Select': {'Name': 'Filter', 'Values': ['Mean Dip', 'Vector L1 Median Dip', 'Vector L2 Median Dip'], 'Selection': 0},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/Vector_Filters.html'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/vectorfilter/'
 }
 #
 # Define the compute function

@@ -27,7 +27,7 @@ xa.params = {
 	'Inputs': ['Input'],
 	'ZSampMargin' : {'Value':[-20,20], 'Hidden': True},
 	'Parallel' : False,
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/ZC_Block.html'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/zcblock/'
 }
 #
 # Define the compute function

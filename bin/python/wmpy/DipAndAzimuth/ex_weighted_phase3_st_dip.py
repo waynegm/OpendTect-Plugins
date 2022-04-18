@@ -23,7 +23,7 @@ xa.params = {
 	'StepOut' : {'Value': [2,2], 'Minimum': [2,2], 'Symmetric': True},
 	'Par_0' : {'Name': 'Tensor ZStepOut', 'Value': 1},
 	'Par_1' : {'Name': 'Band', 'Value': 0.9},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/DipandAzimuth.html#orientation-using-the-envelope-weighted-3d-complex-trace-phase-structure-tensor'
+	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-using-the-envelope-weighted-3d-complex-trace-phase-structure-tensor'
 }
 #
 # Define the compute function
@@ -59,7 +59,7 @@ def doCompute():
 		shx = xl.kroon3( si, axis=0 )
 		shy = xl.kroon3( si, axis=1 )
 		shz = xl.kroon3( si, axis=2 )
-		
+
 		px = sr[1:xs-1,1:ys-1,:] * shx[1:xs-1,1:ys-1,:] - si[1:xs-1,1:ys-1,:] * sx[1:xs-1,1:ys-1,:]
 		py = sr[1:xs-1,1:ys-1,:] * shy[1:xs-1,1:ys-1,:] - si[1:xs-1,1:ys-1,:] * sy[1:xs-1,1:ys-1,:]
 		pz = sr[1:xs-1,1:ys-1,:] * shz[1:xs-1,1:ys-1,:] - si[1:xs-1,1:ys-1,:] * sz[1:xs-1,1:ys-1,:]
@@ -91,7 +91,7 @@ def doCompute():
 		evec = evecs[np.arange(0,T.shape[0],1),:,ndx[:,2]]
 		e1 = evals[np.arange(0,T.shape[0],1),ndx[:,2]]
 		e2 = evals[np.arange(0,T.shape[0],1),ndx[:,1]]
-		
+
 		xa.Output['Crl_dip'] = -evec[:,1]/evec[:,2]*crlFactor
 		xa.Output['Inl_dip'] = -evec[:,0]/evec[:,2]*inlFactor
 		xa.Output['True Dip'] = np.sqrt(xa.Output['Crl_dip']*xa.Output['Crl_dip']+xa.Output['Inl_dip']*xa.Output['Inl_dip'])
@@ -99,7 +99,7 @@ def doCompute():
 		xa.Output['Cplane'] = (e1-e2)/(e1+e2)
 
 		xa.doOutput()
-	
+
 
 #
 # Assign the compute function to the attribute
@@ -109,4 +109,4 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+

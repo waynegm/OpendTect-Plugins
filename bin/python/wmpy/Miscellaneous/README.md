@@ -1,5 +1,5 @@
 # Miscellaneous External Attribute Scripts
-This a collection of [External Attribute](http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/) scripts for performing miscellaneous tasks.
+This a collection of [External Attribute](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/) scripts for performing miscellaneous tasks.
 
 | PLUGIN | DESCRIPTION |
 |--------|-------------|

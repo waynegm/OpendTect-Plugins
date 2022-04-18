@@ -27,14 +27,14 @@ xa.params = {
 	'ZSampMargin' : {'Value': [-5,5], 'Hidden': True, 'Symmetric': True},
 	'Par_0' : {'Name': 'S/N Ratio', 'Value': 1},
 	'Parallel' : False,
-	'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/external_attributes/Add_Noise.html'
+	'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/addnoise/'
 }
 #
 # Define the compute function
 #
 def doCompute():
 #
-#	Initialise some constants from the attribute parameters 
+#	Initialise some constants from the attribute parameters
 #
 	snratio = xa.params['Par_0']['Value']
 #	This is the trace processing loop
@@ -61,5 +61,5 @@ xa.doCompute = doCompute
 # Do it
 #
 xa.run(sys.argv[1:])
-  
+
 
