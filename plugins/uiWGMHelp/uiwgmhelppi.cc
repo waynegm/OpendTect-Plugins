@@ -10,22 +10,22 @@ typedef struct keyholder {
 } keyholder;
 
 keyholder keys[] = {
-    {"avo", "AVOAttrib.html"},
-    {"avop","AVOPolarAttrib.html"},
-    {"deh", "WMTools.html#data-extent-horizon"},
-    {"ext", "ExternalAttrib.html"},
-    {"fpl", "WMTools.html#fault-surface-3d-horizon-intersection-polyline"},
-    {"geodisp","GeopackageDisplay.html"},
-    {"geopkg", "GeopackageExport.html"},
-    {"geotiff", "GeotiffExport.html"},
-    {"grad", "GradientAttrib.html"},
-    {"grid2d3d","Grid2D-3D.html"},
-    {"ltf", "LocalAttrib.html"},
-    {"mistie", "Mistie.html"},
-    {"mlv", "MLVFilter.html"},
-    {"pconz","WMTools.html#constant-z-polyline"},
-    {"pcvx","WMTools.html#convex-hull-polygon"},
-    {"rspec","RSpecAttrib.html"},
+    {"avo", "avoattrib/"},
+    {"avop","avopolarattrib/"},
+    {"deh", "wmtools/#data-extent-horizon"},
+    {"ext", "externalattrib/"},
+    {"fpl", "wmtools/#fault-surface-3d-horizon-intersection-polyline"},
+    {"geodisp","geopackagedisplay/"},
+    {"geopkg", "geopackageexport/"},
+    {"geotiff", "geotiffexport/"},
+    {"grad", "gradientattrib.html"},
+    {"grid2d3d","grid2d-3d/"},
+    {"ltf", "localattrib/"},
+    {"mistie", "mistie/"},
+    {"mlv", "mlvfilter/"},
+    {"pconz","wmtools/#constant-z-polyline"},
+    {"pcvx","mwtools/#convex-hull-polygon"},
+    {"rspec","rspecattrib/"},
     { 0, 0}
 };
 
@@ -35,15 +35,15 @@ public:
     WGMHelpProvider( const char* baseurl )
     : SimpleHelpProvider(baseurl)
     {}
-    
+
     static void initClass()
     {
         HelpProvider::factory().addCreator( WGMHelpProvider::createInstance, "wgm");
     }
-    
+
     static HelpProvider* createInstance()
     {
-        BufferString baseurl( "http://waynegm.github.io/OpendTect-Plugin-Docs/plugins/" );
+        BufferString baseurl( "http://waynegm.github.io/WMPlugin-Docs/docs/plugins/" );
         WGMHelpProvider* hp = new WGMHelpProvider( baseurl.buf());
         int idx = 0;
         while (keys[idx].key) {
