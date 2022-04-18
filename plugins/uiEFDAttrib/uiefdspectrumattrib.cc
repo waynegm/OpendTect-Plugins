@@ -24,7 +24,6 @@
 #include "survinfo.h"
 #include "uiattribfactory.h"
 #include "uiattrsel.h"
-#include "uigeninput.h"
 #include "uibutton.h"
 #include "uispinbox.h"
 #include "trckeyzsampling.h"
@@ -42,9 +41,12 @@ uiEFDSpectrumAttrib::uiEFDSpectrumAttrib( uiParent* p, bool is2d )
 , TestPanelAdaptor()
 {
     inpfld_ = createInpFld( is2d );
+    mAttachCB(inpfld_->selectionDone, uiEFDSpectrumAttrib::inputSel);
 
-    modesfld_ = new uiGenInput( this, tr("Number of Modes"), IntInpSpec(5, 1, 20));
-    modesfld_->attach( alignedBelow, inpfld_ );
+    nrmodesfld_ = new uiLabeledSpinBox(this, tr("Number of Modes"));
+    nrmodesfld_->box()->setInterval(1, 100);
+    nrmodesfld_->box()->setValue(5);
+    nrmodesfld_->attach( alignedBelow, inpfld_ );
 
     uiString lbl;
     const bool zistime = SI().zDomain().isTime();
@@ -57,7 +59,7 @@ uiEFDSpectrumAttrib::uiEFDSpectrumAttrib( uiParent* p, bool is2d )
 	lbl = tr("Output Wavenumber (/kft)");
 
     freqfld_ = new uiLabeledSpinBox( this, lbl, 1 );
-    freqfld_->attach( alignedBelow, modesfld_ );
+    freqfld_->attach( alignedBelow, nrmodesfld_ );
     freqfld_->box()->doSnap( true );
 
     stepfld_ = new uiLabeledSpinBox( this, uiStrings::sStep(), 1 );
@@ -121,7 +123,7 @@ bool uiEFDSpectrumAttrib::setParameters( const Attrib::Desc& desc )
     if ( desc.attribName() != EFDSpectrumAttrib::attribName() )
 	return false;
 
-    mIfGetInt(EFDSpectrumAttrib::nrmodesStr(), nrmodes, modesfld_->setValue(nrmodes));
+    mIfGetInt(EFDSpectrumAttrib::nrmodesStr(), nrmodes, nrmodesfld_->box()->setValue(nrmodes));
     const float freqscale = zIsTime() ? 1.f : 1000.f;
     mIfGetFloat(EFDSpectrumAttrib::stepStr(), step, stepfld_->box()->setValue(step*freqscale) );
 
@@ -149,7 +151,7 @@ bool uiEFDSpectrumAttrib::getParameters( Attrib::Desc& desc )
     if ( desc.attribName() != EFDSpectrumAttrib::attribName() )
 	return false;
 
-    mSetInt( EFDSpectrumAttrib::nrmodesStr(), modesfld_->getIntValue() );
+    mSetInt( EFDSpectrumAttrib::nrmodesStr(), nrmodesfld_->box()->getIntValue() );
     const float freqscale = zIsTime() ? 1.f : 1000.f;
     mSetFloat( EFDSpectrumAttrib::stepStr(), stepfld_->box()->getFValue()/freqscale );
     return true;
@@ -216,7 +218,7 @@ void uiEFDSpectrumAttrib::showPosDlgCB( CallBacker* )
 
 void uiEFDSpectrumAttrib::fillTestParams( Attrib::Desc* desc ) const
 {
-    mSetParam(Int,nmodes, EFDSpectrumAttrib::nrmodesStr(), modesfld_->getIntValue())
+    mSetParam(Int,nmodes, EFDSpectrumAttrib::nrmodesStr(), nrmodesfld_->box()->getIntValue())
 
     //show Frequencies with a step of 1 in Time and 1e-3 in Depth,
     //independently of what the user can have specified previously

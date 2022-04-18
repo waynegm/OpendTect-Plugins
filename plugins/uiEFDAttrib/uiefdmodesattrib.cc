@@ -24,7 +24,6 @@
 #include "survinfo.h"
 #include "uiattribfactory.h"
 #include "uiattrsel.h"
-#include "uigeninput.h"
 #include "uibutton.h"
 #include "uispinbox.h"
 #include "trckeyzsampling.h"
@@ -43,14 +42,15 @@ uiEFDModesAttrib::uiEFDModesAttrib( uiParent* p, bool is2d )
 {
     inpfld_ = createInpFld( is2d );
 
-    IntInpSpec inspec( 5, 1, 20 );
-    nrmodesfld_ = new uiGenInput( this, tr("Number of Modes"), inspec );
+    nrmodesfld_ = new uiLabeledSpinBox( this, tr("Number of Modes") );
+    nrmodesfld_->box()->setInterval(1, 100);
+    nrmodesfld_->box()->setValue(5);
     nrmodesfld_->attach( alignedBelow, inpfld_ );
-    mAttachCB(nrmodesfld_->valuechanged,uiEFDModesAttrib::nrmodesChgCB);
+    mAttachCB(nrmodesfld_->box()->valueChanged,uiEFDModesAttrib::nrmodesChgCB);
 
     outmodefld_ = new uiLabeledSpinBox(this, tr("Output Mode"));
     outmodefld_->attach( alignedBelow, nrmodesfld_ );
-    outmodefld_->box()->setInterval(0, inspec.value()-1);
+    outmodefld_->box()->setInterval(0, nrmodesfld_->box()->getIntValue()-1);
     outmodefld_->box()->setValue(0);
 
     uiString butstr = tr("Display EFD Modes panel");
@@ -68,19 +68,18 @@ uiEFDModesAttrib::~uiEFDModesAttrib()
 
 void uiEFDModesAttrib::nrmodesChgCB( CallBacker* )
 {
-    const int mxmodes = nrmodesfld_->getIntValue();
+    const int mxmodes = nrmodesfld_->box()->getIntValue();
     const int selmode = mMIN(mxmodes-1, outmodefld_->box()->getIntValue());
     outmodefld_->box()->setInterval( 0, mxmodes-1);
     outmodefld_->box()->setValue( selmode);
 }
-
 
 bool uiEFDModesAttrib::setParameters( const Attrib::Desc& desc )
 {
     if ( desc.attribName() != EFDModesAttrib::attribName() )
 	return false;
 
-    mIfGetInt(EFDModesAttrib::nrmodesStr(), nrmodes, nrmodesfld_->setValue(nrmodes));
+    mIfGetInt(EFDModesAttrib::nrmodesStr(), nrmodes, nrmodesfld_->box()->setValue(nrmodes));
     nrmodesChgCB(nullptr);
     return true;
 }
@@ -103,7 +102,7 @@ bool uiEFDModesAttrib::getParameters( Attrib::Desc& desc )
     if ( desc.attribName() != EFDModesAttrib::attribName() )
 	return false;
 
-    mSetInt( EFDModesAttrib::nrmodesStr(), nrmodesfld_->getIntValue() );
+    mSetInt( EFDModesAttrib::nrmodesStr(), nrmodesfld_->box()->getIntValue() );
     return true;
 }
 
@@ -152,5 +151,5 @@ void uiEFDModesAttrib::showPosDlgCB( CallBacker* )
 
 void uiEFDModesAttrib::fillTestParams( Attrib::Desc* desc ) const
 {
-    mSetParam(Int,nrmodes, EFDModesAttrib::nrmodesStr(), nrmodesfld_->getIntValue())
+    mSetParam(Int,nrmodes, EFDModesAttrib::nrmodesStr(), nrmodesfld_->box()->getIntValue())
 }

@@ -22,7 +22,6 @@
 
 namespace Attrib { class Desc; }
 class uiAttrSel;
-class uiGenInput;
 class uiLabeledSpinBox;
 class uiPushButton;
 
@@ -39,7 +38,7 @@ public:
 protected:
 
     uiAttrSel*			inpfld_;
-    uiGenInput*			modesfld_;
+    uiLabeledSpinBox*		nrmodesfld_;
     uiLabeledSpinBox*		freqfld_;
     uiLabeledSpinBox*		stepfld_;
     uiAttribTestPanel<uiEFDSpectrumAttrib>*	testpanel_ = nullptr;

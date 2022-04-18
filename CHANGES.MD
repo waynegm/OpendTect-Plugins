@@ -18,6 +18,11 @@
 ### Mistie Analysis
 - fix crash when estimating misties for depth surveys
 
+### wmodpy - OpendTect Python Bindings
+A decision was made to discontinue development of these within WMPlugins in favour of moving the code
+into the dGB managed OpendTect open source code repository system on Github. The new repository will be
+called "odpybind".
+
 ## Release 6.6.9
 ### AVOPolarAttrib
 -  Fix attribute calculation on time slices and horizons

@@ -36,8 +36,6 @@ void EFDSpectrumAttrib::initClass()
     mAttrStartInitClassWithDescAndDefaultsUpdate
 
     IntParam* nrmodes = new IntParam( nrmodesStr() );
-    nrmodes->setLimits( 1, 20 );
-    nrmodes->setDefaultValue( 5 );
     desc->addParam( nrmodes );
 
     FloatParam* step = new FloatParam( stepStr() );

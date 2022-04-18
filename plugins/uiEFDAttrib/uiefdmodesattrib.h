@@ -22,7 +22,6 @@
 
 namespace Attrib { class Desc; }
 class uiAttrSel;
-class uiGenInput;
 class uiLabeledSpinBox;
 class uiPushButton;
 
@@ -38,13 +37,12 @@ public:
 protected:
 
     uiAttrSel*				inpfld_;
-    uiGenInput*				nrmodesfld_;
+    uiLabeledSpinBox*			nrmodesfld_;
     uiLabeledSpinBox*			outmodefld_;
     uiAttribTestPanel<uiEFDModesAttrib>* testpanel_ = nullptr;
     uiPushButton*			modepanelbut_;
 
     void		nrmodesChgCB(CallBacker*);
-
 
     bool		setParameters(const Attrib::Desc&);
     bool		setInput(const Attrib::Desc&);
