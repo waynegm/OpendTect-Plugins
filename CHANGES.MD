@@ -1,7 +1,7 @@
 # OpendTect Plugins Release Notes
 
 ## Release 6.6.10
-###AVOPolarAttrib
+### AVOPolarAttrib
 -  Replace Nans and Infs with Undefined
 
 ### EFDAttrib
