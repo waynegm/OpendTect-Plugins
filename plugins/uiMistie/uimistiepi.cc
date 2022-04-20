@@ -74,7 +74,7 @@ void uiMistieMgr::updateMenu( CallBacker* )
     mnumgr.analMnu()->insertAction( newitem );
 
     uiActionSeparString gridprocstr( "Create Horizon Output" );
-    uiAction* itm = mnumgr.procMnu()->findAction( gridprocstr );
+    const uiAction* itm = mnumgr.procMnu()->findAction( gridprocstr );
     if ( !itm || !itm->getMenu() ) return;
     uiMenu* miscor = new uiMenu(appl_, tr("Apply Mistie Corrections"));
 
@@ -83,7 +83,8 @@ void uiMistieMgr::updateMenu( CallBacker* )
     if (SI().has3D())
 	miscor->insertAction(new uiAction(m3Dots(uiStrings::s3D()),mCB(this,uiMistieMgr,doMistieCorrection3D)));
 
-    itm->getMenu()->addMenu(miscor);
+    uiMenu* prochormenu = const_cast<uiMenu*>(itm->getMenu());
+    prochormenu->addMenu(miscor);
 }
 
 void uiMistieMgr::doCorrectionEdit( CallBacker* )

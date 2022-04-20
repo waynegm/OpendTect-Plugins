@@ -59,7 +59,7 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon,
 	subsel3Dfld_->display(show3Dsubsel);
 
     }
-    mAttachCB( postFinalise(), uiHorInputGrp::initGrp );
+    mAttachCB( postFinalize(), uiHorInputGrp::initGrp );
 }
 
 uiHorInputGrp::~uiHorInputGrp()

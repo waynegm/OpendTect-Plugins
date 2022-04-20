@@ -41,7 +41,7 @@ Line3DOverlapFinder::Line3DOverlapFinder(const EM::Horizon3D* hor3D, const Objec
 
 void Line3DOverlapFinder::setBounds(TrcKeySampling tks )
 {
-    tks.normalise();
+    tks.normalize();
     bounds3d_.setLeft(tks.inlRange().start);
     bounds3d_.setRight(tks.inlRange().stop);
     bounds3d_.setTop(tks.crlRange().stop);
@@ -163,7 +163,7 @@ bool MistieEstimatorFromSeismic2D3D::doWork( od_int64 start, od_int64 stop, int 
         std::complex<float> cPhasediff(0.0, 0.0);
         float ampdiff = 0.0;
         float quality = 0.0;
-        
+
         if (!misties_.get(idx, lineA, trc1, lineB, trc2)) {
             BufferString tmp("MistieEstimator2D3D::doWork - could not get intersection details at index: ");
             tmp += idx;
@@ -229,14 +229,14 @@ bool MistieEstimatorFromSeismic2D3D::doWork( od_int64 start, od_int64 stop, int 
 bool MistieEstimatorFromSeismic2D3D::get2DTrc( BufferString line, int trcnr, SeisTrc& trc )
 {
     Pos::GeomID geomid = Survey::GM().getGeomID(line);
-    
+
     Seis::RangeSelData range;
     range.setZRange(window_);
     range.cubeSampling().hsamp_.setInlRange(Interval<int>(0,0));
     range.cubeSampling().hsamp_.setCrlRange(Interval<int>(trcnr, trcnr));
     range.setGeomID(geomid);
-    
-    SeisTrcReader rdr(ioobj2d_);
+
+    SeisTrcReader rdr(*ioobj2d_);
     rdr.setSelData(range.clone());
     rdr.prepareWork();
     rdr.get(trc);
@@ -250,12 +250,12 @@ bool MistieEstimatorFromSeismic2D3D::get3DTrc( int inl, int crl, SeisTrc& trc )
     range.setZRange(window_);
     range.cubeSampling().hsamp_.setInlRange(Interval<int>(inl, inl));
     range.cubeSampling().hsamp_.setCrlRange(Interval<int>(crl, crl));
-    
-    SeisTrcReader rdr(ioobj3d_);
+
+    SeisTrcReader rdr(*ioobj3d_);
     rdr.setSelData(range.clone());
     rdr.prepareWork();
     rdr.get(trc);
-    
+
     return (!trc.isNull());
 }
 

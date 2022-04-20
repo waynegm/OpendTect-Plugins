@@ -68,10 +68,11 @@ void uiGrid2D3DHorizonMgr::updateMenu( CallBacker* )
     deleteAndZeroPtr( dlg_ );
 
     uiODMenuMgr& mnumgr = appl_->menuMgr();
-    uiAction* itm = mnumgr.procMnu()->findAction( tr("Create Horizon Output") );
+    const uiAction* itm = mnumgr.procMnu()->findAction( tr("Create Horizon Output") );
     if ( !itm || !itm->getMenu() ) return;
 
-    itm->getMenu()->insertAction( new uiAction(tr("Grid 2D-3D Horizon ..."),mCB(this,uiGrid2D3DHorizonMgr,gridDialog)) );
+    uiMenu* prochormenu = const_cast<uiMenu*>(itm->getMenu());
+    prochormenu->insertAction( new uiAction(tr("Grid 2D-3D Horizon ..."),mCB(this,uiGrid2D3DHorizonMgr,gridDialog)) );
 }
 
 

@@ -64,7 +64,7 @@ uiConvexHull::uiConvexHull( uiParent* p )
     zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start*SI().zDomain().userFactor()) );
     zfld_->attach( rightOf, namefld_ );
 
-    colorfld_ = new uiColorInput(this, uiColorInput::Setup(getRandStdDrawColor()).
+    colorfld_ = new uiColorInput(this, uiColorInput::Setup(OD::getRandStdDrawColor()).
     lbltxt(uiStrings::sColor()) );
     colorfld_->attach(alignedBelow, namefld_);
 
@@ -115,7 +115,7 @@ uiConvexHull::uiConvexHull( uiParent* p )
 	}
     }
 
-    mAttachCB( postFinalise(), uiConvexHull::initGrp );
+    mAttachCB( postFinalize(), uiConvexHull::initGrp );
 }
 
 uiConvexHull::~uiConvexHull()

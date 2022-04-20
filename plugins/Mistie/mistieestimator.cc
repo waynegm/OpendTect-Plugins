@@ -69,13 +69,13 @@ bool MistieEstimatorFromSeismic::doWork( od_int64 start, od_int64 stop, int thre
     BufferString lineA, lineB;
     int trcnrA, trcnrB;
     SeisTrc trcA, trcB;
-    
+
     for (int idx=mCast(int,start); idx<=stop && shouldContinue(); idx++, addToNrDone(1)) {
         float zdiff = 0.0;
         float phasediff = 0.0;
         float ampdiff = 1.0;
         float quality = 0.0;
-        
+
         if (!misties_.get(idx, lineA, trcnrA, lineB, trcnrB)) {
             BufferString tmp("MistieEstimatorFromSeismic::doWork - could not get intersection details at index: ");
             tmp += idx;
@@ -110,14 +110,14 @@ bool MistieEstimatorFromSeismic::doWork( od_int64 start, od_int64 stop, int thre
 bool MistieEstimatorFromSeismic::get2DTrc( BufferString line, int trcnr, SeisTrc& trc )
 {
     Pos::GeomID geomid = Survey::GM().getGeomID(line);
-    
+
     Seis::RangeSelData range;
     range.setZRange(window_);
     range.cubeSampling().hsamp_.setInlRange(Interval<int>(0,0));
     range.cubeSampling().hsamp_.setCrlRange(Interval<int>(trcnr, trcnr));
     range.setGeomID(geomid);
-    
-    SeisTrcReader rdr(ioobj_);
+
+    SeisTrcReader rdr(*ioobj_);
     rdr.setSelData(range.clone());
     rdr.prepareWork();
     rdr.get(trc);

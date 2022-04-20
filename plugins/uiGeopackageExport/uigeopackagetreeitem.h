@@ -40,49 +40,49 @@ public:
     static void                 initClass();
     uiGeopackageTreeItem(const char* parenttype);
     ~uiGeopackageTreeItem();
-    
+
     static uiODDataTreeItem*    create(const Attrib::SelSpec&,const char*);
     void                        showPropertyDlg();
-    
+
     static const char*          sKeyGeopackageDefString();
     static const char*          sKeyGeopkg();
     static const char*          sKeyGeopkgNr();
     static const char*          sKeyGeopkgStart();
-    
+
     bool			fillPar(IOPar& par) const;
     void			usePar(IOPar& par);
-    
+
 private:
     virtual bool            	init();
     virtual uiString        	createDisplayName() const;
     virtual void            	checkCB(CallBacker*);
-    virtual bool            	doubleClick(uiTreeViewItem*);    
+    virtual bool            	doubleClick(uiTreeViewItem*);
     virtual void            	createMenu(MenuHandler*,bool istb);
     virtual void            	handleMenuCB(CallBacker*);
     virtual bool		hasTransparencyMenu() const { return false; }
-    
+
     void                    	prepareForShutdown();
     void                    	removeAll();
     void			sessionSaveCB(CallBacker*);
     void			sessionRestoreCB(CallBacker*);
-    
+
     void                    visClosingCB(CallBacker*);
-    
+
     void                    updateColumnText(int);
     void                    showLayer();
     bool                    createPolyLines();
     void                    removeOldLinesFromScene();
-    
+
     visSurvey::HorizonDisplay*  getHorDisp() const;
-    
+
     uiGeopackageReader*     reader_;
 	int						zshift_;
-    Color                   color_;
+    OD::Color			color_;
     int                     linewidth_;
     visBase::PolyLine*      lines_;
     visBase::DrawStyle*     drawstyle_;
     visBase::Material*      material_;
-    
+
     MenuItem                optionsmenuitem_;
 };
 

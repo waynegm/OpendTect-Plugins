@@ -113,9 +113,9 @@ void WMLib::ui3DRangeGrp::rangeChg(CallBacker* cb)
 		   crlfld_->getIStepInterval().stop);
 	SI().snap(stop, BinID(1,1));
 	StepInterval<int> inlrg(start.inl(), stop.inl(), hs.step_.first);
-        inlrg.snap(inlrg.stop, 1);
+        inlrg.snap(inlrg.stop, OD::SnapUpward);
         StepInterval<int> crlrg(start.crl(), stop.crl(), hs.step_.second);
-        crlrg.snap(crlrg.stop, 1);
+        crlrg.snap(crlrg.stop, OD::SnapUpward);
         inlfld_->setValue(inlrg);
 	crlfld_->setValue(crlrg);
     }

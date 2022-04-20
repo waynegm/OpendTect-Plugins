@@ -94,7 +94,7 @@ bool wmGridder2D::canHandleFaultPolygons( const char* methodName )
     }
 }
 
-wmGridder2D::wmGridder2D() 
+wmGridder2D::wmGridder2D()
     : grid_(0)
     , carr_(0)
     , tr_(nullptr)
@@ -152,21 +152,21 @@ bool wmGridder2D::usePar(const IOPar& par)
             }
         }
     }
-    
+
     hor3DID_.setUdf();
     if (par.get(sKey3DHorizonID(), hor3DID_))
         hor3Dsubsel_.usePar(par);
-    
+
     int scopetype;
     par.get(sKeyScopeType(),scopetype);
     scope_ = (ScopeType)scopetype;
-    
+
     horScopeID_.setUdf();
     par.get(sKeyScopeHorID(), horScopeID_);
-    
+
     croppolyID_.setUdf();
     par.get(sKeyClipPolyID(), croppolyID_);
-    
+
     int nrfaultpoly = 0;
     faultpolyID_.erase();
     if (par.get(sKeyFaultPolyNr(), nrfaultpoly)) {
@@ -177,7 +177,7 @@ bool wmGridder2D::usePar(const IOPar& par)
             faultpolyID_ += id;
         }
     }
-    
+
     int nrcontpoly = 0;
     contpolyID_.erase();
     if (par.get(sKeyContourPolyNr(), nrcontpoly)) {
@@ -192,9 +192,9 @@ bool wmGridder2D::usePar(const IOPar& par)
 
     par.get(sKeySearchRadius(), searchradius_);
     par.get(sKeyMaxPoints(), maxpoints_);
-    
+
     hs_.usePar(par);
-    
+
     faultids_.erase();
     int nrfaults = 0;
     if (par.get(sKeyFaultNr(), nrfaults)) {
@@ -262,7 +262,7 @@ bool wmGridder2D::loadData()
         }
         obj->unRef();
     }
-    
+
     if (!hor2DID_.isUdf() && geomids_.size()>0) {
         EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor2DID_);
         if (!obj) {
@@ -281,7 +281,7 @@ bool wmGridder2D::loadData()
             mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids_[idx]))
             if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
                 continue;
-                
+
             TrcKey tk( geomids_[idx], -1 );
             float spnr = mUdf(float);
 	    Coord binLoc;
@@ -352,7 +352,7 @@ bool wmGridder2D::loadData()
         }
         croppoly_.setClosed(true);
     }
-    
+
     faultpoly_.erase();
     for (int idx=0; idx<faultpolyID_.size(); idx++) {
         ODPolygon<Pos::Ordinate_Type>* fault = new ODPolygon<Pos::Ordinate_Type>();
@@ -392,9 +392,9 @@ bool wmGridder2D::setScope()
         SI().snap(start, BinID(-1,-1));
         SI().snap(stop, BinID(1,1));
         StepInterval<int> inlrg(start.inl(), stop.inl(), hs_.step_.first);
-        inlrg.snap(inlrg.stop, 1);
+        inlrg.snap(inlrg.stop, OD::SnapUpward);
         StepInterval<int> crlrg(start.crl(), stop.crl(), hs_.step_.second);
-        crlrg.snap(crlrg.stop, 1);
+        crlrg.snap(crlrg.stop, OD::SnapUpward);
         hs_.set(inlrg, crlrg);
         if (scope_==ConvexHull )
             cvxhullpoly_.convexHull();
@@ -438,7 +438,7 @@ bool wmGridder2D::segmentsIntersect( Coord s1p1, Coord s1p2, Coord s2p1, Coord s
     Interval<Pos::Ordinate_Type> ix2(s2p2.x, s2p1.x);
     Interval<Pos::Ordinate_Type> iy1(s1p2.y, s1p1.y);
     Interval<Pos::Ordinate_Type> iy2(s2p2.y, s2p1.y);
-    
+
     if (ix1.overlaps(ix2) && iy1.overlaps(iy2)) {
         double denom = ((s2p2.y-s2p1.y)*(s1p2.x-s1p1.x))-((s2p2.x-s2p1.x)*(s1p2.y-s1p1.y));
         if (mIsZero(denom, mDefEps))
@@ -477,7 +477,7 @@ bool wmGridder2D::prepareForGridding()
 	}
     } else
 	grid_->setSize(hs_.nrInl(), hs_.nrCrl());
-    
+
     grid_->setAll(0.0);
     interpidx_.erase();
 
@@ -493,13 +493,13 @@ bool wmGridder2D::prepareForGridding()
 	else
 	    interpidx_ += idx;
     }
-    
+
     return true;
 }
 
 mDefParallelCalc2Pars( LocalInterpolator, od_static_tr("LocalInterpolator","Interpolate nearest grid points"),
 		       const wmGridder2D*, interp, Threads::Lock, lock )
-mDefParallelCalcBody( 
+mDefParallelCalcBody(
 const TypeSet<Coord>& locs_ = interp_->binLocs_;
 const TypeSet<float>& vals_ = interp_->vals_;
 const TrcKeySampling& hs_ = interp_->hs_;
@@ -558,11 +558,11 @@ void wmGridder2D::localInterp( bool approximation )
 	return;
     }
     carr_->setAll(0.0);
-    
+
     Threads::Lock lock;
     LocalInterpolator interp( binLocs_.size(), this, lock);
     interp.execute();
-    
+
     binLocs_.erase();
     vals_.erase();
     if (!approximation)
@@ -634,7 +634,7 @@ double wmLCCTSGridder2D::basis_(const double r) const
                 + log (cx) - M_LOG_2 + M_GAMMA;
         }
     }
-    
+
     return g;
 }
 
@@ -643,7 +643,7 @@ void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
 {
     if (!mIsUdf(searchradius_) && carr_->get(ix,iy)==0.0) {
         TIds result;
-        kdtree_.range( pos.x-searchradius_, pos.y-searchradius_, 
+        kdtree_.range( pos.x-searchradius_, pos.y-searchradius_,
                        pos.x+searchradius_, pos.y+searchradius_, [&result](const std::size_t id) { result.push_back(id); });
         if (result.size() == 0)
             return;
@@ -662,7 +662,7 @@ void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
             return;
         }
         num = num<maxvals_ ? num : maxvals_;
-        
+
         Eigen::MatrixXd M = Eigen::MatrixXd::Zero(num+3, num+3);
         Eigen::ArrayXd d(num);
         for (int idx=0; idx<num; idx++) {
@@ -675,7 +675,7 @@ void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
                 M(idy,idx) = M(idx,idy);
             }
         }
-        
+
         for (int idx=0; idx<num; idx++) {
             M(idx,idx) = 0.0;
             M(idx, num) = 1.0;
@@ -685,22 +685,22 @@ void wmLCCTSGridder2D::interpolate_( int ix, int iy, Coord pos )
             M(num+1, idx) = locs_[result[idx]].first;
             M(num+2, idx) = locs_[result[idx]].second;
         }
-        
+
         for (int idx=num; idx<num+3; idx++)
             for (int idy=num; idy<num+3;idy++)
                 M(idx, idy) = 0.0;
-            
+
             Eigen::VectorXd V = Eigen::VectorXd::Zero(num+3);
         for (int idx=0; idx<num; idx++)
             V(idx) = vals_[result[idx]];
-        
+
         Eigen::VectorXd W =  M.colPivHouseholderQr().solve(V);
-        
+
         for (int idx=0; idx<num; idx++)
             d[idx] = basis_(d[idx]);
         double val = W(num) + W(num+1)*pos.x + W(num+2)*pos.y;
         val += (W.head(num).array() * d).sum();
-        
+
         grid_->set(ix, iy, (float)val);
     }
 }

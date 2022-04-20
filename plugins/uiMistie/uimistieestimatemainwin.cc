@@ -116,7 +116,7 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
     onlyzfld_->attach(alignedBelow, lagfld_);
     onlyzfld_->setChecked(false);
 
-    mAttachCB(postFinalise(), uiMistieEstimateBySeismic::seisselCB);
+    mAttachCB(postFinalize(), uiMistieEstimateBySeismic::seisselCB);
 }
 
 uiMistieEstimateBySeismic::~uiMistieEstimateBySeismic()
@@ -320,7 +320,7 @@ uiMistieEstimateMainWin::uiMistieEstimateMainWin(uiParent* p)
     horgrp_ = new uiMistieEstimateByHorizon( this );
     horgrp_->attach(alignedBelow, fromseisfld_);
 
-    mAttachCB(postFinalise(), uiMistieEstimateMainWin::initCB);
+    mAttachCB(postFinalize(), uiMistieEstimateMainWin::initCB);
 }
 
 uiMistieEstimateMainWin::~uiMistieEstimateMainWin()

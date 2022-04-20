@@ -55,11 +55,11 @@ uiFaultPoly::uiFaultPoly( uiParent* p )
 
     faultsfld_ = new uiFaultParSel( this, false );
     faultsfld_->attach( alignedBelow, hor3Dfld_ );
-    
+
     prefixfld_ = new uiGenInput(this, tr("Fault polygon/polyline prefix"));
     prefixfld_->attach( alignedBelow, faultsfld_ );
 
-    colorfld_ = new uiColorInput(this, uiColorInput::Setup(getRandStdDrawColor()).
+    colorfld_ = new uiColorInput(this, uiColorInput::Setup(OD::getRandStdDrawColor()).
     lbltxt(uiStrings::sColor()) );
     colorfld_->attach(alignedBelow, prefixfld_);
 }
@@ -82,7 +82,7 @@ bool uiFaultPoly::acceptOK( CallBacker*)
 	uiMSG().error(tr("Please select a 3D horizon."));
 	return false;
     }
-    
+
     EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3Did);
     if (!obj) {
 	ErrMsg("uiFaultPoly::acceptOK - loading 3D horizon failed");
@@ -96,10 +96,10 @@ bool uiFaultPoly::acceptOK( CallBacker*)
 	return false;
     }
     hor_ = hor;
-    
+
     prefix_ = prefixfld_->text();
     prefix_.trimBlanks();
-    
+
 
     return true;
 }
@@ -132,7 +132,7 @@ Pick::Set* uiFaultPoly::getPolyForFault( int idx )
 	uiMSG().error(tr("uiFaultPoly::getPolyForFault - casting fault surface failed for id %1").arg(faultIDs[idx]));
 	return nullptr;
     }
-    
+
     BufferString faultname = fault->name();
     const EM::SectionID fsid = fault->sectionID( 0 );
     const Geometry::FaultStickSurface* fss = fault->geometry().sectionGeometry(fsid);
@@ -208,8 +208,8 @@ Coord3 uiFaultPoly::lineSegmentIntersection( Coord3 start, Coord3 end,
     const Coord spos = SI().binID2Coord().transformBackNoSnap( start );
     const Coord epos = SI().binID2Coord().transformBackNoSnap( end );
 
-    const BinID bidstart( rrg.snap( spos.x, -1 ), crg.snap( spos.y, -1 ) );
-    const BinID bidend( rrg.snap( epos.x, -1 ), crg.snap( epos.y, -1 ) );
+    const BinID bidstart( rrg.snap( spos.x, OD::SnapDownward ), crg.snap( spos.y, OD::SnapDownward ) );
+    const BinID bidend( rrg.snap( epos.x, OD::SnapDownward ), crg.snap( epos.y, OD::SnapDownward ) );
 
     StepInterval<int> brrg( bidstart.inl(), bidend.inl(), rrg.step );
     brrg.sort();

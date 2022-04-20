@@ -58,7 +58,7 @@ uiContourPoly::uiContourPoly( uiParent* p )
     zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start*SI().zDomain().userFactor()) );
     zfld_->attach( rightOf, namefld_ );
 
-    colorfld_ = new uiColorInput(this, uiColorInput::Setup(getRandStdDrawColor()).
+    colorfld_ = new uiColorInput(this, uiColorInput::Setup(OD::getRandStdDrawColor()).
     lbltxt(uiStrings::sColor()) );
     colorfld_->attach(alignedBelow, namefld_);
 

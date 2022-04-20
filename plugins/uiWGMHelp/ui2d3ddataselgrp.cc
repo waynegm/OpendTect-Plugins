@@ -33,7 +33,7 @@ ui2D3DDataSelGrp::ui2D3DDataSelGrp( uiParent* p )
 	subsel3dfld_->attach( alignedBelow, include3dfld_ );
     }
 
-    mAttachCB( postFinalise(), ui2D3DDataSelGrp::initGrp );
+    mAttachCB( postFinalize(), ui2D3DDataSelGrp::initGrp );
 }
 
 ui2D3DDataSelGrp::~ui2D3DDataSelGrp()

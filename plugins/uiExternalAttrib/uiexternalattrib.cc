@@ -455,7 +455,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     makeUI();
 
     setHAlignObj( uiinp_ );
-    mAttachCB(postFinalise(), uiExternalAttrib::initGrp);
+    mAttachCB(postFinalize(), uiExternalAttrib::initGrp);
 }
 
 uiExternalAttrib::~uiExternalAttrib()

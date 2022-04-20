@@ -41,7 +41,7 @@ uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
         BufferString projstr(proj->getProjection()->defStr());
         projstr += " +init=epsg:";
         projstr += proj->getProjection()->authCode().id();
-        
+
         if (poSRS_->importFromProj4(projstr) != OGRERR_NONE) {
             BufferString tmp("uiGeopackageWriter::uiGeopackageWriter - setting CRS in output file failed \n");
             tmp += "Survey CRS: ";
@@ -66,9 +66,9 @@ uiGeopackageWriter::~uiGeopackageWriter()
 bool uiGeopackageWriter::open( const char* filename )
 {
     const char* papszAllowedDrivers[] = { "GPKG", NULL };
-    
+
     GDALAllRegister();
-    
+
     if (append_) {
         gdalDS_ = GDALDataset::Open(filename, GDAL_OF_VECTOR || GDAL_OF_UPDATE, papszAllowedDrivers, nullptr, nullptr);
         if (gdalDS_ == nullptr) {
@@ -100,7 +100,7 @@ void uiGeopackageWriter::writeSurvey()
 {
     if (gdalDS_ != nullptr) {
         SurveyInfo* si = const_cast<SurveyInfo*>( &SI() );
-    
+
         OGRLayer* poLayer = nullptr;
         if (append_)
             poLayer = gdalDS_->GetLayerByName( "Survey" );
@@ -118,12 +118,12 @@ void uiGeopackageWriter::writeSurvey()
                 return;
             }
         }
-        
+
         OGRFeature feature( poLayer->GetLayerDefn() );
         feature.SetField("Name", GetSurveyName());
-    
+
         OGRLinearRing ring;
-    
+
         const StepInterval<int> inlrg = si->inlRange( false );
         const StepInterval<int> crlrg = si->crlRange( false );
         Coord coord;
@@ -166,18 +166,18 @@ void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
                 return;
             }
         }
-        
+
         for ( int idx=0; idx<geomids.size(); idx++ ) {
             mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
             if ( !geom2d )
                 continue;
-            
+
             const PosInfo::Line2DData& geom = geom2d->data();
             const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
-            
+
             OGRFeature feature( poLayer->GetLayerDefn() );
             feature.SetField("LineName", geom2d->getName());
-            
+
             OGRLineString line;
             for ( int tdx=0; tdx<posns.size(); tdx++ ) {
                 Coord pos = posns[tdx].coord_;
@@ -215,14 +215,14 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
                 return;
             }
         }
-        
+
         for ( int idx=0; idx<geomids.size(); idx++ ) {
             mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
             if ( !geom2d )
                 continue;
             const PosInfo::Line2DData& geom = geom2d->data();
             const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
-            
+
             if (gdalDS_->StartTransaction() == OGRERR_FAILURE) {
                 ErrMsg("uiGeopackageWriter::write2DStations - starting transaction for writing 2DStation layer failed" );
                 continue;
@@ -231,7 +231,7 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
                 OGRFeature feature( poLayer->GetLayerDefn() );
                 feature.SetField("LineName", geom2d->getName());
                 feature.SetField("Station", posns[tdx].nr_);
-                
+
                 OGRPoint pt;
                 Coord pos = posns[tdx].coord_;
                 pt.setX(pos.x);
@@ -271,7 +271,7 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
                 return;
             }
         }
-        
+
         for ( int idx=0; idx<lineids.size(); idx++ ) {
             Geometry::RandomLineSet inprls;
             BufferString msg;
@@ -280,14 +280,14 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
                 ErrMsg("uiGeopackageWriter::writeRandomLines - cannot get ioobj" );
                 continue;
             }
-            
+
             if (!RandomLineSetTranslator::retrieve( inprls, ioobj, msg )) {
                 BufferString tmp("uiGeopackageWriter::writeRandomLines - error reading random line - ");
                 tmp += msg;
                 ErrMsg(tmp);
                 return;
             }
-            
+
             for (int rdx=0; rdx<inprls.size(); rdx++) {
                 const Geometry::RandomLine* rdl = inprls.lines()[rdx];
                 if ( rdl == nullptr ) {
@@ -296,7 +296,7 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
                 }
                 OGRFeature feature( poLayer->GetLayerDefn() );
                 feature.SetField("LineName", rdl->name());
-            
+
                 OGRLineString line;
                 for ( int tdx=0; tdx<rdl->nrNodes(); tdx++ ) {
                     Coord pos = SI().transform( rdl->nodePosition(tdx) );;
@@ -307,7 +307,7 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
                     ErrMsg("uiGeopackageWriter::writeRandomLines - creating feature failed" );
             }
         }
-    }    
+    }
 }
 
 void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
@@ -316,7 +316,7 @@ void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
         OGRLayer* poLayer = nullptr;
         if (append_)
             poLayer = gdalDS_->GetLayerByName( "Wells" );
-        
+
         if (poLayer == nullptr) {
             poLayer = gdalDS_->CreateLayer( "Wells", poSRS_, wkbPoint, NULL );
             if (poLayer == nullptr) {
@@ -341,7 +341,7 @@ void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
                 return;
             }
         }
-        
+
         for ( int idx=0; idx<wellids.size(); idx++ ) {
             Well::Data* wd = Well::MGR().get(wellids[idx]);
             if ( wd == nullptr ) {
@@ -349,19 +349,19 @@ void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
                 continue;
             }
             Well::Info& wdinfo = wd->info();
-            
+
             OGRFeature feature( poLayer->GetLayerDefn() );
             feature.SetField("WellName", wdinfo.name());
-            feature.SetField("UWID", wdinfo.uwid);
+            feature.SetField("UWID", wdinfo.uwid_);
             feature.SetField("Status", wdinfo.welltype_);
-            
+
             OGRPoint pt;
-            pt.setX(wdinfo.surfacecoord.x);
-            pt.setY(wdinfo.surfacecoord.y);
+            pt.setX(wdinfo.surfacecoord_.x);
+            pt.setY(wdinfo.surfacecoord_.y);
             feature.SetGeometry( &pt );
             if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
                 ErrMsg("uiGeopackageWriter::writeWells - creating feature failed" );
-            
+
         }
     }
 }
@@ -372,7 +372,7 @@ void uiGeopackageWriter::writeWellTracks( TypeSet<MultiID>& wellids )
         OGRLayer* poLayer = nullptr;
         if (append_)
             poLayer = gdalDS_->GetLayerByName( "WellTracks" );
-        
+
         if (poLayer == nullptr) {
             poLayer = gdalDS_->CreateLayer( "WellTracks", poSRS_, wkbLineString, NULL );
             if (poLayer == nullptr) {
@@ -386,7 +386,7 @@ void uiGeopackageWriter::writeWellTracks( TypeSet<MultiID>& wellids )
                 return;
             }
         }
-        
+
         for ( int idx=0; idx<wellids.size(); idx++ ) {
             Well::Data* wd = Well::MGR().get(wellids[idx]);
             if ( wd == nullptr ) {
@@ -396,10 +396,10 @@ void uiGeopackageWriter::writeWellTracks( TypeSet<MultiID>& wellids )
             Well::Info& wdinfo = wd->info();
             const Well::Track& wtrack = wd->track();
             const TypeSet<Coord3>& wtrackpos = wtrack.getAllPos();
-            
+
             OGRFeature feature( poLayer->GetLayerDefn() );
             feature.SetField("WellName", wdinfo.name());
-            
+
             OGRLineString track;
             for (int tdx=0; tdx<wtrackpos.size(); tdx++) {
                 Coord3 pos = wtrackpos[tdx];
@@ -408,7 +408,7 @@ void uiGeopackageWriter::writeWellTracks( TypeSet<MultiID>& wellids )
             feature.SetGeometry( &track );
             if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
                 ErrMsg("uiGeopackageWriter::writeWellTracks - creating feature failed" );
-            
+
         }
     }
 }
@@ -419,7 +419,7 @@ void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids, bool inFee
         OGRLayer* poLayer = nullptr;
         if (append_)
             poLayer = gdalDS_->GetLayerByName( "WellMarkers" );
-        
+
         if (poLayer == nullptr) {
             poLayer = gdalDS_->CreateLayer( "WellMarkers", poSRS_, wkbPoint, NULL );
             if (poLayer == nullptr) {
@@ -453,7 +453,7 @@ void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids, bool inFee
             inFeet = true;
         else
             inFeet = false;
-        
+
         for ( int idx=0; idx<wellids.size(); idx++ ) {
             Well::Data* wd = Well::MGR().get(wellids[idx]);
             if ( wd == nullptr ) {
@@ -463,10 +463,10 @@ void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids, bool inFee
             Well::Info& wdinfo = wd->info();
             const Well::Track& wtrack = wd->track();
             const Well::MarkerSet& wmarkers = wd->markers();
-            
+
             for (int tdx=0; tdx<wmarkers.size(); tdx++) {
                 OGRFeature feature( poLayer->GetLayerDefn() );
-            
+
                 feature.SetField("WellName", wdinfo.name());
                 feature.SetField("Marker", wmarkers[tdx]->name());
                 float md = wmarkers[tdx]->dah();
@@ -499,10 +499,10 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
             poLayerLines = gdalDS_->GetLayerByName( "PolyLines" );
             poLayerPolygons = gdalDS_->GetLayerByName( "Polygons" );
         }
-            
+
         OGRFieldDefn oField( "Name", OFTString );
         oField.SetWidth(32);
-        
+
         for ( int idx=0; idx<lineids.size(); idx++ ) {
             Pick::Set ps;
             BufferString msg;
@@ -537,13 +537,13 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
                     ring.addPoint( pos.x, pos.y );
                 }
                 ring.addPoint(ps[0].pos().x, ps[0].pos().y);
-                
+
                 OGRPolygon poly;
                 poly.addRing(&ring);
                 feature.SetGeometry( &poly );
                 if (poLayerPolygons->CreateFeature( &feature ) != OGRERR_NONE)
                     ErrMsg("uiGeopackageWriter::writePolyLines - creating polygon feature failed" );
-                
+
             } else {
                 if (poLayerLines == nullptr) {
                     poLayerLines = gdalDS_->CreateLayer( "PolyLines", poSRS_, wkbLineString, NULL );
@@ -563,16 +563,16 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
                     const Coord3 pos = ps[rdx].pos();
                     line.addPoint( pos.x, pos.y );
                 }
-                
+
                 feature.SetGeometry( &line );
                 if (poLayerLines->CreateFeature( &feature ) != OGRERR_NONE)
                     ErrMsg("uiGeopackageWriter::writePolyLines - creating polyline feature failed" );
             }
         }
-    }    
+    }
 }
 
-void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor2Dkey, const char* attrib2D, const TypeSet<Pos::GeomID>& geomids, 
+void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor2Dkey, const char* attrib2D, const TypeSet<Pos::GeomID>& geomids,
                                        const MultiID& hor3Dkey, const char* attrib3D, const TrcKeyZSampling& cs  )
 {
     if (gdalDS_ != nullptr) {
@@ -591,7 +591,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
         OGRLayer* poLayer = nullptr;
         if (append_)
             poLayer = gdalDS_->GetLayerByName( layerName );
-        
+
         if (poLayer == nullptr) {
             poLayer = gdalDS_->CreateLayer( layerName, poSRS_, wkbPoint, NULL );
             if (poLayer == nullptr) {
@@ -611,9 +611,9 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
                 return;
             }
         }
-        
+
         const float zfac = SI().zIsTime() ? 1000 : 1;
-        
+
         if (!hor2Dkey.isUdf() && geomids.size()>0) {
             EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor2Dkey);
             if (obj==nullptr) {
@@ -632,7 +632,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
                 mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids[idx]))
                 if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
                     continue;
-                
+
                 TrcKey tk( geomids[idx], -1 );
                 Coord crd;
                 float spnr = mUdf(float);
@@ -648,9 +648,9 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
                     if (mIsUdf(z))
                         continue;
                     const float scaledZ = z*zfac;
-                    
+
                     survgeom2d->getPosByTrcNr( trcnr, crd, spnr );
-                    
+
                     OGRFeature feature( poLayer->GetLayerDefn() );
                     feature.SetField(attrib, scaledZ);
                     OGRPoint pt(crd.x, crd.y);
@@ -670,7 +670,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
             }
             obj->unRef();
         }
-        
+
         if (!hor3Dkey.isUdf()) {
             EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3Dkey);
             if (obj==nullptr) {
@@ -699,7 +699,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor
                     if (mIsUdf(z))
                         continue;
                     const float scaledZ = z*zfac;
-                    
+
                     Coord coord;
                     coord = SI().transform(bid);
                     OGRFeature feature( poLayer->GetLayerDefn() );

@@ -146,7 +146,7 @@ void WMLib::uiSeis2DLineSelGrp::readChoiceDone( CallBacker* )
     TypeSet<Pos::GeomID> gids;
     for ( int idx=0; idx<lbchoiceio_->chosenKeys().size(); idx++ )
     {
-        const MultiID mid = lbchoiceio_->chosenKeys().get(idx).buf();
+        const MultiID mid(lbchoiceio_->chosenKeys().get(idx));
         gids += Pos::GeomID( mid.ID(1) );
     }
     setChosen( gids );
@@ -156,7 +156,7 @@ void WMLib::uiSeis2DLineSelGrp::readChoiceDone( CallBacker* )
 void WMLib::uiSeis2DLineSelGrp::writeChoiceReq( CallBacker* )
 {
     MultiID mid = IOObjContext::getStdDirData(IOObjContext::Geom)->id_;
-    mid.add( 0 );
+//    mid.add( 0 );
 
     lbchoiceio_->keys().setEmpty();
     for ( int idx=0; idx<listfld_->size(); idx++ )
@@ -166,6 +166,6 @@ void WMLib::uiSeis2DLineSelGrp::writeChoiceReq( CallBacker* )
         { pErrMsg("Huh"); continue; }
 
         mid.setID( 1, geomids_[idxof] );
-        lbchoiceio_->keys().add( mid.buf() );
+        lbchoiceio_->keys().add( mid );
     }
 }

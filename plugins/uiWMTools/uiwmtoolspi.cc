@@ -178,10 +178,11 @@ void uiWMToolsMgr::setupDEHMenu()
 {
     uiODMenuMgr& mnumgr = appl_->menuMgr();
     uiActionSeparString dehprocstr( "Create Horizon Output" );
-    uiAction* itm = mnumgr.procMnu()->findAction( dehprocstr );
+    const uiAction* itm = mnumgr.procMnu()->findAction( dehprocstr );
     if ( !itm || !itm->getMenu() ) return;
 
-    itm->getMenu()->insertAction( new uiAction(m3Dots(tr("Create Data Extent Horizon")),mCB(this,uiWMToolsMgr,dataExtentHorizonCB)) );
+    uiMenu* prochormenu = const_cast<uiMenu*>(itm->getMenu());
+    prochormenu->insertAction( new uiAction(m3Dots(tr("Create Data Extent Horizon")),mCB(this,uiWMToolsMgr,dataExtentHorizonCB)) );
 }
 
 void uiWMToolsMgr::treeMenuCB(CallBacker* cb)

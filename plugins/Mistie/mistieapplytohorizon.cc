@@ -122,7 +122,7 @@ bool MistieApplyToHorizon2D::doFinish(bool success)
 	inphor_->unRef();
     if (outhor_)
     {
-	outhor_->setPreferredColor(getRandomColor());
+	outhor_->setPreferredColor(OD::getRandomColor());
 	outhor_->setMultiID(newhor2did_);
 	PtrMan<Executor> saver = outhor_->saver();
 	if (saver)
@@ -227,7 +227,7 @@ bool MistieApplyToHorizon3D::doFinish(bool success)
 {
     if (outhor_ && inphor_)
     {
-	outhor_->setPreferredColor(getRandomColor());
+	outhor_->setPreferredColor(OD::getRandomColor());
 	outhor_->setMultiID(newhor3did_);
 	BinID start( inphor_->geometry().rowRange().start,
 		     inphor_->geometry().colRange().start );
