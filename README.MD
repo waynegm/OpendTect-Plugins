@@ -19,7 +19,7 @@ For details please see the [documentation](http://waynegm.github.io/WMPlugin-Doc
 
 | PLUGIN | DESCRIPTION |
 |--------|-------------|
-| [AVOAttrib](http://waynegm.github.io//WMPlugin-Docs/docs/plugins/avoattrib) | Six attributes derived from reflection intercept and gradient |
+| [AVOAttrib](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/avoattrib) | Six attributes derived from reflection intercept and gradient |
 | [AVOPolarAttrib](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/avopolarattrib) |Six attributes derived from AVO Polarization in the AVO Intercept-Gradient crossplot |
 | [ExternalAttrib](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib) | Calculate attribute using an external process such as a python script |
 | [GeopackageExport](http://waynegm.github.io/WMPlugin-Docs/docs/plugins/geopackageexport) | Export OpendTect data to a [GeoPackage](https://www.geopackage.org/) database |
@@ -33,6 +33,6 @@ For details please see the [documentation](http://waynegm.github.io/WMPlugin-Doc
 
 ## Building and Installation
 
-* [Build from Source](http://waynegm.github.iohttps://waynegm.github.io/WMPlugin-Docs/docs/gettingstarted/building-from-source/)
+* [Build from Source](http://waynegm.github.io/WMPlugin-Docs/docs/gettingstarted/building-from-source/)
 
 * [Installation](http://waynegm.github.io/WMPlugin-Docs/docs/gettingstarted/installation/)
