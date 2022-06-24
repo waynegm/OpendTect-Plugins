@@ -114,7 +114,7 @@ int uiFaultPoly::nrFaults() const
     return faultsfld_->selFaultIDs().size();
 }
 
-Pick::Set* uiFaultPoly::getPolyForFault( int idx )
+RefMan<Pick::Set> uiFaultPoly::getPolyForFault( int idx )
 {
     const TypeSet<MultiID>& faultIDs = faultsfld_->selFaultIDs();
     if ( idx<0 || idx>=faultIDs.size() ) {
@@ -170,7 +170,7 @@ Pick::Set* uiFaultPoly::getPolyForFault( int idx )
 	}
     }
 
-    Pick::Set* ps = new Pick::Set;
+    RefMan<Pick::Set> ps = new Pick::Set;
     BufferString name( prefix_ );
     name += faultname;
     ps->setName( name );

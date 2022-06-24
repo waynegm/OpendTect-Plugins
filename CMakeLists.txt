@@ -71,7 +71,7 @@ get_filename_component( OD_BINARY_BASEDIR "${OD_BINARY_BASEDIR}" REALPATH )
 set ( PLUGINS uiWGMHelp
 	    EigenTools
             uiWMTools
-            uiGeopackageExport
+            #uiGeopackageExport
             uiGrid2D3DHorizon
             Mistie uiMistie
             AVOPolarAttrib uiAVOPolarAttrib

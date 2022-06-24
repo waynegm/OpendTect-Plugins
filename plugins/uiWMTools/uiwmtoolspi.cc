@@ -33,15 +33,17 @@
 #include "survinfo.h"
 #include "uimsg.h"
 #include "ioman.h"
+#include "uiioobj.h"
 #include "uimenuhandler.h"
 #include "uitreeview.h"
 #include "pickset.h"
 #include "picksetmgr.h"
 #include "uipickpartserv.h"
 #include "commontypes.h"
+#include "ctxtioobj.h"
+#include "picksettr.h"
 
 #include "uidehmainwin.h"
-#include "uiwmpolygontreeitem.h"
 #include "uiconvexhull.h"
 #include "uifaultpoly.h"
 #include "uicontourpoly.h"
@@ -69,8 +71,6 @@ public:
                 ~uiWMToolsMgr();
 
     void        updateMenu(CallBacker*);
-    void 	treeToBeAddedCB(CallBacker*);
-    void 	treeAddedCB(CallBacker*);
     void        setupDEHMenu();
 
     void        surveyChangeCB(CallBacker*);
@@ -78,48 +78,26 @@ public:
     void	convexHullCB(CallBacker*);
     void	faultPolyCB(CallBacker*);
     void	contourPolyCB(CallBacker*);
-    void	treeMenuCB(CallBacker*);
+
+    bool	addNewPolygon(Pick::Set&, bool warnifexist=false);
+    void 	polygonParentMenuCB(CallBacker*);
+    void	horizonParentMenuCB(CallBacker*);
 
     uiODMain*   		appl_;
 
-    uidehMainWin*		dehdlg_ = 0;
-    uiWMPolygonParentTreeItem*	polytreeparent_ = 0;
-
-    MenuItem		dehitem_;
-    int			dehmenuid_;
-
-    MenuItem		convexpolyitem_;
-    int 		convexpolymenuid_;
-    MenuItem		faultpolyitem_;
-    int 		faultpolymenuid_;
-    MenuItem		contourpolyitem_;
-    int			contourpolymenuid_;
-
+    uidehMainWin*		dehdlg_ = nullptr;
+    uiODPolygonParentTreeItem*	polytreeparent_ = nullptr;
 };
 
 uiWMToolsMgr::uiWMToolsMgr( uiODMain* a )
 	: appl_(a)
-	, dehitem_(m3Dots(tr("Create Data Extent Horizon")))
-	, dehmenuid_(200)
-	, convexpolyitem_(m3Dots(tr("New Convex Hull")))
-	, convexpolymenuid_(201)
-	, faultpolyitem_(m3Dots(tr("Create Fault Polygons/Polylines")))
-	, faultpolymenuid_(202)
-	, contourpolyitem_(m3Dots(tr("New Constant Z Polyline")))
-	, contourpolymenuid_(203)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiWMToolsMgr::updateMenu );
-    mAttachCB( appl_->sceneMgr().treeToBeAdded, uiWMToolsMgr::treeToBeAddedCB );
-    mAttachCB( appl_->sceneMgr().treeAdded, uiWMToolsMgr::treeAddedCB );
     mAttachCB(IOM().surveyChanged, uiWMToolsMgr::surveyChangeCB);
+    mAttachCB( uiODPolygonParentTreeItem::showMenuNotifier(), uiWMToolsMgr::polygonParentMenuCB );
+    mAttachCB( uiODHorizonParentTreeItem::showMenuNotifier(), uiWMToolsMgr::horizonParentMenuCB );
 
-    dehitem_.id = dehmenuid_;
-    convexpolyitem_.id = convexpolymenuid_;
-    faultpolyitem_.id = faultpolymenuid_;
-    contourpolyitem_.id = contourpolymenuid_;
-
-    updateMenu(0);
-
+    updateMenu(nullptr);
 }
 
 
@@ -133,45 +111,28 @@ void uiWMToolsMgr::updateMenu( CallBacker* )
     setupDEHMenu();
 }
 
-void uiWMToolsMgr::treeToBeAddedCB(CallBacker*)
+void uiWMToolsMgr::horizonParentMenuCB( CallBacker* cb )
 {
-    uiTreeFactorySet* tifs = appl_->sceneMgr().treeItemFactorySet();
-    BufferString tmp;
-    for (int i=0; i<tifs->nrFactories(); i++) {
-	tmp = tifs->getFactory(i)->name();
-	if (tmp.findLast("uiODPolygonTreeItemFactory")) {
-	    tifs->remove(tmp);
-	    tifs->addFactory( new uiWMPolygonTreeItemFactory, 8500,
-			      SurveyInfo::Both2DAnd3D );
-	    break;
-	}
-    }
+    mCBCapsuleUnpack(uiMenu*,mnu,cb);
+    uiMenu* wmtmnu = new uiMenu(tr("WMPlugins"));
+    wmtmnu->insertAction( new uiAction(m3Dots(tr("Add Data Extent Horizon")), mCB(this,uiWMToolsMgr,dataExtentHorizonCB)) );
+    mnu->addMenu( wmtmnu );
 }
 
-void uiWMToolsMgr::treeAddedCB(CallBacker* cb)
+void uiWMToolsMgr::polygonParentMenuCB( CallBacker* cb )
 {
-    mCBCapsuleUnpack(int, sceneid, cb);
-    uiODTreeTop* treetop = appl_->sceneMgr().getTreeItemMgr(sceneid);
-    if (!treetop)
+    mCBCapsuleUnpack(uiMenu*,mnu,cb);
+    uiMenu* wmtmnu = new uiMenu(tr("WMPlugins"));
+
+    wmtmnu->insertAction( new uiAction(m3Dots(tr("Add Convex Hull")), mCB(this,uiWMToolsMgr,convexHullCB)) );
+    wmtmnu->insertAction( new uiAction(m3Dots(tr("Add Fault Polygons/Polylines")), mCB(this,uiWMToolsMgr,faultPolyCB)) );
+    wmtmnu->insertAction( new uiAction(m3Dots(tr("Add Constant Z Polyline")), mCB(this,uiWMToolsMgr,contourPolyCB)) );
+    mnu->addMenu( wmtmnu );
+    auto* pitm = sCast(uiODPolygonParentTreeItem*,cbcaps->caller);
+    if ( !pitm )
 	return;
 
-    for (int idx=0; idx<treetop->nrChildren(); idx++) {
-	mDynamicCastGet(uiODHorizonParentTreeItem*,pitm,treetop->getChild(idx))
-	if ( !pitm ) continue;
-	pitm->newmenu_.addItem( &dehitem_ );
-	mAttachCB(pitm->handleMenu, uiWMToolsMgr::treeMenuCB);
-    }
-    for (int idx=0; idx<treetop->nrChildren(); idx++) {
-	mDynamicCastGet(uiWMPolygonParentTreeItem*,pitm,treetop->getChild(idx))
-	if ( pitm )
-	    polytreeparent_ = pitm;
-    }
-    if ( polytreeparent_ ) {
-	polytreeparent_->toolsmenu_.addItem( &convexpolyitem_ );
-	polytreeparent_->toolsmenu_.addItem( &contourpolyitem_ );
-	polytreeparent_->toolsmenu_.addItem( &faultpolyitem_ );
-	mAttachCB(polytreeparent_->handleMenu, uiWMToolsMgr::treeMenuCB);
-    }
+    polytreeparent_ = pitm;
 }
 
 void uiWMToolsMgr::setupDEHMenu()
@@ -185,20 +146,6 @@ void uiWMToolsMgr::setupDEHMenu()
     prochormenu->insertAction( new uiAction(m3Dots(tr("Create Data Extent Horizon")),mCB(this,uiWMToolsMgr,dataExtentHorizonCB)) );
 }
 
-void uiWMToolsMgr::treeMenuCB(CallBacker* cb)
-{
-    mCBCapsuleUnpack(int, menuid, cb);
-    if (menuid == dehmenuid_) {
-	dataExtentHorizonCB(0);
-    } else if (menuid == convexpolymenuid_) {
-	convexHullCB(0);
-    } else if (menuid == faultpolymenuid_) {
-	faultPolyCB(0);
-    } else if (menuid == contourpolymenuid_) {
-	contourPolyCB(0);
-    }
-}
-
 void uiWMToolsMgr::dataExtentHorizonCB(CallBacker* cb)
 {
     if ( !dehdlg_ ) {
@@ -208,15 +155,46 @@ void uiWMToolsMgr::dataExtentHorizonCB(CallBacker* cb)
     dehdlg_->raise();
 }
 
+bool uiWMToolsMgr::addNewPolygon(Pick::Set& psin, bool warnifexist)
+{
+    RefMan<Pick::Set> ps(&psin);
+    PtrMan<CtxtIOObj> ctio = mMkCtxtIOObj(PickSet);
+    if (!ctio || !ps)
+	return false;
+
+    ctio->setName( ps->name() );
+    BufferString errmsg;
+    if ( uiIOObj::fillCtio(*ctio, warnifexist) )
+    {
+	PtrMan<IOObj> ioobj = ctio->ioobj_;
+	if (!ioobj)
+	    return false;
+
+	IOM().commitChanges( *ioobj );
+	if ( !PickSetTranslator::store( *ps, ioobj, errmsg ) ) {
+	    uiMSG().error(tr("%1").arg(errmsg));
+	    return false;
+	}
+	Pick::Mgr().set( ioobj->key(), ps );
+	RefMan<Pick::Set> polyps = Pick::Mgr().get( Pick::Mgr().size()-1 );
+	appl_->sceneMgr().addPickSetItem(*polyps, polytreeparent_->sceneID());
+	return true;
+    }
+    return false;
+}
+
 void uiWMToolsMgr::convexHullCB(CallBacker*)
 {
     uiConvexHull convexhulldlg( appl_ );
     if ( !convexhulldlg.go() )
 	return;
 
-    Pick::Set* ps = convexhulldlg.getPolygonPickSet();
     if ( polytreeparent_ )
-	polytreeparent_->addNewPolygon( ps );
+    {
+	RefMan<Pick::Set> ps = convexhulldlg.getPolygonPickSet();
+	if ( ps && ps->size() )
+	    addNewPolygon(*ps, false);
+    }
 }
 
 void uiWMToolsMgr::faultPolyCB(CallBacker*)
@@ -225,12 +203,15 @@ void uiWMToolsMgr::faultPolyCB(CallBacker*)
     if ( !faultpolydlg.go() )
 	return;
 
-    int nfaults = faultpolydlg.nrFaults();
-    for ( int idx=0; idx<nfaults; idx++ ) {
-	Pick::Set* ps = faultpolydlg.getPolyForFault(idx);
-
-	if ( polytreeparent_ && ps && ps->size() )
-	    polytreeparent_->addNewPolygon( ps );
+    if (polytreeparent_)
+    {
+	const int nfaults = faultpolydlg.nrFaults();
+	for ( int idx=0; idx<nfaults; idx++ )
+	{
+	    RefMan<Pick::Set> ps = faultpolydlg.getPolyForFault(idx);
+	    if ( ps && ps->size() )
+		addNewPolygon(*ps, false);
+	}
     }
 }
 
@@ -240,11 +221,11 @@ void uiWMToolsMgr::contourPolyCB(CallBacker*)
     if ( !contourpolydlg.go() )
 	return;
 
-    Pick::Set* ps = contourpolydlg.getPolygonPickSet();
-    if ( polytreeparent_ ) {
-	polytreeparent_->addNewPolygon( ps );
-	if (polytreeparent_->lastAddedChild)
-	    polytreeparent_->lastAddedChild->setProperty("Z value", contourpolydlg.getZ());
+    if (polytreeparent_)
+    {
+	RefMan<Pick::Set> ps = contourpolydlg.getPolygonPickSet();
+	if (ps && ps->size())
+	    addNewPolygon(*ps, false);
     }
 }
 

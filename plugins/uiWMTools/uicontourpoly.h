@@ -33,8 +33,8 @@ mClass(uiWMTools) uiContourPoly : public uiDialog
 public:
     uiContourPoly(uiParent*);
     ~uiContourPoly();
-    
-    Pick::Set*	getPolygonPickSet() const;
+
+    RefMan<Pick::Set>	getPolygonPickSet() const;
     float	getZ() const { return z_; }
     // Becomes yours
 
@@ -43,12 +43,12 @@ protected:
     uiGenInput*			namefld_;
     uiGenInput*			zfld_;
     uiColorInput*		colorfld_;
-    
+
     BufferString		polyname_;
     Pos::Ordinate_Type		z_;
-    
+
     bool                acceptOK(CallBacker*);
-    
+
 private:
     uiString    getCaptionStr() const;
 };

@@ -21,7 +21,7 @@
 #include "commontypes.h"
 #include "polygon.h"
 
-namespace WMLib { 
+namespace WMLib {
     class ui2D3DDataSelGrp;
     class uiHorInputGrp;
 };
@@ -39,11 +39,9 @@ mClass(uiWMTools) uiConvexHull : public uiDialog
 public:
     uiConvexHull(uiParent*);
     ~uiConvexHull();
-    
+
     bool	addToDisplay() const;
-    Pick::Set*	getPolygonPickSet() const;
-    // Becomes yours
-    
+    RefMan<Pick::Set>	getPolygonPickSet() const;
 
 protected:
 
@@ -52,19 +50,19 @@ protected:
     uiGenInput*			namefld_;
     uiGenInput*			zfld_;
     uiColorInput*		colorfld_;
-    uiCheckBox*                 usenavfld_;    
-    uiCheckBox*                 usehorfld_;   
-    
+    uiCheckBox*                 usenavfld_;
+    uiCheckBox*                 usehorfld_;
+
     BufferString			polyname_;
     ODPolygon<Pos::Ordinate_Type>	poly_;
     Pos::Ordinate_Type			z_;
-    
+
     bool                acceptOK(CallBacker*);
     void		usenavCB(CallBacker*);
     void		usehorCB(CallBacker*);
     void 		dataselCB(CallBacker*);
     void 		initGrp(CallBacker*);
-    
+
     void		fillPolyFromNav();
     void		fillPolyFromHorizon();
 

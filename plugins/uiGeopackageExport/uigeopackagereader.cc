@@ -24,7 +24,7 @@ bool uiGeopackageReader::open( const char* filename )
 {
     if (filename_ != filename)
         close();
-    
+
     if (!gdalDS_) {
         const char* papszAllowedDrivers[] = { "GPKG", NULL };
         GDALAllRegister();
@@ -40,7 +40,7 @@ bool uiGeopackageReader::open( const char* filename )
 
 void uiGeopackageReader::close()
 {
-    if (gdalDS_) 
+    if (gdalDS_)
         GDALClose( gdalDS_ );
     gdalDS_ = 0;
     gdalLayer_ = 0;
@@ -82,7 +82,7 @@ bool uiGeopackageReader::isSameCRS(BufferString& errmsg)
         if (poFileSRS->IsProjected() && SI().getCoordSystem()->isProjection()) {
             const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
             BufferString odtAuthCode;
-            odtAuthCode += proj->getProjection()->authCode().id();
+            odtAuthCode += proj->getProjection()->authCode().code();
             BufferString fileAuthCode = poFileSRS->GetAuthorityCode("PROJCS");
             errmsg += "Geopackage SRS: ";
             errmsg += fileAuthCode;
@@ -143,7 +143,7 @@ bool uiGeopackageReader::getNextFeature(ManagedObjectSet<ODPolygon<Pos::Ordinate
                     }
                     res = true;
                 } else if (wkbType == wkbMultiPolygon) {
-                    ErrMsg("uiGeopackageReader::getNextFeature - reading MultiPolygon geometries not supported"); 
+                    ErrMsg("uiGeopackageReader::getNextFeature - reading MultiPolygon geometries not supported");
                     res = false;
                 }
             }

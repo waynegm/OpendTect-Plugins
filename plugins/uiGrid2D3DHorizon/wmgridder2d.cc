@@ -314,17 +314,17 @@ bool wmGridder2D::loadData()
 	    ErrMsg("wmGridder2D::loadData - cannot get contour polyline ioobj");
 	    return false;
 	}
-	Pick::Set ps;
+	RefMan<Pick::Set> ps = new Pick::Set;
 	BufferString msg;
-	if (!PickSetTranslator::retrieve(ps, ioobj, true, msg)) {
+	if (!PickSetTranslator::retrieve(*ps, ioobj, true, msg)) {
 	    BufferString tmp("wmGridder2D::loadData - error reading contour polygon - ");
 	    tmp += msg;
 	    ErrMsg(tmp);
 	    return false;
 	}
-	for (int idp=0; idp<ps.size(); idp++) {
-	    const Pick::Location& pl = ps[idp];
-	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos().coord());
+	for (int idp=0; idp<ps->size(); idp++) {
+	    const Pick::Location& pl = ps->get(idp);
+	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos());
 	    setPoint(binLoc, pl.z());
 	    cvxhullpoly_.add(binLoc);
 	}
@@ -337,17 +337,17 @@ bool wmGridder2D::loadData()
             ErrMsg("wmGridder2D::loadData - cannot get crop polygon ioobj");
             return false;
         }
-        Pick::Set ps;
+	RefMan<Pick::Set> ps = new Pick::Set;
         BufferString msg;
-        if (!PickSetTranslator::retrieve(ps, ioobj, true, msg)) {
+        if (!PickSetTranslator::retrieve(*ps, ioobj, true, msg)) {
             BufferString tmp("wmGridder2D::loadData - error reading crop polygon - ");
             tmp += msg;
             ErrMsg(tmp);
             return false;
         }
-        for (int idx=0; idx<ps.size(); idx++) {
-            const Pick::Location& pl = ps[idx];
-	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos_.coord());
+        for (int idx=0; idx<ps->size(); idx++) {
+            const Pick::Location& pl = ps->get(idx);
+	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos());
             croppoly_.add(binLoc);
         }
         croppoly_.setClosed(true);
@@ -361,20 +361,20 @@ bool wmGridder2D::loadData()
             ErrMsg("wmGridder2D::loadData - cannot get fault polygon ioobj");
             return false;
         }
-        Pick::Set ps;
+	RefMan<Pick::Set> ps = new Pick::Set;
         BufferString msg;
-        if (!PickSetTranslator::retrieve(ps, ioobj, true, msg)) {
+        if (!PickSetTranslator::retrieve(*ps, ioobj, true, msg)) {
             BufferString tmp("wmGridder2D::loadData - error reading fault polygon - ");
             tmp += msg;
             ErrMsg(tmp);
             return false;
         }
-        for (int idp=0; idp<ps.size(); idp++) {
-            const Pick::Location& pl = ps[idp];
-	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos_.coord());
+        for (int idp=0; idp<ps->size(); idp++) {
+            const Pick::Location& pl = ps->get(idp);
+	    Coord binLoc = SI().binID2Coord().transformBackNoSnap(pl.pos());
 	    fault->add(binLoc);
         }
-        if (ps.disp_.connect_==Pick::Set::Disp::Close)
+        if (ps->disp_.connect_==Pick::Set::Disp::Close)
           fault->setClosed( true );
         else
           fault->setClosed( false );

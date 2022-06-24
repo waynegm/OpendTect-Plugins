@@ -133,6 +133,7 @@ bool uiConvexHull::acceptOK( CallBacker*)
     }
 
     PtrMan<CtxtIOObj> ctio = mMkCtxtIOObj(PickSet);
+    if (!ctio) return false;
     ctio->setName( polyname_ );
     const IODir iodir( ctio->ctxt_.getSelKey() );
     if ( iodir.get( polyname_, ctio->ctxt_.trgroup_->groupName() ) ) {
@@ -310,11 +311,9 @@ bool uiConvexHull::addToDisplay() const
     return saveButtonChecked();
 }
 
-Pick::Set* uiConvexHull::getPolygonPickSet() const
+RefMan<Pick::Set> uiConvexHull::getPolygonPickSet() const
 {
-    Pick::Set* ps = new Pick::Set;
-    if (!ps) return nullptr;
-    ps->setName( polyname_ );
+    RefMan<Pick::Set> ps = new Pick::Set( polyname_ );
     ps->disp_.color_ = colorfld_->color();
     ps->disp_.linestyle_ = OD::LineStyle(OD::LineStyle::Solid, 1, colorfld_->color());
     ps->disp_.connect_ = Pick::Set::Disp::Close;

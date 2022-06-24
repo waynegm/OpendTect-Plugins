@@ -109,13 +109,15 @@ uiString uiContourPoly::getCaptionStr() const
     return tr("Create Constant Z Polyline");
 }
 
-Pick::Set* uiContourPoly::getPolygonPickSet() const
+RefMan<Pick::Set> uiContourPoly::getPolygonPickSet() const
 {
-    Pick::Set* ps = new Pick::Set;
+    RefMan<Pick::Set> ps = new Pick::Set;
     if (!ps) return nullptr;
     ps->setName( polyname_ );
     ps->disp_.color_ = colorfld_->color();
     ps->disp_.linestyle_ = OD::LineStyle(OD::LineStyle::Solid, 1, colorfld_->color());
     ps->disp_.connect_ = Pick::Set::Disp::Open;
+    for ( int idx=0; idx<ps->size(); idx++ )
+	ps->setZ( idx, z_ );
     return ps;
 }

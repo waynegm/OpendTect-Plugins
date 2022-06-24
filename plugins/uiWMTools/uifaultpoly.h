@@ -45,10 +45,10 @@ mClass(uiWMTools) uiFaultPoly : public uiDialog
 public:
     uiFaultPoly(uiParent*);
     ~uiFaultPoly();
-    
+
     bool	addToDisplay() const;
     int		nrFaults() const;
-    Pick::Set*	getPolyForFault( int idx );
+    RefMan<Pick::Set>	getPolyForFault( int idx );
     // Becomes yours
     Coord3	lineSegmentIntersection(Coord3, Coord3,
 					const Geometry::BinIDSurface*) const;
@@ -59,12 +59,12 @@ protected:
     uiColorInput*		colorfld_;
     uiIOObjSel*			hor3Dfld_;
     uiFaultParSel*		faultsfld_;
-    
+
     BufferString		prefix_;
     EM::Horizon3D*		hor_;
-    
+
     bool                acceptOK(CallBacker*);
-    
+
 private:
     uiString    getCaptionStr() const;
 };
