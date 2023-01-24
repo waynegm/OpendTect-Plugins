@@ -23,6 +23,7 @@
 #include "survgeom2d.h"
 #include "trckeyzsampling.h"
 #include "wmgridder2d.h"
+#include "wmplugins.h"
 
 uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
 : uiDlgGroup(p, tr("Input Data")), hor2Dfld_(nullptr), lines2Dfld_(nullptr),
@@ -77,43 +78,55 @@ void uiInputGrp::exp3DselCB(CallBacker*)
 
 bool uiInputGrp::fillPar( IOPar& par ) const
 {
+    IOPar inp_par;
+    inp_par.set(sKey::Version(), wmPlugins::sKeyWMPluginsVersion());
     MultiID hor2Did, hor3Did;
     getHorIds(hor2Did, hor3Did);
     if (!hor2Did.isUdf()) {
         TypeSet<Pos::GeomID> mids;
         getGeoMids(mids);
         if (mids.size()>0) {
-            par.set( wmGridder2D::sKey2DHorizonID(), hor2Did );
-            par.set( wmGridder2D::sKey2DLineIDNr(), mids.size() );
+            inp_par.set( wmGridder2D::sKey2DHorizonID(), hor2Did );
+            inp_par.set( wmGridder2D::sKey2DLineIDNr(), mids.size() );
             for (int idx=0; idx<mids.size(); idx++)
-                par.set(IOPar::compKey(wmGridder2D::sKey2DLineID(), idx), mids[idx]);
+                inp_par.set(IOPar::compKey(wmGridder2D::sKey2DLineID(), idx), mids[idx]);
         }
     }
-    if (!hor3Did.isUdf() && exp3D_->isChecked()) {
-        par.set( wmGridder2D::sKey3DHorizonID(), hor3Did );
+    if (!hor3Did.isUdf() && exp3D_ && exp3D_->isChecked()) {
+        inp_par.set( wmGridder2D::sKey3DHorizonID(), hor3Did );
         TrcKeyZSampling tkz;
         get3Dsel(tkz);
-        tkz.hsamp_.fillPar(par);
+        tkz.hsamp_.fillPar(inp_par);
     }
 
     const TypeSet<MultiID>& selpolytids = contpolyfld_->selPolygonIDs();
-    par.set( wmGridder2D::sKeyContourPolyNr(), selpolytids.size() );
+    inp_par.set( wmGridder2D::sKeyContourPolyNr(), selpolytids.size() );
     for ( int idx=0; idx<selpolytids.size(); idx++ )
-	par.set( IOPar::compKey(wmGridder2D::sKeyContourPolyID(),idx), selpolytids[idx] );
+	inp_par.set( IOPar::compKey(wmGridder2D::sKeyContourPolyID(),idx), selpolytids[idx] );
 
+    par.mergeComp(inp_par, wmGridder2D::sKeyInput());
     return true;
 }
 
 void uiInputGrp::usePar( const IOPar& par )
 {
     MultiID hor2Did, hor3Did;
+    PtrMan<IOPar> inp_par;
+    BufferString parverstr;
+    if (par.get(IOPar::compKey(wmGridder2D::sKeyInput(), sKey::Version()), parverstr))
+	if (parverstr==wmPlugins::sKeyWMPluginsVersion())
+	    inp_par = par.subselect(sKey::Input());
+	else
+	    return;
+    else
+	return;
 
     hor3Did.setUdf();
-    if (par.get(wmGridder2D::sKey3DHorizonID(), hor3Did)) {
+    if (inp_par->get(wmGridder2D::sKey3DHorizonID(), hor3Did)) {
         if (hor3Dfld_ && subsel3Dfld_ && exp3D_) {
             hor3Dfld_->setInput(hor3Did);
             TrcKeyZSampling tkz;
-            tkz.usePar(par);
+            tkz.usePar(*inp_par);
             subsel3Dfld_->setInput(tkz);
 	    exp3D_->setChecked(true);
         }
@@ -123,15 +136,15 @@ void uiInputGrp::usePar( const IOPar& par )
     exp3DselCB(nullptr);
 
     hor2Did.setUdf();
-    if (par.get(wmGridder2D::sKey2DHorizonID(), hor2Did)) {
+    if (inp_par->get(wmGridder2D::sKey2DHorizonID(), hor2Did)) {
         if (hor2Dfld_!=nullptr) {
             int nlines = 0;
-            par.get(wmGridder2D::sKey2DLineIDNr(), nlines);
+            inp_par->get(wmGridder2D::sKey2DLineIDNr(), nlines);
             if (nlines>0) {
                 TypeSet<Pos::GeomID> mids;
                 for (int idx=0; idx<nlines; idx++) {
                     Pos::GeomID id;
-                    if (par.get(IOPar::compKey(wmGridder2D::sKey2DLineID(),idx), id))
+                    if (inp_par->get(IOPar::compKey(wmGridder2D::sKey2DLineID(),idx), id))
                         mids += id;
                 }
                 lines2Dfld_->setChosen(mids);
@@ -141,12 +154,12 @@ void uiInputGrp::usePar( const IOPar& par )
 
     int nrcontpoly = 0;
     contpolyfld_->setEmpty();
-    if (par.get(wmGridder2D::sKeyContourPolyNr(), nrcontpoly)) {
+    if (inp_par->get(wmGridder2D::sKeyContourPolyNr(), nrcontpoly)) {
 	if (nrcontpoly>0) {
 	    TypeSet<MultiID> polyIDs;
 	    for (int idx=0; idx<nrcontpoly; idx++) {
 		MultiID id;
-		if (!par.get(IOPar::compKey(wmGridder2D::sKeyContourPolyID(), idx), id))
+		if (!inp_par->get(IOPar::compKey(wmGridder2D::sKeyContourPolyID(), idx), id))
 		    return;
 		polyIDs += id;
 	    }

@@ -23,6 +23,7 @@
 
 #include "paralleltask.h"
 #include "survinfo.h"
+#include "uitaskrunner.h"
 
 class AzimuthBinner
 {
@@ -87,7 +88,7 @@ protected:
 typedef std::vector<std::pair<size_t,Pos::Ordinate_Type>> RadiusResultSet;
 
 
-mDefParallelCalc3Pars( LTPSInterpolator, od_static_tr("LTPSInterpolator","Local Thin-plate Spline interpolation"),
+mDefParallelCalc3Pars( LTPSInterpolator, od_static_tr("LTPSInterpolator","LTPS interpolation"),
 		       const wmLTPSGridder2D*, interp, CoordKDTree&, index, Threads::Lock, lock )
 mDefParallelCalcBody(
 const TypeSet<Coord>& locs_ = interp_->binLocs_;
@@ -168,22 +169,20 @@ grid_->set(ix, iy, (float)val);
 wmLTPSGridder2D::wmLTPSGridder2D()
 {}
 
-bool wmLTPSGridder2D::executeGridding(TaskRunner* tr)
+bool wmLTPSGridder2D::executeGridding(uiParent* p)
 {
-    localInterp();
+    localInterp(p);
     calcResidual();
 
     const CoordTypeSetAdaptor coords( binLocs_ );
     CoordKDTree nfindex( 2, coords );
     Threads::Lock lock;
     nfindex.buildIndex();
+    uiTaskRunner uitr(p);
+    uitr.setCaption(toUiString("Refine grid"));
     LTPSInterpolator interp( interpidx_.size(), this, nfindex, lock );
-    if (tr)
-	return TaskRunner::execute( tr, interp );
-    else
-	interp.execute();
-
-    return true;
+    const bool res = uitr.execute(interp);
+    return res;
 }
 
 void wmLTPSGridder2D::calcResidual()

@@ -1,5 +1,9 @@
 # OpendTect Plugins Release Notes
 
+## Release 6.6.11
+### uiGrid2D3DHorizon
+- try and fix reported crashes
+
 ## Release 6.6.10
 ### AVOPolarAttrib
 -  Replace Nans and Infs with Undefined

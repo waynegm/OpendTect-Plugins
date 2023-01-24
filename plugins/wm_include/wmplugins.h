@@ -1,6 +1,7 @@
 #pragma once
 
 #include "version.h"
+#include "bufstring.h"
 
 class wmPlugins
 {
@@ -9,5 +10,4 @@ public:
     static const char* sKeyWMSeismicSolutions()	{ return "WM Seismic Solutions"; }
     static const char* sKeyWMPluginsAuthor()	{ return "Wayne Mogg (WM Seismic Solutions)"; }
     static const char* sKeyWMPluginsVersion()	{ return wm_version; }
-
 };

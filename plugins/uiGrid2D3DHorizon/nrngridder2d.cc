@@ -1,12 +1,13 @@
 #include "nrngridder2d.h"
+#include "uiparent.h"
 
 wmNRNGridder2D::wmNRNGridder2D()
-{    
+{
 }
 
-bool wmNRNGridder2D::executeGridding(TaskRunner* tr)
+bool wmNRNGridder2D::executeGridding(uiParent* p)
 {
-    localInterp(false);
+    localInterp(p, false);
 
     for (int idx=0; idx<interpidx_.size(); idx++) {
 	BinID gridBid = hs_.atIndex(interpidx_[idx]);

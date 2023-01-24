@@ -63,7 +63,7 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     enableSaveButton(tr("Display after create"));
 
     IOPar par;
-    if (par.read(getParFileName(),0)) {
+    if (par.read(getParFileName(), "grid2d3d")) {
         if (inputgrp_)
 	    inputgrp_->usePar( par );
         if (gridgrp_)
@@ -80,7 +80,6 @@ uiGrid2D3DHorizonMainWin::~uiGrid2D3DHorizonMainWin()
 BufferString uiGrid2D3DHorizonMainWin::getParFileName()
 {
     FilePath fp(GetDataDir(), "Misc", "grid2d3d.par");
-    ErrMsg(fp.fullPath());
     return fp.fullPath();
 }
 
@@ -100,14 +99,14 @@ void uiGrid2D3DHorizonMainWin::tabSelCB( CallBacker* )
 bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
 {
     IOPar par;
-    inputgrp_->fillPar( par );
-    gridgrp_->fillPar( par );
     BufferString tmp;
+    inputgrp_->fillPar(par);
+    gridgrp_->fillPar(par);
     par.dumpPretty(tmp);
     ErrMsg(tmp);
-    par.write(getParFileName(), 0);
+    par.write(getParFileName(), "grid2d3d");
 
-    FixedString method = par.find( wmGridder2D::sKeyMethod() );
+    FixedString method = par.find(IOPar::compKey(wmGridder2D::sKeyGridDef(), wmGridder2D::sKeyMethod()));
     PtrMan<wmGridder2D> interpolator = wmGridder2D::create( method );
     if ( !interpolator ) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - selected interpolation method not found.");
@@ -126,13 +125,11 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
             return false;
     }
 
-    {
-        if (!interpolator->prepareForGridding())
-            return false;
-	uiTaskRunner uitr(this);
-	uitr.setCaption(tr("Gridding"));
-	interpolator->executeGridding(&uitr);
-    }
+    uiUserShowWait uisw(this, tr("Loading data"));
+    if (!interpolator->prepareForGridding(this))
+	return false;
+
+    interpolator->executeGridding(this);
 
     RefMan<EM::Horizon3D> hor3d = EM::Horizon3D::createWithConstZ(0.0, interpolator->getTrcKeySampling());
     if (!hor3d) {

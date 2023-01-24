@@ -13,6 +13,7 @@ keyholder keys[] = {
     {"avo", "avoattrib/"},
     {"avop","avopolarattrib/"},
     {"deh", "wmtools/#data-extent-horizon"},
+    {"efd", "efdattrib"},
     {"ext", "externalattrib/"},
     {"fpl", "wmtools/#fault-surface-3d-horizon-intersection-polyline"},
     {"geodisp","geopackagedisplay/"},
