@@ -77,9 +77,12 @@ void uiGrid2D3DHorizonMgr::updateMenu( CallBacker* )
 
 void uiGrid2D3DHorizonMgr::gridDialog( CallBacker* )
 {
-    if ( !dlg_ ) {
-        dlg_ = new uiGrid2D3DHorizonMainWin( appl_ );
+    if ( dlg_ )
+    {
+	dlg_->close();
+	deleteAndZeroPtr( dlg_ );
     }
+    dlg_ = new uiGrid2D3DHorizonMainWin( appl_ );
     dlg_->show();
     dlg_->raise();
 }

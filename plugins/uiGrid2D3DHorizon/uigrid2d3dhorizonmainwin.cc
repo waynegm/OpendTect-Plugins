@@ -40,12 +40,12 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
         CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
         const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
         const IODirEntryList entries2D( iodir2D, ctio2D.ctxt_ );
-        bool has2Dhorizon = SI().has2D() && entries2D.size()>0;
+        bool has2Dhorizon = entries2D.size()>0;
 
         CtxtIOObj ctio3D(EMHorizon3DTranslatorGroup::ioContext());
         const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
         const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
-        bool has3Dhorizon = SI().has3D() && entries3D.size()>0;
+        bool has3Dhorizon = entries3D.size()>0;
 
         if (has2Dhorizon || has3Dhorizon) {
             inputgrp_ = new uiInputGrp( tabparent, has2Dhorizon, has3Dhorizon );
@@ -99,11 +99,8 @@ void uiGrid2D3DHorizonMainWin::tabSelCB( CallBacker* )
 bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
 {
     IOPar par;
-    BufferString tmp;
     inputgrp_->fillPar(par);
     gridgrp_->fillPar(par);
-    par.dumpPretty(tmp);
-    ErrMsg(tmp);
     par.write(getParFileName(), "grid2d3d");
 
     FixedString method = par.find(IOPar::compKey(wmGridder2D::sKeyGridDef(), wmGridder2D::sKeyMethod()));

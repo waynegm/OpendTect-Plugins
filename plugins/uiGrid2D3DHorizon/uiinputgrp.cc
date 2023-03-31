@@ -1,5 +1,8 @@
 #include "uiinputgrp.h"
 
+#include "ioman.h"
+#include "iodir.h"
+#include "iodirentry.h"
 #include "uibutton.h"
 #include "uigeninput.h"
 #include "uicombobox.h"
@@ -29,36 +32,39 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
 : uiDlgGroup(p, tr("Input Data")), hor2Dfld_(nullptr), lines2Dfld_(nullptr),
   hor3Dfld_(nullptr), subsel3Dfld_(nullptr)
 {
-    uiObject* lastfld = nullptr;
+    uiIOObjSel::Setup su;
+    su.optional( true );
 
-    if (has2Dhorizon) {
-	hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), uiStrings::s2DHorizon());
-	mAttachCB(hor2Dfld_->selectionDone, uiInputGrp::hor2DselCB);
+    su.seltxt( uiStrings::s2DHorizon() );
+    hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), su);
+    mAttachCB(hor2Dfld_->selectionDone, uiInputGrp::hor2DselCB);
 
-        lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
-        lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
+    lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
+    lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
 
-        lastfld = (uiObject*) lines2Dfld_;
-    }
-    if (has3Dhorizon) {
-        exp3D_ = new uiCheckBox(this, tr("Include 3D horizon"));
-        if (lastfld!=nullptr)
-            exp3D_->attach(alignedBelow, lastfld);
-        exp3D_->setChecked(true);
-	mAttachCB(exp3D_->activated, uiInputGrp::exp3DselCB);
+    hor2Dfld_->setSensitive( has2Dhorizon );
+    hor2Dfld_->setChecked( has2Dhorizon );
+    lines2Dfld_->setSensitive( has2Dhorizon );
 
-        hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon());
-        hor3Dfld_->attach(alignedBelow, exp3D_);
-	mAttachCB(hor3Dfld_->selectionDone, uiInputGrp::hor3DselCB);
+    su.seltxt( uiStrings::s3DHorizon() );
+    hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), su);
+    hor3Dfld_->attach(alignedBelow, lines2Dfld_);
+    mAttachCB(hor3Dfld_->selectionDone, uiInputGrp::hor3DselCB);
 
-        subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
-        subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
+    subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
+    subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
-	lastfld = (uiObject*) subsel3Dfld_;
-    }
+    hor3Dfld_->setSensitive( has3Dhorizon );
+    hor3Dfld_->setChecked( has3Dhorizon );
+    subsel3Dfld_->setSensitive( has3Dhorizon );
 
     contpolyfld_ = new WMLib::uiPolygonParSel(this, tr("Contour Polygons/Polylines"), true);
-    contpolyfld_->attach( alignedBelow, lastfld );
+    contpolyfld_->attach( alignedBelow, subsel3Dfld_ );
+
+    mAttachCB(hor2Dfld_->optionalChecked, uiInputGrp::updateUICB);
+    mAttachCB(hor3Dfld_->optionalChecked, uiInputGrp::updateUICB);
+    mAttachCB(IOM().entryAdded, uiInputGrp::updateUICB);
+    mAttachCB(IOM().entryRemoved, uiInputGrp::updateUICB);
 
     update();
 }
@@ -68,21 +74,14 @@ uiInputGrp::~uiInputGrp()
     detachAllNotifiers();
 }
 
-void uiInputGrp::exp3DselCB(CallBacker*)
-{
-    if (exp3D_ && hor3Dfld_ && subsel3Dfld_) {
-	hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-	subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-    }
-}
-
 bool uiInputGrp::fillPar( IOPar& par ) const
 {
     IOPar inp_par;
     inp_par.set(sKey::Version(), wmPlugins::sKeyWMPluginsVersion());
     MultiID hor2Did, hor3Did;
     getHorIds(hor2Did, hor3Did);
-    if (!hor2Did.isUdf()) {
+    if (!hor2Did.isUdf())
+    {
         TypeSet<Pos::GeomID> mids;
         getGeoMids(mids);
         if (mids.size()>0) {
@@ -92,7 +91,8 @@ bool uiInputGrp::fillPar( IOPar& par ) const
                 inp_par.set(IOPar::compKey(wmGridder2D::sKey2DLineID(), idx), mids[idx]);
         }
     }
-    if (!hor3Did.isUdf() && exp3D_ && exp3D_->isChecked()) {
+    if (!hor3Did.isUdf() )
+    {
         inp_par.set( wmGridder2D::sKey3DHorizonID(), hor3Did );
         TrcKeyZSampling tkz;
         get3Dsel(tkz);
@@ -122,34 +122,44 @@ void uiInputGrp::usePar( const IOPar& par )
 	return;
 
     hor3Did.setUdf();
-    if (inp_par->get(wmGridder2D::sKey3DHorizonID(), hor3Did)) {
-        if (hor3Dfld_ && subsel3Dfld_ && exp3D_) {
-            hor3Dfld_->setInput(hor3Did);
-            TrcKeyZSampling tkz;
-            tkz.usePar(*inp_par);
-            subsel3Dfld_->setInput(tkz);
-	    exp3D_->setChecked(true);
-        }
-    } else if (exp3D_)
-	exp3D_->setChecked(false);
-
-    exp3DselCB(nullptr);
+    if (inp_par->get(wmGridder2D::sKey3DHorizonID(), hor3Did))
+    {
+	EM::IOObjInfo eminfo(hor3Did);
+        if ( eminfo.isOK() )
+	{
+	    hor3Dfld_->setSensitive( true );
+	    hor3Dfld_->setChecked( true );
+	    subsel3Dfld_->setSensitive( true );
+	    hor3Dfld_->setInput(hor3Did);
+	    TrcKeyZSampling tkz;
+	    tkz.usePar(*inp_par);
+	    subsel3Dfld_->setInput(tkz);
+	}
+    }
 
     hor2Did.setUdf();
-    if (inp_par->get(wmGridder2D::sKey2DHorizonID(), hor2Did)) {
-        if (hor2Dfld_!=nullptr) {
-            int nlines = 0;
-            inp_par->get(wmGridder2D::sKey2DLineIDNr(), nlines);
-            if (nlines>0) {
-                TypeSet<Pos::GeomID> mids;
-                for (int idx=0; idx<nlines; idx++) {
-                    Pos::GeomID id;
-                    if (inp_par->get(IOPar::compKey(wmGridder2D::sKey2DLineID(),idx), id))
-                        mids += id;
-                }
-                lines2Dfld_->setChosen(mids);
-            }
-        }
+    if (inp_par->get(wmGridder2D::sKey2DHorizonID(), hor2Did))
+    {
+	EM::IOObjInfo eminfo(hor2Did);
+        if ( eminfo.isOK() )
+	{
+	    hor2Dfld_->setSensitive( true );
+	    hor2Dfld_->setChecked( true );
+	    lines2Dfld_->setSensitive( true );
+	    int nlines = 0;
+	    inp_par->get(wmGridder2D::sKey2DLineIDNr(), nlines);
+	    if (nlines>0)
+	    {
+		TypeSet<Pos::GeomID> mids;
+		for (int idx=0; idx<nlines; idx++)
+		{
+		    Pos::GeomID id;
+		    if (inp_par->get(IOPar::compKey(wmGridder2D::sKey2DLineID(),idx), id))
+			mids += id;
+		}
+		lines2Dfld_->setChosen(mids);
+	    }
+	}
     }
 
     int nrcontpoly = 0;
@@ -173,12 +183,14 @@ void uiInputGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did ) const
 {
     hor2Did.setUdf();
     hor3Did.setUdf();
-    if (hor2Dfld_!=nullptr) {
+    if ( hor2Dfld_->isChecked() )
+    {
         const IOObj* horObj = hor2Dfld_->ioobj(true);
         if (horObj!=nullptr)
             hor2Did = horObj->key();
     }
-    if (hor3Dfld_!=nullptr) {
+    if ( hor3Dfld_->isChecked() )
+    {
         const IOObj* horObj = hor3Dfld_->ioobj(true);
         if (horObj!=nullptr)
             hor3Did = horObj->key();
@@ -266,7 +278,7 @@ void uiInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
 
 int uiInputGrp::num2DLinesChosen()
 {
-    if (hor2Dfld_!=nullptr && lines2Dfld_!=nullptr)
+    if ( hor2Dfld_->isChecked() )
         return lines2Dfld_->nrChosen();
     else
         return 0;
@@ -275,15 +287,34 @@ int uiInputGrp::num2DLinesChosen()
 void uiInputGrp::getGeoMids( TypeSet<Pos::GeomID>& geomids ) const
 {
     geomids.erase();
-    if (lines2Dfld_!=nullptr)
-        lines2Dfld_->getChosen(geomids);
+    lines2Dfld_->getChosen(geomids);
 }
 
 void uiInputGrp::get3Dsel( TrcKeyZSampling& envelope ) const
 {
     envelope.setEmpty();
-    if (subsel3Dfld_!=nullptr)
-        envelope = subsel3Dfld_->envelope();
+    envelope = subsel3Dfld_->envelope();
+}
+
+void uiInputGrp::updateUICB(CallBacker*)
+{
+    CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
+    const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
+    const IODirEntryList entries2D( iodir2D, ctio2D.ctxt_ );
+    bool has2Dhorizon = entries2D.size()>0;
+
+    CtxtIOObj ctio3D(EMHorizon3DTranslatorGroup::ioContext());
+    const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
+    const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
+    bool has3Dhorizon = entries3D.size()>0;
+
+    hor2Dfld_->setSensitive( has2Dhorizon );
+    hor2Dfld_->updateInput();
+    lines2Dfld_->setSensitive( has2Dhorizon && hor2Dfld_->isChecked() );
+
+    hor3Dfld_->setSensitive( has3Dhorizon );
+    hor3Dfld_->updateInput();
+    subsel3Dfld_->setSensitive( has3Dhorizon && hor3Dfld_->isChecked() );
 }
 
 void uiInputGrp::hor2DselCB(CallBacker* )
@@ -341,10 +372,8 @@ void uiInputGrp::hor3DselCB(CallBacker*)
 
 void uiInputGrp::update()
 {
-    if (hor2Dfld_!=nullptr)
+    if ( hor2Dfld_->sensitive() )
         hor2DselCB(0);
-    if (hor3Dfld_!=nullptr) {
+    if ( hor3Dfld_->sensitive() )
         hor3DselCB(0);
-        exp3DselCB(0);
-    }
 }

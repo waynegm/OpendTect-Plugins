@@ -7,20 +7,15 @@
 
 
 cmake_minimum_required (VERSION 3.0)
-project(OpendTect_Plugins)
+project(OpendTect_Plugins VERSION 6.6.12)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set ( OD_SUBSYSTEM "waynegm_plugin" )
 set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
-
-if(${CMAKE_SOURCE_DIR}/VERSION.txt IS_NEWER_THAN ${CMAKE_SOURCE_DIR}/plugins/wm_include/version.h)
-    file(STRINGS ${CMAKE_SOURCE_DIR}/VERSION.txt content)
-    set(delim "===")
-    set(content "static const char* wm_version = R\"${delim}(${content})${delim}\";")
-    file(WRITE ${CMAKE_SOURCE_DIR}/plugins/wm_include/version.h "${content}")
-endif()
+configure_file(wmplugins_version.h.in wmplugins_version.h)
+file ( WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION} )
 
 if((NOT ${EIGEN3_INCLUDE_DIR}) OR (NOT EXISTS ${EIGEN3_INCLUDE_DIR}))
     message("Unable to find system Eigen install - will use local")
@@ -50,20 +45,8 @@ if((NOT ${MBA_INCLUDE_DIR}) OR (NOT EXISTS ${MBA_INCLUDE_DIR}))
     set(MBA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
 endif()
 
-if(NOT ${CMAKE_SOURCE_DIR}/python_bindings/pybind11)
-    message("Unable to find system pybind11 - will use local")
-    execute_process(COMMAND git submodule update --init -- python_bindings/pybind11
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-    file( COPY ${CMAKE_SOURCE_DIR}/python_bindings/pybind11/include/pybind11 DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
-    set(PYBIND11_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
-endif()
-
-
-
 add_subdirectory(external)
-#add_subdirectory(python_bindings)
-include_directories(SYSTEM external/include plugins/wm_include)
+include_directories(SYSTEM external/include plugins/wm_include "${PROJECT_BINARY_DIR}")
 
 #Setup output directory
 option ( OD_BUILD_LOCAL "Build in local directory" OFF )
