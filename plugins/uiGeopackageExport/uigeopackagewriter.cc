@@ -1,58 +1,66 @@
 #include "uigeopackagewriter.h"
 
-#include "survinfo.h"
-#include "survgeom2d.h"
-#include "posinfo2d.h"
-#include "coordsystem.h"
-#include "crssystem.h"
-#include "crsproj.h"
 #include "bufstring.h"
 #include "bufstringset.h"
-#include "string2.h"
-#include "uistring.h"
-#include "uimsg.h"
-#include "errmsg.h"
+#include "coordsystem.h"
+#include "crsproj.h"
+#include "crssystem.h"
 #include "ctxtioobj.h"
-#include "ioman.h"
-#include "randomlinetr.h"
-#include "pickset.h"
-#include "picksettr.h"
-#include "welldata.h"
-#include "wellman.h"
-#include "welltrack.h"
-#include "wellmarker.h"
-#include "randomlinegeom.h"
 #include "emhorizon3d.h"
 #include "emhorizon2d.h"
+#include "emioobjinfo.h"
 #include "emmanager.h"
 #include "emsurfaceiodata.h"
 #include "emsurfacetr.h"
-#include "emioobjinfo.h"
+#include "errmsg.h"
+#include "file.h"
+#include "ioman.h"
+#include "pickset.h"
+#include "picksettr.h"
+#include "posinfo2d.h"
+#include "randomlinegeom.h"
+#include "randomlinetr.h"
+#include "string2.h"
+#include "survinfo.h"
+#include "survgeom2d.h"
+#include "welldata.h"
+#include "wellman.h"
+#include "wellmarker.h"
+#include "welltrack.h"
+#include "uistring.h"
+#include "uimsg.h"
 
-#include "ogrsf_frmts.h"
-#include "ogr_spatialref.h"
+#include "gpkgio.h"
 
 uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
-: gdalDS_(nullptr), poSRS_(nullptr), append_(append)
+: gpkg_(nullptr), srs_(nullptr), append_(append)
 {
-    if (SI().getCoordSystem()->isProjection()) {
-        const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
-        poSRS_= new OGRSpatialReference();
-        BufferString projstr(proj->getProjection()->defStr());
-        projstr += " +init=epsg:";
-        projstr += proj->getProjection()->authCode().id();
-
-        if (poSRS_->importFromProj4(projstr) != OGRERR_NONE) {
-            BufferString tmp("uiGeopackageWriter::uiGeopackageWriter - setting CRS in output file failed \n");
-            tmp += "Survey CRS: ";
-            tmp += SI().getCoordSystem()->summary();
-            tmp += "\n";
+    if (SI().getCoordSystem()->isProjection())
+    {
+	mDynamicCastGet(const Coords::ProjectionBasedSystem*, projsys, SI().getCoordSystem().ptr());
+	if (!projsys)
+	{
+	    BufferString tmp("uiGeopackageWriter::uiGeopackageWriter - getting survey CRS failed \n");
             ErrMsg(tmp);
-        } else {
-            open(filename);
-        }
-    } else {
-        BufferString crsSummary("uiGeopackageWriter::uiGeopackageWriter - unrecognised CRS: ");
+	}
+	const auto* proj = projsys->getProjection();
+	if (proj && open(filename))
+	{
+	    srs_ = new Coords::AuthorityCode(proj->authCode());
+	    if (!gpkg_ || !gpkg_->addSRS(proj->userName(), srs_->code(), srs_->authority(), srs_->code()))
+	    {
+		BufferString tmp("uiGeopackageWriter::uiGeopackageWriter - setting CRS in output file failed \n");
+		tmp += "Survey CRS: ";
+		tmp += SI().getCoordSystem()->summary();
+		tmp += "\n";
+		ErrMsg(tmp);
+		close();
+	    }
+	}
+    }
+    else
+    {
+        BufferString crsSummary("uiGeopackageWriter::uiGeopackageWriter - not a projected CRS: ");
         crsSummary += SI().getCoordSystem()->summary();
         ErrMsg(crsSummary);
     }
@@ -65,661 +73,648 @@ uiGeopackageWriter::~uiGeopackageWriter()
 
 bool uiGeopackageWriter::open( const char* filename )
 {
-    const char* papszAllowedDrivers[] = { "GPKG", NULL };
+    if (!append_ && File::exists(filename))
+	if (!File::remove(filename))
+	{
+	    BufferString tmp("GeopackageWriter::file already exists and can't be removed. ");
+	    ErrMsg(tmp);
+	    return false;
+	}
 
-    GDALAllRegister();
-
-    if (append_) {
-        gdalDS_ = GDALDataset::Open(filename, GDAL_OF_VECTOR || GDAL_OF_UPDATE, papszAllowedDrivers, nullptr, nullptr);
-        if (gdalDS_ == nullptr) {
-            ErrMsg("uiGeopackageWriter::open - cannot open output file for appending.");
-            return false;
-        }
-    } else {
-        GDALDriver* poDriver = GetGDALDriverManager()->GetDriverByName(papszAllowedDrivers[0]);
-        if (poDriver == nullptr) {
-            ErrMsg("uiGeopackageWriter::open - GPKG driver not available");
-            return false;
-        }
-        gdalDS_ = poDriver->Create(filename, 0, 0, 0, GDT_Unknown, nullptr);
-        if (gdalDS_ == nullptr) {
-            ErrMsg("uiGeopackageWriter::open - cannot create output file.");
-            return false;
-        }
+    gpkg_ = new GeopackageIO(filename, append_);
+    if (!gpkg_->isOK())
+    {
+	BufferString tmp("GeopackageWriter::open failed with error: ");
+	tmp.add(gpkg_->errorMsg());
+	ErrMsg(tmp);
+	return false;
     }
+
     return true;
 }
 
 void uiGeopackageWriter::close()
 {
-    if (gdalDS_ != nullptr)
-        GDALClose( gdalDS_ );
+    delete gpkg_;
+    gpkg_ = nullptr;
+    delete srs_;
+    srs_ = nullptr;
 }
 
 void uiGeopackageWriter::writeSurvey()
 {
-    if (gdalDS_ != nullptr) {
-        SurveyInfo* si = const_cast<SurveyInfo*>( &SI() );
+    if (!gpkg_ || !srs_)
+	return;
 
-        OGRLayer* poLayer = nullptr;
-        if (append_)
-            poLayer = gdalDS_->GetLayerByName( "Survey" );
-
-        if (poLayer == nullptr) {
-            poLayer = gdalDS_->CreateLayer( "Survey", poSRS_, wkbPolygon, NULL );
-            if (poLayer == nullptr) {
-                ErrMsg("uiGeopackageWriter::writeSurvey - creation of Survey layer failed");
-                return;
-            }
-            OGRFieldDefn oField( "Name", OFTString );
-            oField.SetWidth(32);
-            if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeSurvey - creating Name field failed" );
-                return;
-            }
-        }
-
-        OGRFeature feature( poLayer->GetLayerDefn() );
-        feature.SetField("Name", GetSurveyName());
-
-        OGRLinearRing ring;
-
-        const StepInterval<int> inlrg = si->inlRange( false );
-        const StepInterval<int> crlrg = si->crlRange( false );
-        Coord coord;
-        coord = si->transform(BinID(inlrg.start,crlrg.start));
-        ring.addPoint( coord.x, coord.y );
-        coord = si->transform(BinID(inlrg.start,crlrg.stop));
-        ring.addPoint( coord.x, coord.y );
-        coord = si->transform(BinID(inlrg.stop,crlrg.stop));
-        ring.addPoint( coord.x, coord.y );
-        coord = si->transform(BinID(inlrg.stop,crlrg.start));
-        ring.addPoint( coord.x, coord.y );
-        coord = si->transform(BinID(inlrg.start,crlrg.start));
-        ring.addPoint( coord.x, coord.y );
-
-        OGRPolygon survpoly;
-        survpoly.addRing(&ring);
-        feature.SetGeometry( &survpoly );
-        if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
-            ErrMsg("uiGeopackageWriter::writeSurvey - creating feature failed" );
+    std::vector<std::string> fieldnms({"name"});
+    std::vector<std::string> fielddefs({"TEXT NOT NULL"});
+    if (!gpkg_->addGeomLayer("polygon", "survey", srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::writeSurvey - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
     }
+
+    sqlite3_stmt* stmt;
+    if (!gpkg_->makeGeomStatement(&stmt, "survey", srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(stmt);
+	ErrMsg("uiGeopackageWriter::writeSurvey - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+
+    std::vector<double> points;
+    points.reserve(5);
+    const TrcKeySampling tk = SI().sampling( false ).hsamp_;
+    Coord coord;
+
+    coord = tk.toCoord(tk.corner(0));
+    points.push_back(coord.x);
+    points.push_back(coord.y);
+    coord = tk.toCoord(tk.corner(1));
+    points.push_back(coord.x);
+    points.push_back(coord.y);
+    coord = tk.toCoord(tk.corner(3));
+    points.push_back(coord.x);
+    points.push_back(coord.y);
+    coord = tk.toCoord(tk.corner(2));
+    points.push_back(coord.x);
+    points.push_back(coord.y);
+    coord = tk.toCoord(tk.corner(4));
+    points.push_back(coord.x);
+    points.push_back(coord.y);
+
+    std::vector<std::vector<double>> poly({points});
+    gpkg_->startTransaction();
+    if (!gpkg_->addPolygon(stmt, poly, GetSurveyName()))
+    {
+	ErrMsg("uiGeopackageWriter::writeSurvey - writing feature failed.");
+	ErrMsg(gpkg_->errorMsg());
+	gpkg_->rollbackTransaction();
+    }
+    else
+	gpkg_->commitTransaction();
+
+    sqlite3_finalize(stmt);
 }
 
 void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
 {
-    if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = nullptr;
-        if (append_)
-            poLayer = gdalDS_->GetLayerByName( "2DLines" );
+    if (!gpkg_ || !srs_)
+	return;
 
-        if (poLayer == nullptr) {
-            poLayer = gdalDS_->CreateLayer( "2DLines", poSRS_, wkbLineString, NULL );
-            if (poLayer == nullptr) {
-                ErrMsg("uiGeopackageWriter::write2DLines - creation of 2DLines layer failed");
-                return;
-            }
-            OGRFieldDefn oField( "LineName", OFTString );
-            oField.SetWidth(32);
-            if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::write2DLines - creation of LineName field failed" );
-                return;
-            }
-        }
-
-        for ( int idx=0; idx<geomids.size(); idx++ ) {
-            mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
-            if ( !geom2d )
-                continue;
-
-            const PosInfo::Line2DData& geom = geom2d->data();
-            const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
-
-            OGRFeature feature( poLayer->GetLayerDefn() );
-            feature.SetField("LineName", geom2d->getName());
-
-            OGRLineString line;
-            for ( int tdx=0; tdx<posns.size(); tdx++ ) {
-                Coord pos = posns[tdx].coord_;
-                line.addPoint( pos.x, pos.y );
-            }
-            feature.SetGeometry( &line );
-            if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
-                ErrMsg("uiGeopackageWriter::write2DLines - creating feature failed" );
-        }
+    std::vector<std::string> fieldnms({"line_name"});
+    std::vector<std::string> fielddefs({"TEXT NOT NULL"});
+    if (!gpkg_->addGeomLayer("linestring", "lines2d", srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::write2DLines - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
     }
+
+    sqlite3_stmt* stmt;
+    if (!gpkg_->makeGeomStatement(&stmt, "lines2d", srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(stmt);
+	ErrMsg("uiGeopackageWriter::write2DLines - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+
+    for ( int idx=0; idx<geomids.size(); idx++ )
+    {
+	mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+	if ( !geom2d )
+	    continue;
+
+	const PosInfo::Line2DData& geom = geom2d->data();
+	const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
+
+	std::vector<double> points;
+	points.reserve(posns.size()*2);
+	for ( int tdx=0; tdx<posns.size(); tdx++ )
+	{
+	    const Coord pos = posns[tdx].coord_;
+	    points.push_back(pos.x);
+	    points.push_back(pos.y);
+	}
+
+	gpkg_->startTransaction();
+	if (!gpkg_->addLineString(stmt, points, geom.lineName().buf()))
+	{
+	    ErrMsg("uiGeopackageWriter::write2DLines - writing feature failed.");
+	    ErrMsg(gpkg_->errorMsg());
+	    gpkg_->rollbackTransaction();
+	}
+	else
+	    gpkg_->commitTransaction();
+    }
+    sqlite3_finalize(stmt);
 }
 
 void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
 {
-    if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = nullptr;
-        if (append_)
-            poLayer = gdalDS_->GetLayerByName( "2DStations" );
+    if (!gpkg_ || !srs_)
+	return;
 
-        if (poLayer == nullptr) {
-            poLayer = gdalDS_->CreateLayer( "2DStations", poSRS_, wkbPoint, NULL );
-            if (poLayer == nullptr) {
-                ErrMsg("uiGeopackageWriter::write2DStations - creation of 2DStations layer failed");
-                return;
-            }
-            OGRFieldDefn oLineField( "LineName", OFTString );
-            oLineField.SetWidth(32);
-            if( poLayer->CreateField( &oLineField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::write2DStations - creating Line Name field failed" );
-                return;
-            }
-            OGRFieldDefn oStationField( "Station", OFTInteger );
-            if( poLayer->CreateField( &oStationField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::write2DStations - creating Station field failed" );
-                return;
-            }
-        }
-
-        for ( int idx=0; idx<geomids.size(); idx++ ) {
-            mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
-            if ( !geom2d )
-                continue;
-            const PosInfo::Line2DData& geom = geom2d->data();
-            const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
-
-            if (gdalDS_->StartTransaction() == OGRERR_FAILURE) {
-                ErrMsg("uiGeopackageWriter::write2DStations - starting transaction for writing 2DStation layer failed" );
-                continue;
-            }
-            for ( int tdx=0; tdx<posns.size(); tdx++ ) {
-                OGRFeature feature( poLayer->GetLayerDefn() );
-                feature.SetField("LineName", geom2d->getName());
-                feature.SetField("Station", posns[tdx].nr_);
-
-                OGRPoint pt;
-                Coord pos = posns[tdx].coord_;
-                pt.setX(pos.x);
-                pt.setY(pos.y);
-                feature.SetGeometry( &pt );
-                if (poLayer->CreateFeature( &feature ) != OGRERR_NONE) {
-                    ErrMsg("uiGeopackageWriter::write2DStations - creating feature failed" );
-                    gdalDS_->RollbackTransaction();
-                    break;
-                }
-            }
-            if (gdalDS_->CommitTransaction() == OGRERR_FAILURE) {
-                ErrMsg("uiGeopackageWriter::write2DStations - transaction commit for 2DStations layer failed" );
-                return;
-            }
-        }
+    std::vector<std::string> fieldnms({"line_name", "station"});
+    std::vector<std::string> fielddefs({"TEXT NOT NULL", "INTEGER"});
+    if (!gpkg_->addGeomLayer("point", "stations2d", srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::write2DStations - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
     }
+
+    sqlite3_stmt* stmt;
+    if (!gpkg_->makeGeomStatement(&stmt, "stations2d", srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(stmt);
+	ErrMsg("uiGeopackageWriter::write2DStations - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+
+    for ( int idx=0; idx<geomids.size(); idx++ )
+    {
+	mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+	if ( !geom2d )
+	    continue;
+	const PosInfo::Line2DData& geom = geom2d->data();
+	const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
+
+	gpkg_->startTransaction();
+	for ( int tdx=0; tdx<posns.size(); tdx++ )
+	{
+	    if ( !gpkg_->addPoint(stmt, posns[tdx].coord_.x, posns[tdx].coord_.y,
+			     geom2d->getName(), posns[tdx].nr_))
+	    {
+		ErrMsg("uiGeopackageWriter::write2DStations - writing feature failed.");
+		ErrMsg(gpkg_->errorMsg());
+		gpkg_->rollbackTransaction();
+		break;
+	    }
+	}
+	gpkg_->commitTransaction();
+    }
+    sqlite3_finalize(stmt);
 }
 
 void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
 {
-    if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = nullptr;
-        if (append_)
-            poLayer = gdalDS_->GetLayerByName( "RandomLines" );
-
-        if (poLayer == nullptr) {
-            poLayer = gdalDS_->CreateLayer( "RandomLines", poSRS_, wkbLineString, NULL );
-            if (poLayer == nullptr) {
-                ErrMsg("uiGeopackageWriter::writeRandomLines - creation of RandomLines layer failed");
-                return;
-            }
-            OGRFieldDefn oField( "LineName", OFTString );
-            oField.SetWidth(32);
-            if( poLayer->CreateField( &oField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeRandomLines - creating Line Name field failed" );
-                return;
-            }
-        }
-
-        for ( int idx=0; idx<lineids.size(); idx++ ) {
-            Geometry::RandomLineSet inprls;
-            BufferString msg;
-            IOObj* ioobj = IOM().get(lineids[idx]);
-            if ( ioobj == nullptr ) {
-                ErrMsg("uiGeopackageWriter::writeRandomLines - cannot get ioobj" );
-                continue;
-            }
-
-            if (!RandomLineSetTranslator::retrieve( inprls, ioobj, msg )) {
-                BufferString tmp("uiGeopackageWriter::writeRandomLines - error reading random line - ");
-                tmp += msg;
-                ErrMsg(tmp);
-                return;
-            }
-
-            for (int rdx=0; rdx<inprls.size(); rdx++) {
-                const Geometry::RandomLine* rdl = inprls.lines()[rdx];
-                if ( rdl == nullptr ) {
-                    ErrMsg("uiGeopackageWriter::writeRandomLines - cannot get random line geometry" );
-                    continue;
-                }
-                OGRFeature feature( poLayer->GetLayerDefn() );
-                feature.SetField("LineName", rdl->name());
-
-                OGRLineString line;
-                for ( int tdx=0; tdx<rdl->nrNodes(); tdx++ ) {
-                    Coord pos = SI().transform( rdl->nodePosition(tdx) );;
-                    line.addPoint( pos.x, pos.y );
-                }
-                feature.SetGeometry( &line );
-                if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
-                    ErrMsg("uiGeopackageWriter::writeRandomLines - creating feature failed" );
-            }
-        }
+    std::vector<std::string> fieldnms({"line_name"});
+    std::vector<std::string> fielddefs({"TEXT NOT NULL"});
+    if (!gpkg_->addGeomLayer("linestring", "random_lines", srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::writeRandomLines - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
     }
+
+    sqlite3_stmt* stmt;
+    if (!gpkg_->makeGeomStatement(&stmt, "random_lines", srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(stmt);
+	ErrMsg("uiGeopackageWriter::writeRandomLines - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+
+    for ( int idx=0; idx<lineids.size(); idx++ )
+    {
+	Geometry::RandomLineSet inprls;
+	BufferString msg;
+	IOObj* ioobj = IOM().get(lineids[idx]);
+	if ( ioobj == nullptr )
+	{
+	    ErrMsg("uiGeopackageWriter::writeRandomLines - cannot get ioobj" );
+	    continue;
+	}
+
+	if (!RandomLineSetTranslator::retrieve( inprls, ioobj, msg ))
+	{
+	    BufferString tmp("uiGeopackageWriter::writeRandomLines - error reading random line - ");
+	    tmp += msg;
+	    ErrMsg(tmp);
+	    return;
+	}
+
+	for (int rdx=0; rdx<inprls.size(); rdx++)
+	{
+	    const Geometry::RandomLine* rdl = inprls.lines()[rdx];
+	    if ( rdl == nullptr ) {
+		ErrMsg("uiGeopackageWriter::writeRandomLines - cannot get random line geometry" );
+		continue;
+	    }
+	    std::vector<double> points;
+	    points.reserve(rdl->nrNodes()*2);
+	    for ( int tdx=0; tdx<rdl->nrNodes(); tdx++ )
+	    {
+		const Coord pos = SI().transform(rdl->nodePosition(tdx));
+		points.push_back(pos.x);
+		points.push_back(pos.y);
+	    }
+
+	    gpkg_->startTransaction();
+	    if (!gpkg_->addLineString(stmt, points, rdl->name().str()))
+	    {
+		ErrMsg("uiGeopackageWriter::writeRandomLines - writing feature failed.");
+		ErrMsg(gpkg_->errorMsg());
+		gpkg_->rollbackTransaction();
+		continue;
+	    }
+	    else
+		gpkg_->commitTransaction();
+	}
+    }
+    sqlite3_finalize(stmt);
 }
 
 void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
 {
-    if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = nullptr;
-        if (append_)
-            poLayer = gdalDS_->GetLayerByName( "Wells" );
+    if (!gpkg_ || !srs_)
+	return;
 
-        if (poLayer == nullptr) {
-            poLayer = gdalDS_->CreateLayer( "Wells", poSRS_, wkbPoint, NULL );
-            if (poLayer == nullptr) {
-                ErrMsg("uiGeopackageWriter::writeWells - creation of Wells layer failed");
-                return;
-            }
-            OGRFieldDefn oNameField( "WellName", OFTString );
-            oNameField.SetWidth(32);
-            if( poLayer->CreateField( &oNameField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeWells - creating WellName field failed" );
-                return;
-            }
-            OGRFieldDefn ouwidField( "UWID", OFTString );
-            ouwidField.SetWidth(32);
-            if( poLayer->CreateField( &ouwidField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeWells - creating UWID field failed" );
-                return;
-            }
-            OGRFieldDefn oStatusField( "Status", OFTInteger );
-            if( poLayer->CreateField( &oStatusField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeWells - creating Status field failed" );
-                return;
-            }
-        }
-
-        for ( int idx=0; idx<wellids.size(); idx++ ) {
-            Well::Data* wd = Well::MGR().get(wellids[idx]);
-            if ( wd == nullptr ) {
-                ErrMsg("uiGeopackageWriter::writeWells - unable to read well data");
-                continue;
-            }
-            Well::Info& wdinfo = wd->info();
-
-            OGRFeature feature( poLayer->GetLayerDefn() );
-            feature.SetField("WellName", wdinfo.name());
-            feature.SetField("UWID", wdinfo.uwid_);
-            feature.SetField("Status", wdinfo.welltype_);
-
-            OGRPoint pt;
-            pt.setX(wdinfo.surfacecoord_.x);
-            pt.setY(wdinfo.surfacecoord_.y);
-            feature.SetGeometry( &pt );
-            if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
-                ErrMsg("uiGeopackageWriter::writeWells - creating feature failed" );
-
-        }
+    std::vector<std::string> fieldnms({"name", "uwid", "status"});
+    std::vector<std::string> fielddefs({"TEXT NOT NULL", "TEXT", "INTEGER"});
+    if (!gpkg_->addGeomLayer("point", "wells", srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::writeWells - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
     }
+
+    sqlite3_stmt* stmt;
+    if (!gpkg_->makeGeomStatement(&stmt, "wells", srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(stmt);
+	ErrMsg("uiGeopackageWriter::writeWells - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+    for ( int idx=0; idx<wellids.size(); idx++ )
+    {
+	ConstRefMan<Well::Data> wd = Well::MGR().get(wellids[idx]);
+	if ( !wd )
+	{
+	    ErrMsg("uiGeopackageWriter::writeWells - unable to read well data.");
+	    continue;
+	}
+	const Well::Info& wdinfo = wd->info();
+	gpkg_->startTransaction();
+	if ( !gpkg_->addPoint(stmt, wdinfo.surfacecoord_.x, wdinfo.surfacecoord_.y,
+			      wdinfo.name().str(), wdinfo.uwid_.str(), OD::WellTypeDef().indexOf(wdinfo.welltype_)))
+	{
+	    ErrMsg("uiGeopackageWriter::writeWells - writing well data error.");
+	    ErrMsg(gpkg_->errorMsg());
+	    gpkg_->rollbackTransaction();
+	    continue;
+	}
+	else
+	    gpkg_->commitTransaction();
+    }
+    sqlite3_finalize(stmt);
 }
 
 void uiGeopackageWriter::writeWellTracks( TypeSet<MultiID>& wellids )
 {
-    if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = nullptr;
-        if (append_)
-            poLayer = gdalDS_->GetLayerByName( "WellTracks" );
+    if (!gpkg_ || !srs_)
+	return;
 
-        if (poLayer == nullptr) {
-            poLayer = gdalDS_->CreateLayer( "WellTracks", poSRS_, wkbLineString, NULL );
-            if (poLayer == nullptr) {
-                ErrMsg("uiGeopackageWriter::writeWellTracks - creation of WellTracks layer failed");
-                return;
-            }
-            OGRFieldDefn oNameField( "WellName", OFTString );
-            oNameField.SetWidth(32);
-            if( poLayer->CreateField( &oNameField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeWellTracks - creating WellName field failed" );
-                return;
-            }
-        }
-
-        for ( int idx=0; idx<wellids.size(); idx++ ) {
-            Well::Data* wd = Well::MGR().get(wellids[idx]);
-            if ( wd == nullptr ) {
-                ErrMsg("uiGeopackageWriter::writeWellTracks - unable to read well data");
-                continue;
-            }
-            Well::Info& wdinfo = wd->info();
-            const Well::Track& wtrack = wd->track();
-            const TypeSet<Coord3>& wtrackpos = wtrack.getAllPos();
-
-            OGRFeature feature( poLayer->GetLayerDefn() );
-            feature.SetField("WellName", wdinfo.name());
-
-            OGRLineString track;
-            for (int tdx=0; tdx<wtrackpos.size(); tdx++) {
-                Coord3 pos = wtrackpos[tdx];
-                track.addPoint(pos.x, pos.y);
-            }
-            feature.SetGeometry( &track );
-            if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
-                ErrMsg("uiGeopackageWriter::writeWellTracks - creating feature failed" );
-
-        }
+    std::vector<std::string> fieldnms({"name"});
+    std::vector<std::string> fielddefs({"TEXT NOT NULL"});
+    if (!gpkg_->addGeomLayer("linestring", "well_tracks", srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::writeWellTracks - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
     }
+
+    sqlite3_stmt* stmt;
+    if (!gpkg_->makeGeomStatement(&stmt, "well_tracks", srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(stmt);
+	ErrMsg("uiGeopackageWriter::writeWellTracks - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+    for ( int idx=0; idx<wellids.size(); idx++ )
+    {
+	ConstRefMan<Well::Data> wd = Well::MGR().get(wellids[idx]);
+	if (!wd)
+	{
+	    ErrMsg("uiGeopackageWriter::writeWellTracks - unable to read well data");
+	    continue;
+	}
+	const Well::Info& wdinfo = wd->info();
+	const Well::Track& wtrack = wd->track();
+	const TypeSet<Coord3>& wtrackpos = wtrack.getAllPos();
+	std::vector<double> points;
+	points.reserve(wtrackpos.size()*2);
+	for (int tdx=0; tdx<wtrackpos.size(); tdx++)
+	{
+	    Coord3 pos = wtrackpos[tdx];
+	    points.push_back(pos.x);
+	    points.push_back(pos.y);
+	}
+	gpkg_->startTransaction();
+	if (!gpkg_->addLineString(stmt, points, wdinfo.name().str()))
+	{
+	    ErrMsg("uiGeopackageWriter::writeWellTracks - writing feature failed.");
+	    ErrMsg(gpkg_->errorMsg());
+	    gpkg_->rollbackTransaction();
+	    continue;
+	}
+	else
+	    gpkg_->commitTransaction();
+    }
+    sqlite3_finalize(stmt);
 }
 
 void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids, bool inFeet )
 {
-    if (gdalDS_ != nullptr) {
-        OGRLayer* poLayer = nullptr;
-        if (append_)
-            poLayer = gdalDS_->GetLayerByName( "WellMarkers" );
+    if (!gpkg_ || !srs_)
+	return;
 
-        if (poLayer == nullptr) {
-            poLayer = gdalDS_->CreateLayer( "WellMarkers", poSRS_, wkbPoint, NULL );
-            if (poLayer == nullptr) {
-                ErrMsg("uiGeopackageWriter::writeWellMarkers - creation of WellMarkers layer failed");
-                return;
-            }
-            OGRFieldDefn oNameField( "WellName", OFTString );
-            oNameField.SetWidth(32);
-            if( poLayer->CreateField( &oNameField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeWellMarkers - creating WellName field failed" );
-                return;
-            }
-            OGRFieldDefn oMarkerField( "Marker", OFTString );
-            oMarkerField.SetWidth(32);
-            if( poLayer->CreateField( &oMarkerField ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeWellMarkers - creating Marker field failed" );
-                return;
-            }
-            OGRFieldDefn oMD( inFeet?"MD(ft)":"MD(m)", OFTReal );
-            if( poLayer->CreateField( &oMD ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeWellMarkers - creating MD field failed" );
-                return;
-            }
-            OGRFieldDefn oTVDSS( inFeet?"TVDSS(ft)":"TVDSS(m)", OFTReal );
-            if( poLayer->CreateField( &oTVDSS ) != OGRERR_NONE ) {
-                ErrMsg("uiGeopackageWriter::writeWellMarkers - creating TVDSS field failed" );
-                return;
-            }
-        }
-        if (poLayer->FindFieldIndex("MD(ft)", true) != -1)
-            inFeet = true;
-        else
-            inFeet = false;
-
-        for ( int idx=0; idx<wellids.size(); idx++ ) {
-            Well::Data* wd = Well::MGR().get(wellids[idx]);
-            if ( wd == nullptr ) {
-                ErrMsg("uiGeopackageWriter::writeWellMarkers - unable to read well data");
-                continue;
-            }
-            Well::Info& wdinfo = wd->info();
-            const Well::Track& wtrack = wd->track();
-            const Well::MarkerSet& wmarkers = wd->markers();
-
-            for (int tdx=0; tdx<wmarkers.size(); tdx++) {
-                OGRFeature feature( poLayer->GetLayerDefn() );
-
-                feature.SetField("WellName", wdinfo.name());
-                feature.SetField("Marker", wmarkers[tdx]->name());
-                float md = wmarkers[tdx]->dah();
-                Coord3 pos = wtrack.getPos(md);
-                float tvdss = pos.z;
-                if (inFeet) {
-                    feature.SetField("MD(ft)", md*mToFeetFactorF);
-                    feature.SetField("TVDSS(ft)", tvdss*mToFeetFactorF);
-                } else {
-                    feature.SetField("MD(m)", md);
-                    feature.SetField("TVDSS(m)", tvdss);
-                }
-                OGRPoint pt;
-                pt.setX(pos.x);
-                pt.setY(pos.y);
-                feature.SetGeometry( &pt );
-                if (poLayer->CreateFeature( &feature ) != OGRERR_NONE)
-                    ErrMsg("uiGeopackageWriter::writeWellMarkers - creating feature failed" );
-            }
-        }
+    std::vector<std::string> fieldnms({"name", "marker", inFeet?"md(ft)":"md(m)", inFeet?"tvdss(ft)":"tvdss(m)"});
+    std::vector<std::string> fielddefs({"TEXT NOT NULL", "TEXT NOT NULL", "REAL", "REAL"});
+    if (!gpkg_->addGeomLayer("point", "well_markers", srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::writeWellMarkers - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
     }
+
+    sqlite3_stmt* stmt;
+    if (!gpkg_->makeGeomStatement(&stmt, "well_markers", srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(stmt);
+	ErrMsg("uiGeopackageWriter::writeWellMarkers - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+    for ( int idx=0; idx<wellids.size(); idx++ )
+    {
+	ConstRefMan<Well::Data> wd = Well::MGR().get(wellids[idx]);
+	if (!wd)
+	{
+	    ErrMsg("uiGeopackageWriter::writeWellMarkers - unable to read well data");
+	    continue;
+	}
+	const Well::Info& wdinfo = wd->info();
+	const Well::Track& wtrack = wd->track();
+	const Well::MarkerSet& wmarkers = wd->markers();
+	for (int tdx=0; tdx<wmarkers.size(); tdx++)
+	{
+	    float md = wmarkers[tdx]->dah();
+	    Coord3 pos = wtrack.getPos(md);
+	    float tvdss = pos.z;
+
+	    gpkg_->startTransaction();
+	    if ( !gpkg_->addPoint(stmt, pos.x, pos.y, wdinfo.name().str(), wmarkers[tdx]->name().str(), md, tvdss))
+	    {
+		ErrMsg("uiGeopackageWriter::writeWellMarkers - writing well data error.");
+		ErrMsg(gpkg_->errorMsg());
+		gpkg_->rollbackTransaction();
+		continue;
+	    }
+	    else
+		gpkg_->commitTransaction();
+	}
+    }
+    sqlite3_finalize(stmt);
 }
 
 void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
 {
-    if (gdalDS_ != nullptr) {
-        OGRLayer* poLayerLines = nullptr;
-        OGRLayer* poLayerPolygons = nullptr;
-        if (append_) {
-            poLayerLines = gdalDS_->GetLayerByName( "PolyLines" );
-            poLayerPolygons = gdalDS_->GetLayerByName( "Polygons" );
-        }
+    if (!gpkg_ || !srs_ || !lineids.size())
+	return;
 
-        OGRFieldDefn oField( "Name", OFTString );
-        oField.SetWidth(32);
-
-        for ( int idx=0; idx<lineids.size(); idx++ ) {
-            Pick::Set ps;
-            BufferString msg;
-            IOObj* ioobj = IOM().get(lineids[idx]);
-            if ( ioobj == nullptr ) {
-                ErrMsg("uiGeopackageWriter::writePolyLines - cannot get ioobj" );
-                continue;
-            }
-            if (!PickSetTranslator::retrieve( ps, ioobj, true, msg )) {
-                BufferString tmp("uiGeopackageWriter::writePolyLines - error reading polyline - ");
-                tmp += msg;
-                ErrMsg(tmp);
-                return;
-            }
-            if (ps.disp_.connect_ == Pick::Set::Disp::Close ) {
-                if (poLayerPolygons == nullptr) {
-                    poLayerPolygons = gdalDS_->CreateLayer( "Polygons", poSRS_, wkbPolygon, NULL );
-                    if (poLayerPolygons == nullptr) {
-                        ErrMsg("uiGeopackageWriter::writePolyLines - creation of Polygons layer failed");
-                        return;
-                    }
-                    if( poLayerPolygons->CreateField( &oField ) != OGRERR_NONE ) {
-                        ErrMsg("uiGeopackageWriter::writePolyLines - creating Name field in Polygons layer failed" );
-                        return;
-                    }
-                }
-                OGRLinearRing ring;
-                OGRFeature feature( poLayerPolygons->GetLayerDefn() );
-                feature.SetField("Name", ps.name());
-                for (int rdx=0; rdx<ps.size(); rdx++) {
-                    const Coord3 pos = ps[rdx].pos();
-                    ring.addPoint( pos.x, pos.y );
-                }
-                ring.addPoint(ps[0].pos().x, ps[0].pos().y);
-
-                OGRPolygon poly;
-                poly.addRing(&ring);
-                feature.SetGeometry( &poly );
-                if (poLayerPolygons->CreateFeature( &feature ) != OGRERR_NONE)
-                    ErrMsg("uiGeopackageWriter::writePolyLines - creating polygon feature failed" );
-
-            } else {
-                if (poLayerLines == nullptr) {
-                    poLayerLines = gdalDS_->CreateLayer( "PolyLines", poSRS_, wkbLineString, NULL );
-                    if (poLayerLines == nullptr) {
-                        ErrMsg("uiGeopackageWriter::writePolyLines - creation of PolyLines layer failed");
-                        return;
-                    }
-                    if( poLayerLines->CreateField( &oField ) != OGRERR_NONE ) {
-                        ErrMsg("uiGeopackageWriter::writePolyLines - creating Name field in PolyLines layer failed" );
-                        return;
-                    }
-                }
-                OGRLineString line;
-                OGRFeature feature( poLayerLines->GetLayerDefn() );
-                feature.SetField("Name", ps.name());
-                for (int rdx=0; rdx<ps.size(); rdx++) {
-                    const Coord3 pos = ps[rdx].pos();
-                    line.addPoint( pos.x, pos.y );
-                }
-
-                feature.SetGeometry( &line );
-                if (poLayerLines->CreateFeature( &feature ) != OGRERR_NONE)
-                    ErrMsg("uiGeopackageWriter::writePolyLines - creating polyline feature failed" );
-            }
-        }
+    std::vector<std::string> fieldnms({"name"});
+    std::vector<std::string> fielddefs({"TEXT NOT NULL"});
+    if (!gpkg_->addGeomLayer("linestring", "polylines", srs_->code(), fieldnms, fielddefs) ||
+	!gpkg_->addGeomLayer("polygon", "polygons", srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::writePolyLines - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
     }
+
+    sqlite3_stmt* pl_stmt;
+    sqlite3_stmt* pg_stmt;
+    if (!gpkg_->makeGeomStatement(&pl_stmt, "polylines", srs_->code(), fieldnms) ||
+	!gpkg_->makeGeomStatement(&pg_stmt, "polygons", srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(pl_stmt);
+	sqlite3_finalize(pg_stmt);
+	ErrMsg("uiGeopackageWriter::writePolyLines - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+
+    for ( int idx=0; idx<lineids.size(); idx++ )
+    {
+	RefMan<Pick::Set> ps = new Pick::Set;
+	BufferString msg;
+	IOObj* ioobj = IOM().get(lineids[idx]);
+	if ( !ioobj ) {
+	    ErrMsg("uiGeopackageWriter::writePolyLines - cannot get ioobj" );
+	    continue;
+	}
+
+	if (!PickSetTranslator::retrieve(*ps, ioobj, true, msg))
+	{
+	    BufferString tmp("uiGeopackageWriter::writePolyLines - error reading polyline - ");
+	    tmp += msg;
+	    ErrMsg(tmp);
+	    return;
+	}
+
+	const bool ispolygon = ps->isPolygon() && ps->disp_.connect_==Pick::Set::Disp::Close;
+	std::vector<double> points;
+	points.reserve(ispolygon ? ps->size()*2+2 : ps->size()*2);
+	for (int rdx=0; rdx<ps->size(); rdx++)
+	{
+	    const Coord3 pos = ps->get(rdx).pos();
+	    points.push_back(pos.x);
+	    points.push_back(pos.y);
+	}
+	if (ispolygon)
+	{
+	    points.push_back(ps->get(0).pos().x);
+	    points.push_back(ps->get(0).pos().y);
+	    std::vector<std::vector<double>> poly({points});
+	    gpkg_->startTransaction();
+	    if (!gpkg_->addPolygon(pg_stmt, poly, ps->name().str()))
+	    {
+		ErrMsg("uiGeopackageWriter::writePolyLines - writing feature failed.");
+		ErrMsg(gpkg_->errorMsg());
+		gpkg_->rollbackTransaction();
+		continue;
+	    }
+	    else
+		gpkg_->commitTransaction();
+	}
+	else
+	{
+	    gpkg_->startTransaction();
+	    if (!gpkg_->addLineString(pl_stmt, points, ps->name().str()))
+	    {
+		ErrMsg("uiGeopackageWriter::writePolyLines - writing feature failed.");
+		ErrMsg(gpkg_->errorMsg());
+		gpkg_->rollbackTransaction();
+		continue;
+	    }
+	    else
+		gpkg_->commitTransaction();
+	}
+    }
+    sqlite3_finalize(pl_stmt);
+    sqlite3_finalize(pg_stmt);
 }
 
-void uiGeopackageWriter::writeHorizon( const char* layerName, const MultiID& hor2Dkey, const char* attrib2D, const TypeSet<Pos::GeomID>& geomids,
-                                       const MultiID& hor3Dkey, const char* attrib3D, const TrcKeyZSampling& cs  )
+void uiGeopackageWriter::writeHorizon( const char* layerName,
+				       const MultiID& hor2Dkey, const char* attrib2D, const TypeSet<Pos::GeomID>& geomids,
+				       const MultiID& hor3Dkey, const char* attrib3D, const TrcKeyZSampling& cs  )
 {
-    if (gdalDS_ != nullptr) {
-        BufferString attrib("Z Values");
-        if (!hor2Dkey.isUdf() && attrib2D != nullptr)
-            attrib = attrib2D;
-        if (!hor3Dkey.isUdf() && attrib3D != nullptr) {
-            if (attrib2D == nullptr)
-                attrib = attrib3D;
-            else if (!caseInsensitiveEqual(attrib2D, attrib3D)) {
-                attrib += "_";
-                attrib += attrib3D;
-            }
-        }
+    if (!gpkg_ || !srs_)
+	return;
 
-        OGRLayer* poLayer = nullptr;
-        if (append_)
-            poLayer = gdalDS_->GetLayerByName( layerName );
+    BufferString attrib("zvals");
+    if (!hor2Dkey.isUdf() && attrib2D)
+	attrib = attrib2D;
 
-        if (poLayer == nullptr) {
-            poLayer = gdalDS_->CreateLayer( layerName, poSRS_, wkbPoint, NULL );
-            if (poLayer == nullptr) {
-                BufferString tmp("uiGeopackageWriter::writeHorizon - creation of ");
-                tmp += layerName;
-                tmp += " layer failed";
-                ErrMsg(tmp);
-                return;
-            }
-
-            OGRFieldDefn oZField( attrib, OFTReal );
-            if( poLayer->CreateField( &oZField ) != OGRERR_NONE ) {
-                BufferString tmp("uiGeopackageWriter::writeHorizon - creation of ");
-                tmp += attrib;
-                tmp += " field failed";
-                ErrMsg(tmp);
-                return;
-            }
-        }
-
-        const float zfac = SI().zIsTime() ? 1000 : 1;
-
-        if (!hor2Dkey.isUdf() && geomids.size()>0) {
-            EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor2Dkey);
-            if (obj==nullptr) {
-                ErrMsg("uiGeopackageWriter::writeHorizon - loading 2D horizon failed");
-                return;
-            }
-            obj->ref();
-            mDynamicCastGet(EM::Horizon2D*,hor,obj);
-            if (hor==nullptr) {
-                ErrMsg("uiGeopackageWriter::writeHorizon - casting 2D horizon failed");
-                obj->unRef();
-                return;
-            }
-            for (int idx=0; idx<geomids.size(); idx++) {
-                const StepInterval<int> trcrg = hor->geometry().colRange( geomids[idx] );
-                mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids[idx]))
-                if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
-                    continue;
-
-                TrcKey tk( geomids[idx], -1 );
-                Coord crd;
-                float spnr = mUdf(float);
-
-                if (gdalDS_->StartTransaction() == OGRERR_FAILURE) {
-                    ErrMsg("uiGeopackageWriter::writeHorizon - starting transaction for writing 2D horizon failed" );
-                    obj->unRef();
-                    continue;
-                }
-                for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step ) {
-                    tk.setTrcNr( trcnr );
-                    const float z = hor->getZ( tk );
-                    if (mIsUdf(z))
-                        continue;
-                    const float scaledZ = z*zfac;
-
-                    survgeom2d->getPosByTrcNr( trcnr, crd, spnr );
-
-                    OGRFeature feature( poLayer->GetLayerDefn() );
-                    feature.SetField(attrib, scaledZ);
-                    OGRPoint pt(crd.x, crd.y);
-                    feature.SetGeometry( &pt );
-                    if (poLayer->CreateFeature( &feature ) != OGRERR_NONE) {
-                        ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 2D horizon failed" );
-                        gdalDS_->RollbackTransaction();
-                        obj->unRef();
-                        break;
-                    }
-                }
-                if (gdalDS_->CommitTransaction() == OGRERR_FAILURE) {
-                    ErrMsg("uiGeopackageWriter::writeHorizon - transaction commit for 2D horizon failed" );
-                    obj->unRef();
-                    return;
-                }
-            }
-            obj->unRef();
-        }
-
-        if (!hor3Dkey.isUdf()) {
-            EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3Dkey);
-            if (obj==nullptr) {
-                ErrMsg("uiGeopackageWriter::writeHorizon - loading 3D horizon failed");
-                return;
-            }
-            obj->ref();
-            mDynamicCastGet(EM::Horizon3D*,hor,obj);
-            if (hor==nullptr) {
-                ErrMsg("uiGeopackageWriter::writeHorizon - casting 3D horizon failed");
-                obj->unRef();
-                return;
-            }
-
-            if (gdalDS_->StartTransaction() == OGRERR_FAILURE) {
-                ErrMsg("uiGeopackageWriter::writeHorizon - starting transaction for writing 3D horizon failed" );
-                obj->unRef();
-                return;
-            }
-            TrcKeySampling expSel = cs.hsamp_;
-            for (int iln=expSel.start_.inl(); iln<=expSel.stop_.inl(); iln+=expSel.step_.inl()) {
-                for (int xln=expSel.start_.crl(); xln<=expSel.stop_.crl(); xln+=expSel.step_.crl()) {
-                    BinID bid(iln,xln);
-                    TrcKey tk(bid);
-                    const float z = hor->getZ( tk );
-                    if (mIsUdf(z))
-                        continue;
-                    const float scaledZ = z*zfac;
-
-                    Coord coord;
-                    coord = SI().transform(bid);
-                    OGRFeature feature( poLayer->GetLayerDefn() );
-                    feature.SetField(attrib, scaledZ);
-                    OGRPoint pt(coord.x, coord.y);
-                    feature.SetGeometry( &pt );
-                    if (poLayer->CreateFeature( &feature ) != OGRERR_NONE) {
-                        ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 3D horizon failed" );
-                        gdalDS_->RollbackTransaction();
-                        obj->unRef();
-                        break;
-                    }
-                }
-            }
-            if (gdalDS_->CommitTransaction() == OGRERR_FAILURE) {
-                ErrMsg("uiGeopackageWriter::writeHorizon - transaction commit for 3D horizon failed" );
-                obj->unRef();
-                return;
-            }
-            obj->unRef();
-        }
+    if (!hor3Dkey.isUdf() && attrib3D)
+    {
+	if (!attrib2D)
+	    attrib = attrib3D;
+	else if (!caseInsensitiveEqual(attrib2D, attrib3D))
+	{
+	    attrib += "_";
+	    attrib += attrib3D;
+	}
     }
+
+    std::vector<std::string> fieldnms({attrib.getCStr()});
+    std::vector<std::string> fielddefs({"REAL"});
+    if (!gpkg_->addGeomLayer("point", layerName, srs_->code(), fieldnms, fielddefs))
+    {
+	ErrMsg("uiGeopackageWriter::writeHorizon - creation of feature table failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+
+    sqlite3_stmt* stmt;
+    if (!gpkg_->makeGeomStatement(&stmt, layerName, srs_->code(), fieldnms))
+    {
+	sqlite3_finalize(stmt);
+	ErrMsg("uiGeopackageWriter::writeHorizon - creation of output statement failed.");
+	ErrMsg(gpkg_->errorMsg());
+	return;
+    }
+
+    const float zfac = attrib=="zvals" && SI().zIsTime() ? 1000 : 1;
+
+    if (!hor2Dkey.isUdf() && geomids.size()>0)
+    {
+	EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor2Dkey);
+	if (!obj)
+	{
+	    sqlite3_finalize(stmt);
+	    ErrMsg("uiGeopackageWriter::writeHorizon - loading 2D horizon failed");
+	    return;
+	}
+	obj->ref();
+	mDynamicCastGet(EM::Horizon2D*,hor,obj);
+	if (!hor)
+	{
+	    sqlite3_finalize(stmt);
+	    ErrMsg("uiGeopackageWriter::writeHorizon - casting 2D horizon failed");
+	    obj->unRef();
+	    return;
+	}
+
+	for (int idx=0; idx<geomids.size(); idx++)
+	{
+	    const StepInterval<int> trcrg = hor->geometry().colRange( geomids[idx] );
+	    mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids[idx]))
+	    if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
+		continue;
+
+	    TrcKey tk( geomids[idx], -1 );
+	    Coord pos;
+	    float spnr = mUdf(float);
+	    gpkg_->startTransaction();
+	    for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step )
+	    {
+		tk.setTrcNr( trcnr );
+		const float z = hor->getZ( tk );
+		if (mIsUdf(z))
+		    continue;
+		const float scaledZ = z*zfac;
+		survgeom2d->getPosByTrcNr( trcnr, pos, spnr );
+		if ( !gpkg_->addPoint(stmt, pos.x, pos.y, scaledZ))
+		{
+		    ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 2D horizon failed.");
+		    ErrMsg(gpkg_->errorMsg());
+		    gpkg_->rollbackTransaction();
+		    sqlite3_finalize(stmt);
+		    obj->unRef();
+		    break;
+		}
+	    }
+	    gpkg_->commitTransaction();
+	}
+	obj->unRef();
+    }
+
+    if (!hor3Dkey.isUdf())
+    {
+	EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3Dkey);
+	if (!obj)
+	{
+	    sqlite3_finalize(stmt);
+	    ErrMsg("uiGeopackageWriter::writeHorizon - loading 3D horizon failed");
+	    return;
+	}
+	obj->ref();
+	mDynamicCastGet(EM::Horizon3D*,hor,obj);
+	if (!hor)
+	{
+	    sqlite3_finalize(stmt);
+	    ErrMsg("uiGeopackageWriter::writeHorizon - casting 3D horizon failed");
+	    obj->unRef();
+	    return;
+	}
+
+	gpkg_->startTransaction();
+	TrcKeySampling expSel = cs.hsamp_;
+	for (int iln=expSel.start_.inl(); iln<=expSel.stop_.inl(); iln+=expSel.step_.inl())
+	{
+	    for (int xln=expSel.start_.crl(); xln<=expSel.stop_.crl(); xln+=expSel.step_.crl())
+	    {
+		BinID bid(iln,xln);
+		TrcKey tk(bid);
+		const float z = hor->getZ( tk );
+		if (mIsUdf(z))
+		    continue;
+
+		const float scaledZ = z*zfac;
+		const Coord pos = SI().transform(bid);
+		if ( !gpkg_->addPoint(stmt, pos.x, pos.y, scaledZ))
+		{
+		    ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 3D horizon failed.");
+		    ErrMsg(gpkg_->errorMsg());
+		    gpkg_->rollbackTransaction();
+		    sqlite3_finalize(stmt);
+		    obj->unRef();
+		    break;
+		}
+	    }
+	}
+	gpkg_->commitTransaction();
+	obj->unRef();
+    }
+    sqlite3_finalize(stmt);
 }

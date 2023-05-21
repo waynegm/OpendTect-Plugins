@@ -2,13 +2,14 @@
 
 #include "paralleltask.h"
 #include "survinfo.h"
+#include "uitaskrunner.h"
 
 #include "nanoflann_extra.h"
 
 
 mDefParallelCalc2Pars( IDWGlobalInterpolator, od_static_tr("IDWGlobalInterpolator","IDW global interpolation"),
 		       const wmIDWGridder2D*, interp, Threads::Lock, lock )
-mDefParallelCalcBody( 
+mDefParallelCalcBody(
 const TypeSet<Coord>& locs_ = interp_->binLocs_;
 const TypeSet<float>& vals_ = interp_->vals_;
 const TrcKeySampling& hs_ = interp_->hs_;
@@ -100,7 +101,7 @@ typedef std::vector<std::pair<size_t,Pos::Ordinate_Type>> RadiusResultSet;
 
 mDefParallelCalc3Pars( IDWLocalInterpolator, od_static_tr("IDWLocalInterpolator","IDW local interpolation"),
 		       const wmIDWGridder2D*, interp, CoordKDTree&, index, Threads::Lock, lock )
-mDefParallelCalcBody( 
+mDefParallelCalcBody(
 const TypeSet<Coord>& locs_ = interp_->binLocs_;
 const TypeSet<float>& vals_ = interp_->vals_;
 const TrcKeySampling& hs_ = interp_->hs_;
@@ -174,33 +175,26 @@ grid_->set(ix, iy, fval);
 wmIDWGridder2D::wmIDWGridder2D()
 {}
 
-bool wmIDWGridder2D::executeGridding(TaskRunner* tr)
+bool wmIDWGridder2D::executeGridding(uiParent* p)
 {
-    localInterp();
+    localInterp(p);
     const CoordTypeSetAdaptor coords( binLocs_ );
     CoordKDTree index( 2, coords );
     Threads::Lock lock;
 
+    uiTaskRunner uitr(p);
+    uitr.setCaption((tr("IDW interpolation")));
     if ( mIsUdf(maxpoints_) && mIsUdf(searchradius_) ) {
 	IDWGlobalInterpolator interp( interpidx_.size(), this, lock );
-	if (tr)
-	    return TaskRunner::execute( tr, interp );
-	else
-	    interp.execute();
+	uitr.execute(interp);
     } else if ( !mIsUdf(maxpoints_) && mIsUdf(searchradius_) ) {
 	index.buildIndex();
 	IDWKNNInterpolator interp( interpidx_.size(), this, index, lock );
-	if (tr)
-	    return TaskRunner::execute( tr, interp );
-	else
-	    interp.execute();
+	uitr.execute(interp);
     } else {
 	index.buildIndex();
 	IDWLocalInterpolator interp( interpidx_.size(), this, index, lock );
-	if (tr)
-	    return TaskRunner::execute( tr, interp );
-	else
-	    interp.execute();
+	uitr.execute(interp);
     }
 
     return true;

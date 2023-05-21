@@ -404,7 +404,7 @@ bool uiExternalAttribInp::getParameters(Attrib::Desc& desc, ChangeTracker& chtr_
 	}
     }
 
-    mSetString( ExternalAttrib::encodedParStr(), getNewParams(desc, chtr_) );
+    mSetString( ExternalAttrib::encodedParStr(), getNewParams(desc, chtr_).getCStr() );
     return true;
 }
 
@@ -605,7 +605,7 @@ bool uiExternalAttrib::getParameters( Attrib::Desc& desc )
     if ( desc.attribName() != ExternalAttrib::attribName())
 	return false;
     mSetString( ExternalAttrib::interpFileStr(), interpfilefld_->fileName() );
-    mSetString( ExternalAttrib::exFileStr(), getExFileName() );
+    mSetString( ExternalAttrib::exFileStr(), getExFileName().getCStr() );
 
     return uiinp_->getParameters(desc, chtr_);
 }

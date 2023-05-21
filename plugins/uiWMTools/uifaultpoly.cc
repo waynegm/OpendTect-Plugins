@@ -134,11 +134,9 @@ RefMan<Pick::Set> uiFaultPoly::getPolyForFault( int idx )
     }
 
     BufferString faultname = fault->name();
-    const EM::SectionID fsid = fault->sectionID( 0 );
-    const Geometry::FaultStickSurface* fss = fault->geometry().sectionGeometry(fsid);
+    const Geometry::FaultStickSurface* fss = fault->geometry().geometryElement();
 
-    const EM::SectionID hsid = hor_->sectionID( 0 );
-    Geometry::BinIDSurface* surf = hor_->geometry().sectionGeometry(hsid);
+    Geometry::BinIDSurface* surf = hor_->geometry().geometryElement();
     if (!surf) {
 	uiMSG().error(tr("uiFaultPoly::getPolyForFault - failed getting BinIDSurface for horizon %1").arg(hor_->name()));
 	obj->unRef();

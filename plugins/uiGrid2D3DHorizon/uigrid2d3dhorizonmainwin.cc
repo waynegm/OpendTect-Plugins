@@ -40,12 +40,12 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
         CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
         const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
         const IODirEntryList entries2D( iodir2D, ctio2D.ctxt_ );
-        bool has2Dhorizon = SI().has2D() && entries2D.size()>0;
+        bool has2Dhorizon = entries2D.size()>0;
 
         CtxtIOObj ctio3D(EMHorizon3DTranslatorGroup::ioContext());
         const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
         const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
-        bool has3Dhorizon = SI().has3D() && entries3D.size()>0;
+        bool has3Dhorizon = entries3D.size()>0;
 
         if (has2Dhorizon || has3Dhorizon) {
             inputgrp_ = new uiInputGrp( tabparent, has2Dhorizon, has3Dhorizon );
@@ -63,7 +63,7 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
     enableSaveButton(tr("Display after create"));
 
     IOPar par;
-    if (par.read(getParFileName(),0)) {
+    if (par.read(getParFileName(),"grid2d3d")) {
         if (inputgrp_)
 	    inputgrp_->usePar( par );
         if (gridgrp_)
@@ -102,12 +102,9 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
     IOPar par;
     inputgrp_->fillPar( par );
     gridgrp_->fillPar( par );
-    BufferString tmp;
-    par.dumpPretty(tmp);
-    ErrMsg(tmp);
-    par.write(getParFileName(), 0);
+    par.write(getParFileName(), "grid2d3d");
 
-    FixedString method = par.find( wmGridder2D::sKeyMethod() );
+    BufferString method = par.find(IOPar::compKey(wmGridder2D::sKeyGridDef(), wmGridder2D::sKeyMethod()));
     PtrMan<wmGridder2D> interpolator = wmGridder2D::create( method );
     if ( !interpolator ) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - selected interpolation method not found.");
@@ -126,13 +123,11 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
             return false;
     }
 
-    {
-        if (!interpolator->prepareForGridding())
-            return false;
-	uiTaskRunner uitr(this);
-	uitr.setCaption(tr("Gridding"));
-	interpolator->executeGridding(&uitr);
-    }
+    uiUserShowWait uisw(this, tr("Loading data"));
+    if (!interpolator->prepareForGridding(this))
+	return false;
+
+    interpolator->executeGridding(this);
 
     RefMan<EM::Horizon3D> hor3d = EM::Horizon3D::createWithConstZ(0.0, interpolator->getTrcKeySampling());
     if (!hor3d) {
@@ -154,8 +149,8 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         }
     }
     if (saveButtonChecked()) {
-        int displayid = ODMainWin()->sceneMgr().getIDFromName(hor3d->name());
-        if (displayid != -1)
+        VisID displayid = ODMainWin()->sceneMgr().getIDFromName(hor3d->name());
+        if (!displayid.isUdf())
             ODMainWin()->sceneMgr().removeTreeItem(displayid);
         ODMainWin()->sceneMgr().addEMItem(EM::EMM().getObjectID(hor3d->multiID()));
         ODMainWin()->sceneMgr().updateTrees();

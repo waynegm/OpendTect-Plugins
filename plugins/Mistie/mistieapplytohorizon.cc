@@ -84,7 +84,7 @@ bool MistieApplyToHorizon2D::doWork( od_int64 start, od_int64 stop, int threadid
 	if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
 	{
 	    BufferString tmp("MistieApplyToHorizon2D::doWork - geometry error for: ");
-	    tmp += geomids_[idx];
+	    tmp += geomids_[idx].toString();
 	    ErrMsg(tmp);
 	    continue;
 	}
@@ -164,7 +164,7 @@ MistieApplyToHorizon3D::MistieApplyToHorizon3D(const MultiID oldhor3did,
 	return;
     }
 
-    arr2d_ = inphor_->createArray2D( oldobj->sectionID(0) );
+    arr2d_ = inphor_->createArray2D();
     nlocs_ = arr2d_->totalSize();
     BufferString tmp;
     outhor_->setFullyLoaded(true);

@@ -49,7 +49,7 @@ void ExternalAttrib::initClass()
 
     StringParam* interpfilepar = new StringParam( interpFileStr() );
     FilePath pypath;
-    interpfilepar->setDefaultValue( uiWGMHelp::GetPythonInterpPath().fullPath() );
+    interpfilepar->setDefaultValue( uiWGMHelp::GetPythonInterpPath().fullPath().getCStr() );
     desc->addParam( interpfilepar );
 
     StringParam* exfilepar = new StringParam( exFileStr() );

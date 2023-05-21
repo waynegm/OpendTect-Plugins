@@ -10,11 +10,12 @@
 uiWellsGrp::uiWellsGrp( uiParent* p )
 : uiDlgGroup(p, tr("Wells")), ctio_(WellTranslatorGroup::ioContext())
 {
-    uiIOObjSelGrp::Setup stup; 
+    uiIOObjSelGrp::Setup stup;
     stup.choicemode_ = OD::ChooseZeroOrMore;
+    stup.withinserters_ = false;
     wellsfld_ = new uiIOObjSelGrp( this, ctio_, uiStrings::sWells(), stup );
     wellsfld_->getManipGroup()->display(false);
-    
+
     expWellTracks_ = new uiCheckBox(this, tr("Export Well Tracks"));
     expWellTracks_->setChecked(false);
     expWellTracks_->attach( alignedBelow, wellsfld_ );
@@ -22,11 +23,11 @@ uiWellsGrp::uiWellsGrp( uiParent* p )
     expMarkers_ = new uiCheckBox(this, tr("Export Markers"));
     expMarkers_->setChecked(false);
     expMarkers_->attach( alignedBelow, expWellTracks_ );
-    
+
     inFeet_ = new uiCheckBox(this, tr("Depths in Feet"));
     inFeet_->setChecked(false);
     inFeet_->attach( rightTo, expMarkers_ );
-    
+
 }
 
 bool uiWellsGrp::doWellExport()

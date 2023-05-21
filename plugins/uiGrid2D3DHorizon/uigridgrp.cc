@@ -16,6 +16,7 @@
 #include "wmgridder2d.h"
 #include "uipolygonparsel.h"
 #include "uicompoundparsel.h"
+#include "wmplugins.h"
 
 ui2D3DInterpol* ui2D3DInterpol::create( const char* methodName, uiParent* p )
 {
@@ -143,25 +144,27 @@ void uiGridGrp::methodChgCB(CallBacker* )
 
 bool uiGridGrp::fillPar( IOPar& par ) const
 {
+    IOPar grd_par;
+    grd_par.set(sKey::Version(), wmPlugins::sKeyWMPluginsVersion());
     const int scope = scopefld_->getIntValue();
-    par.set (wmGridder2D::sKeyScopeType(), scope );
+    grd_par.set (wmGridder2D::sKeyScopeType(), scope );
 
     if ( scope == wmGridder2D::Horizon ) {
         const IOObj* horObj = horfld_->selIOObj();
         if (horObj)
-            par.set( wmGridder2D::sKeyScopeHorID(), horObj->key() );
+            grd_par.set( wmGridder2D::sKeyScopeHorID(), horObj->key() );
     }
 
     const TypeSet<MultiID>& croppolytids = polycropfld_->selPolygonIDs();
     if (croppolytids.size()==1)
-        par.set( wmGridder2D::sKeyClipPolyID(), croppolytids[0] );
+        grd_par.set( wmGridder2D::sKeyClipPolyID(), croppolytids[0] );
 
     if ( faultpolyfld_->isDisplayed() )  {
 	const TypeSet<MultiID>& selpolytids = faultpolyfld_->selPolygonIDs();
 	if ( selpolytids.size()>=1 ) {
-	    par.set( wmGridder2D::sKeyFaultPolyNr(), selpolytids.size() );
+	    grd_par.set( wmGridder2D::sKeyFaultPolyNr(), selpolytids.size() );
 	    for ( int idx=0; idx<selpolytids.size(); idx++ )
-		par.set( IOPar::compKey(wmGridder2D::sKeyFaultPolyID(),idx), selpolytids[idx] );
+		grd_par.set( IOPar::compKey(wmGridder2D::sKeyFaultPolyID(),idx), selpolytids[idx] );
 	}
     }
 
@@ -177,26 +180,38 @@ bool uiGridGrp::fillPar( IOPar& par ) const
             uiStrings::phrEnter(tr("positive integer value for steps")) );
         return false;
     }
-    gridfld_->fillPar( par );
+    gridfld_->fillPar( grd_par );
 
     const int methodidx = methodfld_->getIntValue( 0 );
-    par.set( wmGridder2D::sKeyMethod(), wmGridder2D::MethodNames[methodidx] );
-    return methodgrps_[methodidx]->fillPar( par );
+    grd_par.set( wmGridder2D::sKeyMethod(), wmGridder2D::MethodNames[methodidx] );
+    bool res = methodgrps_[methodidx]->fillPar( grd_par );
+    par.mergeComp(grd_par, wmGridder2D::sKeyGridDef());
+    return res;
 }
 
 void uiGridGrp::usePar( const IOPar& par )
 {
+    PtrMan<IOPar> grd_par;
+    BufferString parverstr;
+    if (par.get(IOPar::compKey(wmGridder2D::sKeyGridDef(), sKey::Version()), parverstr))
+	if (parverstr==wmPlugins::sKeyWMPluginsVersion())
+	    grd_par = par.subselect(wmGridder2D::sKeyGridDef());
+	else
+	    return;
+    else
+	return;
+
     int scope = 0;
-    if (par.get(wmGridder2D::sKeyScopeType(), scope))
+    if (grd_par->get(wmGridder2D::sKeyScopeType(), scope))
         scopefld_->setValue(scope);
 
     MultiID horID;
-    if (par.get(wmGridder2D::sKeyScopeHorID(), horID))
+    if (grd_par->get(wmGridder2D::sKeyScopeHorID(), horID))
         horfld_->setInput(horID);
 
     MultiID clipPolyID;
     polycropfld_->setEmpty();
-    if (par.get(wmGridder2D::sKeyClipPolyID(), clipPolyID)) {
+    if (grd_par->get(wmGridder2D::sKeyClipPolyID(), clipPolyID)) {
         TypeSet<MultiID> polyIDs;
         polyIDs += clipPolyID;
         polycropfld_->setSelectedPolygons(polyIDs);
@@ -204,12 +219,12 @@ void uiGridGrp::usePar( const IOPar& par )
 
     int nrfaultpoly = 0;
     faultpolyfld_->setEmpty();
-    if (par.get(wmGridder2D::sKeyFaultPolyNr(), nrfaultpoly)) {
+    if (grd_par->get(wmGridder2D::sKeyFaultPolyNr(), nrfaultpoly)) {
         if (nrfaultpoly>0) {
             TypeSet<MultiID> polyIDs;
             for (int idx=0; idx<nrfaultpoly; idx++) {
                 MultiID id;
-                if (!par.get(IOPar::compKey(wmGridder2D::sKeyFaultPolyID(), idx), id))
+                if (!grd_par->get(IOPar::compKey(wmGridder2D::sKeyFaultPolyID(), idx), id))
                     return;
                 polyIDs += id;
             }
@@ -217,12 +232,12 @@ void uiGridGrp::usePar( const IOPar& par )
         }
     }
 
-    gridfld_->usePar(par);
+    gridfld_->usePar(*grd_par);
 
     BufferStringSet strs( wmGridder2D::MethodNames );
-    int methodidx = strs.indexOf(par.find(wmGridder2D::sKeyMethod()));
+    int methodidx = strs.indexOf(grd_par->find(wmGridder2D::sKeyMethod()));
     methodfld_->setValue( methodidx );
-    methodgrps_[methodidx]->usePar( par );
+    methodgrps_[methodidx]->usePar( *grd_par );
 
     update();
 }

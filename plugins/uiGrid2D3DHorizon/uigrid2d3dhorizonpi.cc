@@ -65,7 +65,7 @@ void uiGrid2D3DHorizonMgr::updateToolBar( CallBacker* )
 
 void uiGrid2D3DHorizonMgr::updateMenu( CallBacker* )
 {
-    deleteAndZeroPtr( dlg_ );
+    deleteAndNullPtr( dlg_ );
 
     uiODMenuMgr& mnumgr = appl_->menuMgr();
     const uiAction* itm = mnumgr.procMnu()->findAction( tr("Create Horizon Output") );
@@ -78,9 +78,12 @@ void uiGrid2D3DHorizonMgr::updateMenu( CallBacker* )
 
 void uiGrid2D3DHorizonMgr::gridDialog( CallBacker* )
 {
-    if ( !dlg_ ) {
-        dlg_ = new uiGrid2D3DHorizonMainWin( appl_ );
+    if ( dlg_ )
+    {
+	dlg_->close();
+	deleteAndNullPtr( dlg_ );
     }
+    dlg_ = new uiGrid2D3DHorizonMainWin( appl_ );
     dlg_->show();
     dlg_->raise();
 }

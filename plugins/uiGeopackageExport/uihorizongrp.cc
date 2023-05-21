@@ -11,54 +11,57 @@
 #include "bufstringset.h"
 #include "emsurfacetr.h"
 #include "emioobjinfo.h"
+#include "iodir.h"
+#include "iodirentry.h"
+#include "ioman.h"
 #include "survgeom2d.h"
 #include "trckeyzsampling.h"
 
 uiHorizonGrp::uiHorizonGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
-: uiDlgGroup(p, tr("Horizon")), exp2D_(nullptr), hor2Dfld_(nullptr), lines2Dfld_(nullptr),
-  exp3D_(nullptr), hor3Dfld_(nullptr), subsel3Dfld_(nullptr)
+: uiDlgGroup(p, tr("Horizon")), hor2Dfld_(nullptr), lines2Dfld_(nullptr),
+  hor3Dfld_(nullptr), subsel3Dfld_(nullptr)
 {
     namefld_ = new uiGenInput(this, tr("Output Layer") );
-    uiObject* lastfld = (uiObject*) namefld_;
-    if (has2Dhorizon) {
-        exp2D_ = new uiCheckBox(this, uiStrings::phrExport(uiStrings::s2DHorizon()));
-        exp2D_->attach(alignedBelow, namefld_);
-        exp2D_->setChecked(false);
-        mAttachCB(exp2D_->activated,  uiHorizonGrp::exp2Dsel);
 
-        hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), uiStrings::s2DHorizon());
-        hor2Dfld_->attach(alignedBelow, exp2D_);
-        mAttachCB(hor2Dfld_->selectionDone, uiHorizonGrp::hor2Dsel);
+    uiIOObjSel::Setup su;
+    su.optional( true );
 
-        lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
-        lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
+    su.seltxt( uiStrings::s2DHorizon() );
+    hor2Dfld_ = new uiIOObjSel(this, EMHorizon2DTranslatorGroup::ioContext(), su);
+    hor2Dfld_->attach(alignedBelow, namefld_);
+    mAttachCB(hor2Dfld_->selectionDone, uiHorizonGrp::hor2Dsel);
+
+    lines2Dfld_ = new WMLib::uiSeis2DLineSelGrp( this, OD::ChooseZeroOrMore );
+    lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
+
+    hor2Dfld_->setSensitive( has2Dhorizon );
+    hor2Dfld_->setChecked( has2Dhorizon );
+    lines2Dfld_->setSensitive( has2Dhorizon );
 
 //        attrib2Dfld_ = new uiLabeledComboBox( this, uiStrings::s2D().append(uiStrings::sAttribute()) );
 //        attrib2Dfld_->attach(alignedBelow, lines2Dfld_);
 
-        hor2Dsel(0);
-        exp2Dsel(0);
-//        lastfld = (uiObject*) attrib2Dfld_;
-        lastfld = (uiObject*) lines2Dfld_;
-    }
-    if (has3Dhorizon) {
-	exp3D_ = new uiCheckBox(this, uiStrings::phrExport(uiStrings::s3DHorizon()));
-        exp3D_->attach(alignedBelow, lastfld);
-        exp3D_->setChecked(false);
-        mAttachCB(exp3D_->activated, uiHorizonGrp::exp3Dsel);
+    su.seltxt( uiStrings::s3DHorizon() );
+    hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), su);
+    hor3Dfld_->attach(alignedBelow, lines2Dfld_);
+    mAttachCB(hor3Dfld_->selectionDone, uiHorizonGrp::hor3Dsel);
 
-	hor3Dfld_ = new uiIOObjSel(this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon());
-        hor3Dfld_->attach(alignedBelow, exp3D_);
-        mAttachCB(hor3Dfld_->selectionDone, uiHorizonGrp::hor3Dsel);
+    subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
+    subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
-        subsel3Dfld_ = new uiPosSubSel( this, uiPosSubSel::Setup(false,false) );
-        subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
+    hor3Dfld_->setSensitive( has3Dhorizon );
+    hor3Dfld_->setChecked( has3Dhorizon );
+    subsel3Dfld_->setSensitive( has3Dhorizon );
 
 //        attrib3Dfld_ = new uiLabeledComboBox( this, uiStrings::s3D().append(uiStrings::sAttribute()) );
 //        attrib3Dfld_->attach(alignedBelow, subsel3Dfld_);
-        hor3Dsel(0);
-        exp3Dsel(0);
-    }
+
+    mAttachCB(hor2Dfld_->optionalChecked, uiHorizonGrp::updateUICB);
+    mAttachCB(hor3Dfld_->optionalChecked, uiHorizonGrp::updateUICB);
+    mAttachCB(IOM().entryAdded, uiHorizonGrp::updateUICB);
+    mAttachCB(IOM().entryRemoved, uiHorizonGrp::updateUICB);
+
+    update();
 }
 
 uiHorizonGrp::~uiHorizonGrp()
@@ -70,37 +73,39 @@ bool uiHorizonGrp::doHorizonExport()
 {
     MultiID hor2Did, hor3Did;
     getHorIds(hor2Did, hor3Did);
-    if (!hor3Did.isUdf() && exp3D_->isChecked())
+    if (!hor3Did.isUdf())
         return true;
-    if (!hor2Did.isUdf() && exp2D_->isChecked())
+    if (!hor2Did.isUdf())
         return true;
     return false;
 }
 
 const char* uiHorizonGrp::outputName()
 {
-    return namefld_->text("");
+    return namefld_->text(nullptr);
 }
 
 void uiHorizonGrp::getHorIds( MultiID& hor2Did, MultiID& hor3Did )
 {
     hor2Did.setUdf();
     hor3Did.setUdf();
-    if (hor2Dfld_!=nullptr && exp2D_->isChecked()) {
+    if (hor2Dfld_->isChecked())
+    {
         const IOObj* horObj = hor2Dfld_->ioobj(true);
-        if (horObj!=nullptr)
+        if (horObj)
             hor2Did = horObj->key();
     }
-    if (hor3Dfld_!=nullptr && exp3D_->isChecked()) {
+    if (hor3Dfld_->isChecked())
+    {
         const IOObj* horObj = hor3Dfld_->ioobj(true);
-        if (horObj!=nullptr)
+        if (horObj)
             hor3Did = horObj->key();
     }
 }
 
 int uiHorizonGrp::num2DLinesChosen()
 {
-    if (hor2Dfld_!=nullptr && exp2D_->isChecked() && lines2Dfld_!=nullptr)
+    if (hor2Dfld_->isChecked())
         return lines2Dfld_->nrChosen();
     else
         return 0;
@@ -109,14 +114,14 @@ int uiHorizonGrp::num2DLinesChosen()
 void uiHorizonGrp::getGeoMids( TypeSet<Pos::GeomID>& geomids )
 {
     geomids.erase();
-    if (lines2Dfld_!=nullptr)
+    if (hor2Dfld_->isChecked())
         lines2Dfld_->getChosen(geomids);
 }
 
 void uiHorizonGrp::get3Dsel( TrcKeyZSampling& envelope )
 {
     envelope.setEmpty();
-    if (subsel3Dfld_!=nullptr)
+    if (hor3Dfld_->isChecked())
         envelope = subsel3Dfld_->envelope();
 }
 
@@ -127,7 +132,7 @@ const char* uiHorizonGrp::attrib2D()
         return attrib2Dfld_->box()->text();
     return nullptr;
 */
-    return "Z values";
+    return "zvals";
 }
 
 const char* uiHorizonGrp::attrib3D()
@@ -137,40 +142,36 @@ const char* uiHorizonGrp::attrib3D()
         return attrib3Dfld_->box()->text();
     return nullptr;
 */
-return "Z values";
-}
-
-void uiHorizonGrp::update()
-{
-    if (hor2Dfld_!=nullptr) {
-        hor2Dsel(0);
-        exp2Dsel(0);
-    }
-    if (hor3Dfld_!=nullptr) {
-        hor3Dsel(0);
-        exp3Dsel(0);
-    }
+return "zvals";
 }
 
 void uiHorizonGrp::hor2Dsel(CallBacker* )
 {
     const IOObj* horObj = hor2Dfld_->ioobj(true);
-    if (horObj==nullptr) {
+    if (!horObj)
+    {
         lines2Dfld_->clear();
 //        attrib2Dfld_->setChildrenSensitive(false);
-    } else {
+    }
+    else
+    {
         EM::IOObjInfo eminfo(horObj->key());
-        if (!eminfo.isOK()) {
+        if (!eminfo.isOK())
+	{
             BufferString tmp("uiHorizonGrp::hor2Dsel - cannot read ");
             tmp += horObj->name();
             ErrMsg( tmp );
             return;
-        }
+	}
+	TypeSet<Pos::GeomID> prevmids;
+        getGeoMids(prevmids);
+
         BufferStringSet lnms;
         TypeSet<Pos::GeomID> geomids;
         eminfo.getLineNames(lnms);
         eminfo.getGeomIDs(geomids);
         lines2Dfld_->setInput( lnms, geomids );
+        lines2Dfld_->setChosen(prevmids);
 /*
         uiString msg;
         EM::SurfaceIOData emdata;
@@ -197,9 +198,8 @@ void uiHorizonGrp::hor2Dsel(CallBacker* )
 void uiHorizonGrp::hor3Dsel(CallBacker*)
 {
     const IOObj* horObj = hor3Dfld_->ioobj(true);
-    if (horObj==nullptr) {
-//        attrib3Dfld_->setChildrenSensitive(false);
-    } else {
+    if (horObj)
+    {
         EM::IOObjInfo eminfo(horObj->key());
         if (!eminfo.isOK()) {
             BufferString tmp("uiHorizonGrp::hor3Dsel - cannot read ");
@@ -234,17 +234,32 @@ void uiHorizonGrp::hor3Dsel(CallBacker*)
     }
 }
 
-void uiHorizonGrp::exp2Dsel(CallBacker*)
+void uiHorizonGrp::update()
 {
-    hor2Dfld_->setChildrenSensitive(exp2D_->isChecked());
-    lines2Dfld_->setChildrenSensitive(exp2D_->isChecked());
-//    attrib2Dfld_->setChildrenSensitive(exp2D_->isChecked());
+    if (hor2Dfld_->isChecked())
+        hor2Dsel(nullptr);
+
+    if (hor3Dfld_->isChecked())
+        hor3Dsel(nullptr);
 }
 
-void uiHorizonGrp::exp3Dsel(CallBacker*)
+void uiHorizonGrp::updateUICB(CallBacker*)
 {
-    hor3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-    subsel3Dfld_->setChildrenSensitive(exp3D_->isChecked());
-//    attrib3Dfld_->setChildrenSensitive(exp3D_->isChecked());
+    CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
+    const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
+    const IODirEntryList entries2D( iodir2D, ctio2D.ctxt_ );
+    bool has2Dhorizon = entries2D.size()>0;
 
+    CtxtIOObj ctio3D(EMHorizon3DTranslatorGroup::ioContext());
+    const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
+    const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
+    bool has3Dhorizon = entries3D.size()>0;
+
+    hor2Dfld_->setSensitive( has2Dhorizon );
+    hor2Dfld_->updateInput();
+    lines2Dfld_->setSensitive( has2Dhorizon && hor2Dfld_->isChecked() );
+
+    hor3Dfld_->setSensitive( has3Dhorizon );
+    hor3Dfld_->updateInput();
+    subsel3Dfld_->setSensitive( has3Dhorizon && hor3Dfld_->isChecked() );
 }

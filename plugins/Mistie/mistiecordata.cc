@@ -22,17 +22,16 @@ bool MistieCorrectionData::read( const char* filename )
     IOPar misties;
     if (misties.read(filename, 0)) {
         erase();
-        int irow = 0;
-        for (int idx=0; idx<misties.size(); idx++) {
-            BufferString name = misties.getKey(idx);
+	BufferStringSet keynms;
+	misties.getKeys(keynms);
+        for (const auto* keynm : keynms) {
             float shift, phase, amp;
-            if (!name.isEmpty()) {
-                misties.get(name, shift, phase, amp);
-                datanames_.add(name);
+            if (!keynm->isEmpty()) {
+                misties.get(*keynm, shift, phase, amp);
+                datanames_.add(*keynm);
                 shifts_ += shift;
                 phases_ += phase;
                 amps_ += amp;
-                irow++;
             }
         }
         return true;
@@ -44,7 +43,7 @@ bool MistieCorrectionData::write( const char* filename ) const
     IOPar misties;
     for (int idx=0; idx<size(); idx++)
         misties.set( datanames_.get(idx), shifts_[idx], phases_[idx], amps_[idx]);
-    
+
     return misties.write(filename, 0);
 }
 
@@ -64,7 +63,7 @@ int MistieCorrectionData::getIndex( const char* dataname ) const
     else
 	idx = datanames_.indexOf(dataname);
     return idx;
-}    
+}
 
 BufferString MistieCorrectionData::getDataName( int idx ) const
 {
@@ -109,7 +108,7 @@ bool MistieCorrectionData::get( const char* name, float& shift, float& phase, fl
         amp = amps_[idx];
         return true;
     }
-    
+
     return false;
 }
 
@@ -128,7 +127,7 @@ void MistieCorrectionData::setZCor( int idx, float zcor )
 void MistieCorrectionData::setZCor( const char* name, float zcor )
 {
     int idx = datanames_.indexOf(name);
-    if (idx>=0) 
+    if (idx>=0)
         shifts_[idx] = zcor;
     else {
         datanames_.add(name);
@@ -142,12 +141,12 @@ void MistieCorrectionData::setPhaseCor( int idx, float phasecor )
 {
     if (idx>=0 && idx <size())
         phases_[idx] = phasecor;
-}    
+}
 
 void MistieCorrectionData::setPhaseCor( const char* name, float phasecor )
 {
     int idx = datanames_.indexOf(name);
-    if (idx>=0) 
+    if (idx>=0)
         phases_[idx] = phasecor;
     else {
         datanames_.add(name);
@@ -166,7 +165,7 @@ void MistieCorrectionData::setAmpCor( int idx, float ampcor )
 void MistieCorrectionData::setAmpCor( const char* name, float ampcor )
 {
     int idx = datanames_.indexOf(name);
-    if (idx>=0) 
+    if (idx>=0)
         amps_[idx] = ampcor;
     else {
         datanames_.add(name);
@@ -195,11 +194,11 @@ float MistieCorrectionData::computeZCor( const MistieData& misties, const Buffer
 {
     BufferString lineA, lineB;
     float zdiff, errLast, err;
-    
+
     for (int idx=0; idx<misties.size(); idx++) {
         misties.getLines(idx, lineA, lineB);
-        setZCor(lineA, 0.0);
-        setZCor(lineB, 0.0);
+        setZCor(lineA.getCStr(), 0.0);
+        setZCor(lineB.getCStr(), 0.0);
     }
     errLast = 0.0;
     int nrGood = 0;
@@ -223,7 +222,7 @@ float MistieCorrectionData::computeZCor( const MistieData& misties, const Buffer
             if (misties.getQuality(idx)>=minQuality) {
                 misties.getLines(idx, lineA, lineB );
                 zdiff = misties.getZMistieWith( *this, idx );
-        
+
                 int ilA = getIndex(lineA);
                 int ilB = getIndex(lineB);
                 est[ilA] += zdiff;
@@ -254,7 +253,7 @@ float MistieCorrectionData::computeZCor( const MistieData& misties, const Buffer
     logmsg += " Final RMS mistie: "; logmsg += err; logmsg += " Iterations: "; logmsg += iter;
     UsrMsg(logmsg);
 
-    return errLast;    
+    return errLast;
 }
 
 float MistieCorrectionData::computePhaseCor( const MistieData& misties, const BufferStringSet& reference, float minQuality, int maxIter, float damping, float delta )
@@ -262,11 +261,11 @@ float MistieCorrectionData::computePhaseCor( const MistieData& misties, const Bu
     BufferString lineA, lineB;
     float phasediff, errLast, err;
     MistieData work(misties);
-    
+
     for (int idx=0; idx<work.size(); idx++) {
         misties.getLines(idx, lineA, lineB);
-        setPhaseCor(lineA, 0.0);
-        setPhaseCor(lineB, 0.0);
+        setPhaseCor(lineA.getCStr(), 0.0);
+        setPhaseCor(lineB.getCStr(), 0.0);
     }
     errLast = 0.0;
     int nrGood = 0;
@@ -290,7 +289,7 @@ float MistieCorrectionData::computePhaseCor( const MistieData& misties, const Bu
             if (work.getQuality(idx)>=minQuality) {
                 work.getLines(idx, lineA, lineB );
                 phasediff = work.getPhaseMistieWith( *this, idx );
-                
+
                 int ilA = getIndex(lineA);
                 int ilB = getIndex(lineB);
                 est[ilA] += phasediff;
@@ -316,7 +315,7 @@ float MistieCorrectionData::computePhaseCor( const MistieData& misties, const Bu
             if (work.getQuality(idx)>=minQuality) {
                 work.getLines(idx, lineA, lineB );
                 phasediff = work.getPhaseMistie( idx );
-                
+
                 int ilA = getIndex(lineA);
                 int ilB = getIndex(lineB);
                 float diff = phasediff - (getPhaseCor(ilA)-getPhaseCor(ilB));
@@ -329,11 +328,11 @@ float MistieCorrectionData::computePhaseCor( const MistieData& misties, const Bu
         iter++;
         errLast = err;
     } while (chg > delta && iter < maxIter);
-    
+
     logmsg += " Final RMS mistie: "; logmsg += err; logmsg += " Iterations: "; logmsg += iter;
     UsrMsg(logmsg);
-    
-    return errLast;    
+
+    return errLast;
 }
 
 
@@ -341,7 +340,7 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
 {
     BufferString lineA, lineB;
     float ampdiff, errLast, err;
-    
+
     ampdiff = 0.0;
     int count = 0;
     for (int idx=0; idx<misties.size(); idx++) {
@@ -354,22 +353,22 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
             count++;
         }
     }
-    if (count) 
+    if (count)
         ampdiff = pow(10, -ampdiff/(float)count);
     else
         ampdiff = 1.0;
-        
+
     for (int idx=0; idx<misties.size(); idx++) {
         misties.getLines(idx, lineA, lineB);
         if (reference.isPresent(lineA) || reference.isPresent(lineB)) {
-            setAmpCor(lineA, 1.0);
-            setAmpCor(lineB, 1.0);
+            setAmpCor(lineA.getCStr(), 1.0);
+            setAmpCor(lineB.getCStr(), 1.0);
         } else {
-            setAmpCor(lineA, ampdiff);
-            setAmpCor(lineB, ampdiff);
+            setAmpCor(lineA.getCStr(), ampdiff);
+            setAmpCor(lineB.getCStr(), ampdiff);
         }
     }
-        
+
     errLast = 0.0;
     int nrGood = 0;
     for (int idx=0; idx<misties.size(); idx++) {
@@ -392,7 +391,7 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
             if (misties.getQuality(idx)>=minQuality) {
                 misties.getLines(idx, lineA, lineB );
                 ampdiff = log10(misties.getAmpMistieWith( *this, idx ));
-                
+
                 int ilA = getIndex(lineA);
                 int ilB = getIndex(lineB);
                 est[ilA] += ampdiff;
@@ -419,9 +418,9 @@ float MistieCorrectionData::computeAmpCor( const MistieData& misties, const Buff
         iter++;
         errLast = err;
     } while (chg > delta && iter < maxIter);
-    
+
     logmsg += " Final RMS mistie: "; logmsg += err; logmsg += " Iterations: "; logmsg += iter;
     UsrMsg(logmsg);
-    
-    return errLast;    
+
+    return errLast;
 }

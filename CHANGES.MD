@@ -1,5 +1,19 @@
 # OpendTect Plugins Release Notes
 
+## Release 7.0.0
+- Adapt to OpendTect 7.0 API changes
+
+### uiGeopackageExport
+- remove dependency on gdal
+
+## Release 6.6.12
+### uiGrid2D3DHorizon
+- revamp ui to fix reported crashes
+
+## Release 6.6.11
+### uiGrid2D3DHorizon
+- try and fix reported crashes
+
 ## Release 6.6.10
 ###AVOPolarAttrib
 -  Replace Nans and Infs with Undefined

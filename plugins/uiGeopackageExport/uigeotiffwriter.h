@@ -1,30 +1,45 @@
 #ifndef uigeotiffwriter_h
 #define uigeotiffwriter_h
 
-#include "typeset.h"
+#include "arraynd.h"
+#include "bufstring.h"
+#include "bufstringset.h"
+#include "multiid.h"
+#include "uistringset.h"
 
-class GDALDataset;
-class OGRSpatialReference;
+#include "geotiffio.h"
+#include "xtiffio.h"
+
+namespace Coords{ class AuthorityCode; }
 class BufferStringSet;
-class TrcKeyZSampling;
 class uiTaskRunner;
+class PtrMan<Coords::AuthorityCode>;
 
 class uiGeotiffWriter
-{ 
+{ mODTextTranslationClass(uiGeotiffWriter);
 public:
-    uiGeotiffWriter( const char* filename=0 );
+    uiGeotiffWriter(const MultiID& hor3Dkey, const char* filename, bool overwrite=true );
     ~uiGeotiffWriter();
-    
-    void    setFileName( const char* filename ); 
-    
-    bool    writeHorizon( uiTaskRunner& taskrunner, const MultiID& hor3Dkey, bool exportZ, const BufferStringSet& attribs );
-    
-protected:
-    void    close();
 
-    GDALDataset*            gdalDS_;
-    OGRSpatialReference*    poSRS_;
-    BufferString            filename_;
+
+    uiRetVal	writeHorizon( uiTaskRunner& taskrunner, bool exportZ, const BufferStringSet& attribs );
+    bool	isOK()		{ return errmsg_.isOK(); }
+
+protected:
+    void	close();
+    bool	open();
+    void 	addBandMetadata(int bandnr, const char* description);
+    void	setMetadataField() const;
+
+    TIFF*				tif_	= nullptr;
+    GTIF*				gtif_	= nullptr;
+    Coords::AuthorityCode*		srs_;
+    MultiID				hor3Did_;
+    BufferString			filename_;
+    bool				overwrite_ = true;
+    BufferStringSet			bandmetadata_;
+    uiRetVal				errmsg_;
+
 };
 
 #endif

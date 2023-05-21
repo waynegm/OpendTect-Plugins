@@ -1,0 +1,2 @@
+// the configured options and settings for WMPlugins
+#define WMPLUGINS_VERSION @OpendTect_Plugins_VERSION@

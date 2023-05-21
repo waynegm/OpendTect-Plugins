@@ -17,184 +17,300 @@
 #include "emsurfacetr.h"
 #include "emioobjinfo.h"
 #include "emsurfaceauxdata.h"
+#include "file.h"
+#include "ioman.h"
 #include "uitaskrunner.h"
 #include "executor.h"
 
-#include "gdal_priv.h"
-#include "cpl_conv.h"
+#include "geotiffio.h"
+#include "xtiffio.h"
 
-uiGeotiffWriter::uiGeotiffWriter( const char* filename )
-    : gdalDS_(0)
-    , poSRS_(0)
-    , filename_(filename)
+uiGeotiffWriter::uiGeotiffWriter(const MultiID& hor3Dkey, const char* fname, bool overwrite)
+    : filename_(fname)
+    , hor3Did_(hor3Dkey)
+    , overwrite_(overwrite)
 {
-    if (SI().getCoordSystem()->isProjection()) {
-        const Coords::ProjectionBasedSystem* const proj = dynamic_cast<const Coords::ProjectionBasedSystem* const>(SI().getCoordSystem().ptr());
-        poSRS_= new OGRSpatialReference();
-        BufferString projstr(proj->getProjection()->defStr());
-        projstr += " +init=epsg:";
-        projstr += proj->getProjection()->authCode().id();
-        
-        if (poSRS_->importFromProj4(projstr) != OGRERR_NONE) {
-            BufferString tmp("uiGeotiffWriter::uiGeotiffWriter - setting CRS in output file failed \n");
-            tmp += "Survey CRS: ";
-            tmp += SI().getCoordSystem()->summary();
-            tmp += "\n";
-            ErrMsg(tmp);
-        }
-    } else {
-        BufferString crsSummary("uiGeotiffWriter::uiGeotiffWriter - unrecognised CRS: ");
-        crsSummary += SI().getCoordSystem()->summary();
-        ErrMsg(crsSummary);
+
+    if (SI().getCoordSystem()->isProjection())
+    {
+	mDynamicCastGet(const Coords::ProjectionBasedSystem*, projsys, SI().getCoordSystem().ptr());
+	if (!projsys)
+	{
+	    errmsg_.set(tr("uiGeotiffWriter - getting survey CRS failed."));
+	    return;
+	}
+
+	const auto* proj = projsys->getProjection();
+	if (!proj)
+	{
+	    errmsg_.set(tr("uiGeotiffWriter - getting survey projection failed."));
+	    return;
+	}
+
+	srs_ = new Coords::AuthorityCode(proj->authCode());
+    }
+    else
+    {
+        errmsg_.set(tr("uiGeotiffWriter - not a projected CRS: %1."));
+	errmsg_.add(tr("%1").arg(SI().getCoordSystem()->summary()));
     }
 }
 
 uiGeotiffWriter::~uiGeotiffWriter()
 {
     close();
+    delete(srs_);
 }
 
-void uiGeotiffWriter::setFileName( const char* name )
+bool uiGeotiffWriter::open()
 {
-    filename_  = name;
+    if (File::exists(filename_) && !overwrite_)
+	return false;
+
+    tif_ = XTIFFOpen(filename_,"w");
+    if (!tif_)
+    {
+	errmsg_.set(tr("uiGeotiffWriter::open - cannot open output file."));
+	return false;
+    }
+
+    gtif_ = GTIFNew(tif_);
+    if (!gtif_)
+    {
+	errmsg_.set(tr("uiGeotiffWriter::open - cannot create Geotiff directory."));
+	return false;
+    }
+
+    const TIFFFieldInfo xtiffFieldInfo[] = {
+        {TIFFTAG_GDAL_METADATA, -1, -1, TIFF_ASCII, FIELD_CUSTOM, true, false,
+         const_cast<char *>("GDALMetadata")},
+        {TIFFTAG_GDAL_NODATA, -1, -1, TIFF_ASCII, FIELD_CUSTOM, true, false,
+         const_cast<char *>("GDALNoDataValue")},
+        {TIFFTAG_RPCCOEFFICIENT, -1, -1, TIFF_DOUBLE, FIELD_CUSTOM, true, true,
+         const_cast<char *>("RPCCoefficient")},
+        {TIFFTAG_TIFF_RSID, -1, -1, TIFF_ASCII, FIELD_CUSTOM, true, false,
+         const_cast<char *>("TIFF_RSID")},
+        {TIFFTAG_GEO_METADATA, TIFF_VARIABLE2, TIFF_VARIABLE2, TIFF_BYTE,
+         FIELD_CUSTOM, true, true, const_cast<char *>("GEO_METADATA")}
+    };
+    TIFFMergeFieldInfo(tif_, xtiffFieldInfo,
+                       sizeof(xtiffFieldInfo) / sizeof(xtiffFieldInfo[0]));
+
+    return true;
 }
 
 void uiGeotiffWriter::close()
 {
-    if (gdalDS_ != nullptr)
-        GDALClose( gdalDS_ );
+    if (gtif_)
+    {
+	GTIFWriteKeys(gtif_);
+	GTIFFree(gtif_);
+	gtif_ = nullptr;
+    }
+
+    if (tif_)
+    {
+	XTIFFClose(tif_);
+	tif_ = nullptr;
+    }
 }
 
-
-bool uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID& hor3Dkey, bool exportZ, const BufferStringSet& attribs )
+void uiGeotiffWriter::addBandMetadata(int band, const char* description)
 {
+    BufferString desc("<Item name=""DESCRIPTION"" sample=""");
+    desc.add(band).add(""" role=""description"">").add(description).add("</Item>");
+    bandmetadata_.add(desc);
+}
+
+void uiGeotiffWriter::setMetadataField() const
+{
+    if ( bandmetadata_.isEmpty())
+	return;
+
+    BufferStringSet metadata;
+    metadata.add("<GDALMetadata>");
+    metadata.add(bandmetadata_, true);
+    metadata.add("</GDALMetadata>");
+    TIFFSetField(tif_, TIFFTAG_GDAL_METADATA, metadata.cat().buf());
+}
+
+uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, bool exportZ, const BufferStringSet& attribs )
+{
+    if (!srs_)
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - srs is undefined."));
+
+    if (hor3Did_.isUdf())
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - undefined horizon id."));
+
+    if (!exportZ && attribs.isEmpty())
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - nothing to export."));
+
+    if (!isOK() || !open())
+	return errmsg_;
+
     const float zfac = SI().zIsTime() ? 1000 : 1;
-    if (!hor3Dkey.isUdf() && poSRS_ && (exportZ || attribs.size()>0)) {
-        EM::IOObjInfo eminfo(hor3Dkey);
-        if (!eminfo.isOK()) {
-            BufferString tmp("uiGeotiffWriter::writeHorizon - cannot read ");
-            tmp += eminfo.name();
-            ErrMsg( tmp );
-            return false;
-        }
-        TrcKeySampling hs;
-        hs.set(eminfo.getInlRange(), eminfo.getCrlRange());
-        Coord origin = hs.toCoord(hs.atIndex(0,0));
-        Coord delInl = hs.toCoord(hs.atIndex(1,0)) - origin;
-        Coord delCrl = hs.toCoord(hs.atIndex(0,1)) - origin;
-        double adfGeoTransform[6];
-        adfGeoTransform[0] = origin.x - 0.5*delInl.x - 0.5*delCrl.x;
-        adfGeoTransform[1] = delInl.x;
-        adfGeoTransform[2] = delCrl.x;
-        adfGeoTransform[3] = origin.y - 0.5*delInl.y - 0.5*delCrl.y;
-        adfGeoTransform[4] = delInl.y;
-        adfGeoTransform[5] = delCrl.y;
-        
-        EM::EMObject* obj = EM::EMM().loadIfNotFullyLoaded(hor3Dkey);
-        if (obj==nullptr) {
-            ErrMsg("uiGeotiffWriter::writeHorizon - loading 3D horizon failed");
-            return false;
-        }
-        obj->ref();
-        mDynamicCastGet(EM::Horizon3D*,hor,obj);
-        if (hor==nullptr) {
-            ErrMsg("uiGeotiffWriter::writeHorizon - casting 3D horizon failed");
-            obj->unRef();
-            return false;
-        }
-        
-        GDALAllRegister();
-        GDALDriver* poDriver = GetGDALDriverManager()->GetDriverByName("GTiff");
-        if (poDriver == nullptr) {
-            ErrMsg("uiGeotiffWriter::writeHorizon - GTiff driver not available");
-            return false;
-        }
+    EM::IOObjInfo eminfo(hor3Did_);
+    if (!eminfo.isOK())
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - cannot read %1.").arg(eminfo.name()));
 
-        int nrBands = exportZ ? attribs.size()+1 : attribs.size(); 
-        gdalDS_ = poDriver->Create(filename_, hs.nrInl(), hs.nrCrl(), nrBands, GDT_Float32, nullptr);
-        if (gdalDS_ == nullptr) {
-            ErrMsg("uiGeotiffWriter::writeHorizon - cannot create output file.");
-            return false;
-        }
-        gdalDS_->SetMetadataItem("AREA_OR_POINT", "POINT");
-        gdalDS_->SetGeoTransform( adfGeoTransform );
-        char* pszSRS_WKT = nullptr;
-        poSRS_->exportToWkt( &pszSRS_WKT );
-        gdalDS_->SetProjection( pszSRS_WKT );
-        CPLFree( pszSRS_WKT );
-        
-        float* rowBuff = (float*) CPLMalloc(sizeof(float)*hs.nrCrl());
-// Export Z
-        if (exportZ) {
-            GDALRasterBand* poBand = gdalDS_->GetRasterBand(1);
-            poBand->SetNoDataValue(mUdf(float));
-            poBand->SetColorInterpretation(GCI_Undefined);
-            BufferString lbl("Z value ");
-            lbl += SI().getZUnitString();
-            poBand->SetDescription(lbl);
-            for (int ildx=0; ildx<hs.nrInl(); ildx++) {
-                for (int icdx=0; icdx<hs.nrCrl(); icdx++) {
-                    BinID bid = hs.atIndex(ildx, icdx);
-                    TrcKey tk(bid);
-                    float z = hor->getZ( tk );
-                    if (!mIsUdf(z))
-                        z *= zfac;
-                    rowBuff[icdx] = z;
-                }
-                if (poBand->RasterIO(GF_Write, ildx, 0, 1, hs.nrCrl(), rowBuff, 1, hs.nrCrl(), GDT_Float32, 0, 0, NULL) != CE_None) {
-                    ErrMsg("uiGeotiffWriter::writeHorizon - error during RasterIO of Z values");
-                    obj->unRef();
-                    CPLFree( rowBuff );
-                    return false;
-                }
-            }
-            poBand->ComputeStatistics(false, NULL, NULL, NULL, NULL, NULL, NULL);
-        }
-// Export attributes        
-        if (attribs.size()>0) {
-            ExecutorGroup exgrp( "Reading attribute data" );
-            for ( int idx=0; idx<attribs.size(); idx++ )
-                exgrp.add( hor->auxdata.auxDataLoader(attribs.get(idx)) );
-        
-            if ( !TaskRunner::execute( &taskrunner, exgrp ) ) 
-                return false;
+    TrcKeySampling hs;
+    hs.set(eminfo.getInlRange(), eminfo.getCrlRange());
+    int nrBands = exportZ ? attribs.size()+1 : attribs.size();
+    bandmetadata_.setEmpty();
 
-            int iband = exportZ ? 2 : 1;
-            for (int iatt=0; iatt<attribs.size(); iatt++) {
-                if (hor->auxdata.hasAuxDataName(attribs.get(iatt))) {
-                    int iaux = hor->auxdata.auxDataIndex(attribs.get(iatt));
-                    GDALRasterBand* poBand = gdalDS_->GetRasterBand(iband);
-                    poBand->SetNoDataValue(mUdf(float));
-                    poBand->SetDescription(attribs.get(iatt));
-                    poBand->SetColorInterpretation(GCI_Undefined);
-                    for (int ildx=0; ildx<hs.nrInl(); ildx++) {
-                        for (int icdx=0; icdx<hs.nrCrl(); icdx++) {
-                            BinID bid = hs.atIndex(ildx, icdx);
-                            TrcKey tk(bid);
-                            const float val = hor->auxdata.getAuxDataVal(iaux, tk);
-                            rowBuff[icdx] = val;
-                        }
-                        if (poBand->RasterIO(GF_Write, ildx, 0, 1, hs.nrCrl(), rowBuff, 1, hs.nrCrl(), GDT_Float32, 0, 0, NULL) != CE_None) {
-                            BufferString tmp("uiGeotiffWriter::writeHorizon - error during RasterIO of attribute called ");
-                            tmp += attribs.get(iatt);
-                            ErrMsg(tmp);
-                            obj->unRef();
-                            CPLFree( rowBuff );
-                            return false;
-                        }
-                    }
-                    poBand->ComputeStatistics(false, NULL, NULL, NULL, NULL, NULL, NULL);
-                    iband++;
-                } else {
-                    BufferString tmp("uiGeotiffWriter::writeHorizon - no data for attribute called ");
-                    tmp += attribs.get(iatt);
-                    ErrMsg(tmp);
-                }
-            }
-        }
-        CPLFree( rowBuff );
-        obj->unRef();
-        return true;
+
+    TIFFSetField(tif_, TIFFTAG_IMAGEWIDTH, hs.nrCrl());
+    TIFFSetField(tif_, TIFFTAG_IMAGELENGTH, hs.nrInl());
+    TIFFSetField(tif_, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+    TIFFSetField(tif_, TIFFTAG_PLANARCONFIG, PLANARCONFIG_SEPARATE);
+    TIFFSetField(tif_, TIFFTAG_PHOTOMETRIC,   PHOTOMETRIC_MINISBLACK);
+    TIFFSetField(tif_, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_IEEEFP);
+    TIFFSetField(tif_,TIFFTAG_BITSPERSAMPLE, sizeof(float)*8);
+    TIFFSetField(tif_, TIFFTAG_SAMPLESPERPIXEL, nrBands);
+    TIFFSetField(tif_, TIFFTAG_GDAL_NODATA, toString(mUdf(float)));
+    TIFFSetField(tif_, TIFFTAG_ROWSPERSTRIP,  1L);
+    if (nrBands>1)
+    {
+	uint16_t exsamp[nrBands-1];
+	for (int idx=0; idx<nrBands-1; idx++)
+	    exsamp[idx] = EXTRASAMPLE_UNSPECIFIED;
+
+	TIFFSetField(tif_, TIFFTAG_EXTRASAMPLES, nrBands-1, exsamp);
     }
-    return false;
+
+    GTIFKeySet(gtif_, GTModelTypeGeoKey, TYPE_SHORT, 1, ModelProjected);
+    GTIFKeySet(gtif_, GTRasterTypeGeoKey, TYPE_SHORT, 1, RasterPixelIsPoint);
+    BufferString crs( srs_->code() );
+    if ( crs.isNumber(true) )
+	GTIFKeySet(gtif_, ProjectedCRSGeoKey, TYPE_SHORT, 1, crs.toInt() );
+    else
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - unrecognised CRS: %1.").arg(srs_->code()));
+
+
+    Coord origin = hs.toCoord(hs.atIndex(0,0));
+    Coord delInl = hs.toCoord(hs.atIndex(1,0)) - origin;
+    Coord delCrl = hs.toCoord(hs.atIndex(0,1)) - origin;
+    double geotransform[16] = {};
+    geotransform[0] = delCrl.x;
+    geotransform[1] = delInl.x;
+    geotransform[3] = origin.x - 0.5*delInl.x - 0.5*delCrl.x;
+    geotransform[4] = delCrl.y;
+    geotransform[5] = delInl.y;
+    geotransform[7] = origin.y - 0.5*delInl.y - 0.5*delCrl.y;
+    geotransform[15] = 1.0;
+    TIFFSetField(tif_, TIFFTAG_GEOTRANSMATRIX, 16, geotransform);
+        // double adfGeoTransform[6];
+        // adfGeoTransform[0] = origin.x - 0.5*delInl.x - 0.5*delCrl.x;
+        // adfGeoTransform[1] = delInl.x;
+        // adfGeoTransform[2] = delCrl.x;
+        // adfGeoTransform[3] = origin.y - 0.5*delInl.y - 0.5*delCrl.y;
+        // adfGeoTransform[4] = delInl.y;
+        // adfGeoTransform[5] = delCrl.y;
+
+    ConstPtrMan<IOObj> ioobj = IOM().get( hor3Did_ );
+    if ( !ioobj )
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - undefined horizon ioobj."));
+
+    EM::SurfaceIOData sd;
+    uiString errmsg;
+    if ( !EM::EMM().getSurfaceData(ioobj->key(), sd, errmsg) )
+	return uiRetVal(tr("uiGeoTiffWriter::writeHorizon - "), errmsg);
+
+    EM::SurfaceIODataSelection sels( sd );
+    sels.selvalues.erase();
+    RefMan<EM::EMObject> emobj = EM::EMM().createTempObject( ioobj->group() );
+    if ( !emobj )
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - cannot create temporary horizon."));
+
+    emobj->setMultiID( ioobj->key() );
+    mDynamicCastGet(EM::Horizon3D*,hor,emobj.ptr())
+    PtrMan<Executor> loader = hor->geometry().loader( &sels );
+    if ( !loader )
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - getting 3D horizon loader failed"));
+
+    if ( !TaskRunner::execute(&taskrunner,*loader) )
+	 return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon failed"));
+
+    for ( const auto* nms : attribs )
+    {
+	const int idx = sd.valnames.indexOf( *nms );
+	if ( idx<0 )
+	    continue;
+
+	sels.selvalues += idx;
+    }
+
+    if ( !sels.selvalues.isEmpty() )
+    {
+	ExecutorGroup exgrp( "Reading aux data" );
+	for ( int idx=0; idx<sels.selvalues.size(); idx++ )
+	    exgrp.add( hor->auxdata.auxDataLoader(sels.selvalues[idx]) );
+
+	if ( !TaskRunner::execute( &taskrunner, exgrp ) )
+	    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon attributes failed"));
+    }
+
+    float* rowBuff = (float*) _TIFFmalloc(TIFFScanlineSize(tif_));
+    BufferString description;
+    int bandnr = 0;
+// Export Z
+    if (exportZ)
+    {
+	description = BufferString("Z value ", SI().getZUnitString());
+	addBandMetadata(bandnr, description);
+	for (int ildx=0; ildx<hs.nrInl(); ildx++)
+	{
+	    for (int icdx=0; icdx<hs.nrCrl(); icdx++)
+	    {
+		const auto trckey = hs.trcKeyAt( ildx, icdx );
+		float z = hor->getZ( trckey );
+		if (!mIsUdf(z))
+		    z *= zfac;
+		rowBuff[icdx] = z;
+	    }
+	    if (!TIFFWriteScanline(tif_, rowBuff, ildx, bandnr))
+	    {
+		_TIFFfree(rowBuff);
+		return uiRetVal(tr("uiGeotiffWriter::writeHorizon - writing horizon z data failed"));
+	    }
+        }
+        bandnr++;
+    }
+// Export attributes
+    if (attribs.size()>0)
+    {
+	for (int iatt=0; iatt<attribs.size(); iatt++)
+	{
+	    if (hor->auxdata.hasAuxDataName(attribs.get(iatt)))
+	    {
+		int iaux = hor->auxdata.auxDataIndex(attribs.get(iatt));
+		description = attribs.get(iatt);
+		addBandMetadata(bandnr, description);
+		for (int ildx=0; ildx<hs.nrInl(); ildx++)
+		{
+		    for (int icdx=0; icdx<hs.nrCrl(); icdx++)
+		    {
+			const auto trckey = hs.trcKeyAt( ildx, icdx );
+			float z = hor->auxdata.getAuxDataVal( iaux, trckey );
+			rowBuff[icdx] = z;
+		    }
+		    if (!TIFFWriteScanline(tif_, rowBuff, ildx, bandnr))
+		    {
+			_TIFFfree(rowBuff);
+			return uiRetVal(tr("uiGeotiffWriter::writeHorizon - writing attribute data failed"));
+		    }
+		}
+	    } else
+	    {
+		_TIFFfree(rowBuff);
+		return uiRetVal(tr("uiGeotiffWriter::writeHorizon - no data for attribute: %1").arg(attribs.get(iatt)));
+	    }
+	    bandnr++;
+	}
+    }
+    setMetadataField();
+    close();
+    _TIFFfree( rowBuff );
+
+    return uiRetVal::OK();
 }

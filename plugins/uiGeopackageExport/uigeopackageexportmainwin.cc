@@ -97,11 +97,12 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
         CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
         const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
         const IODirEntryList entries2D( iodir2D, ctio2D.ctxt_ );
-        bool has2Dhorizon = SI().has2D() && entries2D.size()>0;
+        bool has2Dhorizon = entries2D.size()>0;
+
         CtxtIOObj ctio3D(EMHorizon3DTranslatorGroup::ioContext());
         const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
         const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
-        bool has3Dhorizon = SI().has3D() && entries3D.size()>0;
+        bool has3Dhorizon = entries3D.size()>0;
         if (has2Dhorizon || has3Dhorizon) {
             horgrp_= new uiHorizonGrp( tabparent, has2Dhorizon, has3Dhorizon);
             tabstack_->addTab( horgrp_ );
@@ -151,7 +152,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         uiMSG().error( tr("Please specify an output file") );
         return false;
     }
-    if (horgrp_!=nullptr && horgrp_->doHorizonExport()) {
+    if (horgrp_ && horgrp_->doHorizonExport()) {
         MultiID hor2Did, hor3Did;
         horgrp_->getHorIds(hor2Did, hor3Did);
         if (!hor2Did.isUdf() && horgrp_->num2DLinesChosen()==0) {
@@ -173,7 +174,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
             gpgWriter.writeSurvey();
         }
 
-    if (SI().has2D() && linesgrp_!=nullptr) {
+    if (SI().has2D() && linesgrp_) {
         TypeSet<Pos::GeomID> geomids;
         linesgrp_->getGeoMids( geomids );
         if ( linesgrp_->doLineExport() ) {
@@ -186,7 +187,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         }
     }
 
-    if (randomgrp_!=nullptr) {
+    if (randomgrp_) {
         if (randomgrp_->doLineExport()) {
             setCaption(tr("Exporting Random Lines"));
             TypeSet<MultiID> lineids;
@@ -195,7 +196,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         }
     }
 
-    if (wellsgrp_!=nullptr) {
+    if (wellsgrp_) {
         if (wellsgrp_->doWellExport()) {
             setCaption(tr("Exporting wells"));
             TypeSet<MultiID> wellids;
@@ -216,7 +217,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         }
     }
 
-    if (polygrp_!=nullptr) {
+    if (polygrp_) {
         if (polygrp_->doLineExport()) {
             setCaption(tr("Exporting polylines"));
             TypeSet<MultiID> lineids;
@@ -225,7 +226,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         }
     }
 
-    if (horgrp_!=nullptr) {
+    if (horgrp_) {
         if (horgrp_->doHorizonExport()) {
             setCaption(tr("Exporting horizon"));
             MultiID hor2Did, hor3Did;

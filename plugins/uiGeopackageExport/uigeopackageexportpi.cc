@@ -1,6 +1,9 @@
 #include "uigeopackageexportmod.h"
 
+#include "filepath.h"
+#include "oddirs.h"
 #include "ioman.h"
+#include "sharedlibs.h"
 #include "uimenu.h"
 #include "uiodmenumgr.h"
 #include "uitoolbar.h"
@@ -23,7 +26,8 @@
 
 #include "uigeopackageexportmainwin.h"
 #include "uigeotiffexportmainwin.h"
-#include "uigeopackagetreeitem.h"
+#include "gpkgio.h"
+//#include "uigeopackagetreeitem.h"
 #include "wmplugins.h"
 
 mDefODPluginInfo(uiGeopackageExport)
@@ -46,13 +50,13 @@ public:
     uiODMain*		appl_;
     uiGeopackageExportMainWin*	gpxdlg_;
     uiGeotiffExportMainWin*     gtifdlg_;
-    uiVisMenuItemHandler        geopmnuitemhndlr_;
+//    uiVisMenuItemHandler        geopmnuitemhndlr_;
 
     void	updateToolBar(CallBacker*);
     void	updateMenu(CallBacker*);
     void	gpxDialog(CallBacker*);
     void	gtifDialog(CallBacker*);
-    void        doDisplayCB(CallBacker*);
+//    void        doDisplayCB(CallBacker*);
     void	surveyChgCB(CallBacker*);
 
     bool        hasCRSdefined();
@@ -64,7 +68,7 @@ uiGeopackageExportMgr::uiGeopackageExportMgr( uiODMain* a )
     : appl_(a)
     , gpxdlg_(nullptr)
     , gtifdlg_(nullptr)
-    , geopmnuitemhndlr_(visSurvey::HorizonDisplay::sFactoryKeyword(), *a->applMgr().visServer(), tr("Geopackage Display"), mCB(this, uiGeopackageExportMgr, doDisplayCB), "Add", 994)
+//    , geopmnuitemhndlr_(visSurvey::HorizonDisplay::sFactoryKeyword(), *a->applMgr().visServer(), tr("Geopackage Display"), mCB(this, uiGeopackageExportMgr, doDisplayCB), "Add", 994)
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiGeopackageExportMgr::updateMenu );
     mAttachCB( IOM().surveyChanged, uiGeopackageExportMgr::surveyChgCB );
@@ -138,9 +142,9 @@ void uiGeopackageExportMgr::gtifDialog( CallBacker* )
     gtifdlg_->raise();
 }
 
-void uiGeopackageExportMgr::doDisplayCB( CallBacker* )
+/*void uiGeopackageExportMgr::doDisplayCB( CallBacker* )
 {
-    const int displayid = geopmnuitemhndlr_.getDisplayID();
+    const auto displayid = geopmnuitemhndlr_.getDisplayID();
     uiVisPartServer* visserv = appl_->applMgr().visServer();
     mDynamicCastGet(visSurvey::HorizonDisplay*,hd,visserv->getObject(displayid))
     if ( !hd ) return;
@@ -170,7 +174,7 @@ void uiGeopackageExportMgr::doDisplayCB( CallBacker* )
         parent->addChild(newitem, false);
         newitem->showPropertyDlg();
     }
-}
+}*/
 
 void uiGeopackageExportMgr::surveyChgCB( CallBacker* )
 {
@@ -193,7 +197,12 @@ mDefODInitPlugin(uiGeopackageExport)
     if ( !theinst_ )
         return "Cannot instantiate Geopackage Export plugin";
 
-    uiGeopackageTreeItem::initClass();
+    BufferString libnm( 256, false );
+    SharedLibAccess::getLibName("gpkg", libnm.getCStr(), libnm.bufSize());
+    FilePath fp(GetLibPlfDir(), libnm);
+    GeopackageIO::setGPKGlib_location(fp.fullPath());
+
+//    uiGeopackageTreeItem::initClass();
 
     return 0;
 }

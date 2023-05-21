@@ -38,11 +38,11 @@ uiGeotiffExportMainWin::uiGeotiffExportMainWin( uiParent* p )
     if (entries3D.size()>0) {
         expZvalue_ = new uiCheckBox(this, tr("Export Z value"));
         expZvalue_->setChecked(true);
-        
+
         hor3Dfld_ = new uiSurfaceRead( this, uiSurfaceRead::Setup(EMHorizon3DTranslatorGroup::sGroupName())
         .withsubsel(false).withsectionfld(false) );
         hor3Dfld_->attach(alignedBelow, expZvalue_);
-        
+
         BufferString defseldir = FilePath(GetDataDir()).add("Misc").fullPath();
         filefld_ = new uiFileInput( this, uiStrings::sOutputFile(),
                                     uiFileInput::Setup(uiFileDialog::Gen)
@@ -54,7 +54,7 @@ uiGeotiffExportMainWin::uiGeotiffExportMainWin( uiParent* p )
 
 uiGeotiffExportMainWin::~uiGeotiffExportMainWin()
 {
-    
+
 }
 
 bool uiGeotiffExportMainWin::acceptOK( CallBacker*)
@@ -63,7 +63,7 @@ bool uiGeotiffExportMainWin::acceptOK( CallBacker*)
         uiMSG().error( tr("Please specify an output file") );
         return false;
     }
-    
+
     MultiID hor3Did;
     hor3Did.setUdf();
     if (hor3Dfld_) {
@@ -72,16 +72,20 @@ bool uiGeotiffExportMainWin::acceptOK( CallBacker*)
             hor3Did = horObj->key();
     } else
         return false;
-    
-    
+
+
     BufferStringSet attribs;
     if (hor3Dfld_->haveAttrSel())
         hor3Dfld_->getSelAttributes(attribs);
 
     uiTaskRunner taskrunner(this);
-    uiGeotiffWriter gtw( filefld_->fileName() );
-    
-    return gtw.writeHorizon( taskrunner, hor3Did, expZvalue_->isChecked(), attribs );
+    uiGeotiffWriter gtw( hor3Did, filefld_->fileName() );
+
+    uiRetVal uirv = gtw.writeHorizon( taskrunner, expZvalue_->isChecked(), attribs );
+    if (!uirv.isOK())
+	uiMSG().errorWithDetails( uirv, tr("Error saving geotiff"));
+
+    return uirv.isOK();
 }
 
 uiString uiGeotiffExportMainWin::getCaptionStr() const

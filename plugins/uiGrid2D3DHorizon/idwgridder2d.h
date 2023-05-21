@@ -1,7 +1,8 @@
-#ifndef idwgridder2d_h 
+#ifndef idwgridder2d_h
 #define idwgridder2d_h
 
 #include "wmgridder2d.h"
+class uiParent;
 
 class IDWGlobalInterpolator;
 class IDWLocalInterpolator;
@@ -12,12 +13,12 @@ public:
     friend class IDWGlobalInterpolator;
     friend class IDWKNNInterpolator;
     friend class IDWLocalInterpolator;
-    
+
     wmIDWGridder2D();
-    
-    bool	executeGridding(TaskRunner*);
+
+    bool	executeGridding(uiParent*);
 protected:
-    
+
 };
 
 

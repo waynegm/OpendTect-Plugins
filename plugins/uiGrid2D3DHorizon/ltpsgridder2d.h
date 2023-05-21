@@ -17,7 +17,7 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "wmgridder2d.h"
-
+class uiParent;
 
 
 
@@ -27,8 +27,8 @@ public:
     friend class LTPSInterpolator;
     wmLTPSGridder2D();
     ~wmLTPSGridder2D() {}
-    
-    bool	executeGridding(TaskRunner*);
+
+    bool	executeGridding(uiParent*);
     double	basis( double r ) const;
 
 protected:
