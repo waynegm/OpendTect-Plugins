@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set ( OD_SUBSYSTEM "waynegm_plugin" )
 set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 configure_file(wmplugins_version.h.in wmplugins_version.h)
-file (WRITE "S{CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
+file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 
 
 set (PROJ_INCLUDE_DIR ${PROJ_DIR}/include)
