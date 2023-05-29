@@ -13,7 +13,6 @@
 namespace Coords{ class AuthorityCode; }
 class BufferStringSet;
 class uiTaskRunner;
-class PtrMan<Coords::AuthorityCode>;
 
 class uiGeotiffWriter
 { mODTextTranslationClass(uiGeotiffWriter);

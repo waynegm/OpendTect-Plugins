@@ -6,31 +6,31 @@ endif()
 list( APPEND OD_MODULE_INCLUDESYSPATH
     ${OpendTect_DIR}/plugins/CRS
     ${SQLITE_DIR}/include
-    ${CMAKE_PREFIX_PATH}/include
+    ${WMDEPS_DIR}/include
 )
 
 find_library(
     TIFF_LIBRARY
     NAMES tiff
-    PATHS ${CMAKE_PREFIX_PATH}/lib
+    PATHS ${WMDEPS_DIR}/lib
     NO_DEFAULT_PATH
 )
 find_library(
     GEOTIFF_LIBRARY
-    NAMES geotiff
-    PATHS ${CMAKE_PREFIX_PATH}/lib
+    NAMES geotiff_i
+    PATHS ${WMDEPS_DIR}/lib
     NO_DEFAULT_PATH
 )
 find_library(
     GPKGIO_LIBRARY
     NAMES gpkgio
-    PATHS ${CMAKE_PREFIX_PATH}/lib
+    PATHS ${WMDEPS_DIR}/lib
     NO_DEFAULT_PATH
 )
 find_library(
     GPKGEXT_LIBRARY
     NAMES gpkg
-    PATHS ${CMAKE_PREFIX_PATH}/lib
+    PATHS ${WMDEPS_DIR}/lib
     NO_DEFAULT_PATH
 )
 
@@ -40,7 +40,11 @@ list( APPEND OD_MODULE_EXTERNAL_LIBS
     ${GEOTIFF_LIBRARY}
     ${GPKGIO_LIBRARY}
     ${GPKGEXT_LIBRARY}
+    ${SQLITE_LIBRARY}
 )
+string(REPLACE ";"  "\n " stri "${OD_MODULE_INCLUDESYSPATH}")
+message("${stri}")
+
 string(REPLACE ";"  "\n " str "${OD_MODULE_EXTERNAL_LIBS}")
 message("${str}")
 

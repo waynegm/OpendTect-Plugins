@@ -468,7 +468,6 @@ bool wmGridder2D::segmentsIntersect( Coord s1p1, Coord s1p2, Coord s2p1, Coord s
         double ub = ((s1p2.x-s1p1.x)*(s1p1.y-s2p1.y)-(s1p2.y-s1p1.y)*(s1p1.x-s2p1.x))/denom;
         return ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0));
     }
-    return false;
 }
 
 bool wmGridder2D::faultBetween(Coord s1p1, Coord s1p2) const

@@ -171,11 +171,11 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, bool exportZ, 
     TIFFSetField(tif_, TIFFTAG_ROWSPERSTRIP,  1L);
     if (nrBands>1)
     {
-	uint16_t exsamp[nrBands-1];
+	PtrMan<uint16_t> exsamp = new uint16_t[nrBands-1];
 	for (int idx=0; idx<nrBands-1; idx++)
 	    exsamp[idx] = EXTRASAMPLE_UNSPECIFIED;
 
-	TIFFSetField(tif_, TIFFTAG_EXTRASAMPLES, nrBands-1, exsamp);
+	TIFFSetField(tif_, TIFFTAG_EXTRASAMPLES, nrBands-1, *exsamp);
     }
 
     GTIFKeySet(gtif_, GTModelTypeGeoKey, TYPE_SHORT, 1, ModelProjected);

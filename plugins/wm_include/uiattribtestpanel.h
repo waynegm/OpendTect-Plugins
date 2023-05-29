@@ -73,7 +73,8 @@ inline void uiTestPanel::createAndDisplay2DViewer( FlatDataPack* fdpack )
 	return;
 
     if ( flatvwin_ )
-	flatvwin_->viewer().setPack( wva_, fdpack->id() );
+	flatvwin_->viewer().setPack( 
+		    wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD, fdpack->id() );
     else
     {
 	flatvwin_ = new uiFlatViewMainWin( parent_,
@@ -90,7 +91,8 @@ inline void uiTestPanel::createAndDisplay2DViewer( FlatDataPack* fdpack )
 	app.setDarkBG( false );
 	app.setGeoDefaults( true );
 	app.ddpars_.show( wva_, true );
-	vwr.setPack( wva_, fdpack->id() );
+	vwr.setPack( wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD, 
+		     fdpack->id() );
 	flatvwin_->addControl( new uiFlatViewStdControl(vwr,
 		uiFlatViewStdControl::Setup(nullptr).isvertical(true)) );
 	flatvwin_->setDeleteOnClose( false );

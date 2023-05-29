@@ -18,11 +18,19 @@ configure_file(wmplugins_version.h.in wmplugins_version.h)
 file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 
 
-set (PROJ_INCLUDE_DIR ${PROJ_DIR}/include)
+set (SQLITE_DIR "" CACHE PATH "Sqlite directory")
+set (PROJ_DIR "" CACHE PATH "Proj9 directory")
+set (WMDEPS_DIR "" CACHE PATH "WMPlugin dependency directory")
 find_library(
     PROJ_LIBRARY
     NAMES proj
     PATHS ${PROJ_DIR}/lib
+    NO_DEFAULT_PATH
+)
+find_library(
+    SQLITE_LIBRARY
+    NAMES sqlite3
+    PATHS ${SQLITE_DIR}/lib
     NO_DEFAULT_PATH
 )
 
