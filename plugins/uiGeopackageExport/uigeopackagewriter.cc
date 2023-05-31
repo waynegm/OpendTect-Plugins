@@ -437,7 +437,7 @@ void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids, bool inFee
     if (!gpkg_ || !srs_)
 	return;
 
-    std::vector<std::string> fieldnms({"name", "marker", inFeet?"md(ft)":"md(m)", inFeet?"tvdss(ft)":"tvdss(m)"});
+    std::vector<std::string> fieldnms({"name", "marker", inFeet?"[md(ft)]":"[md(m)]", inFeet?"[tvdss(ft)]":"[tvdss(m)]"});
     std::vector<std::string> fielddefs({"TEXT NOT NULL", "TEXT NOT NULL", "REAL", "REAL"});
     if (!gpkg_->addGeomLayer("point", "well_markers", srs_->code(), fieldnms, fielddefs))
     {

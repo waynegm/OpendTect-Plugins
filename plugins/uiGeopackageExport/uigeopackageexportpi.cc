@@ -1,5 +1,6 @@
 #include "uigeopackageexportmod.h"
 
+#include "envvars.h"
 #include "filepath.h"
 #include "oddirs.h"
 #include "ioman.h"
@@ -199,8 +200,15 @@ mDefODInitPlugin(uiGeopackageExport)
 
     BufferString libnm( 256, false );
     SharedLibAccess::getLibName("gpkg", libnm.getCStr(), libnm.bufSize());
-    FilePath fp(GetLibPlfDir(), libnm);
-    GeopackageIO::setGPKGlib_location(fp.fullPath());
+    if ( __islinux__ )
+	libnm.add(".0");
+
+    FilePath libfp(GetLibPlfDir(), libnm);
+    if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") )
+	libfp = FilePath(GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", GetPlfSubDir(),
+			 GetBinSubDir(), libnm);
+
+    GeopackageIO::setGPKGlib_location(libfp.fullPath());
 
 //    uiGeopackageTreeItem::initClass();
 

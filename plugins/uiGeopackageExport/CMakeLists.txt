@@ -17,7 +17,7 @@ find_library(
 )
 find_library(
     GEOTIFF_LIBRARY
-    NAMES geotiff_i
+    NAMES geotiff geotiff_i
     PATHS ${WMDEPS_DIR}/lib
     NO_DEFAULT_PATH
 )
