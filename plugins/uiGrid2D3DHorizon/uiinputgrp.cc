@@ -43,7 +43,7 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
     lines2Dfld_->attach( alignedBelow, hor2Dfld_ );
 
     hor2Dfld_->setSensitive( has2Dhorizon );
-    hor2Dfld_->setChecked( has2Dhorizon );
+    hor2Dfld_->setChecked( false );
     lines2Dfld_->setSensitive( has2Dhorizon );
 
     su.seltxt( uiStrings::s3DHorizon() );
@@ -55,7 +55,7 @@ uiInputGrp::uiInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon )
     subsel3Dfld_->attach( alignedBelow, hor3Dfld_ );
 
     hor3Dfld_->setSensitive( has3Dhorizon );
-    hor3Dfld_->setChecked( has3Dhorizon );
+    hor3Dfld_->setChecked( false );
     subsel3Dfld_->setSensitive( has3Dhorizon );
 
     contpolyfld_ = new WMLib::uiPolygonParSel(this, tr("Contour Polygons/Polylines"), true);

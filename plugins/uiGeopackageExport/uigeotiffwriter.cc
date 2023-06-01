@@ -165,8 +165,8 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, bool exportZ, 
     TIFFSetField(tif_, TIFFTAG_PLANARCONFIG, PLANARCONFIG_SEPARATE);
     TIFFSetField(tif_, TIFFTAG_PHOTOMETRIC,   PHOTOMETRIC_MINISBLACK);
     TIFFSetField(tif_, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_IEEEFP);
-    TIFFSetField(tif_,TIFFTAG_BITSPERSAMPLE, sizeof(float)*8);
     TIFFSetField(tif_, TIFFTAG_SAMPLESPERPIXEL, nrBands);
+    TIFFSetField(tif_,TIFFTAG_BITSPERSAMPLE, sizeof(float)*8);
     TIFFSetField(tif_, TIFFTAG_GDAL_NODATA, toString(mUdf(float)));
     TIFFSetField(tif_, TIFFTAG_ROWSPERSTRIP,  1L);
     if (nrBands>1)
@@ -175,7 +175,7 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, bool exportZ, 
 	for (int idx=0; idx<nrBands-1; idx++)
 	    exsamp[idx] = EXTRASAMPLE_UNSPECIFIED;
 
-	TIFFSetField(tif_, TIFFTAG_EXTRASAMPLES, nrBands-1, *exsamp);
+	TIFFSetField(tif_, TIFFTAG_EXTRASAMPLES, nrBands-1, exsamp.ptr());
     }
 
     GTIFKeySet(gtif_, GTModelTypeGeoKey, TYPE_SHORT, 1, ModelProjected);
@@ -231,25 +231,6 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, bool exportZ, 
     if ( !TaskRunner::execute(&taskrunner,*loader) )
 	 return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon failed"));
 
-    for ( const auto* nms : attribs )
-    {
-	const int idx = sd.valnames.indexOf( *nms );
-	if ( idx<0 )
-	    continue;
-
-	sels.selvalues += idx;
-    }
-
-    if ( !sels.selvalues.isEmpty() )
-    {
-	ExecutorGroup exgrp( "Reading aux data" );
-	for ( int idx=0; idx<sels.selvalues.size(); idx++ )
-	    exgrp.add( hor->auxdata.auxDataLoader(sels.selvalues[idx]) );
-
-	if ( !TaskRunner::execute( &taskrunner, exgrp ) )
-	    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon attributes failed"));
-    }
-
     float* rowBuff = (float*) _TIFFmalloc(TIFFScanlineSize(tif_));
     BufferString description;
     int bandnr = 0;
@@ -281,8 +262,13 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, bool exportZ, 
     {
 	for (int iatt=0; iatt<attribs.size(); iatt++)
 	{
+	    PtrMan<Executor> auxloader = hor->auxdata.auxDataLoader(attribs.get(iatt).buf());
+	    if ( !loader || !TaskRunner::execute( &taskrunner, *auxloader ) )
+		    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon attributes failed"));
+
 	    if (hor->auxdata.hasAuxDataName(attribs.get(iatt)))
 	    {
+
 		int iaux = hor->auxdata.auxDataIndex(attribs.get(iatt));
 		description = attribs.get(iatt);
 		addBandMetadata(bandnr, description);
@@ -306,6 +292,7 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, bool exportZ, 
 		return uiRetVal(tr("uiGeotiffWriter::writeHorizon - no data for attribute: %1").arg(attribs.get(iatt)));
 	    }
 	    bandnr++;
+	    hor->auxdata.removeAll();
 	}
     }
     setMetadataField();
