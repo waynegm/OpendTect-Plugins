@@ -9,12 +9,15 @@
 #include "uiioobjmanip.h"
 #include "uiseis2dlineselgrp.h"
 #include "bufstringset.h"
+#include "ctxtioobj.h"
 #include "emsurfacetr.h"
 #include "emioobjinfo.h"
 #include "emmanager.h"
 #include "emhorizon3d.h"
 #include "emhorizon2d.h"
 #include "emsurfacegeometry.h"
+#include "iodir.h"
+#include "iodirentry.h"
 #include "typeset.h"
 #include "ranges.h"
 #include "survinfo.h"
@@ -65,6 +68,22 @@ uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon,
 uiHorInputGrp::~uiHorInputGrp()
 {
     detachAllNotifiers();
+}
+
+bool uiHorInputGrp::has2Dhorizons()
+{
+    CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
+    const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
+    const IODirEntryList entries2D( iodir2D, ctio2D.ctxt_ );
+    return SI().has2D() && entries2D.size()>0;
+}
+
+bool uiHorInputGrp::has3Dhorizons()
+{
+    CtxtIOObj ctio3D(EMHorizon3DTranslatorGroup::ioContext());
+    const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
+    const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
+    return SI().has3D() && entries3D.size()>0;
 }
 
 void uiHorInputGrp::exp3DselCB(CallBacker*)

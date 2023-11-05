@@ -210,18 +210,10 @@ uiMistieEstimateByHorizon::uiMistieEstimateByHorizon(uiParent* p )
 : uiGroup(p)
 , trcstepfld_(nullptr)
 {
-    CtxtIOObj ctio2D(EMHorizon2DTranslatorGroup::ioContext());
-    const IODir iodir2D( ctio2D.ctxt_.getSelKey() );
-    const IODirEntryList entries2D( iodir2D, ctio2D.ctxt_ );
-    bool has2Dhorizon = SI().has2D() && entries2D.size()>0;
-
-    CtxtIOObj ctio3D(EMHorizon3DTranslatorGroup::ioContext());
-    const IODir iodir3D( ctio3D.ctxt_.getSelKey() );
-    const IODirEntryList entries3D( iodir3D, ctio3D.ctxt_ );
-    bool has3Dhorizon = SI().has3D() && entries3D.size()>0;
-
+    const bool has2Dhorizon = WMLib::uiHorInputGrp::has2Dhorizons();
+    const bool has3Dhorizon = WMLib::uiHorInputGrp::has3Dhorizons();
     horinpgrp_ = new WMLib::uiHorInputGrp(this, has2Dhorizon, has3Dhorizon, false);
-    if (has3Dhorizon)
+    if (has2Dhorizon && has3Dhorizon)
     {
 	mAttachCB(horinpgrp_->exp3D_->activated, uiMistieEstimateByHorizon::use3DCB);
         trcstepfld_ = new uiGenInput(this, tr("2D Trace Step"), IntInpSpec(100));

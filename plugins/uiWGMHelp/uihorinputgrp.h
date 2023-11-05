@@ -36,6 +36,9 @@ public:
     static const char* 	sKey2DLineIDNr()	{ return "2DLineIDNr"; }
     static const char*	sKey3DHorizonID()	{ return "3DHorizonID"; }
 
+    static bool	has2Dhorizons();
+    static bool has3Dhorizons();
+
     uiCheckBox*                 exp3D_ = nullptr;
 
 protected:
