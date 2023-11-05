@@ -1,5 +1,12 @@
 # OpendTect Plugins Release Notes
 
+## Release 7.0.1
+### GradientAttrib
+- fix documentation link
+
+### Mistie Analysis
+- fix crash when no 2D horizons in survey
+
 ## Release 7.0.0
 - Adapt to OpendTect 7.0 API changes
 
@@ -15,7 +22,7 @@
 - try and fix reported crashes
 
 ## Release 6.6.10
-###AVOPolarAttrib
+### AVOPolarAttrib
 -  Replace Nans and Infs with Undefined
 
 ### EFDAttrib
