@@ -18,7 +18,7 @@ keyholder keys[] = {
     {"geodisp","geopackagedisplay/"},
     {"geopkg", "geopackageexport/"},
     {"geotiff", "geotiffexport/"},
-    {"grad", "gradientattrib.html"},
+    {"grad", "gradientattrib/"},
     {"grid2d3d","grid2d-3d/"},
     {"ltf", "localattrib/"},
     {"mistie", "mistie/"},
