@@ -98,6 +98,7 @@ void uiExternalAttribInp::addField(const char* key, uiGenInput* field)
     field->display(true);
     fields_[key] = field;
     insertRows(nrRows(), 1);
+    field->preFinalize().trigger();
     setCellGroup( RowCol(nrRows()-1,0), field );
 }
 
@@ -245,6 +246,7 @@ void uiExternalAttribInp::makeZSamplingUI()
 	zmarginfld_->setTitleText(tr("Z Window (samples)"));
     }
     insertRows(nrRows(), 1);
+    zmarginfld_->preFinalize().trigger();
     setCellGroup( RowCol(nrRows()-1,0), zmarginfld_ );
 }
 
@@ -277,6 +279,7 @@ void uiExternalAttribInp::makeLegacyUI()
 	selectfld_->setValue(extproc_->selectValue());
 	selectfld_->display(true);
 	insertRows(nrRows(), 1);
+	selectfld_->preFinalize().trigger();
 	setCellGroup( RowCol(nrRows()-1,0), selectfld_ );
     }
 
@@ -289,6 +292,7 @@ void uiExternalAttribInp::makeLegacyUI()
 	    tmp->display(true);
 	    parflds_ += tmp;
 	    insertRows(nrRows(), 1);
+	    tmp->preFinalize().trigger();
 	    setCellGroup(RowCol(nrRows()-1,0), tmp);
 	}
     }
