@@ -160,7 +160,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
             uiMSG().error( tr("Please select the 2D line(s) to export") );
             return false;
         }
-        if (strlen(horgrp_->outputName())==0) {
+        if (!horgrp_->outputName() || strlen(horgrp_->outputName())==0) {
             tabstack_->setCurrentPage( horgrp_ );
             uiMSG().error( tr("Please specify an output layer name for the horizon") );
             return false;

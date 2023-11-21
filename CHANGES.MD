@@ -4,6 +4,9 @@
 ### External Attributes
 - fix for UI fields not being displayed
 
+### uiGeopackageExport
+- fix for crash when exporting horizon data without a layer name
+
 ### GradientAttrib
 - fix documentation link
 
