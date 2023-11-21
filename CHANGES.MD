@@ -1,6 +1,9 @@
 # OpendTect Plugins Release Notes
 
 ## Release 7.0.1
+### External Attributes
+- fix for UI fields not being displayed
+
 ### GradientAttrib
 - fix documentation link
 

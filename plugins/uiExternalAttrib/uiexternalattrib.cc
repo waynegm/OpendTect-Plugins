@@ -206,6 +206,7 @@ void uiExternalAttribInp::makeInputUI(const Attrib::DescSet* ads,
 	tmp->setBorder(0);
 	tmp->display(true);
 	inpflds_ += tmp;
+	tmp->preFinalize().trigger();
 	insertRows(nrRows(), 1);
 	setCellGroup( RowCol(nrRows()-1,0), tmp );
 	setColor( RowCol(nrRows()-1,0), parent()->backgroundColor() );
@@ -238,6 +239,7 @@ void uiExternalAttribInp::makeZSamplingUI()
     val.start = -val.start;
     zmarginfld_->setValue(val);
     zmarginfld_->display(true);
+    zmarginfld_->preFinalize().trigger();
     if (extproc_->zSymmetric()) {
 	zmarginfld_->displayField(false, 1, 0);
 	zmarginfld_->setTitleText(tr("Z Window (+/-samples)"));
@@ -246,7 +248,6 @@ void uiExternalAttribInp::makeZSamplingUI()
 	zmarginfld_->setTitleText(tr("Z Window (samples)"));
     }
     insertRows(nrRows(), 1);
-    zmarginfld_->preFinalize().trigger();
     setCellGroup( RowCol(nrRows()-1,0), zmarginfld_ );
 }
 
@@ -255,12 +256,12 @@ void uiExternalAttribInp::makeStepoutUI(bool is2d)
     if (!extproc_->hasStepOut() || extproc_->hideStepOut())
 	return;
 
-    stepoutfld_ = new uiExt_StepOutSel(nullptr, is2d);
+    stepoutfld_ = new uiExt_StepOutSel(nullptr, is2d||extproc_->so_same());
     mAttachCB(stepoutfld_->valueChanging,uiExternalAttribInp::doStepOutCheck);
-    stepoutfld_->setFieldNames( "Inl Stepout", "Crl Stepout" );
     stepoutfld_->display(true);
     stepoutfld_->setBinID(extproc_->stepout());
-    stepoutfld_->displayFld2(!extproc_->so_same());
+//    stepoutfld_->displayFld2(!extproc_->so_same());
+
     insertRows(nrRows(), 1);
     setCellGroup( RowCol(nrRows()-1,0), stepoutfld_ );
 }
@@ -329,13 +330,13 @@ void uiExternalAttribInp::doZmarginCheck( CallBacker* cb )
 void uiExternalAttribInp::doStepOutCheck( CallBacker* cb )
 {
 	BinID val = stepoutfld_->getBinID();
+	if ( extproc_->so_same() )
+	    val.inl() = val.crl();
+
 	if (extproc_ && extproc_->hasStepOut()) {
 		BinID minval = extproc_->so_minimum();
 		int inl = (val.inl() < minval.inl())? minval.inl():val.inl();
 		int crl = (val.crl() < minval.crl())? minval.crl():val.crl();
-		stepoutfld_->setBinID(BinID(inl,crl));
-		if (extproc_->so_same())
-			crl = inl;
 		stepoutfld_->setBinID(BinID(inl,crl));
 	}
 }
@@ -457,7 +458,6 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     help_->display(false);
 
     makeUI();
-
     setHAlignObj( uiinp_ );
     mAttachCB(postFinalize(), uiExternalAttrib::initGrp);
 }
