@@ -1,11 +1,14 @@
 # OpendTect Plugins Release Notes
 
-## Release 7.0.1
+## Release 7.0.3
+- Compile against new versions dependencies for OpendTect 7.0.3
+
 ### External Attributes
 - fix for UI fields not being displayed
 
 ### uiGeopackageExport
 - fix for crash when exporting horizon data without a layer name
+- add export of Z slices to geotiff
 
 ### GradientAttrib
 - fix documentation link
