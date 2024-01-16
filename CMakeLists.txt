@@ -7,7 +7,7 @@
 
 
 cmake_minimum_required (VERSION 3.0)
-project(OpendTect_Plugins VERSION 7.0.3)
+project(OpendTect_Plugins VERSION 7.0.4)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -21,6 +21,8 @@ file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 set (SQLITE_DIR "" CACHE PATH "Sqlite directory")
 set (PROJ_DIR "" CACHE PATH "Proj9 directory")
 set (WMDEPS_DIR "" CACHE PATH "WMPlugin dependency directory")
+set (SQLITE_DIR ${SQLite3_ROOT})
+
 find_library(
     PROJ_LIBRARY
     NAMES proj
