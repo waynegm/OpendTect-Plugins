@@ -220,6 +220,7 @@ void uiExternalAttribInp::makeOutputUI()
 	return;
     outputfld_ = new uiGenInput( 0, uiStrings::sOutput(), StringListInpSpec(outputs) );
     outputfld_->display(true);
+    outputfld_->preFinalize().trigger();
     insertRows(nrRows(), 1);
     setCellGroup( RowCol(nrRows()-1,0), outputfld_ );
 }

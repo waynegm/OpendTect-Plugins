@@ -1,5 +1,12 @@
 # OpendTect Plugins Release Notes
 
+## Release 7.0.4.1
+### External Attributes
+- fix for Output UI field not being displayed
+
+## Release 7.0.4
+- Compile against OpendTect 7.0.4 with new compilers (GCC 10.5 and MSVS 2022)
+
 ## Release 7.0.3
 - Compile against new versions dependencies for OpendTect 7.0.3
 
