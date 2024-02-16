@@ -22,7 +22,7 @@ xa.params = {
   'Angle (deg)' : {'Type': 'Number', 'Value': 6},
   'Method' : {'Type': 'Select', 'Options': ['akirich', 'fatti'], 'Value': 'akirich'},
   'Parallel' : False,
-  'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/pylops/'
+  'Help'  : xa.HelpRoot+'pylops/'
 }
 #
 # Define the compute function

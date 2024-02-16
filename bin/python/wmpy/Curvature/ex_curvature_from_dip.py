@@ -18,7 +18,7 @@ xa.params = {
 	'Output': ['Mean curvature', 'Gaussian curvature', 'Maximum curvature', 'Minimum curvature', 'Most pos curvature', 'Most neg curvature'],
 	'ZSampMargin' : {'Value':[-1,1], 'Hidden': True},
 	'StepOut' : {'Value': [1,1], 'Hidden': True},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/'
+	'Help': xa.HelpRoot
 }
 #
 # Define the compute function

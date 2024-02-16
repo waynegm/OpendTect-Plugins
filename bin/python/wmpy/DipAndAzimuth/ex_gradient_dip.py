@@ -18,7 +18,7 @@ import extattrib as xa
 xa.params = {
 	'Inputs': ['In-line gradient', 'Cross-line gradient', 'Z gradient'],
 	'Output': ['Crl_dip', 'Inl_dip', 'True Dip', 'Dip Azimuth'],
-	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-from-gradients'
+	'Help': xa.HelpRoot+'dipazimuth/#orientation-from-gradients'
 }
 #
 # Define the compute function

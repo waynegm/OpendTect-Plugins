@@ -27,7 +27,7 @@ xa.params = {
 	'ZSampMargin' : {'Value': [-5,5], 'Hidden': True, 'Symmetric': True},
 	'Par_0' : {'Name': 'S/N Ratio', 'Value': 1},
 	'Parallel' : False,
-	'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/addnoise/'
+	'Help'  : xa.HelpRoot+'addnoise/'
 }
 #
 # Define the compute function

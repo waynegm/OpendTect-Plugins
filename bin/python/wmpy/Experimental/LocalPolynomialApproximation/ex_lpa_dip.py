@@ -25,7 +25,7 @@ xa.params = {
 	'StepOut' : {'Value': [1,1]},
 	'Par_0': {'Name': 'Weight Factor', 'Value': 0.2},
 	'Par_1': {'Name': '+/- Dip Clip(ms/m,mm/m)', 'Value': 300},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External_Attributes/LPA_Attributes/'
+	'Help': xa.HelpRoot
 }
 #
 # Define the compute function

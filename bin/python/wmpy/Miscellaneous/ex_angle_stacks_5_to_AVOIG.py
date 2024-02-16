@@ -28,7 +28,7 @@ xa.params = {
 	'Par_2': {'Name': 'Far Angle', 'Value': 27},
 	'Par_3': {'Name': 'ExtraFar Angle', 'Value': 37},
 	'Par_4': {'Name': 'UltraFar Angle', 'Value': 49},
-	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/avo_ig/'
+	'Help': xa.HelpRoot+'avo_ig/'
 }
 #
 # Define the compute function

@@ -1,7 +1,7 @@
 # External Attribute Skeleton
 #
-# Input: Multi-trace, single attribute
-# Output: Single attribute
+# Input: Multi-trace, multi-attribute
+# Output: Multi-attribute
 #
 import sys,os
 import numpy as np
@@ -15,15 +15,17 @@ import extattrib as xa
 # The attribute parameters - keep what you need
 #
 xa.params = {
-	'Inputs': ['Input'],
+	'Inputs': ['Input1', 'Input2'],
+	'Output': ['Out1','Out2'],
 	'ZSampMargin' : {'Value': [-30,30], 'Minimum': [-1,1], 'Symmetric': True, 'Hidden': False},
 	'StepOut' : {'Value': [1,1], 'Minimum': [1,1], 'Hidden': False},
+	'File Selection' : {'Type': 'File', 'Value': 'Seismics/*.wvlt'},
+	'Number Input'  : {'Type': 'Number', 'Value': 1},
+	'String Input' : {'Type': 'Text', 'Value': 'Bla bla bla'},
+	'New Selection' : {'Type': 'Select', 'Options':['New First','New Second','New Third'], 'Value':'New Second'},
 	'Par_0' : {'Name': 'Parameter 0', 'Value': 0},
 	'Par_1' : {'Name': 'Parameter 1', 'Value': 1},
 	'Par_2' : {'Name': 'Parameter 2', 'Value': 2},
-	'Par_3' : {'Name': 'Parameter 3', 'Value': 3},
-	'Par_4' : {'Name': 'Parameter 4', 'Value': 4},
-	'Par_5' : {'Name': 'Parameter 5', 'Value': 5},
 	'Select' : {'Name': 'Option', 'Values': ['First', 'Second', 'Third'], 'Selection': 0},
 	'Parallel' : False,
 	'Help'  : xa.HelpRoot
@@ -59,22 +61,27 @@ def doCompute():
 #
 #	Get the input
 #
-		indata = xa.Input['Input']
+		in_1 = xa.Input['Input1']
+		in_2 = xa.Input['Input2']
 #
 #	Your attribute calculation goes here
 #
 #	Warning Python loops can be slow - this is contrived just to show how to access traces in the analysis data cube
 #
-		outdata = np.zeros(number_of_samples)
+		out_1 = np.zeros(number_of_samples)
+		out_2 = np.zeros(number_of_samples)
 		for inline in range(number_inline):
 			for xline in range(number_xline):
 				if (inline != centre_trace_x and xline != centre_trace_y):
-					outdata += indata[inline,xline,:]
+					out_1 += in_1[inline,xline,:]
+					out_2 += in_2[inline,xline,:]
 
-		outdata /= (number_inline * number_xline - 1)
 #------------------------------------------------------------------------------------
 #
-		xa.Output = outdata
+#	Replace Output1-Output3 with the names in the xa.params Output array
+#
+		xa.Output['Out1'] = out_1
+		xa.Output['Out2'] = out_2
 		xa.doOutput()
 
 #

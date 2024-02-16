@@ -23,7 +23,7 @@ xa.params = {
 	'StepOut' : {'Value': [2,2], 'Minimum': [2,2], 'Symmetric': True},
 	'Par_0' : {'Name': 'Tensor ZStepOut', 'Value': 1},
 	'Par_1' : {'Name': 'Band', 'Value': 0.9},
-	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-using-the-envelope-weighted-3d-complex-trace-phase-structure-tensor'
+	'Help': xa.HelpRoot+'dipazimuth/#orientation-using-the-envelope-weighted-3d-complex-trace-phase-structure-tensor'
 }
 #
 # Define the compute function

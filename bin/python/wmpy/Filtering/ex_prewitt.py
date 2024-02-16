@@ -11,7 +11,7 @@ xa.params = {
 	'ZSampMargin' : {'Value': [-1,1], 'Hidden': True},
 	'StepOut' : {'Value': [1,1], 'Hidden': True},
 	'Parallel' : False,
-	'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/'
+	'Help'  : xa.HelpRoot
 }
 
 def doCompute():

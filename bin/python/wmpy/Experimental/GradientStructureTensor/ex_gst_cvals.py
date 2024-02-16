@@ -24,7 +24,7 @@ xa.params = {
 	'Output': ['Cline', 'Cplane', 'Cfault', 'Cchaos', 'Ctype'],
 	'ZSampMargin' : {'Value':[-3,3], 'Symmetric': True},
 	'StepOut' : {'Value': [3,3], 'Symmetric': True},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External_Attributes/GST_Attributes/'
+	'Help': xa.HelpRoot
 }
 #
 # Define the compute function

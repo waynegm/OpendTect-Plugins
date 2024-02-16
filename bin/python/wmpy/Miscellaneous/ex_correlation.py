@@ -27,7 +27,7 @@ xa.params = {
 	'Output': ['Shift', 'Quality'],
 	'ZSampMargin' : {'Value':[-10,10], 'Symmetric': True},
 	'Par_0': {'Name': 'Max Lag (samples)', 'Value': 5},
-	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/zdelayest/'
+	'Help': xa.HelpRoot+'zdelayest/'
 }
 #
 # Define the compute function

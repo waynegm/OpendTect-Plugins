@@ -20,7 +20,7 @@ xa.params = {
 	'StepOut' : {'Value': [9,9], 'Minimum': [9,9], 'Hidden': False, 'Same': True},
 	'Par_0' : {'Name': 'Norm. Spatial Frequency', 'Value': 0.5},
 	'Select' : {'Name': 'Type', 'Values': ['Low Pass', 'High Pass', 'Band Pass', 'Band Reject'], 'Selection': 0},
-	'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/spatialfiltercircular/'
+	'Help'  : xa.HelpRoot+'spatialfiltercircular/'
 }
 #
 # Define the compute function

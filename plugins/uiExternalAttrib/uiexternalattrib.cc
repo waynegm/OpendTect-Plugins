@@ -112,6 +112,9 @@ void uiExternalAttribInp::makeNewUI()
 	if (keytype=="Number") {
 	    field = new uiGenInput(nullptr, toUiString(key->str()), FloatInpSpec());
 	    field->setValue(extproc_->getParamFValue(key->str()));
+	} else if (keytype=="Text") {
+	    field = new uiGenInput(nullptr, toUiString(key->str()), StringInpSpec());
+	    field->setText(extproc_->getParamStrValue(key->str()));
 	} else if (keytype=="File") {
 	    uiFileInput::Setup su;
 	    su.defseldir("").forread(true);
@@ -153,6 +156,8 @@ bool uiExternalAttribInp::setNewParams(const BufferString& encodedstr)
 	    const BufferString keytype = extproc_->getParamType(key);
 	    if (field && keytype=="Number")
 		field->setValue(extproc_->getParamFValue(key));
+	    else if (field && keytype=="Text")
+		field->setText(extproc_->getParamStrValue(key));
 	    else if (field && keytype=="File") {
 		mDynamicCastGet(uiFileInput*,filefld,field);
 		FilePath fp(extproc_->getParamStrValue(key));
@@ -184,6 +189,8 @@ BufferString uiExternalAttribInp::getNewParams(Attrib::Desc& desc, ChangeTracker
 	const BufferString keytype = extproc_->getParamType(key);
 	if (field && keytype=="Number")
 	    extproc_->setParamFValue(key, field->getFValue());
+	if (field && keytype=="Text")
+	    extproc_->setParamStrValue(key, field->text());
 	else if (field && keytype=="File") {
 	    mDynamicCastGet(uiFileInput*,filefld,field);
 	    extproc_->setParamStrValue(key, filefld->fileName());

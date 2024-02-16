@@ -1,5 +1,11 @@
 # OpendTect Plugins Release Notes
 
+## Release 7.0.5
+### External Attributes
+- add xa.params metadata (Survey, SurveyDiskLocation, InputNames)
+- fix up help urls
+- add Text UI input type
+
 ## Release 7.0.4.1
 ### External Attributes
 - fix for Output UI field not being displayed

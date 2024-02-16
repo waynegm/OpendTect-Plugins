@@ -198,6 +198,13 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 	int ninl = stepout_.inl()*2 + 1;
 	int ncrl = stepout_.crl()*2 + 1;
 	proc_->setSeisInfo( ninl, ncrl, inlDist()*SI().inlStep(), crlDist()*SI().crlStep(), zFactor(), dipFactor() );
+	proc_->addMetadata( "Survey", SI().name().str() );
+	proc_->addMetadata( "SurveyDiskLocation", SI().diskLocation().fullPath().str() );
+	BufferStringSet input_names;
+	for ( int i=0; i<desc.nrInputs(); i++ )
+	    input_names.add( desc.getInput(i)->userRef() );
+
+	proc_->addMetadata( "InputNames", input_names );
     } else
 	ErrMsg("ExternalAttrib::ExternalAttrib - error creating extrenal procedure");
 }

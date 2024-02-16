@@ -27,7 +27,7 @@ xa.params = {
 	'Par_5' : {'Name': 'Parameter 5', 'Value': 5},
 	'Select' : {'Name': 'Option', 'Values': ['First', 'Second', 'Third'], 'Selection': 0},
 	'Parallel' : False,
-	'Help'  : 'http://waynegm.github.io/OpendTect-Plugin-Docs/Attributes/ExternalAttrib/'
+	'Help'  : xa.HelpRoot
 }
 #
 # Define the compute function

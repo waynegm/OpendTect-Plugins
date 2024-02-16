@@ -41,6 +41,8 @@ public:
     bool		isOK() const;
     void		setSeisInfo( int niln, int ncrl, float inlDist, float crlDist,
 				     float zFactor, float dipFactor );
+    void		addMetadata( const char* key, const char* value );
+    void		addMetadata( const char* key, const BufferStringSet& values );
     ProcInst*		getIdleInst( int nrsamples );
     void		setInstIdle( ProcInst* pi );
     void		setInput( ProcInst* pi, int input, int trc, int idx, float val );

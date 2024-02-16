@@ -22,7 +22,7 @@ xa.params = {
 	'Par_0' : {'Name': 'Band', 'Value': 0.9},
 	'StepOut' : {'Value': [1,1], 'Hidden': True},
 	'Parallel': True,
-	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-from-the-3d-complex-trace-phase'
+	'Help': xa.HelpRoot+'dipazimuth/#orientation-from-the-3d-complex-trace-phase'
 }
 #
 # Define the compute function

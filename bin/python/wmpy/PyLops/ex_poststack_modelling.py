@@ -19,7 +19,7 @@ xa.params = {
   'Inputs': ['Acoustic Impedance'],
   'Wavelet' : {'Type': 'File', 'Value': 'Seismics/*.wvlt'},
   'Parallel' : False,
-  'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/pylops/'
+  'Help'  : xa.HelpRoot+'pylops/'
 }
 #
 # Define the compute function

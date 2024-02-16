@@ -73,6 +73,7 @@ public:
     BufferString	infile_raw_;
     BufferString	infile_;
     json::Value		jsonpar_;
+    json::Object	metadata_;
     BufferStringSet	newparamkeys_;
     ObjectSet<ProcInst> idleinsts_;
     Threads::Mutex	idleinstslock_;
@@ -195,7 +196,14 @@ void ExtProcImpl::addQuotesIfNeeded(BufferStringSet& args)
 
 void ExtProcImpl::startInst( ProcInst* pi )
 {
-    BufferString params(json::Serialize(jsonpar_).c_str());
+    json::Value tmppar( jsonpar_ );
+    for (auto it=metadata_.begin(); it!=metadata_.end(); ++it)
+    {
+	const std::string key = it->first;
+	tmppar[key] = it->second;
+    }
+
+    BufferString params(json::Serialize(tmppar).c_str());
     BufferStringSet runargs;
     if ( !infile_.isEmpty() && !exfile_.isEmpty() )
 	runargs = getInterpreterArgs();
@@ -292,6 +300,20 @@ void ExtProc::setSeisInfo( int ninl, int ncrl, float inlDist, float crlDist, flo
     (pD->seisinfo_).dipFactor = dipFactor;
     (pD->seisinfo_).nrOutput = numOutput();
     (pD->seisinfo_).nrInput = numInput();
+}
+
+void ExtProc::addMetadata( const char* key, const char* value )
+{
+    pD->metadata_[key] = value;
+}
+
+void ExtProc::addMetadata( const char* key, const BufferStringSet& values )
+{
+    json::Array jsarr;
+    for ( const auto* val : values )
+	jsarr.push_back( val->str() );
+
+    pD->metadata_[key] = jsarr;
 }
 
 void ExtProc::setInput( ProcInst* pi, int inpdx, int trc, int idx, float val )

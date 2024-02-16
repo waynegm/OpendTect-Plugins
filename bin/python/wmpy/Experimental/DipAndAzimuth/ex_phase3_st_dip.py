@@ -22,7 +22,7 @@ xa.params = {
 	'Output': ['Crl_dip', 'Inl_dip', 'True Dip', 'Dip Azimuth', 'Cplane'],
 	'ZSampMargin' : {'Value':[-2,2], 'Minimum':[-2,2], 'Symmetric': True},
 	'StepOut' : {'Value': [2,2], 'Minimum': [2,2], 'Symmetric': True},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External_Attributes/DipAndAzimuth/'
+	'Help': xa.HelpRoot+'dipazimuth/'
 }
 #
 # Define the compute function

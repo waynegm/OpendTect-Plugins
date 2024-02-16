@@ -15,7 +15,7 @@ xa.params = {
     'StepOut' : {'Value': [1,1], 'Hidden': True},
     'Select': {'Name': 'Operator', 'Values': ['Scharr','Kroon'], 'Selection': 0},
     'Parallel' : False,
-    'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/plugins/externalattrib/'
+    'Help'  : xa.HelpRoot
 }
 
 def doCompute():

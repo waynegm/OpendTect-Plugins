@@ -22,7 +22,7 @@ xa.params = {
 	'StepOut' : {'Value': [5,5], 'Minimum': [1,1], 'Hidden': False},
 	'Clip Limit (0 to 1)' : {'Type': 'Number', 'Value': 0.5},
   	'Parallel' : False,
-	'Help'  : 'https://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/histogram_equalization/'
+	'Help'  : xa.HelpRoot+'histogram_equalization/'
 }
 #
 # Define the compute function

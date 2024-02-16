@@ -18,7 +18,7 @@ xa.params = {
 	'Output': ['Crl_dip', 'Inl_dip', 'True Dip', 'Dip Azimuth', 'Coherency'],
 	'ZSampMargin' : {'Value':[-3,3], 'Minimum': [-3,3], 'Symmetric': True},
 	'StepOut' : {'Value': [3,3], 'Minimum':[3,3], 'Symmetric': True},
-	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/#orientation-by-the-gradient-structure-tensor'
+	'Help': xa.HelpRoot+'dipazimuth/#orientation-by-the-gradient-structure-tensor'
 }
 #
 # Define the compute function

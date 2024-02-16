@@ -21,7 +21,7 @@ xa.params = {
 	'Par_0' : {'Name': 'Norm. Inline Spatial Freq', 'Value': 0.5},
 	'Par_1' : {'Name': 'Norm. Xline Spatial Freq', 'Value': 0.5},
 	'Select' : {'Name': 'Type', 'Values': ['Low Pass', 'High Pass', 'Band Pass', 'Band Reject'], 'Selection': 0},
-	'Help'  : 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/spatialfilterrectangular/'
+	'Help'  : xa.HelpRoot'spatialfilterrectangular/'
 }
 #
 # Define the compute function

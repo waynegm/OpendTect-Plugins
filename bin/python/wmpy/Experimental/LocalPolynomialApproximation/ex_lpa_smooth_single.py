@@ -21,7 +21,7 @@ xa.params = {
 	'StepOut' : {'Value': [1,1]},
 	'Par_0': {'Name': 'Weight Factor', 'Value': 0.2},
 	'Parallel': False,
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External_Attributes/LPA_Attributes/'
+	'Help': xa.HelpRoot
 }
 #
 # Define the compute function

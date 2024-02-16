@@ -27,7 +27,7 @@ xa.params = {
 	'Inputs': ['Input'],
 	'ZSampMargin' : {'Value':[-20,20], 'Hidden': True},
 	'Parallel' : False,
-	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/zcblock/'
+	'Help': xa.HelpRoot+'zcblock/'
 }
 #
 # Define the compute function

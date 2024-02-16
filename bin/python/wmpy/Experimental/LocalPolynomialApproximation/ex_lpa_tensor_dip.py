@@ -21,7 +21,7 @@ xa.params = {
 	'StepOut' : {'Value': [1,1]},
 	'Par_0': {'Name': 'Weight Factor', 'Value': 0.2},
 	'Select': {'Name': 'Normalzation', 'Values': ['Standard','First','Second','MinMax','Dynamic','Covariance'], 'Selection': 0},
-	'Help': 'http://waynegm.github.io/OpendTect-Plugin-Docs/External_Attributes/DipAndAzimuth/'
+	'Help': xa.HelpRoot
 }
 #
 # Define the compute function

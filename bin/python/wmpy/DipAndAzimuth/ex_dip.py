@@ -16,7 +16,7 @@ import extattrib as xa
 xa.params = {
 	'Inputs': ['Crl_dip', 'Inl_dip'],
 	'Output': ['True Dip', 'Dip Azimuth'],
-	'Help': 'http://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/dipazimuth/'
+	'Help': xa.HelpRoot+'dipazimuth/'
 }
 #
 # Define the compute function

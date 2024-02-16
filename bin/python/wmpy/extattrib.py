@@ -26,6 +26,7 @@ Input = {}
 Output = {}
 TI = {}
 SI = {}
+HelpRoot = 'https://waynegm.github.io/WMPlugin-Docs/docs/externalattributes/'
 undef = 1e30
 
 def doCompute():
