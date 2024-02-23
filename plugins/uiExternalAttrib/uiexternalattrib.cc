@@ -116,8 +116,11 @@ void uiExternalAttribInp::makeNewUI()
 	    field = new uiGenInput(nullptr, toUiString(key->str()), StringInpSpec());
 	    field->setText(extproc_->getParamStrValue(key->str()));
 	} else if (keytype=="File") {
+	    BufferString mode = extproc_->getParamStrValue( key->str(), "Mode" );
 	    uiFileInput::Setup su;
-	    su.defseldir("").forread(true);
+	    su.defseldir("");
+	    su.forread( mode=="FileOut" ? false : true);
+	    su.directories( mode=="Dir" ? true : false );
 	    uiFileInput* filefld = new uiFileInput(0, toUiString(key->str()), su);
 	    FilePath fp(extproc_->getParamStrValue(key->str()));
 	    if (fp.isAbsolute())

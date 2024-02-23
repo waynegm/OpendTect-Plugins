@@ -2,9 +2,18 @@
 
 ## Release 7.0.5
 ### External Attributes
+- if the environment variable OD_USER_PLUGIN_DIR exists add
+OD_USER_PLUGIN_DIR/bin/python to the PYTHONPATH of the attribute script
+environment
+- if the environment variable OD_APPL_PLUGIN_DIR exists add
+OD_APPL_PLUGIN_DIR/bin/python to the PYTHONPATH of the attribute script
+environment
+- move NAN handling in output from Python to C++ side
 - add xa.params metadata (Survey, SurveyDiskLocation, InputNames)
 - fix up help urls
 - add Text UI input type
+- add mode to File type, allowed values are "FileIn", "FileOut" and "Dir" for
+selecting an input file, output file or folder
 
 ## Release 7.0.4.1
 ### External Attributes
