@@ -51,10 +51,8 @@ def doOutput():
 	global Output
 	if 'Output' in params:
 	  for out in params['Output']:
-	    Output[out][np.isnan(Output[out])] = undef
 	    sys.__stdout__.buffer.write(Output[out].astype(np.float32,copy=False).tobytes())
 	else:
-	    Output[np.isnan(Output)] = undef
 	    sys.__stdout__.buffer.write(Output.astype(np.float32,copy=False).tobytes())
 	sys.__stdout__.flush()
 

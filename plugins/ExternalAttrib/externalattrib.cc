@@ -302,6 +302,8 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 	    if (outputinterest_[iout]) {
 		for ( int idx=0; idx<nrsamples; idx++ ) {
 		    float val = proc_->getOutput( pi, iout, idx-zmargin_.start);
+		    if ( !Math::IsNormalNumber(val) )
+			val = mUdf(float);
 		    setOutputValue( output, iout, idx, z0, val );
 		}
 	    }
