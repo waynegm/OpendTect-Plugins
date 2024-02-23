@@ -23,11 +23,13 @@ ________________________________________________________________________
 #include <sys/types.h>
 #include <fcntl.h>
 
+#include "envvars.h"
 #include "errmsg.h"
 #include "msgh.h"
 #include "procinst.h"
 #include "filepath.h"
 #include "file.h"
+#include "pythonaccess.h"
 #include "uistringset.h"
 
 
@@ -143,6 +145,23 @@ void ProcInst::resize( int nrsamples )
 
 bool ProcInst::start( const BufferStringSet& runargs)
 {
+    BufferStringSet pypathset = OD::PythA().getBasePythonPath();
+    BufferString dnm = GetEnvVar( "OD_APPL_PLUGIN_DIR" );
+    if ( !dnm.isEmpty() )
+    {
+	FilePath fp( dnm, "bin", "python" );
+	if ( fp.exists() )
+	    pypathset .insertAt( new BufferString(fp.fullPath()), 0 );
+    }
+
+    dnm = GetEnvVar( "OD_USER_PLUGIN_DIR" );
+    if ( !dnm.isEmpty() )
+    {
+	FilePath fp( dnm, "bin", "python" );
+	if ( fp.exists() )
+	    pypathset .insertAt( new BufferString(fp.fullPath()), 0 );
+    }
+
 #ifdef __win__
 	if (pD->hChildProcess != NULL)
 	{
@@ -212,12 +231,12 @@ bool ProcInst::start( const BufferStringSet& runargs)
 //
 // Open the error log file.
 	HANDLE herr = CreateFile(	logFileName().getCStr(),
-								GENERIC_WRITE,
-								FILE_SHARE_READ,
-								&saAttr,
-								CREATE_NEW,
-								FILE_ATTRIBUTE_NORMAL,
-								NULL );
+					GENERIC_WRITE,
+					FILE_SHARE_READ,
+					&saAttr,
+					CREATE_NEW,
+					FILE_ATTRIBUTE_NORMAL,
+					NULL );
 	if (herr == INVALID_HANDLE_VALUE) {
 		repError(BufferString("ProcInst::start - unable to open error log file ", logFileName().getCStr()));
 		return false;
@@ -238,16 +257,20 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	si.hStdInput = g_hChildStd_IN_Rd;
 	ZeroMemory(&pi, sizeof(pi));
 
-	bool res = CreateProcess( 	NULL,
-								cmd.getCStr(),
-								NULL,
-								NULL,
-								true,
-								0,
-								NULL,
-								NULL,
-								&si,
-								&pi );
+	BufferString pypath;
+	if ( !pypathset.isEmpty() )
+	    pypath = BufferString("PYTHONPATH=", pypathset.cat(";"));
+
+	bool res = CreateProcess(	NULL,
+					cmd.getCStr(),
+					NULL,
+					NULL,
+					true,
+					0,
+					(LPVOID) pypath.getCStr(),
+					NULL,
+					&si,
+					&pi );
 
 	if (!res) {
 		ErrMsg("ProcInst::start - CreateProcess failed");
@@ -265,10 +288,15 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	CloseHandle(herr);
 	return true;
 #else
-	char* envp[3];
+	BufferString pypath;
+	if ( !pypathset.isEmpty() )
+	    pypath = BufferString( "PYTHONPATH=", pypathset.cat(":") );
+
+	char* envp[4];
 	envp[0] = (char*) "IFS= \t\n";
 	envp[1] = (char*) "PATH=" _PATH_STDPATH;
-	envp[2] = 0;
+	envp[2] = pypathset.isEmpty() ? 0 : (char*) pypath.buf();
+	envp[3] = 0;
 
 	if (pD->child_pid != -1)
 	{
