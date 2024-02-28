@@ -2,6 +2,8 @@
 
 ## Release 7.0.5
 ### External Attributes
+- ensure OpendTect application bin/python is in the PYTHONPATH of the attribute
+ script environment
 - if the environment variable OD_USER_PLUGIN_DIR exists add
 OD_USER_PLUGIN_DIR/bin/python to the PYTHONPATH of the attribute script
 environment

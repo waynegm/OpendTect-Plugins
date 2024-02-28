@@ -24,7 +24,6 @@ ________________________________________________________________________
 #include "uiexternalattribmod.h"
 #include "uiattrdesced.h"
 #include "uitable.h"
-#include "json.h"
 #include "wmparamsetget.h"
 #include <map>
 #include <string>

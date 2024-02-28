@@ -22,7 +22,7 @@ ________________________________________________________________________
 #include "ranges.h"
 #include "position.h"
 #include "extproc.h"
-#include "json.h"
+#include "nlohmann/json.hpp"
 #include "msgh.h"
 #include "objectset.h"
 #include "file.h"
@@ -52,6 +52,8 @@ static const char* LegacyKeys[] =
     0
 };
 
+using ordered_json = nlohmann::ordered_json;
+
 struct ExtProcImpl
 {
 public:
@@ -72,8 +74,8 @@ public:
     BufferString 	exfile_;
     BufferString	infile_raw_;
     BufferString	infile_;
-    json::Value		jsonpar_;
-    json::Object	metadata_;
+    ordered_json	jsonpar_;
+    ordered_json	metadata_;
     BufferStringSet	newparamkeys_;
     ObjectSet<ProcInst> idleinsts_;
     Threads::Mutex	idleinstslock_;
@@ -126,11 +128,10 @@ void ExtProcImpl::updateNewParamKeys()
 {
     newparamkeys_.setEmpty();
     const BufferStringSet legacy(LegacyKeys);
-    if (jsonpar_.GetType() == json::ObjectVal) {
-	const json::Object jsonobj = jsonpar_.ToObject();
-	for (auto it=jsonobj.begin(); it!=jsonobj.end(); ++it)
+    if (jsonpar_.is_object()) {
+	for (auto it=jsonpar_.begin(); it!=jsonpar_.end(); it++)
 	{
-	    const BufferString key(it->first.c_str());
+	    const BufferString key(it.key().c_str());
 	    if (!legacy.isPresent(key))
 		newparamkeys_.add(key);
 	}
@@ -196,14 +197,14 @@ void ExtProcImpl::addQuotesIfNeeded(BufferStringSet& args)
 
 void ExtProcImpl::startInst( ProcInst* pi )
 {
-    json::Value tmppar( jsonpar_ );
-    for (auto it=metadata_.begin(); it!=metadata_.end(); ++it)
+    ordered_json tmppar( jsonpar_ );
+    for (auto& x : metadata_.items())
     {
-	const std::string key = it->first;
-	tmppar[key] = it->second;
+	const std::string key = x.key();
+	tmppar[key] = x.value();
     }
 
-    BufferString params(json::Serialize(tmppar).c_str());
+    BufferString params(tmppar.dump().c_str());
     BufferStringSet runargs;
     if ( !infile_.isEmpty() && !exfile_.isEmpty() )
 	runargs = getInterpreterArgs();
@@ -256,8 +257,8 @@ bool ExtProcImpl::getParam()
     }
     if (result) {
 	if (!params.isEmpty()) {
-	    jsonpar_ = json::Deserialize(urllib::urldecode(std::string(params.str())));
-	    if (jsonpar_.GetType() == json::NULLVal) {
+	    jsonpar_ = ordered_json::parse(urllib::urldecode(std::string(params.str())));
+	    if (jsonpar_.is_null()) {
 		repError("ExtProcImpl::getParam - parameter output of external attribute is not valid JSON");
 		if (!params.isEmpty())
 		    repError(params);
@@ -309,7 +310,7 @@ void ExtProc::addMetadata( const char* key, const char* value )
 
 void ExtProc::addMetadata( const char* key, const BufferStringSet& values )
 {
-    json::Array jsarr;
+    ordered_json jsarr = ordered_json::array();
     for ( const auto* val : values )
 	jsarr.push_back( val->str() );
 
@@ -390,19 +391,19 @@ BufferStringSet ExtProc::getOutputNames() const
 
 bool ExtProc::hasInput() const
 {
-    return (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey("Input"));
+    return (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("Input"));
 }
 
 bool ExtProc::hasInputs() const
 {
-    return (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey("Inputs"));
+    return (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("Inputs"));
 }
 
 int ExtProc::numInput() const
 {
     int nIn = 1;
-    if (hasInputs()) {
-	json::Array inarr = pD->jsonpar_["Inputs"].ToArray();
+    if (hasInputs() && pD->jsonpar_["Inputs"].is_array()) {
+	ordered_json inarr = pD->jsonpar_["Inputs"];
 	nIn = inarr.size();
     }
     return nIn;
@@ -412,26 +413,26 @@ BufferString ExtProc::inputName(int inum ) const
 {
     BufferString name;
     if (hasInputs()) {
-	json::Array inarr = pD->jsonpar_["Inputs"].ToArray();
+	ordered_json inarr = pD->jsonpar_["Inputs"];
 	int nIn = inarr.size();
 	if (inum >= 0 && inum <nIn)
-	    name = inarr[inum].ToString().c_str();
+	    name = inarr[inum].template get<std::string>().c_str();
     } else if (hasInput())
-	name = pD->jsonpar_["Input"].ToString().c_str();
+	name = pD->jsonpar_["Input"].template get<std::string>().c_str();
 
     return name;
 }
 
 bool ExtProc::hasOutput() const
 {
-    return (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey("Output"));
+    return (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("Output"));
 }
 
 int ExtProc::numOutput() const
 {
     int nOut = 1;
     if (hasOutput()) {
-	json::Array outarr = pD->jsonpar_["Output"].ToArray();
+	ordered_json outarr = pD->jsonpar_["Output"];
 	nOut = outarr.size();
     }
     return nOut;
@@ -440,25 +441,25 @@ int ExtProc::numOutput() const
 BufferString ExtProc::outputName( int onum ) const
 {
     BufferString name;
-    if (hasOutput()) {
-	json::Array outarr = pD->jsonpar_["Output"].ToArray();
+    if (hasOutput() && pD->jsonpar_["Output"].is_array()) {
+	ordered_json outarr = pD->jsonpar_["Output"];
 	int nOut = outarr.size();
 	if (onum >= 0 && onum <nOut)
-	    name = outarr[onum].ToString().c_str();
+	    name = outarr[onum].template get<std::string>().c_str();
     }
     return name;
 }
 
 bool ExtProc::hasZMargin() const
 {
-    return (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey("ZSampMargin"));
+    return (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("ZSampMargin"));
 }
 
 bool ExtProc::hideZMargin() const
 {
     if (hasZMargin()) {
-	json::Object jobj = pD->jsonpar_["ZSampMargin"].ToObject();
-	if (jobj.HasKey("Hidden"))
+	ordered_json jobj = pD->jsonpar_["ZSampMargin"];
+	if (jobj.is_object() && jobj.contains("Hidden"))
 	    return jobj["Hidden"];
 	else
 	    return false;
@@ -469,8 +470,8 @@ bool ExtProc::hideZMargin() const
 bool ExtProc::zSymmetric() const
 {
     if (hasZMargin()) {
-	json::Object jobj = pD->jsonpar_["ZSampMargin"].ToObject();
-	if (jobj.HasKey("Symmetric"))
+	ordered_json jobj = pD->jsonpar_["ZSampMargin"];
+	if (jobj.is_object() && jobj.contains("Symmetric"))
 	    return jobj["Symmetric"];
 	else
 	    return false;
@@ -482,9 +483,9 @@ Interval<int> ExtProc::z_minimum() const
 {
     Interval<int> res;
     if (hasZMargin()) {
-	json::Object jobj = pD->jsonpar_["ZSampMargin"].ToObject();
-	if (jobj.HasKey("Minimum")) {
-	    json::Array zmarr = jobj["Minimum"].ToArray();
+	ordered_json jobj = pD->jsonpar_["ZSampMargin"];
+	if (jobj.is_object() && jobj.contains("Minimum") && jobj["Minimum"].is_array()) {
+	    ordered_json zmarr = jobj["Minimum"];
 	    int begin = zmarr[0];
 	    int end = zmarr[1];
 	    res = Interval<int>(begin, end);
@@ -497,9 +498,9 @@ Interval<int> ExtProc::zmargin() const
 {
     Interval<int> res;
     if (hasZMargin()) {
-	json::Object jobj = pD->jsonpar_["ZSampMargin"].ToObject();
-	if (jobj.HasKey("Value")) {
-	    json::Array zmarr = jobj["Value"].ToArray();
+	ordered_json jobj = pD->jsonpar_["ZSampMargin"];
+	if (jobj.is_object() && jobj.contains("Value") && jobj["Value"].is_array()) {
+	    ordered_json zmarr = jobj["Value"];
 	    int begin = zmarr[0];
 	    int end = zmarr[1];
 	    res = Interval<int>(begin, end);
@@ -510,24 +511,21 @@ Interval<int> ExtProc::zmargin() const
 
 void ExtProc::setZMargin( Interval<int> g )
 {
-    json::Array garr;
-    garr.insert(0, g.start);
-    garr.insert(1, g.stop);
-    json::Object jobj;
-    jobj["Value"] = garr;
+    ordered_json garr = ordered_json::array({g.start, g.stop});
+    ordered_json jobj = ordered_json::object({{"Value", garr}});
     pD->jsonpar_["ZSampMargin"] = jobj;
 }
 
 bool ExtProc::hasStepOut() const
 {
-    return (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey("StepOut"));
+    return (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("StepOut"));
 }
 
 bool ExtProc::hideStepOut() const
 {
     if (hasStepOut()) {
-	json::Object jobj = pD->jsonpar_["StepOut"].ToObject();
-	if (jobj.HasKey("Hidden"))
+	ordered_json jobj = pD->jsonpar_["StepOut"];
+	if (jobj.is_object() && jobj.contains("Hidden"))
 	    return jobj["Hidden"];
 	else
 	    return false;
@@ -538,8 +536,8 @@ bool ExtProc::hideStepOut() const
 bool ExtProc::so_same()
 {
     if (hasStepOut()) {
-	json::Object jobj = pD->jsonpar_["StepOut"].ToObject();
-	if (jobj.HasKey("Same"))
+	ordered_json jobj = pD->jsonpar_["StepOut"];
+	if (jobj.is_object() && jobj.contains("Same"))
 	    return jobj["Same"];
 	else
 	    return false;
@@ -551,9 +549,9 @@ BinID ExtProc::so_minimum()
 {
     BinID res;
     if (hasStepOut()) {
-	json::Object jobj = pD->jsonpar_["StepOut"].ToObject();
-	if (jobj.HasKey("Minimum")) {
-	    json::Array sarr = jobj["Minimum"].ToArray();
+	ordered_json jobj = pD->jsonpar_["StepOut"];
+	if (jobj.is_object() && jobj.contains("Minimum") && jobj["Minimum"].is_array()) {
+	    ordered_json sarr = jobj["Minimum"];
 	    int inl = sarr[0];
 	    int xln = sarr[1];
 	    res = BinID(inl, xln);
@@ -566,9 +564,9 @@ BinID ExtProc::stepout() const
 {
     BinID res;
     if (hasStepOut()) {
-	json::Object jobj = pD->jsonpar_["StepOut"].ToObject();
-	if (jobj.HasKey("Value")) {
-	    json::Array sarr = jobj["Value"].ToArray();
+	ordered_json jobj = pD->jsonpar_["StepOut"];
+	if (jobj.is_object() && jobj.contains("Value") && jobj["Value"].is_array()) {
+	    ordered_json sarr = jobj["Value"];
 	    int inl = sarr[0];
 	    int xln = sarr[1];
 	    res = BinID(inl, xln);
@@ -579,26 +577,23 @@ BinID ExtProc::stepout() const
 
 void ExtProc::setStepOut(BinID s)
 {
-    json::Array sarr;
-    sarr.insert(0, s.inl());
-    sarr.insert(1, s.crl());
-    json::Object jobj;
-    jobj["Value"] = sarr;
+    ordered_json sarr = ordered_json::array({s.inl(), s.crl()});
+    ordered_json jobj = ordered_json::object({{"Value", sarr}});
     pD->jsonpar_["StepOut"] = jobj;
 }
 
 bool ExtProc::hasSelect() const
 {
-    return (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey("Select"));
+    return (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("Select"));
 }
 
 int ExtProc::numSelect()
 {
     int nsel = 0;
     if (hasSelect()) {
-	json::Object jobj = pD->jsonpar_["Select"].ToObject();
-	if (jobj.HasKey("Values")) {
-	    json::Array selarr = jobj["Values"].ToArray();
+	ordered_json jobj = pD->jsonpar_["Select"];
+	if (jobj.is_object() && jobj.contains("Values") && jobj["Values"].is_array()) {
+	    ordered_json selarr = jobj["Values"];
 	    nsel = selarr.size();
 	}
     }
@@ -609,9 +604,9 @@ BufferString ExtProc::selectName()
 {
     BufferString name;
     if (hasSelect()) {
-	json::Object jobj = pD->jsonpar_["Select"].ToObject();
-	if (jobj.HasKey("Name"))
-	    name = jobj["Name"].ToString().c_str();
+	ordered_json jobj = pD->jsonpar_["Select"];
+	if (jobj.is_object() && jobj.contains("Name"))
+	    name = jobj["Name"].template get<std::string>().c_str();
     }
     return name;
 }
@@ -620,12 +615,12 @@ BufferString ExtProc::selectOpt( int snum )
 {
     BufferString name;
     if (hasSelect()) {
-	json::Object jobj = pD->jsonpar_["Select"].ToObject();
-	if (jobj.HasKey("Values")) {
-	    json::Array selarr = jobj["Values"].ToArray();
+	ordered_json jobj = pD->jsonpar_["Select"];
+	if (jobj.is_object() && jobj.contains("Values") && jobj["Values"].is_array()) {
+	    ordered_json selarr = jobj["Values"];
 	    int nsel = selarr.size();
 	    if (snum>=0 && snum<nsel)
-		name = selarr[snum].ToString().c_str();
+		name = selarr[snum].template get<std::string>().c_str();
 	}
     }
     return name;
@@ -635,8 +630,8 @@ int ExtProc::selectValue()
 {
     int val = 0;
     if (hasSelect()) {
-        json::Object jobj = pD->jsonpar_["Select"].ToObject();
-        if (jobj.HasKey("Selection"))
+        ordered_json jobj = pD->jsonpar_["Select"];
+        if (jobj.contains("Selection"))
             val = jobj["Selection"];
     }
     return val;
@@ -644,8 +639,7 @@ int ExtProc::selectValue()
 
 void ExtProc::setSelection( int sel )
 {
-    json::Object jobj;
-    jobj["Selection"] = sel;
+    ordered_json jobj = ordered_json::object({{"Selection", sel}});
     pD->jsonpar_["Select"] = jobj;
 }
 
@@ -653,7 +647,7 @@ bool ExtProc::hasParam( int pnum ) const
 {
     BufferString tmp("Par_");
     tmp += pnum;
-    return (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(tmp.str()));
+    return (!pD->jsonpar_.is_null() && pD->jsonpar_.contains(tmp.str()));
 }
 
 BufferString ExtProc::paramName( int pnum )
@@ -662,9 +656,9 @@ BufferString ExtProc::paramName( int pnum )
     if (hasParam(pnum)) {
 	BufferString tmp("Par_");
 	tmp += pnum;
-	json::Object jobj = pD->jsonpar_[tmp.str()].ToObject();
-	if (jobj.HasKey("Name"))
-	    name = jobj["Name"].ToString().c_str();
+	ordered_json jobj = pD->jsonpar_[tmp.str()];
+	if (jobj.is_object() && jobj.contains("Name"))
+	    name = jobj["Name"].template get<std::string>().c_str();
     }
     return name;
 }
@@ -675,8 +669,8 @@ float ExtProc::paramValue( int pnum )
     if (hasParam(pnum)) {
 	BufferString tmp("Par_");
 	tmp += pnum;
-	json::Object jobj = pD->jsonpar_[tmp.str()].ToObject();
-	if (jobj.HasKey("Value"))
+	ordered_json jobj = pD->jsonpar_[tmp.str()];
+	if (jobj.is_object() && jobj.contains("Value"))
 	    val = jobj["Value"];
     }
     return val;
@@ -686,28 +680,27 @@ void ExtProc::setParam( int pnum, float val )
 {
     BufferString tmp("Par_");
     tmp += pnum;
-    json::Object jobj;
-    jobj["Value"] = val;
+    ordered_json jobj = ordered_json::object({{"Value", val}});
     pD->jsonpar_[tmp.str()] = jobj;
 }
 
 bool ExtProc::hasHelp() const
 {
-    return (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey("Help"));
+    return (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("Help"));
 }
 
 BufferString ExtProc::helpValue() const
 {
     BufferString res;
     if (hasHelp()) {
-	res = pD->jsonpar_["Help"].ToString().c_str();
+	res = pD->jsonpar_["Help"].template get<std::string>().c_str();
     }
     return res;
 }
 
 bool ExtProc::doParallel()
 {
-    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey("Parallel"))
+    if (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("Parallel"))
 	return pD->jsonpar_["Parallel"];
     else
 	return true;
@@ -742,9 +735,9 @@ BufferStringSet ExtProc::paramKeys() const
 BufferString ExtProc::getParamType( const char* key) const
 {
     BufferString keytype;
-    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(key)
-					    && pD->jsonpar_[key].HasKey("Type"))
-	keytype = pD->jsonpar_[key]["Type"].ToString().c_str();
+    if (!pD->jsonpar_.is_null() && pD->jsonpar_.contains(key)
+					    && pD->jsonpar_[key].contains("Type"))
+	keytype = pD->jsonpar_[key]["Type"].template get<std::string>().c_str();
 
 	return keytype;
 }
@@ -752,8 +745,8 @@ BufferString ExtProc::getParamType( const char* key) const
 float ExtProc::getParamFValue(const char* key, const char* subkey) const
 {
     float val = mUdf(float);
-    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(key)
-					    && pD->jsonpar_[key].HasKey(subkey))
+    if (!pD->jsonpar_.is_null() && pD->jsonpar_.contains(key)
+					    && pD->jsonpar_[key].contains(subkey))
 	val = pD->jsonpar_[key][subkey];
 
     return val;
@@ -761,58 +754,58 @@ float ExtProc::getParamFValue(const char* key, const char* subkey) const
 
 void ExtProc::setParamFValue(const char* key, float val)
 {
-    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(key))
+    if (!pD->jsonpar_.is_null() && pD->jsonpar_.contains(key))
 	pD->jsonpar_[key]["Value"] = val;
 }
 
 BufferString ExtProc::getParamStrValue(const char* key, const char* subkey) const
 {
     BufferString val;
-    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(key)
-					    && pD->jsonpar_[key].HasKey(subkey))
-	val = pD->jsonpar_[key][subkey].ToString().c_str();
+    if (!pD->jsonpar_.is_null() && pD->jsonpar_.contains(key)
+					    && pD->jsonpar_[key].contains(subkey))
+	val = pD->jsonpar_[key][subkey].template get<std::string>().c_str();
 
     return val;
 }
 
 void ExtProc::setParamStrValue(const char* key, const char* val)
 {
-    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(key))
+    if (!pD->jsonpar_.is_null() && pD->jsonpar_.contains(key))
 	pD->jsonpar_[key]["Value"] = val;
 }
 
 BufferStringSet ExtProc::getParamStrLstValue(const char* key, const char* subkey) const
 {
     BufferStringSet res;
-    if (pD->jsonpar_.GetType() != json::NULLVal && pD->jsonpar_.HasKey(key)
-	&& pD->jsonpar_[key].HasKey(subkey) && pD->jsonpar_[key][subkey].GetType()==json::ArrayVal) {
-	json::Array jarr = pD->jsonpar_[key][subkey].ToArray();
+    if (!pD->jsonpar_.is_null() && pD->jsonpar_.contains(key)
+	&& pD->jsonpar_[key].contains(subkey) && pD->jsonpar_[key][subkey].is_array()) {
+	ordered_json jarr = pD->jsonpar_[key][subkey];
 	for (auto& val : jarr)
-	    res.add(val.ToString().c_str());
+	    res.add(val.template get<std::string>().c_str());
     }
     return res;
 }
 
 BufferString ExtProc::getParamsEncodedStr()
 {
-    json::Object jobj;
+    ordered_json jobj = ordered_json::object();
     for (auto* key : pD->newparamkeys_)
 	jobj[key->str()] = pD->jsonpar_[key->str()];
 
-    return BufferString(urllib::urlencode(json::Serialize(jobj)).c_str());
+    const std::string str = jobj.dump();
+    return BufferString(urllib::urlencode(str).c_str());
 }
 
 bool ExtProc::setParamsEncodedStr(const BufferString& encodedstr)
 {
-    json::Value jsonval = json::Deserialize(urllib::urldecode(std::string(encodedstr)));
-    if (jsonval.GetType()!=json::NULLVal) {
-	const json::Object jobj = jsonval.ToObject();
-	for (auto it=jobj.begin(); it!=jobj.end(); ++it) {
-	    const std::string key = it->first;
-        if (it->second.HasKey("Value") && pD->jsonpar_.HasKey(key) && pD->jsonpar_[key].HasKey("Value"))
-        {
-            pD->jsonpar_[key]["Value"] = it->second["Value"];
-        }
+    ordered_json jsonval = ordered_json::parse(urllib::urldecode(std::string(encodedstr)));
+    if (!jsonval.is_null() && jsonval.is_object()) {
+	for (auto&  x : jsonval.items()) {
+	    const std::string key = x.key();
+	    if (x.value().contains("Value") && pD->jsonpar_.contains(key) && pD->jsonpar_[key].contains("Value"))
+	    {
+		pD->jsonpar_[key]["Value"] = x.value()["Value"];
+	    }
 	}
 	return true;
     } else
