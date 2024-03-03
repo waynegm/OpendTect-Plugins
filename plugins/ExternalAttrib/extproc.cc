@@ -18,19 +18,26 @@ ________________________________________________________________________
 
 -*/
 #include "survinfo.h"
+#include "envvars.h"
 #include "errmsg.h"
 #include "ranges.h"
 #include "position.h"
 #include "extproc.h"
-#include "nlohmann/json.hpp"
 #include "msgh.h"
 #include "objectset.h"
 #include "file.h"
 #include "filepath.h"
 #include "envvars.h"
 #include "procinst.h"
+#include "pythonaccess.h"
 #include "uistringset.h"
 #include "urllib.h"
+#ifdef __win__
+    #undef snprintf
+    #undef strtoull
+    #undef strtoll
+#endif
+#include "nlohmann/json.hpp"
 
 
 static const char* LegacyKeys[] =
@@ -169,7 +176,9 @@ BufferStringSet ExtProcImpl::getInterpreterArgs() const
 	    FilePath anaconda_root = FilePath(infile_).pathOnly();
 	    FilePath anaconda_scripts = anaconda_root.add("Scripts").add("activate.bat");
 	    res.add(anaconda_scripts.fullPath());
-	    res.add(envname).add("^&").add(pyexe);
+	    res.add(envname).add("^&");
+	    res.add("set").add(BufferString("PYTHONPATH=", ExtProc::getPythonPath().cat(";"))).add("^&");
+	    res.add(pyexe);
 	}
 	else
 	    res.add(infile_);
@@ -247,12 +256,16 @@ bool ExtProcImpl::getParam()
 
     if (pi.start( runargs )) {
 	params = pi.readAllStdOut();
-	if (pi.finish() != 0 ) {
-	    repError("ExtProcImpl::getParam - external attribute exited abnormally");
+	const int excode = pi.finish();
+	if (excode != 0 ) {
+	    BufferString msg("ExtProcImpl::getParam - external attribute exited abnormally - error code : ");
+	    msg.add(excode);
+	    repError(msg);
 	    result = false;
 	}
     } else {
-	repError("ExtProcImpl::getParam - run error");
+	BufferString err("ExtProcImpl::getParam - run error for cmd: ", runargs.cat(" "));
+	repError(err.buf());
 	result = false;
     }
     if (result) {
@@ -815,4 +828,26 @@ bool ExtProc::setParamsEncodedStr(const BufferString& encodedstr)
 uiRetVal ExtProc::errMsg() const
 {
     return pD->uirv_;
+}
+
+BufferStringSet ExtProc::getPythonPath()
+{
+    BufferStringSet pypathset = OD::PythA().getBasePythonPath();
+    BufferString dnm = GetEnvVar("OD_APPL_PLUGIN_DIR");
+    if (!dnm.isEmpty())
+    {
+	FilePath fp(dnm, "bin", "python");
+	if (fp.exists())
+	    pypathset.insertAt(new BufferString(fp.fullPath()), 0);
+    }
+
+    dnm = GetEnvVar("OD_USER_PLUGIN_DIR");
+    if (!dnm.isEmpty())
+    {
+	FilePath fp(dnm, "bin", "python");
+	if (fp.exists())
+	    pypathset.insertAt(new BufferString(fp.fullPath()), 0);
+    }
+
+    return pypathset;
 }

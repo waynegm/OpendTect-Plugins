@@ -103,6 +103,8 @@ public:
     bool		setParamsEncodedStr(const BufferString&);
 
     uiRetVal		errMsg() const;
+    static BufferStringSet	getPythonPath();
+
 
 protected:
 	ExtProcImpl*	pD;

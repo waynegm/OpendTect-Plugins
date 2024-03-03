@@ -145,23 +145,6 @@ void ProcInst::resize( int nrsamples )
 
 bool ProcInst::start( const BufferStringSet& runargs)
 {
-    BufferStringSet pypathset = OD::PythA().getBasePythonPath();
-    BufferString dnm = GetEnvVar( "OD_APPL_PLUGIN_DIR" );
-    if ( !dnm.isEmpty() )
-    {
-	FilePath fp( dnm, "bin", "python" );
-	if ( fp.exists() )
-	    pypathset .insertAt( new BufferString(fp.fullPath()), 0 );
-    }
-
-    dnm = GetEnvVar( "OD_USER_PLUGIN_DIR" );
-    if ( !dnm.isEmpty() )
-    {
-	FilePath fp( dnm, "bin", "python" );
-	if ( fp.exists() )
-	    pypathset .insertAt( new BufferString(fp.fullPath()), 0 );
-    }
-
 #ifdef __win__
 	if (pD->hChildProcess != NULL)
 	{
@@ -257,17 +240,13 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	si.hStdInput = g_hChildStd_IN_Rd;
 	ZeroMemory(&pi, sizeof(pi));
 
-	BufferString pypath;
-	if ( !pypathset.isEmpty() )
-	    pypath = BufferString("PYTHONPATH=", pypathset.cat(";"));
-
 	bool res = CreateProcess(	NULL,
 					cmd.getCStr(),
 					NULL,
 					NULL,
 					true,
 					0,
-					(LPVOID) pypath.getCStr(),
+					NULL,
 					NULL,
 					&si,
 					&pi );
@@ -289,6 +268,7 @@ bool ProcInst::start( const BufferStringSet& runargs)
 	return true;
 #else
 	BufferString pypath;
+	BufferStringSet pypathset = ExtProc::getPythonPath();
 	if ( !pypathset.isEmpty() )
 	    pypath = BufferString( "PYTHONPATH=", pypathset.cat(":") );
 

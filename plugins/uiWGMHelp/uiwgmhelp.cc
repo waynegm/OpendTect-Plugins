@@ -19,6 +19,7 @@
 
 #include "bufstring.h"
 #include "envvars.h"
+#include "file.h"
 #include "filepath.h"
 #include "oddirs.h"
 #include "pythonaccess.h"
@@ -47,12 +48,15 @@ FilePath uiWGMHelp::GetPythonInterpPath()
     BufferString pythonstr( sKey::Python() ); pythonstr.toLower();
     FilePath fp;
     OD::PythA().GetPythonEnvPath( fp );
+    if (File::isDirectory(fp.fullPath()) && File::isDirEmpty(fp.fullPath()))
+	fp = FilePath( fp.dirUpTo(fp.nrLevels() - 2));
+
 #ifdef __win__
     pythonstr.add(".exe");
 #else
     fp.add("bin");
 #endif
-
+    
     fp.add( pythonstr );
-    return fp;
+    return fp.exists() ? fp : FilePath();
 }
