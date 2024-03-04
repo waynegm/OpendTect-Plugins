@@ -2,6 +2,7 @@
 
 ## Release 7.0.5
 ### External Attributes
+- add xa.params MinSamplesPerThread setting, default is 40
 - ensure OpendTect application bin/python is in the PYTHONPATH of the attribute
  script environment
 - if the environment variable OD_USER_PLUGIN_DIR exists add
