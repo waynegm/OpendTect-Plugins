@@ -27,7 +27,7 @@ ________________________________________________________________________
 
 /*!\brief External Attribute
 
-Compute attribute using external process 
+Compute attribute using external process
 
 */
 class ExtProc;
@@ -46,7 +46,7 @@ public:
 
     static const char*	attribName()	{ return "ExternalAttrib"; }
     void		getCompNames(BufferStringSet&) const;
-	
+
     static const char*	interpFileStr()	{ return "interpfile"; }
     static const char*	exFileStr()	{ return "exfile"; }
     static const char*	encodedParStr()	{ return "encodedpars"; }
@@ -54,23 +54,24 @@ public:
     static const char*	stepoutStr()	{ return "stepout"; }
     static const char*	selectStr()  	{ return "selection"; }
     static const char*	parStr()	{ return "par"; }
-	
+
     static BufferString		exdir_;
     static BufferString		interp_;
-	
+
 protected:
 			~ExternalAttrib();
     static Provider*	createInstance(Desc&);
     static void		updateDesc(Desc&);
     static ExtProc*	dProc_;
-	
-    bool		allowParallelComputation() const;
-    const Interval<int>*	desZSampMargin(int,int) const;
-    const BinID*	desStepout(int input,int output) const;
+
+    bool		allowParallelComputation() const override;
+    int			minTaskSize() const override;
+    const Interval<int>*	desZSampMargin(int,int) const override;
+    const BinID*	desStepout(int input,int output) const override;
     bool		getTrcPos();
-	
-    bool		getInputData(const BinID&,int zintv);
-    bool		computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const;
+
+    bool		getInputData(const BinID&,int zintv) override;
+    bool		computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const override;
 
     BufferString	interpfile_;
     BufferString	exfile_;
@@ -80,11 +81,11 @@ protected:
     TypeSet<float>	par_;
     TypeSet<BinID>	trcpos_;
     int			centertrcidx_;
-	
+
     TypeSet<int>	indataidx_;
 
     ObjectSet<const DataHolder>	indata_;
-	
+
     ExtProc*		proc_;
     int			nrin_;
     int			nrout_;

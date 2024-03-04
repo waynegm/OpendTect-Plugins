@@ -90,6 +90,7 @@ public:
     BufferString	helpValue() const;
 
     bool		doParallel();
+    int			minTaskSize() const;
 
     bool		hasNewParams() const;
     BufferStringSet	paramKeys() const;

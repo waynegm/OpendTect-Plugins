@@ -31,6 +31,7 @@ ________________________________________________________________________
 #include "file.h"
 #include "pythonaccess.h"
 #include "uistringset.h"
+#include "extproc.h"
 
 
 #ifdef __win__

@@ -220,6 +220,16 @@ bool ExternalAttrib::allowParallelComputation() const
     return proc_->doParallel();
 }
 
+int ExternalAttrib::minTaskSize() const
+{
+    if (proc_->doParallel())
+    {
+	return proc_->minTaskSize();
+    }
+
+    return Attrib::Provider::minTaskSize();
+}
+
 bool ExternalAttrib::getTrcPos()
 {
     trcpos_.erase();

@@ -719,6 +719,14 @@ bool ExtProc::doParallel()
 	return true;
 }
 
+int ExtProc::minTaskSize() const
+{
+    if (!pD->jsonpar_.is_null() && pD->jsonpar_.contains("MinSamplesPerThread"))
+	return pD->jsonpar_["MinSamplesPerThread"];
+    else
+	return 40;
+}
+
 BufferString ExtProc::getFile() const
 {
     return pD->exfile_;
