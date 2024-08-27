@@ -112,10 +112,10 @@ bool MistieEstimatorFromSeismic::get2DTrc( BufferString line, int trcnr, SeisTrc
     Pos::GeomID geomid = Survey::GM().getGeomID(line);
 
     Seis::RangeSelData range;
+    range.setGeomID(geomid);
     range.setZRange(window_);
     range.cubeSampling().hsamp_.setInlRange(Interval<int>(0,0));
     range.cubeSampling().hsamp_.setCrlRange(Interval<int>(trcnr, trcnr));
-    range.setGeomID(geomid);
 
     SeisTrcReader rdr(*ioobj_);
     rdr.setSelData(range.clone());

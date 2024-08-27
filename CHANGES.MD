@@ -1,5 +1,16 @@
 # OpendTect Plugins Release Notes
 
+## Release 7.0.6
+- update to C++ 17
+### External Attributes
+- add wmpy/AVO folder
+    - add ex_avoig_angle3.py, ex_avoig_angle4.py and ex_avoig_angle5.py for intercept and gradient
+ calculation from angle stacks
+    - add ex_fatti3_angle3.py and ex_fatti3_angle4.py for fatti 3 term Rp, Rs and Rd calculation
+    from angle stacks
+## Mistie
+- fix to ensure analysis window is used for mistie calculation
+
 ## Release 7.0.5
 ### External Attributes
 - add xa.params MinSamplesPerThread setting, default is 40

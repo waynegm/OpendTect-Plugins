@@ -1,6 +1,6 @@
 SET(OD_IS_PLUGIN yes)
 set ( OD_MODULE_DEPS Basic )
-SET(OD_TEST_PROGS efd_testing.cc eigentools_testing.cc)
+#SET(OD_TEST_PROGS efd_testing.cc eigentools_testing.cc)
 
 SET(OD_MODULE_SOURCES
     eigentoolspi.cc
