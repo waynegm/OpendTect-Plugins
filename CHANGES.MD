@@ -5,6 +5,7 @@
 ### EFDAttrib
 - fix display of modes and spectral decomposition test panel
 ### External Attributes
+- fix usage of OD_USER_PLUGIN_DIR for locating scripts
 - add wmpy/AVO folder
     - add ex_avoig_angle3.py, ex_avoig_angle4.py and ex_avoig_angle5.py for intercept and gradient
  calculation from angle stacks

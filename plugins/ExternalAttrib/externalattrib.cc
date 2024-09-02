@@ -80,14 +80,14 @@ void ExternalAttrib::initClass()
     desc->addInput(InputSpec("Input data", true));
     desc->addOutputDataType( Seis::UnknowData );
 
-    if ( GetEnvVarYN("OD_EX_DIR") )
+    if ( GetEnvVar("OD_EX_DIR") )
 	exdir_ = GetEnvVar("OD_EX_DIR");
     else {
 	FilePath fp( GetScriptDir(),"python","wmpy" );
 	if ( fp.exists() )
 	    exdir_ = fp.fullPath();
 
-	if ( GetEnvVarYN("OD_USER_PLUGIN_DIR") ) {
+	if ( GetEnvVar("OD_USER_PLUGIN_DIR") ) {
 	    FilePath ufp( GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", "python", "wmpy" );
 	    if ( ufp.exists() )
 		exdir_ = ufp.fullPath();
