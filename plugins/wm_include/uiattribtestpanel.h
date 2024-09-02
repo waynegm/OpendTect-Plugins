@@ -72,9 +72,10 @@ inline void uiTestPanel::createAndDisplay2DViewer( FlatDataPack* fdpack )
     if ( !fdpack )
 	return;
 
+    RefMan<FlatDataPack> fdp = fdpack;
     if ( flatvwin_ )
-	flatvwin_->viewer().setPack( 
-		    wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD, fdpack->id() );
+	flatvwin_->viewer().setPack(
+		    wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD, fdp );
     else
     {
 	flatvwin_ = new uiFlatViewMainWin( parent_,
@@ -83,16 +84,16 @@ inline void uiTestPanel::createAndDisplay2DViewer( FlatDataPack* fdpack )
 	vwr.setInitialSize( uiSize(400,600) );
 	FlatView::Appearance& app = vwr.appearance();
 	app.annot_.setAxesAnnot( true );
-	app.annot_.x1_.sampling_ = fdpack->posData().range(true);
-	app.annot_.x2_.sampling_ = fdpack->posData().range(false);
+	app.annot_.x1_.sampling_ = fdp->posData().range(true);
+	app.annot_.x2_.sampling_ = fdp->posData().range(false);
 	app.annot_.x1_.name_ = axisnm_;
 	if ( wva_ )
 	    app.annot_.x1_.annotinint_ = true;
 	app.setDarkBG( false );
 	app.setGeoDefaults( true );
 	app.ddpars_.show( wva_, true );
-	vwr.setPack( wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD, 
-		     fdpack->id() );
+	vwr.setPack( wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD,
+		     fdp );
 	flatvwin_->addControl( new uiFlatViewStdControl(vwr,
 		uiFlatViewStdControl::Setup(nullptr).isvertical(true)) );
 	flatvwin_->setDeleteOnClose( false );
