@@ -1,5 +1,11 @@
 # OpendTect Plugins Release Notes
 
+## Release 7.0.7
+
+### DataExtentHorizon
+- fix 3D area not included after adding 2D lines to scope
+
+
 ## Release 7.0.6
 - update to C++ 17
 ### EFDAttrib

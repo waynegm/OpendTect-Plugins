@@ -69,7 +69,7 @@ uidehMainWin::uidehMainWin( uiParent* p )
             lineselfld_->attach( alignedBelow, zfld_ );
             lineselfld_->attach(ensureBelow, lblxt);
             lastfld = (uiObject*) lineselfld_;
-            mAttachCB(lineselfld_->selectionDone, uidehMainWin::lineselCB);
+            mAttachCB(lineselfld_->selectionDone, uidehMainWin::updateRangeCB);
         }
     }
 
@@ -79,7 +79,7 @@ uidehMainWin::uidehMainWin( uiParent* p )
         include3Dfld_->attach(ensureBelow, lblxt);
         include3Dfld_->setChecked(true);
         lastfld = (uiObject*) include3Dfld_;
-        mAttachCB(include3Dfld_->activated, uidehMainWin::include3DCB);
+        mAttachCB(include3Dfld_->activated, uidehMainWin::updateRangeCB);
     }
 
     uiSeparator* outsep = new uiSeparator(this, "Output");
@@ -97,7 +97,7 @@ uidehMainWin::uidehMainWin( uiParent* p )
     rangefld_ = new WMLib::ui3DRangeGrp(this, tr("Area Selection"), true);
     rangefld_->attach(alignedBelow, outfld_);
 
-    include3DCB(0);
+    updateRangeCB(nullptr);
 }
 
 uidehMainWin::~uidehMainWin()
@@ -105,47 +105,41 @@ uidehMainWin::~uidehMainWin()
     detachAllNotifiers();
 }
 
-void uidehMainWin::lineselCB(CallBacker*)
+void uidehMainWin::updateRangeCB(CallBacker*)
 {
-    if (!lineselfld_)
-        return;
-    TypeSet<Pos::GeomID> geomids;
-    lineselfld_->getChosen(geomids);
-    if (geomids.size()==0) {
-        TrcKeySampling hs;
-        rangefld_->setTrcKeySampling(hs);
-        include3DCB(nullptr);
-        return;
+    TrcKeySampling hs;
+    Interval<int> inlrg, crlrg;
+    if (lineselfld_)
+    {
+	TypeSet<Pos::GeomID> geomids;
+	lineselfld_->getChosen(geomids);
+	if (geomids.size()>0)
+	{
+	    inlrg.setUdf();
+	    crlrg.setUdf();
+	    for (int idx=0; idx<geomids.size(); idx++)
+	    {
+		mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+		if (!geom2d)
+		    continue;
+		const PosInfo::Line2DData& geom = geom2d->data();
+		const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
+		Coord pos = SI().binID2Coord().transformBackNoSnap(posns[0].coord_);
+		inlrg.isUdf()? inlrg.set(pos.x,pos.x) : inlrg.include(pos.x);
+		crlrg.isUdf()? crlrg.set(pos.y,pos.y) : crlrg.include(pos.y);
+		pos = SI().binID2Coord().transformBackNoSnap(posns[posns.size()-1].coord_);
+		inlrg.include(pos.x);
+		crlrg.include(pos.y);
+	    }
+	    hs.setInlRange(inlrg);
+	    hs.setCrlRange(crlrg);
+	}
     }
-    Interval<float> inlrg, crlrg;
-    inlrg.setUdf();
-    crlrg.setUdf();
-    for (int idx=0; idx<geomids.size(); idx++) {
-        mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
-        if (!geom2d)
-            continue;
-        const PosInfo::Line2DData& geom = geom2d->data();
-        const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
-        Coord pos = SI().binID2Coord().transformBackNoSnap(posns[0].coord_);
-        inlrg.isUdf()? inlrg.set(pos.x,pos.x) : inlrg.include(pos.x);
-        crlrg.isUdf()? crlrg.set(pos.y,pos.y) : crlrg.include(pos.y);
-        pos = SI().binID2Coord().transformBackNoSnap(posns[posns.size()-1].coord_);
-        inlrg.include(pos.x);
-        crlrg.include(pos.y);
-    }
-    TrcKeySampling hs = rangefld_->getTrcKeySampling();
-    hs.setInlRange(Interval<int>(Math::Floor(inlrg.start), Math::Ceil(inlrg.stop)));
-    hs.setCrlRange(Interval<int>(Math::Floor(crlrg.start), Math::Ceil(crlrg.stop)));
-    rangefld_->setTrcKeySampling(hs);
-}
 
-void uidehMainWin::include3DCB(CallBacker*)
-{
-    if (include3Dfld_ && include3Dfld_->isChecked()) {
-        TrcKeySampling hs = rangefld_->getTrcKeySampling();
+    if (include3Dfld_ && include3Dfld_->isChecked())
         hs.include(SI().sampling(false).hsamp_, false);
-        rangefld_->setTrcKeySampling(hs);
-    }
+
+    rangefld_->setTrcKeySampling(hs);
 }
 
 bool uidehMainWin::acceptOK( CallBacker*)

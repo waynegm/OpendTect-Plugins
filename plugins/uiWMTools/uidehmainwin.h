@@ -23,7 +23,7 @@ class uiGenInput;
 class uiCheckBox;
 class uiSurfaceWrite;
 class uiSeis2DLineSelGrp;
-namespace WMLib { 
+namespace WMLib {
     class ui3DRangeGrp;
     class uiSeis2DLineSelGrp;
 };
@@ -41,10 +41,9 @@ protected:
     uiCheckBox*                 include3Dfld_;
     WMLib::ui3DRangeGrp*        rangefld_;
     uiSurfaceWrite*             outfld_;
-    
+
     bool                acceptOK(CallBacker*);
-    void                lineselCB(CallBacker*);
-    void                include3DCB(CallBacker*);
+    void		updateRangeCB(CallBacker*);
 
 private:
     uiString    getCaptionStr() const;
