@@ -64,7 +64,7 @@ void ui2D3DDataSelGrp::get2DGeomIDs( TypeSet<Pos::GeomID>& geomids ) const
 void ui2D3DDataSelGrp::get3Dsel( TrcKeyZSampling& envelope ) const
 {
     envelope.setEmpty();
-    if ( subsel3dfld_ )
+    if ( include3dfld_->isChecked() )
 	envelope = subsel3dfld_->envelope();
 }
 

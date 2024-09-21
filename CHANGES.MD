@@ -5,6 +5,8 @@
 ### DataExtentHorizon
 - fix 3D area not included after adding 2D lines to scope
 
+### ConvexHull
+- fix hull includes 3D even if not selected
 
 ## Release 7.0.6
 - update to C++ 17
