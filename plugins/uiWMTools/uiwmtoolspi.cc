@@ -28,20 +28,21 @@
 #include "uitoolbar.h"
 #include "uistring.h"
 #include "odplugin.h"
-#include "oscommand.h"
-#include "pythonaccess.h"
 #include "survinfo.h"
 #include "uimsg.h"
 #include "ioman.h"
 #include "uiioobj.h"
 #include "uimenuhandler.h"
 #include "uitreeview.h"
+#include "commontypes.h"
+#include "ctxtioobj.h"
+
 #include "pickset.h"
 #include "picksetmgr.h"
 #include "uipickpartserv.h"
-#include "commontypes.h"
-#include "ctxtioobj.h"
 #include "picksettr.h"
+#include "uicreatepicks.h"
+#include "uipicksetmgr.h"
 
 #include "uidehmainwin.h"
 #include "uiconvexhull.h"
@@ -79,23 +80,33 @@ public:
     void	faultPolyCB(CallBacker*);
     void	contourPolyCB(CallBacker*);
 
-    bool	addNewPolygon(Pick::Set&, bool warnifexist=false);
+    void	addPolygon(Pick::Set*);
     void 	polygonParentMenuCB(CallBacker*);
     void	horizonParentMenuCB(CallBacker*);
+    void	contourPolyChangeCB(CallBacker*);
 
     uiODMain*   		appl_;
+    Pick::SetMgr&		psmgr_;
+    uiPickSetMgr&		uipsmgr_;
+    RefObjectSet<Pick::Set>	contours_;
+    TypeSet<float>		contour_levels_;
+
 
     uidehMainWin*		dehdlg_ = nullptr;
+    uiContourPoly*		contourdlg_ = nullptr;
     uiODPolygonParentTreeItem*	polytreeparent_ = nullptr;
 };
 
 uiWMToolsMgr::uiWMToolsMgr( uiODMain* a )
 	: appl_(a)
+	, psmgr_(Pick::Mgr())
+	, uipsmgr_(*new uiPickSetMgr(a,psmgr_))
 {
     mAttachCB( appl_->menuMgr().dTectMnuChanged, uiWMToolsMgr::updateMenu );
     mAttachCB(IOM().surveyChanged, uiWMToolsMgr::surveyChangeCB);
     mAttachCB( uiODPolygonParentTreeItem::showMenuNotifier(), uiWMToolsMgr::polygonParentMenuCB );
     mAttachCB( uiODHorizonParentTreeItem::showMenuNotifier(), uiWMToolsMgr::horizonParentMenuCB );
+    mAttachCB(Pick::Mgr().locationChanged, uiWMToolsMgr::contourPolyChangeCB);
 
     updateMenu(nullptr);
 }
@@ -155,32 +166,13 @@ void uiWMToolsMgr::dataExtentHorizonCB(CallBacker* cb)
     dehdlg_->raise();
 }
 
-bool uiWMToolsMgr::addNewPolygon(Pick::Set& psin, bool warnifexist)
+void uiWMToolsMgr::addPolygon(Pick::Set* ps)
 {
-    RefMan<Pick::Set> ps(&psin);
-    PtrMan<CtxtIOObj> ctio = mMkCtxtIOObj(PickSet);
-    if (!ctio || !ps)
-	return false;
+    if ( !ps || !polytreeparent_ )
+	return;
 
-    ctio->setName( ps->name() );
-    BufferString errmsg;
-    if ( uiIOObj::fillCtio(*ctio, warnifexist) )
-    {
-	PtrMan<IOObj> ioobj = ctio->ioobj_;
-	if (!ioobj)
-	    return false;
-
-	IOM().commitChanges( *ioobj );
-	if ( !PickSetTranslator::store( *ps, ioobj, errmsg ) ) {
-	    uiMSG().error(tr("%1").arg(errmsg));
-	    return false;
-	}
-	Pick::Mgr().set( ioobj->key(), ps );
-	RefMan<Pick::Set> polyps = Pick::Mgr().get( Pick::Mgr().size()-1 );
-	appl_->sceneMgr().addPickSetItem(*polyps, polytreeparent_->sceneID());
-	return true;
-    }
-    return false;
+    uiODDisplayTreeItem* item = new uiODPolygonTreeItem( VisID::udf(), *ps );
+    polytreeparent_->addChild( item, false );
 }
 
 void uiWMToolsMgr::convexHullCB(CallBacker*)
@@ -189,11 +181,13 @@ void uiWMToolsMgr::convexHullCB(CallBacker*)
     if ( !convexhulldlg.go() )
 	return;
 
-    if ( polytreeparent_ )
+    RefMan<Pick::Set> ps = convexhulldlg.getPolygonPickSet();
+    if ( ps && ps->size() && uipsmgr_.storeNewSet(*ps, false) )
     {
-	RefMan<Pick::Set> ps = convexhulldlg.getPolygonPickSet();
-	if ( ps && ps->size() )
-	    addNewPolygon(*ps, false);
+	RefMan<Pick::Set> newps = psmgr_.get( psmgr_.size()-1 );
+	addPolygon( newps );
+	contours_ += newps;
+	contour_levels_ +=  convexhulldlg.getZ();
     }
 }
 
@@ -209,24 +203,42 @@ void uiWMToolsMgr::faultPolyCB(CallBacker*)
 	for ( int idx=0; idx<nfaults; idx++ )
 	{
 	    RefMan<Pick::Set> ps = faultpolydlg.getPolyForFault(idx);
-	    if ( ps && ps->size() )
-		addNewPolygon(*ps, false);
+	    if ( ps && ps->size() && uipsmgr_.storeNewSet(*ps, true) )
+	    {
+		RefMan<Pick::Set> newps = psmgr_.get( psmgr_.size()-1 );
+		addPolygon( newps );
+	    }
 	}
     }
 }
 
 void uiWMToolsMgr::contourPolyCB(CallBacker*)
 {
-    uiContourPoly contourpolydlg( appl_ );
-    if ( !contourpolydlg.go() )
+    uiContourPoly dlg( appl_ );
+    if ( !dlg.go() )
 	return;
 
-    if (polytreeparent_)
+    RefMan<Pick::Set> ps = dlg.getPolygonPickSet();
+    if ( ps && 	uipsmgr_.storeNewSet(*ps, false) )
     {
-	RefMan<Pick::Set> ps = contourpolydlg.getPolygonPickSet();
-	if (ps && ps->size())
-	    addNewPolygon(*ps, false);
+	RefMan<Pick::Set> newps = psmgr_.get( psmgr_.size()-1 );
+    	addPolygon( newps );
+	contours_ += newps;
+	contour_levels_ += dlg.getZ();
     }
+}
+
+void uiWMToolsMgr::contourPolyChangeCB(CallBacker* cb)
+{
+    mDynamicCastGet(Pick::SetMgr::ChangeData*,cd,cb);
+    if ( !cd || !cd->set_ )
+	return;
+
+    const int idx = contours_.indexOf(cd->set_);
+    if (idx==-1 || !contour_levels_.validIdx(idx))
+	return;
+
+    const_cast<Pick::Set*>(cd->set_)->setZ(cd->loc_, contour_levels_[idx]);
 }
 
 void uiWMToolsMgr::surveyChangeCB( CallBacker* )
@@ -234,6 +246,11 @@ void uiWMToolsMgr::surveyChangeCB( CallBacker* )
     if (dehdlg_) {
 	dehdlg_->close();
 	deleteAndZeroPtr(dehdlg_);
+    }
+
+    if (contourdlg_) {
+	contourdlg_->close();
+	deleteAndZeroPtr(contourdlg_);
     }
 
 }

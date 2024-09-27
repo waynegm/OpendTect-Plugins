@@ -78,16 +78,6 @@ bool uiContourPoly::acceptOK( CallBacker*)
 	return false;
     }
 
-    PtrMan<CtxtIOObj> ctio = mMkCtxtIOObj(PickSet);
-    if (!ctio) return false;
-    ctio->setName( polyname_ );
-    const IODir iodir( ctio->ctxt_.getSelKey() );
-    if ( iodir.get( polyname_, ctio->ctxt_.trgroup_->groupName() ) ) {
-	uiString msg = tr("Overwrite existing '%1'?").arg(polyname_);
-	if ( !uiMSG().askOverwrite(msg) )
-	    return false;
-    }
-
     float zval = zfld_->getFValue();
     if (mIsUdf(zval)) {
 	uiMSG().error( tr("Z value is undefined. Please enter a valid value") );

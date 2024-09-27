@@ -7,6 +7,14 @@
 
 ### ConvexHull
 - fix hull includes 3D even if not selected
+- fix display and editing of polygons
+- fix editing of points to preserve z level
+
+### ContourPoly
+- fix display and editing of polygons
+
+### FaultPoly
+- fix display of polygons
 
 ## Release 7.0.6
 - update to C++ 17

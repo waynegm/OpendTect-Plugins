@@ -36,7 +36,6 @@ public:
 
     RefMan<Pick::Set>	getPolygonPickSet() const;
     float	getZ() const { return z_; }
-    // Becomes yours
 
 protected:
 

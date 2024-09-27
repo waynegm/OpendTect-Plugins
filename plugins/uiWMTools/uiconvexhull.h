@@ -42,6 +42,7 @@ public:
 
     bool	addToDisplay() const;
     RefMan<Pick::Set>	getPolygonPickSet() const;
+    float	getZ() const { return z_; }
 
 protected:
 
