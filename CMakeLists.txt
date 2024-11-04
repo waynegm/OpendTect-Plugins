@@ -17,13 +17,6 @@ set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 configure_file(wmplugins_version.h.in wmplugins_version.h)
 file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 
-#set (SQLite3_ROOT "" CACHE PATH "Sqlite directory")
-#set (PROJ_DIR "" CACHE PATH "Proj9 directory")
-#set (WMDEPS_DIR "" CACHE PATH "WMPlugin dependency directory")
-
-#find_package( SQLite3_ROOT REQUIRED )
-#find_package( PROJ REQUIRED )
-
 if( NOT IS_DIRECTORY "${EIGEN3_INCLUDE_DIR}" )
     message("Unable to find system Eigen install - will use local")
     execute_process(COMMAND git submodule update --init -- external/eigen
