@@ -229,25 +229,25 @@ void uiInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
             StepInterval<int> trcrng = trcRanges[gidx];
             Coord pos;
             float spnr;
-            geom2d->getPosByTrcNr(trcrng.start, pos, spnr);
+            geom2d->getPosByTrcNr(trcrng.start_, pos, spnr);
             BinID bin = SI().transform(pos);
             if (idx==0) {
-                inlrg.start = bin.inl();
-                inlrg.stop = bin.inl();
-                crlrg.start = bin.crl();
-                crlrg.stop = bin.crl();
+                inlrg.start_ = bin.inl();
+                inlrg.stop_ = bin.inl();
+                crlrg.start_ = bin.crl();
+                crlrg.stop_ = bin.crl();
             } else {
-                inlrg.start = bin.inl()<inlrg.start ? bin.inl() : inlrg.start;
-                inlrg.stop = bin.inl()>inlrg.stop ? bin.inl() : inlrg.stop;
-                crlrg.start = bin.crl()<crlrg.start ? bin.crl() : crlrg.start;
-                crlrg.stop = bin.crl()>crlrg.stop ? bin.crl() : crlrg.stop;
+                inlrg.start_ = bin.inl()<inlrg.start_ ? bin.inl() : inlrg.start_;
+                inlrg.stop_ = bin.inl()>inlrg.stop_ ? bin.inl() : inlrg.stop_;
+                crlrg.start_ = bin.crl()<crlrg.start_ ? bin.crl() : crlrg.start_;
+                crlrg.stop_ = bin.crl()>crlrg.stop_ ? bin.crl() : crlrg.stop_;
             }
-            geom2d->getPosByTrcNr(trcrng.stop, pos, spnr);
+            geom2d->getPosByTrcNr(trcrng.stop_, pos, spnr);
             bin = SI().transform(pos);
-            inlrg.start = bin.inl()<inlrg.start ? bin.inl() : inlrg.start;
-            inlrg.stop = bin.inl()>inlrg.stop ? bin.inl() : inlrg.stop;
-            crlrg.start = bin.crl()<crlrg.start ? bin.crl() : crlrg.start;
-            crlrg.stop = bin.crl()>crlrg.stop ? bin.crl() : crlrg.stop;
+            inlrg.start_ = bin.inl()<inlrg.start_ ? bin.inl() : inlrg.start_;
+            inlrg.stop_ = bin.inl()>inlrg.stop_ ? bin.inl() : inlrg.stop_;
+            crlrg.start_ = bin.crl()<crlrg.start_ ? bin.crl() : crlrg.start_;
+            crlrg.stop_ = bin.crl()>crlrg.stop_ ? bin.crl() : crlrg.stop_;
         }
     }
 
@@ -268,10 +268,10 @@ void uiInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
         StepInterval<int> rR = rcGeom->rowRange();
         StepInterval<int> cR = rcGeom->colRange();
         if (inlrg.isUdf()) {
-            inlrg.start = rR.start;
-            inlrg.stop = rR.stop;
-            crlrg.start = cR.start;
-            crlrg.stop = cR.stop;
+            inlrg.start_ = rR.start_;
+            inlrg.stop_ = rR.stop_;
+            crlrg.start_ = cR.start_;
+            crlrg.stop_ = cR.stop_;
         } else {
             inlrg.include(rR);
             crlrg.include(cR);
@@ -365,7 +365,7 @@ void uiInputGrp::hor3DselCB(CallBacker*)
             BufferString tmp("uiInputGrp::hor3DselCB - cannot read surface data for ");
             tmp += horObj->name();
             tmp += " - ";
-            tmp += msg.getOriginalString();
+            tmp += msg.getString();
             ErrMsg( tmp );
             return;
         }

@@ -41,15 +41,15 @@ bool MistieData::read( const char* filename, bool merge, bool replace )
     od_istream strm(filename);
     if (!strm.isOK())
         return false;
-    
+
     BufferString buf;
     strm.getLine(buf);
-    
+
     BufferString lineA, lineB;
     int trcA, trcB;
     float x, y, zdiff, phasediff, ampdiff, quality;
     Coord pos;
-    
+
     while (strm.isOK()) {
         strm >> lineA >>trcA >> lineB >> trcB >> x >> y >> zdiff >> phasediff >> ampdiff >> quality;
         if (!strm.isBad()) {
@@ -66,15 +66,15 @@ bool MistieData::write( const char* filename ) const
     od_ostream strm(filename);
     if (!strm.isOK())
         return false;
-    
+
     strm << "\"LineA\"\t\"TrcA\"\t\"LineB\"\t\"TrcB\"\t\"X\"\t\"Y\"\t\"Zdiff\"\t\"PhaseDiff\"\t\"AmpDiff\"\t\"Quality\"\n";
     for (int idx=0; idx<size(); idx++)
         strm << dataA_.get(idx) <<'\t'<<trcA_[idx]<<'\t'<<dataB_.get(idx)<<'\t'<<trcB_[idx]<<'\t'
-             <<pos_[idx].x<<'\t'<<pos_[idx].y<<'\t'<<zdiff_[idx]<<'\t'<<phasediff_[idx]<<'\t'<<ampdiff_[idx]<<'\t'<<quality_[idx]<<'\n';
-             
+             <<pos_[idx].x_<<'\t'<<pos_[idx].y_<<'\t'<<zdiff_[idx]<<'\t'<<phasediff_[idx]<<'\t'<<ampdiff_[idx]<<'\t'<<quality_[idx]<<'\n';
+
     if (!strm.isOK())
         return false;
-   return true; 
+   return true;
 }
 
 void MistieData::erase()
@@ -104,14 +104,14 @@ void MistieData::add( const MistieData& other )
         quality_ += other.quality_[idx];
     }
 }
-    
+
 bool MistieData::add( const char* dataA, int trcA, const char* dataB, int trcB, Coord pos, float zdiff, float phasediff, float ampdiff, float quality, bool replace )
 {
     for (int idx=0; idx<size(); idx++) {
-        if ((dataA_.get(idx)==dataA && dataB_.get(idx)==dataB && trcA_[idx]==trcA && trcB_[idx]==trcB) 
+        if ((dataA_.get(idx)==dataA && dataB_.get(idx)==dataB && trcA_[idx]==trcA && trcB_[idx]==trcB)
             || (dataA_.get(idx)==dataB && dataB_.get(idx)==dataA && trcA_[idx]==trcB && trcB_[idx]==trcA)) {
             if (replace) {
-                set(idx, zdiff, phasediff, ampdiff, quality); 
+                set(idx, zdiff, phasediff, ampdiff, quality);
                 return true;
             }
             return false;
@@ -126,7 +126,7 @@ bool MistieData::add( const char* dataA, int trcA, const char* dataB, int trcB, 
     phasediff_ += phasediff;
     ampdiff_ += ampdiff;
     quality_ += quality;
-    
+
     return true;
 }
 
@@ -271,7 +271,7 @@ bool MistieData::getWith(const MistieCorrectionData& corrections, int idx, float
             ampdiff *= corrections.getAmpCor(idxB) / corrections.getAmpCor(idxA);
         } else
             return false;
-        
+
         return true;
     }
     return false;

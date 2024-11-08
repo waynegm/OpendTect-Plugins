@@ -2,6 +2,7 @@
 
 #include "uibutton.h"
 #include "ctxtioobj.h"
+#include "keystrs.h"
 #include "uiioobjselgrp.h"
 #include "uiioobjmanip.h"
 #include "picksettr.h"
@@ -11,7 +12,7 @@ uiPolyLinesGrp::uiPolyLinesGrp( uiParent* p )
 : uiDlgGroup(p, tr("Polylines")), ctio_(PickSetTranslatorGroup::ioContext())
 {
     ctio_.ctxt_.toselect_.require_.set( sKey::Type(), sKey::Polygon() );
-    uiIOObjSelGrp::Setup stup; 
+    uiIOObjSelGrp::Setup stup;
     stup.choicemode_ = OD::ChooseZeroOrMore;
     linesfld_ = new uiIOObjSelGrp( this, ctio_, uiStrings::sPolyLine(mPlural), stup );
     linesfld_->getManipGroup()->display(false);

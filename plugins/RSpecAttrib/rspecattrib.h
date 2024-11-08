@@ -1,5 +1,4 @@
-#ifndef rspecattrib_h
-#define rspecattrib_h
+#pragma once
 
 /*
  *   RSpecAttrib Plugin
@@ -72,7 +71,3 @@ protected:
 };
 
 }; // namespace Attrib
-
-#endif
-
-

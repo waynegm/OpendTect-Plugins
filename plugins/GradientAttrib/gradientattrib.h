@@ -1,3 +1,4 @@
+#pragma once
 /*Copyright (C) 2015 Wayne Mogg All rights reserved.
 
 This file may be used either under the terms of:
@@ -8,10 +9,6 @@ the Free Software Foundation, or
 This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 */
-
-#ifndef gradientattrib_h
-#define gradientattrib_h
-
 /*+
 ________________________________________________________________________
 
@@ -27,7 +24,7 @@ ________________________________________________________________________
 
 /*!\brief Gradient Attribute
 
-Calculate inline, crossline or Z gradient using the operators proposed by Kroon, 2009 
+Calculate inline, crossline or Z gradient using the operators proposed by Kroon, 2009
 
 */
 
@@ -48,7 +45,7 @@ public:
 
 	enum OutputType			{ Inline, Crossline, Z };
 	enum OperatorType		{ Kroon_3, Farid_5, Farid_7};
-	
+
 	static const float		kroon_3_d[];
 	static const float		kroon_3_s[];
 	static const float		farid_5_d[];
@@ -69,7 +66,7 @@ protected:
 	const BinID*			desStepout(int input,int output) const;
 	const Interval<int>*	desZSampMargin(int input,int output) const
 							{ return &zmargin_; }
-				
+
 	bool					getTrcPos();
 
 	BinID					stepout_;
@@ -79,7 +76,7 @@ protected:
 	int						outtype_;
 	int						optype_;
 	int						size_;
-	
+
 	float					*ikernel_, *xkernel_, *zkernel_;
 
 	int						dataidx_;
@@ -88,8 +85,3 @@ protected:
 };
 
 }; // namespace Attrib
-
-
-#endif
-
-

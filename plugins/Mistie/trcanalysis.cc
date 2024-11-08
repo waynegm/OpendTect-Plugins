@@ -10,8 +10,8 @@ bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, flo
     Eigen::FFT<double> fft;
     int n = trcA.size();
     int nfft = 2*n;
-    float dt = trcA.info().sampling.step;
-    
+    float dt = trcA.info().sampling_.step_;
+
     Eigen::VectorXd A, B;
     A.setZero(nfft);
     B.setZero(nfft);
@@ -31,7 +31,7 @@ bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, flo
         return false;
     }
     ampdiff = sumBB/sumAA;
-    
+
     Eigen::VectorXcd Af, Bf, CCf, AS;
     Eigen::VectorXd CC, H;
     H.setConstant(nfft, 2.0);
@@ -60,7 +60,7 @@ bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, flo
     float p0 = std::arg(AS(maxIndex));
     float p1 = cp>=0.0 ? std::arg(AS(ir)) : std::arg(AS(il));
     p1 = p1-p0>M_PI ? p1-M_2PI : p1-p0<-M_PI ? p1+M_2PI : p1;
-    phasediff = Math::toDegrees(cp>=0.0 ? (p1-p0)*cp+p0 :(p0-p1)*cp+p0) ;   
+    phasediff = Math::toDegrees(cp>=0.0 ? (p1-p0)*cp+p0 :(p0-p1)*cp+p0) ;
     return true;
 }
 
@@ -69,7 +69,7 @@ bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, flo
     Eigen::FFT<double> fft;
     int n = trcA.size();
     int nfft = 2*n;
-    float dt = trcA.info().sampling.step;
+    float dt = trcA.info().sampling_.step_;
 
     Eigen::VectorXd A, B;
     A.setZero(nfft);

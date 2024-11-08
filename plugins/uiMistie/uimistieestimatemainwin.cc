@@ -110,7 +110,7 @@ uiMistieEstimateBySeismic::uiMistieEstimateBySeismic( uiParent* p )
     zr.limitTo(SI().zRange(false));
     zr.scale( (float)SI().zDomain().userFactor() );
     gatefld_->setValue( zr );
-    mAttachCB(gatefld_->valuechanged, uiMistieEstimateBySeismic::gatefldchangeCB);
+    mAttachCB(gatefld_->valueChanged, uiMistieEstimateBySeismic::gatefldchangeCB);
 
     onlyzfld_ = new uiCheckBox(this, tr("Only estimate Z misties"));
     onlyzfld_->attach(alignedBelow, lagfld_);
@@ -153,7 +153,7 @@ void uiMistieEstimateBySeismic::gatefldchangeCB(CallBacker*)
     zg.sort();
     ZGate zr = SI().zRange(false);
     float zfac = SI().showZ2UserFactor();
-    zg.limitTo(ZGate(zr.start*zfac, zr.stop*zfac));
+    zg.limitTo(ZGate(zr.start_*zfac, zr.stop_*zfac));
     gatefld_->setValue(zg);
 }
 
@@ -304,7 +304,7 @@ uiMistieEstimateMainWin::uiMistieEstimateMainWin(uiParent* p)
 
     BoolInpSpec bis(true, tr("Seismic Traces"), tr("Horizon Interpretation"));
     fromseisfld_ = new uiGenInput(this, tr("Estimate misties from"), bis);
-    mAttachCB(fromseisfld_->valuechanged, uiMistieEstimateMainWin::modeCB);
+    mAttachCB(fromseisfld_->valueChanged, uiMistieEstimateMainWin::modeCB);
 
     seisgrp_ = new uiMistieEstimateBySeismic(this);
     seisgrp_->attach(alignedBelow, fromseisfld_);

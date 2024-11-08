@@ -1,3 +1,4 @@
+#pragma once
 /*Copyright (C) 2014 Wayne Mogg All rights reserved.
 
 This file may be used either under the terms of:
@@ -8,10 +9,6 @@ the Free Software Foundation, or
 This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 */
-
-#ifndef statcalc_h
-#define statcalc_h
-
 /*+
 ________________________________________________________________________
 
@@ -19,7 +16,7 @@ ________________________________________________________________________
  Date:          January 2014
  ________________________________________________________________________
 
--*/ 
+-*/
 namespace wmStats
 {
 
@@ -49,7 +46,7 @@ protected:
     T		minval_;
     T		mean_;
     T		m2_;
-}; 
+};
 
 template <class T> inline
 void StatCalc<T>::clear()
@@ -89,7 +86,7 @@ inline T StatCalc<T>::max() const
 }
 
 template <class T>
-inline T StatCalc<T>::iqr() 
+inline T StatCalc<T>::iqr()
 {
   const int sz = vals_.size();
   T Q3, Q1;
@@ -102,7 +99,7 @@ inline T StatCalc<T>::iqr()
   const int idx75 = 3 * sz / 4;
 
   std::nth_element( vec.begin(), vec.begin()+idx75, vec.end());
-  if (sz%4 ==0) 
+  if (sz%4 ==0)
     Q1 = (vec[idx25]+vec[idx25-1]) / 2;
   else
     Q1 = vec[idx25];
@@ -117,10 +114,10 @@ template <class T>
 inline T StatCalc<T>::trimmedMean(T sdevs)
 {
     const int sz = vals_.size();
-    
+
     if ( sz < 2 )
         return sz < 1 ? mUdf(T) : vals_[0];
-    
+
     T result=0.0;
     int count = 0;
     T stdev = sqrt(variance ());
@@ -147,7 +144,7 @@ inline T StatCalc<T>::median()
   const int mididx = sz / 2;
 
   std::nth_element( vec.begin(), vec.begin()+mididx, vec.end());
-  
+
   if ( sz%2 == 0 )
     return (vec[mididx] + vec[mididx-1]) / 2;
   else
@@ -180,4 +177,3 @@ StatCalc<T>& StatCalc<T>::addValue( T val)
 }
 
 }
-#endif

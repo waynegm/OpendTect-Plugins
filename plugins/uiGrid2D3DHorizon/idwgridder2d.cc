@@ -8,7 +8,7 @@
 
 
 mDefParallelCalc2Pars( IDWGlobalInterpolator, od_static_tr("IDWGlobalInterpolator","IDW global interpolation"),
-		       const wmIDWGridder2D*, interp, Threads::Lock, lock )
+		       const wmIDWGridder2D*, interp, Threads::Lock&, lock )
 mDefParallelCalcBody(
 const TypeSet<Coord>& locs_ = interp_->binLocs_;
 const TypeSet<float>& vals_ = interp_->vals_;
@@ -49,7 +49,7 @@ grid_->set(ix, iy, fval);
 , )
 
 mDefParallelCalc3Pars( IDWKNNInterpolator, od_static_tr("IDWKNNInterpolator","IDW KNN interpolation "),
-		       const wmIDWGridder2D*, interp, CoordKDTree&, index, Threads::Lock, lock )
+		       const wmIDWGridder2D*, interp, CoordKDTree&, index, Threads::Lock&, lock )
 mDefParallelCalcBody(
 const TypeSet<Coord>& locs_ = interp_->binLocs_;
 const TypeSet<float>& vals_ = interp_->vals_;
@@ -100,7 +100,7 @@ grid_->set(ix, iy, fval);
 typedef std::vector<std::pair<size_t,Pos::Ordinate_Type>> RadiusResultSet;
 
 mDefParallelCalc3Pars( IDWLocalInterpolator, od_static_tr("IDWLocalInterpolator","IDW local interpolation"),
-		       const wmIDWGridder2D*, interp, CoordKDTree&, index, Threads::Lock, lock )
+		       const wmIDWGridder2D*, interp, CoordKDTree&, index, Threads::Lock&, lock )
 mDefParallelCalcBody(
 const TypeSet<Coord>& locs_ = interp_->binLocs_;
 const TypeSet<float>& vals_ = interp_->vals_;

@@ -1,5 +1,4 @@
-#ifndef uifaultpoly_h
-#define uifaultpoly_h
+#pragma once
 /*
  *   Fault polygon/polyline generator class
  *   Copyright (C) 2019  Wayne Mogg
@@ -68,5 +67,3 @@ protected:
 private:
     uiString    getCaptionStr() const;
 };
-
-#endif

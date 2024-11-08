@@ -92,7 +92,7 @@ void uiGrid2D3DHorizonMgr::surveyChgCB( CallBacker* )
 {
     if ( dlg_ ) {
 	dlg_->close();
-	deleteAndZeroPtr( dlg_ );
+	deleteAndNullPtr( dlg_ );
     }
 }
 

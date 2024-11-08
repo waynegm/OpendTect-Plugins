@@ -1,5 +1,4 @@
-#ifndef uiwgmhelp_h
-#define uiwgmhelp_h
+#pragma once
 /*
  *   uiWGMHelp Plugin - help system and helper classes
  *  Copyright (C) 2019  Wayne Mogg
@@ -34,5 +33,3 @@ public:
 	static FilePath		GetPythonInterpPath();
 
 };
-
-#endif

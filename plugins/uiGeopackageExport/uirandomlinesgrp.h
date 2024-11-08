@@ -1,5 +1,4 @@
-#ifndef uirandomlinesgrp_h
-#define uirandomlinesgrp_h
+#pragma Once
 
 #include "uidlggroup.h"
 #include "ctxtioobj.h"
@@ -13,7 +12,7 @@ class uiRandomLinesGrp : public uiDlgGroup
 public:
     uiRandomLinesGrp(uiParent*);
     ~uiRandomLinesGrp() {}
-    
+
     bool doLineExport();
     void getLineIds( TypeSet<MultiID>& lineids );
     void reset();
@@ -22,8 +21,3 @@ protected:
     CtxtIOObj      ctio_;
     uiIOObjSelGrp* linesfld_;
 };
-
-
-
-
-#endif

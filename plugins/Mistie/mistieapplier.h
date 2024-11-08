@@ -1,5 +1,4 @@
-#ifndef mistieapplier_h
-#define mistieapplier_h
+#pragma once
 
 #include "mistiemod.h"
 #include "attribprovider.h"
@@ -8,7 +7,7 @@
 #include "mistiecordata.h"
 
 namespace Attrib {
-    
+
 mClass(Mistie) MistieApplier : public Provider
 { mODTextTranslationClass(MistieApplier);
 public:
@@ -20,19 +19,19 @@ public:
     static const char*  phaseStr()     { return "ApplyPhase"; }
     static const char*  ampStr()     { return "ApplyAmp"; }
     static const char*  mistieFileStr() { return "mistie_database"; }
-    
+
 protected:
                         ~MistieApplier() {}
     static Provider*    createInstance(Desc&);
-                    
+
     bool                allowParallelComputation() const { return true; }
-                    
+
     bool                getInputData(const BinID&,int zintv);
     void                prepareForComputeData();
     bool                computeData(const DataHolder&,const BinID& relpos, int z0,int nrsamples,int threadid) const;
     const Interval<int>* desZSampMargin(int input,int output) const { return &zmargin_; }
-    
-    
+
+
     BufferString        mistiefile_;
     MistieCorrectionData corrections_;
     bool                applyshift_;
@@ -41,15 +40,11 @@ protected:
     const DataHolder*   data_;
     int                 dataidx_;
     Interval<int>       zmargin_;
-    
-    
+
+
     float               shift_;
     float               phase_;
     float               amp_;
 };
 
 };
-
-#endif
-
-    

@@ -1,3 +1,4 @@
+#pragma once
 /*Copyright (C) 2014 Wayne Mogg All rights reserved.
 
 This file may be used either under the terms of:
@@ -8,9 +9,6 @@ the Free Software Foundation, or
 This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 */
-
-#ifndef mlvfilterattrib_h
-#define mlvfilterattrib_h
 
 /*+
 ________________________________________________________________________
@@ -28,7 +26,7 @@ ________________________________________________________________________
 
 /*!\brief MLVFilter Attribute
 
-Structure preserving smoothing 
+Structure preserving smoothing
 
 */
 
@@ -68,7 +66,7 @@ protected:
 	const BinID*			desStepout(int input,int output) const;
 	const Interval<int>*	desZSampMargin(int input,int output) const
 							{ return &dessampgate_; }
-				
+
 	bool					getTrcPos();
 	bool					getElements();
 
@@ -87,8 +85,3 @@ protected:
 };
 
 } // namespace Attrib
-
-
-#endif
-
-

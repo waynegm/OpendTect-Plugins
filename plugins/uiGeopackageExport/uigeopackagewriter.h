@@ -1,5 +1,4 @@
-#ifndef uigeopackagewriter_h
-#define uigeopackagewriter_h
+#pragma once
 
 #include "typeset.h"
 
@@ -32,5 +31,3 @@ protected:
     Coords::AuthorityCode*	srs_;
     bool			append_;
 };
-
-#endif

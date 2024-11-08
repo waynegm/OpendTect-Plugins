@@ -1,5 +1,4 @@
-#ifndef wmsimplify3d_h
-#define wmsimplify3d_h
+#pragma once
 
 #include "idxpair.h"
 #include "typeset.h"
@@ -15,7 +14,7 @@ void wmSimplify3DPolyline( const TypeSet<Coord3>& indata, SortedList<int>& resid
     residx += indata.size()-1;
     TypeSet<IdxPair> work;
     work += IdxPair(0, indata.size()-1);
-    
+
     while (work.size()>0) {
         IdxPair p = work.pop();
         int start = p.first;
@@ -29,13 +28,13 @@ void wmSimplify3DPolyline( const TypeSet<Coord3>& indata, SortedList<int>& resid
             dif.x = abs(dif.x);
             dif.y = abs(dif.y);
             dif.z = abs(dif.z);
-        
+
             if (dif.x>=offmax.x || dif.y>=offmax.y || dif.z>=offmax.z) {
                 offmax = dif;
                 idxmax = idx;
             }
         }
-    
+
         if (offmax.x>=dX || offmax.y>=dY || offmax.z>=dZ) {
             residx += idxmax;
             if (idxmax-start > 1)
@@ -46,10 +45,3 @@ void wmSimplify3DPolyline( const TypeSet<Coord3>& indata, SortedList<int>& resid
     }
 }
 }; //namespace
-
-            
-            
-            
-        
-        
-#endif

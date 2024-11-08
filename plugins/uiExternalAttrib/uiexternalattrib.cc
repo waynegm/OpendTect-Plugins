@@ -211,7 +211,7 @@ void uiExternalAttribInp::makeInputUI(const Attrib::DescSet* ads,
 
     BufferStringSet inputs = extproc_->getInputNames();
     for (auto* input : inputs) {
-	uiAttrSel* tmp = new uiAttrSel( 0, input->str(), asd );
+	uiAttrSel* tmp = new uiAttrSel( 0, toUiString(input->str()), asd );
 	tmp->setDescSet( ads );
 	tmp->setBorder(0);
 	tmp->display(true);
@@ -244,10 +244,10 @@ void uiExternalAttribInp::makeZSamplingUI()
 				 tr("Z Window (samples)"),
 				 IntInpIntervalSpec().setName("Samples after",1)
 				 .setName("Samples before",0));
-    mAttachCB(zmarginfld_->valuechanging, uiExternalAttribInp::doZmarginCheck);
+    mAttachCB(zmarginfld_->valueChanging, uiExternalAttribInp::doZmarginCheck);
 
     Interval<int> val = extproc_->zmargin();
-    val.start = -val.start;
+    val.start_ = -val.start_;
     zmarginfld_->setValue(val);
     zmarginfld_->display(true);
     zmarginfld_->preFinalize().trigger();
@@ -329,10 +329,10 @@ void uiExternalAttribInp::doZmarginCheck( CallBacker* cb )
 		Interval<int> val = zmarginfld_->getIInterval();
 		Interval<int> minval = extproc_->z_minimum();
 
-		val.stop = (val.stop < minval.stop)? minval.stop:val.stop;
-		val.start = (val.start < -minval.start)? -minval.start:val.start;
+		val.stop_ = (val.stop_ < minval.stop_)? minval.stop_:val.stop_;
+		val.start_ = (val.start_ < -minval.start_)? -minval.start_:val.start_;
 		if (extproc_->zSymmetric())
-			val.stop = -val.start;
+			val.stop_ = -val.start_;
 
 		zmarginfld_->setValue( val );
 	}
@@ -358,7 +358,7 @@ bool uiExternalAttribInp::setParameters(const Attrib::Desc& desc)
 	return false;
 
     if (extproc_->hasZMargin() && !extproc_->hideZMargin()) {
-	mIfGetIntInterval( ExternalAttrib::zmarginStr(), zmargin, zmarginfld_->setValues(-zmargin.start, zmargin.stop) )
+	mIfGetIntInterval( ExternalAttrib::zmarginStr(), zmargin, zmarginfld_->setValues(-zmargin.start_, zmargin.stop_) )
     }
 
     if (extproc_->hasStepOut() && !extproc_->hideStepOut()) {
@@ -396,8 +396,8 @@ bool uiExternalAttribInp::getParameters(Attrib::Desc& desc, ChangeTracker& chtr_
 	    val = zmarginfld_->getIInterval();
 
 	if (extproc_->zSymmetric())
-	    val.stop = val.start;
-	val.start = -val.start;
+	    val.stop_ = val.start_;
+	val.start_ = -val.start_;
 	mSetIntInterval( ExternalAttrib::zmarginStr(), val );
     }
 
@@ -447,7 +447,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     #endif
     interpfilefld_ = new uiFileInput( this, tr("Interpreter (optional)"), su );
     interpfilefld_->setFileName(uiWGMHelp::GetPythonInterpPath().fullPath());
-    mAttachCB(interpfilefld_->valuechanged, uiExternalAttrib::exfileChanged);
+    mAttachCB(interpfilefld_->valueChanged, uiExternalAttrib::exfileChanged);
 
     CallBack cb1 = mCB(this,uiExternalAttrib,updateinterpCB);
     refinterp_ = new uiToolButton( this, "refresh", tr("Reset default interpreter"), cb1 );
@@ -455,7 +455,7 @@ uiExternalAttrib::uiExternalAttrib( uiParent* p, bool is2d )
     refinterp_->display(true);
 
     exfilefld_ = new uiFileInput( this, tr("External File"), uiFileInput::Setup(uiFileDialog::Gen).forread( true ).defseldir(ExternalAttrib::exdir_) );
-    mAttachCB(exfilefld_->valuechanged, uiExternalAttrib::exfileChanged);
+    mAttachCB(exfilefld_->valueChanged, uiExternalAttrib::exfileChanged);
     exfilefld_->attach(alignedBelow, interpfilefld_);
 
     CallBack cb2 = mCB(this,uiExternalAttrib,exfileRefresh);

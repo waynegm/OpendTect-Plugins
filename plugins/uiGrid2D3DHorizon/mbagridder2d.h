@@ -1,5 +1,4 @@
-#ifndef mbagridder2d_h
-#define mbagridder2d_h
+#pragma once
 
 #include "wmgridder2d.h"
 class uiParent;
@@ -18,6 +17,4 @@ protected:
     int				maxlevels_;
 
 };
-
-#endif
 

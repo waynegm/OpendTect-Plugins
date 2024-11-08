@@ -1,5 +1,4 @@
-#ifndef uicontourpoly_h
-#define uicontourpoly_h
+#pragma once
 /*
  *   Constant Z polyline generator class
  *   Copyright (C) 2019  Wayne Mogg
@@ -51,5 +50,3 @@ protected:
 private:
     uiString    getCaptionStr() const;
 };
-
-#endif

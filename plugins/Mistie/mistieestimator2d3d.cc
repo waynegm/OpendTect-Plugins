@@ -42,10 +42,10 @@ Line3DOverlapFinder::Line3DOverlapFinder(const EM::Horizon3D* hor3D, const Objec
 void Line3DOverlapFinder::setBounds(TrcKeySampling tks )
 {
     tks.normalize();
-    bounds3d_.setLeft(tks.inlRange().start);
-    bounds3d_.setRight(tks.inlRange().stop);
-    bounds3d_.setTop(tks.crlRange().stop);
-    bounds3d_.setBottom(tks.crlRange().start);
+    bounds3d_.setLeft(tks.inlRange().start_);
+    bounds3d_.setRight(tks.inlRange().stop_);
+    bounds3d_.setTop(tks.crlRange().stop_);
+    bounds3d_.setBottom(tks.crlRange().start_);
 }
 
 od_int64 Line3DOverlapFinder::nrIterations() const
@@ -79,7 +79,7 @@ bool Line3DOverlapFinder::doWork(od_int64 start, od_int64 stop, int tid)
             int posidx = bps->idxs_[bpid];
             if (linepos.validIdx(posidx)) {
                 Coord crd = SI().binID2Coord().transformBackNoSnap(linepos[posidx].coord_);
-                polyline += Geom::Point2D<Pos::Ordinate_Type>(crd.x, crd.y);
+                polyline += Geom::Point2D<Pos::Ordinate_Type>(crd.x_, crd.y_);
             }
         }
         ObjectSet<TypeSet<Geom::Point2D<Pos::Ordinate_Type>>> trimmedLine;
@@ -127,8 +127,8 @@ MistieEstimatorFromSeismic2D3D::MistieEstimatorFromSeismic2D3D(const IOObj* ioob
     lineA += ioobj3d_->uiName().getFullString();
     for (int idx=0; idx<selranges_.size(); idx++) {
         lineB = Survey::GM().getName(selranges_[idx]->geomID());
-        trcA = selranges[idx]->crlRange().start;
-        trcB = selranges[idx]->crlRange().stop;
+        trcA = selranges[idx]->crlRange().start_;
+        trcB = selranges[idx]->crlRange().stop_;
 	Threads::Locker lckr( lock_ );
         misties_.add(lineA, trcA, lineB, trcB, pos);
     }
@@ -183,13 +183,13 @@ bool MistieEstimatorFromSeismic2D3D::doWork( od_int64 start, od_int64 stop, int 
                 Coord pos(trcB.info().getValue(SeisTrcInfo::CoordX), trcB.info().getValue(SeisTrcInfo::CoordY));
                 IdxPair bid = SI().binID2Coord().transformBack(pos);
                 if (get3DTrc(bid.first, bid.second, trcA)) {
-                    if (trcA.info().sampling.step > trcB.info().sampling.step) {
-                        trcA.info().pick = 0.0;
-                        SeisTrc* tmp = trcA.getRelTrc( window_, trcB.info().sampling.step );
+                    if (trcA.info().sampling_.step_ > trcB.info().sampling_.step_) {
+                        trcA.info().pick_ = 0.0;
+                        SeisTrc* tmp = trcA.getRelTrc( window_, trcB.info().sampling_.step_ );
                         trcA = *tmp;
-                    } else if (trcA.info().sampling.step < trcB.info().sampling.step) {
-                        trcB.info().pick = 0.0;
-                        SeisTrc* tmp = trcB.getRelTrc( window_, trcA.info().sampling.step );
+                    } else if (trcA.info().sampling_.step_ < trcB.info().sampling_.step_) {
+                        trcB.info().pick_ = 0.0;
+                        SeisTrc* tmp = trcB.getRelTrc( window_, trcA.info().sampling_.step_ );
                         trcB = *tmp;
                     }
                     float zd = 0.0;
@@ -279,8 +279,8 @@ MistieEstimatorFromHorizon2D3D::MistieEstimatorFromHorizon2D3D(MultiID hor3Did, 
     lineA += "3D";
     for (int idx=0; idx<selranges_.size(); idx++) {
 	lineB = Survey::GM().getName(selranges_[idx]->geomID());
-	trcA = selranges[idx]->crlRange().start;
-	trcB = selranges[idx]->crlRange().stop;
+	trcA = selranges[idx]->crlRange().start_;
+	trcB = selranges[idx]->crlRange().stop_;
 	misties_.add(lineA, trcA, lineB, trcB, pos);
     }
 }
@@ -359,9 +359,9 @@ bool MistieEstimatorFromHorizon2D3D::doWork( od_int64 start, od_int64 stop, int 
 	    const TrcKey tk2d(Survey::GM().getGeomID(lineB), trcnums[it]);
 	    const Coord3 pos2d = hor2d_->getCoord(tk2d);
 	    float z3d = hor3d_->getZ(SI().transform(pos2d.coord()));
-	    if (!mIsUdf(z3d) && !mIsUdf(pos2d.z))
+	    if (!mIsUdf(z3d) && !mIsUdf(pos2d.z_))
 	    {
-		zdiff += (pos2d.z - z3d) * SI().showZ2UserFactor();
+		zdiff += (pos2d.z_ - z3d) * SI().showZ2UserFactor();
 		count++;
 	    }
 	}

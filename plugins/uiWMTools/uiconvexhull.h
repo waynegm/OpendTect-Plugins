@@ -1,5 +1,4 @@
-#ifndef uiconvexhull_h
-#define uiconvexhull_h
+#pragma once
 /*
  *   Convex hull generator class
  *   Copyright (C) 2019  Wayne Mogg
@@ -70,5 +69,3 @@ protected:
 private:
     uiString    getCaptionStr() const;
 };
-
-#endif

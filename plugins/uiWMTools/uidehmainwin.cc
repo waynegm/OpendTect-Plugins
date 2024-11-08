@@ -29,6 +29,7 @@
 #include "emmanager.h"
 #include "emioobjinfo.h"
 #include "emhorizon3d.h"
+#include "executor.h"
 #include "uiiosurface.h"
 #include "survgeom2d.h"
 #include "uitaskrunner.h"
@@ -51,7 +52,7 @@ uidehMainWin::uidehMainWin( uiParent* p )
 
     uiString lbl = tr("Z Value ");
     lbl.append( SI().getUiZUnitString() );
-    zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start*SI().zDomain().userFactor()) );
+    zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start_*SI().zDomain().userFactor()) );
 
     uiObject* lastfld = (uiObject*) zfld_;
     uiSeparator* horsepxt = new uiSeparator(this, "Hor Sep Data Extent");
@@ -125,11 +126,11 @@ void uidehMainWin::updateRangeCB(CallBacker*)
 		const PosInfo::Line2DData& geom = geom2d->data();
 		const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
 		Coord pos = SI().binID2Coord().transformBackNoSnap(posns[0].coord_);
-		inlrg.isUdf()? inlrg.set(pos.x,pos.x) : inlrg.include(pos.x);
-		crlrg.isUdf()? crlrg.set(pos.y,pos.y) : crlrg.include(pos.y);
+		inlrg.isUdf()? inlrg.set(pos.x_,pos.x_) : inlrg.include(pos.x_);
+		crlrg.isUdf()? crlrg.set(pos.y_,pos.y_) : crlrg.include(pos.y_);
 		pos = SI().binID2Coord().transformBackNoSnap(posns[posns.size()-1].coord_);
-		inlrg.include(pos.x);
-		crlrg.include(pos.y);
+		inlrg.include(pos.x_);
+		crlrg.include(pos.y_);
 	    }
 	    hs.setInlRange(inlrg);
 	    hs.setCrlRange(crlrg);

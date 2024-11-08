@@ -40,7 +40,7 @@ public:
     void addPoint( const wmGridder2D* interp, const Coord& loc, float val, double distsq )
     {
 	Coord diff = loc-point_;
-	double ang = atan2(diff.y, diff.x);
+	double ang = atan2(diff.y_, diff.x_);
 	ang += ang<0.0 ? M_2PI: 0;
 	int isect = int(ang/sectorsize_);
 	if ( count_[isect]<maxsecpoints_ && !interp->faultBetween(loc, point_) ) {
@@ -89,7 +89,7 @@ typedef std::vector<std::pair<size_t,Pos::Ordinate_Type>> RadiusResultSet;
 
 
 mDefParallelCalc3Pars( LTPSInterpolator, od_static_tr("LTPSInterpolator","LTPS interpolation"),
-		       const wmLTPSGridder2D*, interp, CoordKDTree&, index, Threads::Lock, lock )
+		       const wmLTPSGridder2D*, interp, CoordKDTree&, index, Threads::Lock&, lock )
 mDefParallelCalcBody(
 const TypeSet<Coord>& locs_ = interp_->binLocs_;
 const TypeSet<float>& vals_ = interp_->vals_;
@@ -190,7 +190,7 @@ void wmLTPSGridder2D::calcResidual()
     std::vector<mba::point<2>> binLocs(binLocs_.size());
     std::vector<float> vals(binLocs_.size());
     for (int idx=0; idx<binLocs_.size(); idx++) {
-	binLocs[idx] = mba::point<2>{{binLocs_[idx].x, binLocs_[idx].y}};
+	binLocs[idx] = mba::point<2>{{binLocs_[idx].x_, binLocs_[idx].y_}};
 	vals[idx] = vals_[idx];
     }
 
@@ -202,7 +202,7 @@ void wmLTPSGridder2D::calcResidual()
     mba::MBA<2> interp(lo, hi, grid, binLocs, vals );
 
     for (od_int64 idx=0; idx<binLocs_.size(); idx++) {
-	vals_[idx] -= interp(mba::point<2>{{binLocs_[idx].x, binLocs_[idx].y}});
+	vals_[idx] -= interp(mba::point<2>{{binLocs_[idx].x_, binLocs_[idx].y_}});
     }
 
     for (od_int64 idx=0; idx<interpidx_.size(); idx++) {

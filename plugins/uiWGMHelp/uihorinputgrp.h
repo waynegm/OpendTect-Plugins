@@ -1,5 +1,4 @@
-#ifndef uihorinputgrp_h
-#define uihorinputgrp_h
+#pragma once
 
 #include "uiwgmhelpmod.h"
 #include "uidlggroup.h"
@@ -54,7 +53,3 @@ protected:
 };
 
 };
-
-
-
-#endif

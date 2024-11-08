@@ -102,8 +102,8 @@ bool AVOPolarAttrib::getTrcPos()
 
 void AVOPolarAttrib::prepPriorToBoundsCalc()
 {
-    sampgateBG_ = Interval<int>( mNINT32(gateBG_.start/refstep_), mNINT32(gateBG_.stop/refstep_) );
-    sampgate_ = Interval<int>( mNINT32(gate_.start/refstep_), mNINT32(gate_.stop/refstep_) );
+    sampgateBG_ = Interval<int>( mNINT32(gateBG_.start_/refstep_), mNINT32(gateBG_.stop_/refstep_) );
+    sampgate_ = Interval<int>( mNINT32(gate_.start_/refstep_), mNINT32(gate_.stop_/refstep_) );
     Provider::prepPriorToBoundsCalc();
 }
 
@@ -169,7 +169,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
     for (int trcidx=0; trcidx<ntraces; trcidx++) {
         const DataHolder* data = intercept_[trcidx];
         for (int idx=0; idx<sz; idx++) {
-            float val = getInputValue(*data, intercept_idx_, sampgateBG_.start+idx, z0);
+            float val = getInputValue(*data, intercept_idx_, sampgateBG_.start_+idx, z0);
             A(idx, trcidx) = mIsUdf(val)?0.0f:val;
         }
     }
@@ -178,7 +178,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
     for (int trcidx=0; trcidx<ntraces; trcidx++) {
         const DataHolder* data = gradient_[trcidx];
         for (int idx=0; idx<sz; idx++) {
-            float val = getInputValue(*data, gradient_idx_, sampgateBG_.start+idx, z0);
+            float val = getInputValue(*data, gradient_idx_, sampgateBG_.start_+idx, z0);
             B(idx, trcidx) = mIsUdf(val)?0.0f:val;
         }
     }
@@ -193,14 +193,14 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
         computeBackgroundAngle( A, B, bgAngle );
 	Eigen::ArrayXd out = (bgAngle.isFinite()).select(bgAngle,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,BGAngle, idx, z0, out[idx-sampgateBG_.start]);
+            setOutputValue(output,BGAngle, idx, z0, out[idx-sampgateBG_.start_]);
     }
 
     if (isOutputEnabled(EventAngle)) {
         computeEventAngle( A, B, evAngle, quality );
 	Eigen::ArrayXd out = (bgAngle.isFinite()).select(bgAngle,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,EventAngle, idx, z0, out[idx-sampgateBG_.start]);
+            setOutputValue(output,EventAngle, idx, z0, out[idx-sampgateBG_.start_]);
     }
 
     if (isOutputEnabled(Difference)) {
@@ -211,14 +211,14 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
         angleDiff = evAngle - bgAngle;
 	Eigen::ArrayXd out = (angleDiff.isFinite()).select(angleDiff,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,Difference, idx, z0, out[idx-sampgateBG_.start]);
+            setOutputValue(output,Difference, idx, z0, out[idx-sampgateBG_.start_]);
     }
 
     if (isOutputEnabled(Strength)) {
         computeStrength( A, B, strength );
 	Eigen::ArrayXd out = (strength.isFinite()).select(strength,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,Strength, idx, z0, out[idx-sampgateBG_.start]);
+            setOutputValue(output,Strength, idx, z0, out[idx-sampgateBG_.start_]);
     }
 
     if (isOutputEnabled(Product)) {
@@ -234,7 +234,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
         Eigen::ArrayXd prod = angleDiff*strength;
 	Eigen::ArrayXd out = (prod.isFinite()).select(prod,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,Product, idx, z0, prod[idx-sampgateBG_.start]);
+            setOutputValue(output,Product, idx, z0, prod[idx-sampgateBG_.start_]);
     }
 
     if (isOutputEnabled(Quality)) {
@@ -243,7 +243,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
 
 	Eigen::ArrayXd out = (quality.isFinite()).select(quality,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
-            setOutputValue(output,Quality, idx, z0, out[idx-sampgateBG_.start]);
+            setOutputValue(output,Quality, idx, z0, out[idx-sampgateBG_.start_]);
     }
 
     return true;

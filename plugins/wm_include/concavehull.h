@@ -1,5 +1,4 @@
-#ifndef concavehull_h
-#define concavehull_h
+#pragma once
 /*
 *   Concave Hull for a set of points
 *   Copyright (C) 2019  Wayne Mogg
@@ -25,7 +24,7 @@ public:
     ConcaveHull(const TypeSet<Coord>& points);
 
 protected:
-    
+
 };
 
 ConcaveHull::ConcaveHull(const TypeSet<Coord>& points)
@@ -34,6 +33,3 @@ ConcaveHull::ConcaveHull(const TypeSet<Coord>& points)
     for (int i=0; i<size() ; i++) {
 	ConvexHull* cvex = new ConvexHull(points);
 }
-
-#endif
-

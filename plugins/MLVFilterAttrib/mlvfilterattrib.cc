@@ -133,7 +133,7 @@ bool MLVFilter::getElements()
 		SamplePointSet pset;
 		for ( int trcidx=0; trcidx<trcpos_.size(); trcidx++ ) {
 			const BinID bid = trcpos_[trcidx];
-			for ( int zidx=dessampgate_.start; zidx<=dessampgate_.stop; zidx++ ) {
+			for ( int zidx=dessampgate_.start_; zidx<=dessampgate_.stop_; zidx++ ) {
 					PlanePoint pos( bid.inl(), bid.crl(), zidx);
 					SamplePoint samp( trcidx, zidx );
 					if (pos.dot(pnorms[ielem]) == 0 )
@@ -178,9 +178,9 @@ int MLVFilter::findLeastVarianceElement( int idx, int z0, float* result,  wmStat
 		const int np = points.size();
 		elemStats.clear();
 		for ( int ipnt=0; ipnt < np; ipnt++ ) {
-			int trcidx = points[ipnt].x;
+			int trcidx = points[ipnt].x_;
 			const DataHolder* data = inputdata_[trcidx];
-			const int zidx = points[ipnt].y;
+			const int zidx = points[ipnt].y_;
 			float traceval = mUdf(float);
 			if ( data )
 				traceval = getInputValue( *data, dataidx_, idx + zidx, z0);

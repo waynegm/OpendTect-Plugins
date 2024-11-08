@@ -1,5 +1,4 @@
-#ifndef uigeopackagetreeitem_h
-#define uigeopackagetreeitem_h
+#pragma once
 
 /*
  *   uiGeopackageExport Plugin
@@ -85,5 +84,3 @@ private:
 
     MenuItem                optionsmenuitem_;
 };
-
-#endif

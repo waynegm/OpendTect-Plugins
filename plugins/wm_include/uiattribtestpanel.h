@@ -251,10 +251,7 @@ void uiAttribTestPanel<T>::showPanelCB( CallBacker* )
     Attrib::DescID testid = createTestDesc( dset );
     const TrcKeyZSampling cs( posdlg_->getTrcKeyZSampling() );
 
-    LineKey lk;
-    if ( dset->is2D() )
-	lk = LineKey( posdlg_->getLineKey() );
-    testpanel_->compAndDispAttrib( dset, testid, cs, Survey::GM().getGeomID(lk.lineName().buf()) );
+    testpanel_->compAndDispAttrib( dset, testid, posdlg_->getTrcKeyZSampling() );
 }
 
 template<class T>

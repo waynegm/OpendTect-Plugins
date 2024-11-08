@@ -1,5 +1,4 @@
-#ifndef convexhull_h
-#define convexhull_h
+#prafma once
 /*
 *   Convex Hull for a set of points
 *   Copyright (C) 2019  Wayne Mogg
@@ -31,10 +30,7 @@ public:
 	: ODPolygon<OrdinateType>((TypeSet<Geom::Point2D<OrdinateType>>&) points) { convexHull(); }
 
 protected:
-    
-};
 
 };
 
-#endif
-
+};

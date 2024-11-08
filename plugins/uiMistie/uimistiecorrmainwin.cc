@@ -92,7 +92,7 @@ uiMistieCorrMainWin::uiMistieCorrMainWin( uiParent* p )
     table_->setColumnLabels( lbls);
     table_->showGrid( true );
     table_->setLeftHeaderHidden( true );
-    table_->setPrefWidthInChars(50);
+    table_->setPrefWidthInChar(50);
     table_->setPrefHeightInRows(50);
     mAttachCB(table_->rowInserted, uiMistieCorrMainWin::newrowCB);
 

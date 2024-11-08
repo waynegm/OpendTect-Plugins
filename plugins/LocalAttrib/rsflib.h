@@ -1,5 +1,4 @@
-#ifndef rsflib_h
-#define rsflib_h
+#pragma once
 /*
  *   LocalAttrib Plugin
  *   Copyright (C) 2019  Wayne Mogg
@@ -18,13 +17,13 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "localattribmod.h" 
+#include "localattribmod.h"
 
 
 
 namespace sf {
 class Triangle;
-    
+
 void adjnull(bool adj, bool add, int nx, int ny, float* x, float* y);
 
 void doubint2(int nx, float *xx, bool der);
@@ -49,7 +48,7 @@ public:
     Triangle();
     Triangle(int nbox, int ndat, bool box);
     ~Triangle();
-    
+
     void init(int nbox, int ndat, bool box);
     bool isNull();
     void setNull();
@@ -61,15 +60,15 @@ public:
     int     nx_;
     bool    box_;
 };
-        
+
 class Trianglen : public Lop
 {
 public:
     Trianglen(int ndim, int* nbox, int* ndat);
     ~Trianglen();
-    
+
     void doLop(bool adj, bool add, int nx, int ny, float* x, float* y);
-    
+
 protected:
     float*      tmp_;
     Triangle*   tr_;
@@ -84,7 +83,7 @@ class Weight : public Lop
 public:
     Weight(const float* w1);
     ~Weight();
-    
+
     void doLop(bool adj, bool add, int nx, int ny, float* xx, float* yy);
 protected:
     const float* w_;
@@ -93,21 +92,21 @@ protected:
 class ConjGrad
 {
 public:
-    ConjGrad(int np1     /* preconditioned size */, 
-             int nx1     /* model size */, 
-             int nd1     /* data size */, 
-             int nr1     /* residual size */, 
+    ConjGrad(int np1     /* preconditioned size */,
+             int nx1     /* model size */,
+             int nd1     /* data size */,
+             int nr1     /* residual size */,
              float eps1  /* scaling */,
-             float tol1  /* tolerance */, 
+             float tol1  /* tolerance */,
              bool hasp01 /* if has initial model */);
     ~ConjGrad();
-    
-    void doCG(Lop* prec  /* data preconditioning */, 
-              Lop* oper  /* linear operator */, 
-              Lop* shape /* shaping operator */, 
-              float* p          /* preconditioned model */, 
-              float* x          /* estimated model */, 
-              const float* dat        /* data */, 
+
+    void doCG(Lop* prec  /* data preconditioning */,
+              Lop* oper  /* linear operator */,
+              Lop* shape /* shaping operator */,
+              float* p          /* preconditioned model */,
+              float* x          /* estimated model */,
+              const float* dat        /* data */,
               int niter         /* number of iterations */);
 protected:
     int np_;
@@ -131,18 +130,16 @@ class Divn
 public:
         Divn(int ndim, int nd, int* ndat, int* nbox, int niter);
         ~Divn();
-        
+
         void doDiv(const float* num, const float* den, float* rat);
-            
+
 protected:
     int         niter_;
     int         n_;
     float*      p_;
     Trianglen   trianglen_;
     ConjGrad    conjgrad_;
-    
+
 };
 
 }; //namespace sf
-
-#endif

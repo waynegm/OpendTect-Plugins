@@ -51,8 +51,6 @@ SET(OD_MODULE_DEPS uiODMain uiWGMHelp CRS)
 
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
-#    uigeopackagereader.cc
-#    uigeopackagetreeitem.cc
     uigeotiffexportmainwin.cc
     uigeotiffwriter.cc
     uigeopackageexportmainwin.cc

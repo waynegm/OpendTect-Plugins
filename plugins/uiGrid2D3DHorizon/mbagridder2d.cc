@@ -22,7 +22,7 @@ bool wmMBAGridder2D::executeGridding(uiParent* p)
     std::vector<mba::point<2>> binLocs(binLocs_.size());
     std::vector<float> vals(binLocs_.size());
     for (int idx=0; idx<binLocs_.size(); idx++) {
-	binLocs[idx] = mba::point<2>{{binLocs_[idx].x, binLocs_[idx].y}};
+	binLocs[idx] = mba::point<2>{{binLocs_[idx].x_, binLocs_[idx].y_}};
 	vals[idx] = vals_[idx];
     }
 

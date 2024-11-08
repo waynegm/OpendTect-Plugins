@@ -1,5 +1,4 @@
-#ifndef uimistiecorrmainwin_h
-#define uimistiecorrmainwin_h
+#pragma once
 
 #include "uimainwin.h"
 #include "menuhandler.h"
@@ -36,9 +35,9 @@ protected:
     MenuItem        saveasitem_;
     MenuItem        mergeitem_;
     MenuItem        helpitem_;
-    
+
     void            createToolBar();
-    
+
     void            helpCB(CallBacker*);
     void            newCB(CallBacker*);
     void            openCB(CallBacker*);
@@ -51,5 +50,3 @@ private:
 
     uiString    getCaptionStr() const;
 };
-
-#endif

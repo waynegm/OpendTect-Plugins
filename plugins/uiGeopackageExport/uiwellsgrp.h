@@ -1,5 +1,4 @@
-#ifndef uiwellsgrp_h
-#define uiwellsgrp_h
+#pragma once
 
 #include "uidlggroup.h"
 #include "ctxtioobj.h"
@@ -13,14 +12,14 @@ class uiWellsGrp : public uiDlgGroup
 public:
     uiWellsGrp(uiParent*);
     ~uiWellsGrp() {}
-    
+
     bool doWellExport();
     bool doWellTrackExport();
     bool doMarkerExport();
     bool doInFeet();
     void getWellIds( TypeSet<MultiID>& wellids );
     void reset();
-    
+
 protected:
     CtxtIOObj       ctio_;
     uiIOObjSelGrp*  wellsfld_;
@@ -28,8 +27,3 @@ protected:
     uiCheckBox*     expMarkers_;
     uiCheckBox*     inFeet_;
 };
-
-
-
-
-#endif

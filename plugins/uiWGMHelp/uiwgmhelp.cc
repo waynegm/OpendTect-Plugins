@@ -21,6 +21,7 @@
 #include "envvars.h"
 #include "file.h"
 #include "filepath.h"
+#include "keystrs.h"
 #include "oddirs.h"
 #include "pythonaccess.h"
 #include "settings.h"
@@ -48,7 +49,7 @@ FilePath uiWGMHelp::GetPythonInterpPath()
     BufferString pythonstr( sKey::Python() ); pythonstr.toLower();
     FilePath fp;
     OD::PythA().GetPythonEnvPath( fp );
-    if (File::isDirectory(fp.fullPath()) && File::isDirEmpty(fp.fullPath()))
+    if (File::isDirectory(fp.fullPath()) && File::isEmpty(fp.fullPath()))
 	fp = FilePath( fp.dirUpTo(fp.nrLevels() - 2));
 
 #ifdef __win__
@@ -56,7 +57,7 @@ FilePath uiWGMHelp::GetPythonInterpPath()
 #else
     fp.add("bin");
 #endif
-    
+
     fp.add( pythonstr );
     return fp.exists() ? fp : FilePath();
 }
