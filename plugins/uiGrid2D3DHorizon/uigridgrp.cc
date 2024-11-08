@@ -40,7 +40,7 @@ uiGridGrp::uiGridGrp( uiParent* p )
 {
     scopefld_ = new uiGenInput(this, tr("Grid Extent"), StringListInpSpec(wmGridder2D::ScopeNames));
     scopefld_->setValue( wmGridder2D::ConvexHull );
-    mAttachCB(scopefld_->valuechanged, uiGridGrp::scopeChgCB);
+    mAttachCB(scopefld_->valueChanged, uiGridGrp::scopeChgCB);
 
     uiSurfaceRead::Setup swsu(EM::Horizon3D::typeStr());
     swsu.withsubsel(false).withattribfld(false).withsectionfld(false);
@@ -58,7 +58,7 @@ uiGridGrp::uiGridGrp( uiParent* p )
 
     methodfld_ = new uiGenInput( this, tr("Algorithm"),StringListInpSpec(wmGridder2D::MethodNames) );
     methodfld_->attach( alignedBelow, gridfld_ );
-    mAttachCB(methodfld_->valuechanged, uiGridGrp::methodChgCB);
+    mAttachCB(methodfld_->valueChanged, uiGridGrp::methodChgCB);
     methodfld_->setValue(wmGridder2D::LTPS);
 
     polycropfld_ = new WMLib::uiPolygonParSel(this, tr("Cropping Polygon"), false);

@@ -35,8 +35,8 @@
 namespace Attrib
 
 {
-mAttrDefCreateInstance(RSpecAttrib)    
-    
+mAttrDefCreateInstance(RSpecAttrib)
+
 void RSpecAttrib::initClass()
 {
 	mAttrStartInitClassWithDescAndDefaultsUpdate
@@ -50,11 +50,11 @@ void RSpecAttrib::initClass()
 	step->setRequired( false );
 	step->setDefaultValue( 5.0f);
 	desc->addParam( step );
-    
+
     BoolParam* reassign_ = new BoolParam(reassignStr());
     reassign_->setDefaultValue(false);
     desc->addParam(reassign_);
-	
+
 	desc->addOutputDataType( Seis::UnknowData );
 	desc->addInput( InputSpec("Input Volume",true) );
 
@@ -89,50 +89,49 @@ RSpecAttrib::RSpecAttrib( Desc& desc )
     mGetFloat( step_, stepStr() );
     mGetFloatInterval( gate_, gateStr() );
     mGetBool(reassign_, reassignStr());
-	gate_.scale(1.0f/zFactor());
-	window_ = gate_.stop - gate_.start;
-	float refstep = getRefStep();
-//    zsampMargin_ = Interval<int>(mNINT32((gate_.start-window_/2.0)/refstep)-1, mNINT32((gate_.stop+window_/2.0)/refstep)+1);
-    zsampMargin_ = Interval<int>(mNINT32(((gate_.start+gate_.stop)/2.0-4.0*window_)/refstep)-1, mNINT32(((gate_.start+gate_.stop)/2.0+4.0*window_)/refstep)+1);
+    gate_.scale(1.0f/zFactor());
+    window_ = gate_.stop_ - gate_.start_;
+    float refstep = getRefStep();
+    zsampMargin_ = Interval<int>(mNINT32(((gate_.start_+gate_.stop_)/2.0-4.0*window_)/refstep)-1,
+				 mNINT32(((gate_.start_+gate_.stop_)/2.0+4.0*window_)/refstep)+1);
 }
 
 bool RSpecAttrib::getInputData( const BinID& relpos, int zintv )
 {
-	indata_ = inputs_[0]->getData( relpos, zintv );
-	if ( !indata_ )
-		return false;
+    indata_ = inputs_[0]->getData( relpos, zintv );
+    if ( !indata_ )
+	return false;
 
-	indataidx_ = getDataIndex( 0 );
-	
+    indataidx_ = getDataIndex( 0 );
     return true;
 }
 
 bool RSpecAttrib::areAllOutputsEnabled() const
 {
-	for (int idx=0; idx<nrOutputs(); idx++)
-		if (!outputinterest_[idx])
-			return false;
-	return true;
+    for (int idx=0; idx<nrOutputs(); idx++)
+	if (!outputinterest_[idx])
+	    return false;
+    return true;
 }
 
 void RSpecAttrib::getCompNames( BufferStringSet& nms ) const
 {
-	nms.erase();
-	const float fnyq = 0.5f / refstep_;
-	const char* basestr = "frequency = ";
-	BufferString suffixstr = zIsTime() ? " Hz" : " cycles/mm";
-	for ( float freq=step_; freq<fnyq; freq+=step_ )
-	{
-		BufferString tmpstr = basestr; tmpstr += freq; tmpstr += suffixstr;
-		nms.add( tmpstr.buf() );
-	}
+    nms.erase();
+    const float fnyq = 0.5f / refstep_;
+    const char* basestr = "frequency = ";
+    BufferString suffixstr = zIsTime() ? " Hz" : " cycles/mm";
+    for ( float freq=step_; freq<fnyq; freq+=step_ )
+    {
+	BufferString tmpstr = basestr; tmpstr += freq; tmpstr += suffixstr;
+	nms.add( tmpstr.buf() );
+    }
 }
-	
+
 bool RSpecAttrib::prepPriorToOutputSetup()
 {
-	return areAllOutputsEnabled();
+    return areAllOutputsEnabled();
 }
-	
+
 void rspec4single(const Eigen::ArrayXd& input, double dt, double omega, double freq, Eigen::ArrayXd& spec)
 {
     int ns = input.size();
@@ -142,7 +141,7 @@ void rspec4single(const Eigen::ArrayXd& input, double dt, double omega, double f
     double sigma_pT2 = sigma_pT*sigma_pT;
     double sigma_pT3 = sigma_pT2*sigma_pT;
     double sigma_pT4 = sigma_pT3*sigma_pT;
-        
+
     Eigen::Array4cd num;
     Eigen::Array4cd den;
     Eigen::ArrayXcd cinput = input;
@@ -153,13 +152,13 @@ void rspec4single(const Eigen::ArrayXd& input, double dt, double omega, double f
     std::complex<double> a2 = a*a;
     std::complex<double> a3 = a2*a;
     std::complex<double> a4 = a3*a;
-            
+
     num << 0.0, sigma_pT4*a/6.0, sigma_pT4*a2*2.0/3.0, sigma_pT4*a3/6.0;
     den << -4.0*a, 6.0*a2, -4.0*a3, a4;
     EigenFilter::iirfiltfilt(cinput, num, den, work);
     spec =  abs(work);
 }
-    
+
 void rrspec4(const Eigen::ArrayXd& input, double dt, double fstep, const Eigen::ArrayXd& freq, Eigen::ArrayXXd& spec)
 {
     int ns = input.size();
@@ -173,7 +172,7 @@ void rrspec4(const Eigen::ArrayXd& input, double dt, double fstep, const Eigen::
     double sigma_pT4 = sigma_pT3*sigma_pT;
     double sigma_p4T3 = sigma_p*sigma_pT3;
     double sigma_p4T5 = dt*sigma_pT4;
-    
+
     Eigen::ArrayXcd num(4), dnum(4);
     Eigen::ArrayXcd den(4), dden(4);
     Eigen::ArrayXcd tnum(5);
@@ -183,7 +182,7 @@ void rrspec4(const Eigen::ArrayXd& input, double dt, double fstep, const Eigen::
     Eigen::ArrayXXcd w(ns, nf);
     Eigen::ArrayXXcd w_d(ns, nf);
     Eigen::ArrayXXcd w_t(ns, nf);
-    
+
     for (int ifreq=0; ifreq<nf; ifreq++) {
         double omega_p = 2.0*M_PI*freq[ifreq];
         std::complex<double> p(-sigma_p, omega_p);
@@ -192,7 +191,7 @@ void rrspec4(const Eigen::ArrayXd& input, double dt, double fstep, const Eigen::
         std::complex<double> a2 = a*a;
         std::complex<double> a3 = a2*a;
         std::complex<double> a4 = a3*a;
-            
+
         num << 0.0, sigma_pT4*a/6.0, sigma_pT4*a2*2.0/3.0, sigma_pT4*a3/6.0;
         den << -4.0*a, 6.0*a2, -4.0*a3, a4;
         dnum << 0.0, sigma_p4T3*a*(3.0+pT)/6.0, sigma_p4T3*a2*pT*2.0/3.0, -sigma_p4T3*a3*(3.0-pT)/6.0;
@@ -215,7 +214,7 @@ void rrspec4(const Eigen::ArrayXd& input, double dt, double fstep, const Eigen::
         for (int ifreq=0; ifreq<nf; ifreq++) {
             int that = idx-mNINT32(real(w_t(idx, ifreq))/dt);
             that = mMIN(mMAX(that, 0), ns-1);
-            
+
             int fhat = mNINT32((imag(w_d(idx,ifreq))/M_2PI - f0)/fstep);
             fhat = mMIN(mMAX(fhat, 0), nf-1);
             spec(that, fhat) += rtfr(idx, ifreq);
@@ -229,15 +228,15 @@ bool RSpecAttrib::computeData( const DataHolder& output, const BinID& relpos, in
         return false;
     const int sz = zsampMargin_.width() + nrsamples;
     const int nfreq = outputinterest_.size();
-    
+
     Eigen::ArrayXd trc(sz);
     for (int idx=0; idx<sz; idx++) {
-        float val = getInputValue(*indata_, indataidx_, idx+zsampMargin_.start, z0);
+        float val = getInputValue(*indata_, indataidx_, idx+zsampMargin_.start_, z0);
         val = mIsUdf(val)?0.0f:val;
         trc[idx] = val;
     }
 
-    int off = zsampMargin_.start-mNINT32((gate_.start + gate_.stop)/2.0/refstep_);
+    int off = zsampMargin_.start_-mNINT32((gate_.start_ + gate_.stop_)/2.0/refstep_);
     if (reassign_) {
         Eigen::ArrayXd freq = Eigen::ArrayXd::LinSpaced(nfreq, step_, nfreq*step_);
         Eigen::ArrayXXd spec(sz, nfreq);
@@ -248,7 +247,7 @@ bool RSpecAttrib::computeData( const DataHolder& output, const BinID& relpos, in
             for (int idx=0; idx<nrsamples; idx++)
                 setOutputValue( output, idf, idx, z0, spec(idx-off, idf));
         }
-        
+
     } else {
         Eigen::ArrayXd spec(sz);
         for (int idf=0; idf<nfreq; idf++) {

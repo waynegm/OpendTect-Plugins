@@ -51,12 +51,12 @@ mInitAttribUI(uiAVOAttrib,AVOAttrib,"AVO Attributes",wmPlugins::sKeyWMPlugins())
 uiAVOAttrib::uiAVOAttrib( uiParent* p, bool is2d )
 	: uiAttrDescEd(p,is2d,HelpKey("wgm", "avo"))
 {
-    inp_interceptfld_ = createInpFld( is2d, "Intercept Volume" );
-    inp_gradientfld_ = createInpFld( is2d, "Gradient Volume" );
+    inp_interceptfld_ = createInpFld( is2d, tr("Intercept Volume") );
+    inp_gradientfld_ = createInpFld( is2d, tr("Gradient Volume") );
     inp_gradientfld_->attach( alignedBelow, inp_interceptfld_ );
 
     outputfld_ = new uiGenInput( this, uiStrings::sOutput(), StringListInpSpec(outputstr) );
-    mAttachCB(outputfld_->valuechanged, uiAVOAttrib::actionSel);
+    mAttachCB(outputfld_->valueChanged, uiAVOAttrib::actionSel);
     outputfld_->attach( alignedBelow, inp_gradientfld_ );
 
     slopefld_ = new uiGenInput( this, tr("Crossplot Slope"), FloatInpSpec() );

@@ -100,7 +100,7 @@ void uiLTFAttrib::inputSel( CallBacker* )
     if ( !inpfld_->getRanges(cs) )
 	cs.init(true);
 
-    const float nyqfreq = 0.5f / cs.zsamp_.step;
+    const float nyqfreq = 0.5f / cs.zsamp_.step_;
 
     const float freqscale = zIsTime() ? 1.f : 1000.f;
     const float scalednyqfreq = nyqfreq * freqscale;

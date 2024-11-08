@@ -40,7 +40,7 @@ uiCorrViewer::uiCorrViewer( uiParent* p, const MistieCorrectionData& corrs )
     table_->setColumnLabels( lbls);
     table_->showGrid( true );
     table_->setLeftHeaderHidden( true );
-    table_->setPrefWidthInChars(50);
+    table_->setPrefWidthInChar(50);
     table_->setPrefHeightInRows(50);
     table_->setTableReadOnly(true);
 

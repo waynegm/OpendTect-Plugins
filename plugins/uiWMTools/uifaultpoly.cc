@@ -53,7 +53,7 @@ uiFaultPoly::uiFaultPoly( uiParent* p )
 
     hor3Dfld_ = new uiIOObjSel( this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon() );
 
-    faultsfld_ = new uiFaultParSel( this, false );
+    faultsfld_ = new uiFaultParSel( this, EM::ObjectType::Flt3D, false );
     faultsfld_->attach( alignedBelow, hor3Dfld_ );
 
     prefixfld_ = new uiGenInput(this, tr("Fault polygon/polyline prefix"));
@@ -146,10 +146,11 @@ RefMan<Pick::Set> uiFaultPoly::getPolyForFault( int idx )
     Coord3ListImpl coords;
     for ( int idstick=0; idstick<fss->nrSticks(); idstick++ )
     {
-	const TypeSet<Coord3>& stick = *(fss->getStick( idstick ));
+	const Geometry::FaultStick& stick = *(fss->getStick( idstick ));
 	for (int iseg=0; iseg<stick.size()-1; iseg++ )
 	{
-	    Coord3 pos = lineSegmentIntersection( stick[iseg], stick[iseg+1],
+	    Coord3 pos = lineSegmentIntersection( stick.getCoordAtIndex(iseg),
+						  stick.getCoordAtIndex(iseg+1),
 						  surf );
 	    if ( !mIsUdf(pos) )
 		coords.add( pos );
@@ -158,10 +159,11 @@ RefMan<Pick::Set> uiFaultPoly::getPolyForFault( int idx )
 
     for ( int idstick=fss->nrSticks()-1; idstick>=0; idstick-- )
     {
-	const TypeSet<Coord3>& stick = *(fss->getStick( idstick ));
+	const Geometry::FaultStick& stick = *(fss->getStick( idstick ));
 	for (int iseg=stick.size()-1; iseg>0; iseg-- )
 	{
-	    Coord3 pos = lineSegmentIntersection( stick[iseg-1], stick[iseg],
+	    Coord3 pos = lineSegmentIntersection( stick.getCoordAtIndex(iseg-1),
+						  stick.getCoordAtIndex(iseg),
 						  surf );
 	    if ( !mIsUdf(pos) )
 		coords.add( pos );
@@ -200,26 +202,28 @@ Coord3 uiFaultPoly::lineSegmentIntersection( Coord3 start, Coord3 end,
 
     const StepInterval<int> rrg = surf->rowRange();
     const StepInterval<int> crg = surf->colRange();
-    const BinID origin_( rrg.start, crg.start );
-    const BinID step_( rrg.step, crg.step );
+    const BinID origin_( rrg.start_, crg.start_ );
+    const BinID step_( rrg.step_, crg.step_ );
 
     const Coord spos = SI().binID2Coord().transformBackNoSnap( start );
     const Coord epos = SI().binID2Coord().transformBackNoSnap( end );
 
-    const BinID bidstart( rrg.snap( spos.x, OD::SnapDownward ), crg.snap( spos.y, OD::SnapDownward ) );
-    const BinID bidend( rrg.snap( epos.x, OD::SnapDownward ), crg.snap( epos.y, OD::SnapDownward ) );
+    const BinID bidstart( rrg.snap( spos.x_, OD::SnapDownward ),
+			  crg.snap( spos.y_, OD::SnapDownward ) );
+    const BinID bidend( rrg.snap( epos.x_, OD::SnapDownward ),
+			crg.snap( epos.y_, OD::SnapDownward ) );
 
-    StepInterval<int> brrg( bidstart.inl(), bidend.inl(), rrg.step );
+    StepInterval<int> brrg( bidstart.inl(), bidend.inl(), rrg.step_ );
     brrg.sort();
-    StepInterval<int> bcrg( bidstart.crl(), bidend.crl(), crg.step );
+    StepInterval<int> bcrg( bidstart.crl(), bidend.crl(), crg.step_ );
     bcrg.sort();
-    for ( int row=brrg.start; row<=brrg.stop; row+=brrg.step ) {
-	for ( int col=bcrg.start; col<=bcrg.stop; col+=bcrg.step ) {
+    for ( int row=brrg.start_; row<=brrg.stop_; row+=brrg.step_ ) {
+	for ( int col=bcrg.start_; col<=bcrg.stop_; col+=bcrg.step_ ) {
 	    Coord3 v00 = surf->getKnot( BinID( row, col), true );
-	    Coord3 v01 = surf->getKnot( BinID( row, col+bcrg.step), true );
-	    Coord3 v11 = surf->getKnot( BinID( row+brrg.step, col+bcrg.step ),
+	    Coord3 v01 = surf->getKnot( BinID( row, col+bcrg.step_), true );
+	    Coord3 v11 = surf->getKnot( BinID( row+brrg.step_, col+bcrg.step_ ),
 					true );
-	    Coord3 v10 = surf->getKnot( BinID( row+brrg.step, col ), true );
+	    Coord3 v10 = surf->getKnot( BinID( row+brrg.step_, col ), true );
 	    res = lineSegmentIntersectsTriangle( start, end, v00, v01, v11 );
 	    if ( !mIsUdf(res) )
 		return res;

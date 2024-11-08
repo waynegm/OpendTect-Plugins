@@ -300,7 +300,7 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 	    for (int trcidx=0; trcidx<nrtraces; trcidx++) {
 		const DataHolder* data = indata_[iin*nrtraces+trcidx];
 		for ( int idx=0; idx<sz; idx++ ) {
-		    float val = getInputValue(*data, indataidx_[iin], zmargin_.start+idx, z0);
+		    float val = getInputValue(*data, indataidx_[iin], zmargin_.start_+idx, z0);
 		    val = mIsUdf(val)?0.0f:val;
 		    proc_->setInput( pi, iin, trcidx, idx, val );
 		}
@@ -311,7 +311,7 @@ bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos,
 	for (int iout = 0; iout<nrout_; iout++) {
 	    if (outputinterest_[iout]) {
 		for ( int idx=0; idx<nrsamples; idx++ ) {
-		    float val = proc_->getOutput( pi, iout, idx-zmargin_.start);
+		    float val = proc_->getOutput( pi, iout, idx-zmargin_.start_);
 		    if ( !Math::IsNormalNumber(val) )
 			val = mUdf(float);
 		    setOutputValue( output, iout, idx, z0, val );

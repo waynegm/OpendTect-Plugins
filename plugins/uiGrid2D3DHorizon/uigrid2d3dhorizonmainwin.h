@@ -1,5 +1,4 @@
-#ifndef uigrid2d3dhorizonmainwin_h
-#define uigrid2d3dhorizonmainwin_h
+#pragma once
 
 #include "uidialog.h"
 #include "bufstring.h"
@@ -22,7 +21,7 @@ protected:
     uiInputGrp*         inputgrp_;
     uiGridGrp*          gridgrp_;
     uiSurfaceWrite*     outfld_;
-    
+
     void                tabSelCB(CallBacker*);
     bool                acceptOK(CallBacker*);
 
@@ -31,5 +30,3 @@ private:
     uiString        getCaptionStr() const;
     BufferString    getParFileName();
 };
-
-#endif

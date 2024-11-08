@@ -31,8 +31,8 @@
 namespace Attrib
 {
 
-mAttrDefCreateInstance(LTFAttrib)    
-    
+mAttrDefCreateInstance(LTFAttrib)
+
 void LTFAttrib::initClass()
 {
     mAttrStartInitClassWithDescAndDefaultsUpdate
@@ -46,7 +46,7 @@ void LTFAttrib::initClass()
     step->setRequired( false );
     step->setDefaultValue( 5.0f);
     desc->addParam( step );
-    
+
 //    FloatParam* freq = new FloatParam( freqStr() );
 //    freq->setDefaultValue( 30.0f);
 //    desc->addParam( freq );
@@ -94,20 +94,21 @@ LTFAttrib::LTFAttrib( Desc& desc )
     if ( !isOK() ) return;
 
     mGetFloatInterval( gate_, gateStr() );
-    gate_.start = gate_.start / zFactor();
-    gate_.stop = gate_.stop / zFactor();
-    
+    gate_.start_ = gate_.start_ / zFactor();
+    gate_.stop_ = gate_.stop_ / zFactor();
+
     mGetFloat( step_, stepStr() );
-    
-    window_ = gate_.stop - gate_.start;
+
+    window_ = gate_.stop_ - gate_.start_;
     float refstep = getRefStep();
-    zsampMargin_ = Interval<int>(mNINT32((gate_.start-window_/2.0)/refstep)-1, mNINT32((gate_.stop+window_/2.0)/refstep)+1);
-    
+    zsampMargin_ = Interval<int>(mNINT32((gate_.start_-window_/2.0)/refstep)-1,
+				 mNINT32((gate_.stop_+window_/2.0)/refstep)+1);
+
 //    mGetFloat( freq_, freqStr() );
 //    mGetInt( smooth_, smoothStr() );
 	mGetInt( niter_, niterStr() );
 //	mGetInt( margin_, marginStr() );
-	
+
 //	dessamp_ = Interval<int>(-smooth_*margin_, smooth_*margin_);
 }
 
@@ -118,7 +119,7 @@ bool LTFAttrib::getInputData( const BinID& relpos, int zintv )
 		return false;
 
 	indataidx_ = getDataIndex( 0 );
-	
+
     return true;
 }
 
@@ -155,24 +156,24 @@ bool LTFAttrib::computeData( const DataHolder& output, const BinID& relpos,
         return false;
     int ns = zsampMargin_.width() + nrsamples;
     const int nfreq = outputinterest_.size();
-    
-	Array1DImpl<float> ss(ns), bs(ns), bc(ns), trc(ns), cc(ns);
-	int smooth = mNINT32(window_/(2.0*getRefStep()));
+
+    Array1DImpl<float> ss(ns), bs(ns), bc(ns), trc(ns), cc(ns);
+    int smooth = mNINT32(window_/(2.0*getRefStep()));
     sf::Divn sfdivn(1,ns,&ns,&smooth,niter_);
-	
-	for (int idx=0; idx<ns; idx++) {
-		float val = getInputValue(*indata_, indataidx_, zsampMargin_.start+idx, z0);
-		val = mIsUdf(val)?0.0f:val;
-		trc.set(idx,val);
-	}
-	int off = zsampMargin_.start-mNINT32((gate_.start + gate_.stop)/2.0/getRefStep());
-    
+
+    for (int idx=0; idx<ns; idx++) {
+	float val = getInputValue(*indata_, indataidx_, zsampMargin_.start_+idx, z0);
+	val = mIsUdf(val)?0.0f:val;
+	trc.set(idx,val);
+    }
+    int off = zsampMargin_.start_-mNINT32((gate_.start_ + gate_.stop_)/2.0/getRefStep());
+
     for (int idf=0; idf<nfreq; idf++) {
         if (!outputinterest_[idf])
             continue;
         float freq = step_ * (idf+1);
         float w = freq * 2.0 * M_PIf;
-        
+
         if (w == 0.) {
             for ( int idx=0; idx<ns; idx++ ) {
                 ss.set(idx, 0.0);
@@ -181,7 +182,7 @@ bool LTFAttrib::computeData( const DataHolder& output, const BinID& relpos,
             sfdivn.doDiv(trc.arr(), bc.arr(), cc.arr());
         } else {
             for (int idx=0; idx<ns; idx++) {
-                float t = (z0 + zsampMargin_.start + idx) * refstep_;
+                float t = (z0 + zsampMargin_.start_ + idx) * refstep_;
                 bs.set(idx, sinf(w*t));
                 bc.set(idx, cosf(w*t));
             }

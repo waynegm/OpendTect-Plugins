@@ -15,12 +15,12 @@ WMLib::ui3DRangeGrp::ui3DRangeGrp( uiParent* p, const uiString& caption, bool sn
     iis.setLimits( startstoprg, -1 ).setLimits( steprg, 2 );
     iis.setName("Inl Start",0).setName("Inl Stop",1).setName("Inl step",2);
     inlfld_ = new uiGenInput(this, uiStrings::phrInline(uiStrings::sRange()), iis);
-    mAttachCB(inlfld_->valuechanged, ui3DRangeGrp::rangeChg);
+    mAttachCB(inlfld_->valueChanged, ui3DRangeGrp::rangeChg);
 
     iis.setName("Crl Start",0).setName("Crl Stop",1).setName("Crl step",2);
     crlfld_ = new uiGenInput( this, tr("Cross-line range"), iis );
     crlfld_->attach(alignedBelow, inlfld_);
-    mAttachCB(crlfld_->valuechanged, ui3DRangeGrp::rangeChg);
+    mAttachCB(crlfld_->valueChanged, ui3DRangeGrp::rangeChg);
 
     setHAlignObj( inlfld_ );
 }
@@ -47,12 +47,12 @@ void WMLib::ui3DRangeGrp::usePar( const IOPar& par )
 TrcKeySampling  WMLib::ui3DRangeGrp::getTrcKeySampling() const
 {
     TrcKeySampling hs;
-    hs.start_.inl() = inlfld_->getIStepInterval().start;
-    hs.stop_.inl() =  inlfld_->getIStepInterval().stop;
-    hs.step_.inl() =  inlfld_->getIStepInterval().step;
-    hs.start_.crl() = crlfld_->getIStepInterval().start;
-    hs.stop_.crl() =  crlfld_->getIStepInterval().stop;
-    hs.step_.crl() =  crlfld_->getIStepInterval().step;
+    hs.start_.inl() = inlfld_->getIStepInterval().start_;
+    hs.stop_.inl() =  inlfld_->getIStepInterval().stop_;
+    hs.step_.inl() =  inlfld_->getIStepInterval().step_;
+    hs.start_.crl() = crlfld_->getIStepInterval().start_;
+    hs.stop_.crl() =  crlfld_->getIStepInterval().stop_;
+    hs.step_.crl() =  crlfld_->getIStepInterval().step_;
 
     return hs;
 }
@@ -99,23 +99,23 @@ void WMLib::ui3DRangeGrp::setSensitive(bool ranges, bool steps)
 void WMLib::ui3DRangeGrp::rangeChg(CallBacker* cb)
 {
     if (stepSnap_) {
-	NotifyStopper ns1(inlfld_->valuechanged);
-	NotifyStopper ns2(crlfld_->valuechanged);
+	NotifyStopper ns1(inlfld_->valueChanged);
+	NotifyStopper ns2(crlfld_->valueChanged);
 
         TrcKeySampling hs;
-	hs.step_ = BinID(inlfld_->getIStepInterval().step,
-			 crlfld_->getIStepInterval().step);
+	hs.step_ = BinID(inlfld_->getIStepInterval().step_,
+			 crlfld_->getIStepInterval().step_);
 	SI().snapStep(hs.step_, BinID(-1,-1));
-	BinID start(inlfld_->getIStepInterval().start,
-		    crlfld_->getIStepInterval().start);
+	BinID start(inlfld_->getIStepInterval().start_,
+		    crlfld_->getIStepInterval().start_);
 	SI().snap(start, BinID(-1,-1));
-	BinID stop(inlfld_->getIStepInterval().stop,
-		   crlfld_->getIStepInterval().stop);
+	BinID stop(inlfld_->getIStepInterval().stop_,
+		   crlfld_->getIStepInterval().stop_);
 	SI().snap(stop, BinID(1,1));
 	StepInterval<int> inlrg(start.inl(), stop.inl(), hs.step_.first);
-        inlrg.snap(inlrg.stop, OD::SnapUpward);
+        inlrg.snap(inlrg.stop_, OD::SnapUpward);
         StepInterval<int> crlrg(start.crl(), stop.crl(), hs.step_.second);
-        crlrg.snap(crlrg.stop, OD::SnapUpward);
+        crlrg.snap(crlrg.stop_, OD::SnapUpward);
         inlfld_->setValue(inlrg);
 	crlfld_->setValue(crlrg);
     }

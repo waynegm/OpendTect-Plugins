@@ -213,7 +213,7 @@ void uiHorizonGrp::hor3Dsel(CallBacker*)
             BufferString tmp("uiHorizonGrp::hor3Dsel - cannot read surface data for ");
             tmp += horObj->name();
             tmp += " - ";
-            tmp += msg.getOriginalString();
+            tmp += msg.getString();
             ErrMsg( tmp );
             return;
         }

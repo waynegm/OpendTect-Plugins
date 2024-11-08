@@ -61,7 +61,7 @@ uiConvexHull::uiConvexHull( uiParent* p )
 
     uiString lbl = tr("Z Value ");
     lbl.append( SI().getUiZUnitString() );
-    zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start*SI().zDomain().userFactor()) );
+    zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start_*SI().zDomain().userFactor()) );
     zfld_->attach( rightOf, namefld_ );
 
     colorfld_ = new uiColorInput(this, uiColorInput::Setup(OD::getRandStdDrawColor()).
@@ -270,14 +270,14 @@ void uiConvexHull::fillPolyFromHorizon()
 	for (int idx=0; idx<mids.size(); idx++) {
 	    const StepInterval<int> trcrg = hor->geometry().colRange( mids[idx] );
 	    mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(mids[idx]))
-	    if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
+	    if (!survgeom2d || trcrg.isUdf() || !trcrg.step_)
 		continue;
 
 	    TrcKey tk( mids[idx], -1 );
 	    float spnr = mUdf(float);
 	    Coord coord;
 	    bool first = true;
-	    for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step ) {
+	    for ( int trcnr=trcrg.start_; trcnr<=trcrg.stop_; trcnr+=trcrg.step_ ) {
 		tk.setTrcNr( trcnr );
 		const float z = hor->getZ( tk );
 		if (mIsUdf(z))
@@ -308,7 +308,7 @@ RefMan<Pick::Set> uiConvexHull::getPolygonPickSet() const
     ps->disp_.connect_ = Pick::Set::Disp::Close;
     for (int iv=0; iv<poly_.size(); iv++) {
 	Coord pos = poly_.getVertex( iv );
-	ps->add( Pick::Location(pos.x, pos.y, z_) );
+	ps->add( Pick::Location(pos.x_, pos.y_, z_) );
     }
     return ps;
 }

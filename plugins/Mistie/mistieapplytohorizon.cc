@@ -81,7 +81,7 @@ bool MistieApplyToHorizon2D::doWork( od_int64 start, od_int64 stop, int threadid
     for (int idx=mCast(int,start); idx<=stop && shouldContinue(); idx++, addToNrDone(1)) {
 	const StepInterval<int> trcrg = inphor_->geometry().colRange( geomids_[idx] );
 	mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids_[idx]))
-	if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
+	if (!survgeom2d || trcrg.isUdf() || !trcrg.step_)
 	{
 	    BufferString tmp("MistieApplyToHorizon2D::doWork - geometry error for: ");
 	    tmp += geomids_[idx].toString();
@@ -102,7 +102,7 @@ bool MistieApplyToHorizon2D::doWork( od_int64 start, od_int64 stop, int threadid
 	BufferString line = survgeom2d->getName();
 	float zcor = corrections_.getZCor(corrections_.getIndex(line))/SI().showZ2UserFactor();
 	TrcKey tk( geomids_[idx], -1 );
-	for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step ) {
+	for ( int trcnr=trcrg.start_; trcnr<=trcrg.stop_; trcnr+=trcrg.step_ ) {
 	    tk.setTrcNr(trcnr);
 	    float z = inphor_->getZ(tk);
 	    if (!mIsUdf(z))
@@ -172,7 +172,7 @@ MistieApplyToHorizon3D::MistieApplyToHorizon3D(const MultiID oldhor3did,
 
 MistieApplyToHorizon3D::~MistieApplyToHorizon3D()
 {
-    deleteAndZeroPtr( arr2d_ );
+    deleteAndNullPtr( arr2d_ );
 }
 
 od_int64 MistieApplyToHorizon3D::nrIterations() const
@@ -229,8 +229,8 @@ bool MistieApplyToHorizon3D::doFinish(bool success)
     {
 	outhor_->setPreferredColor(OD::getRandomColor());
 	outhor_->setMultiID(newhor3did_);
-	BinID start( inphor_->geometry().rowRange().start,
-		     inphor_->geometry().colRange().start );
+	BinID start( inphor_->geometry().rowRange().start_,
+		     inphor_->geometry().colRange().start_ );
 	BinID step( inphor_->geometry().step().row(),
 		    inphor_->geometry().step().col() );
 	outhor_->setArray2D( arr2d_, start, step, true );

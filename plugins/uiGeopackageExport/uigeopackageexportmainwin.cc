@@ -49,7 +49,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
     if (SI().has3D()) {
         surveygrp_ = new uiSurveyGrp( tabparent );
         surveygrp_->attach(hCentered);
-        tabstack_->addTab( surveygrp_ );
+        tabstack_->addTab( surveygrp_, surveygrp_->getCaption() );
     }
 
     if (SI().has2D()) {
@@ -58,7 +58,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
         SeisIOObjInfo::getLinesWithData( lnms, geomids );
         if (lnms.size() > 0 ) {
             linesgrp_ = new ui2DLinesGrp( tabparent );
-            tabstack_->addTab( linesgrp_ );
+            tabstack_->addTab( linesgrp_, linesgrp_->getCaption() );
         }
     }
 
@@ -68,7 +68,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
         const IODirEntryList entries( iodir, ctio.ctxt_ );
         if (entries.size() > 0) {
             randomgrp_ = new uiRandomLinesGrp( tabparent );
-            tabstack_->addTab( randomgrp_ );
+            tabstack_->addTab( randomgrp_, randomgrp_->getCaption() );
         }
     }
 
@@ -78,7 +78,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
         const IODirEntryList entries( iodir, ctio.ctxt_ );
         if (entries.size() > 0) {
             wellsgrp_ = new uiWellsGrp( tabparent );
-            tabstack_->addTab( wellsgrp_ );
+            tabstack_->addTab( wellsgrp_, wellsgrp_->getCaption() );
         }
     }
 
@@ -89,7 +89,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
         const IODirEntryList entries( iodir, ctio.ctxt_ );
         if (entries.size() > 0) {
             polygrp_ = new uiPolyLinesGrp( tabparent );
-            tabstack_->addTab( polygrp_ );
+            tabstack_->addTab( polygrp_, polygrp_->getCaption() );
         }
     }
 
@@ -105,7 +105,7 @@ uiGeopackageExportMainWin::uiGeopackageExportMainWin( uiParent* p )
         bool has3Dhorizon = entries3D.size()>0;
         if (has2Dhorizon || has3Dhorizon) {
             horgrp_= new uiHorizonGrp( tabparent, has2Dhorizon, has3Dhorizon);
-            tabstack_->addTab( horgrp_ );
+            tabstack_->addTab( horgrp_, horgrp_->getCaption() );
         }
     }
 

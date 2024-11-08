@@ -1,5 +1,4 @@
-#ifndef mistieestimator_h
-#define mistieestimator_h
+#pragma once
 
 #include "multiid.h"
 #include "paralleltask.h"
@@ -24,9 +23,9 @@ public:
     od_int64    nrIterations() const;
     uiString    uiMessage() const;
     uiString    uiNrDoneText() const;
-    
+
     const MistieData& getMisties() const { return misties_; }
-    
+
 protected:
     const IOObj*                ioobj_;
     MistieData                  misties_;
@@ -35,10 +34,10 @@ protected:
     bool			allest_;
     Threads::Lock               lock_;
     int                         counter_;
-    
+
     virtual bool        doWork(od_int64 start, od_int64 stop, int threadis) override;
     virtual bool        doFinish(bool success) override;
-    
+
     bool        get2DTrc( BufferString line, int trcnr, SeisTrc& trc );
 };
 
@@ -65,6 +64,3 @@ protected:
     virtual bool        doWork(od_int64 start, od_int64 stop, int threadis) override;
     virtual bool        doFinish(bool success) override;
 };
-
-
-#endif

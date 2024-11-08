@@ -1,5 +1,4 @@
-#ifndef uipolygonparsel_h
-#define uipolygonparsel_h
+#pragma once
 
 #include "uiwgmhelpmod.h"
 #include "uicompoundparsel.h"
@@ -13,32 +12,30 @@ class uiPushButton;
 
 namespace WMLib
 {
-    
+
 mExpClass(uiWGMHelp) uiPolygonParSel : public uiCompoundParSel
 { mODTextTranslationClass(uiPolygonParSel);
 public:
     uiPolygonParSel(uiParent*, const uiString&, bool multisel=true);
     ~uiPolygonParSel();
-    
+
     void                    setSelectedPolygons(const TypeSet<MultiID>&);
     BufferString            getSummary() const;
     const TypeSet<MultiID>&	selPolygonIDs() const { return selpolygonids_; }
-    
+
     void                    setEmpty();
     void                    hideClearButton(bool yn=true);
-    
+
     Notifier<uiPolygonParSel>	selChange;
-    
+
 protected:
     void                    clearPush(CallBacker*);
     void                    doDlg(CallBacker*);
-    
+
     BufferStringSet         selpolygonnms_;
     TypeSet<MultiID>        selpolygonids_;
     bool                    multisel_;
-    
+
     uiPushButton*           clearbut_;
 };
 }; //namespace
-
-#endif

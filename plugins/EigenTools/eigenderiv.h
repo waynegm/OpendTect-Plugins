@@ -1,5 +1,4 @@
-#ifndef eigenderiv_h
-#define eigenderiv_h
+#pragma once
 
 /*
  *   Eigen Derivative functions
@@ -35,8 +34,8 @@ void dr_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
     in_p1.rightCols(cols-1) = input.leftCols(cols-1);
     in_p1.col(0) = 0.0;
     output = in_p1 - in_m1;
-} 
-    
+}
+
 // 3 point 1st derivative finite difference along cols
 void dc_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
 {
@@ -50,7 +49,7 @@ void dc_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
     in_p1.row(0) = 0.0;
     output = in_p1 - in_m1;
 }
-    
+
 // 3 point 2nd derivative finite difference along columns
 void dcc_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
 {
@@ -63,7 +62,7 @@ void dcc_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
     in_p1.bottomRows(rows-1) = input.topRows(rows-1);
     in_p1.row(0) = 0.0;
     output = -2.0*input + in_m1 + in_p1;
-} 
+}
 
 // 3 point 2nd derivative finite difference along rows
 void drr_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
@@ -77,7 +76,7 @@ void drr_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
     in_p1.rightCols(cols-1) = input.leftCols(cols-1);
     in_p1.col(0) = 0.0;
     output = -2.0*input + in_m1 + in_p1;
-} 
+}
 
 
 // 3 point 2nd cross derivative finite difference
@@ -86,7 +85,6 @@ void drc_3( const Eigen::ArrayXXd& input, Eigen::ArrayXXd& output )
     Eigen::ArrayXXd tmp;
     derivEigen::dr_3(input, tmp);
     derivEigen::dc_3(tmp, output);
-} 
+}
 
 }
-#endif 

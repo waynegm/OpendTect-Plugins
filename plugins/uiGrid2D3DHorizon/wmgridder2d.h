@@ -1,5 +1,4 @@
-#ifndef wmgridder2d_h
-#define wmgridder2d_h
+#pragma once
 
 #include <cstddef>
 #include "factory.h"
@@ -109,5 +108,3 @@ protected:
 
     void					localInterp(uiParent*, bool approximation = true);
 };
-
-#endif

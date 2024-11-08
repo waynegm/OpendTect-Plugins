@@ -29,12 +29,12 @@ mInitAttribUI(uiAVOPolarAttrib,AVOPolarAttrib,"AVOPolarAttrib",wmPlugins::sKeyWM
 uiAVOPolarAttrib::uiAVOPolarAttrib( uiParent* p, bool is2d )
 : uiAttrDescEd(p,is2d, HelpKey("wgm","avop") )
 {
-    interceptfld_ = createInpFld( is2d, "Intercept" );
-    gradientfld_ = createInpFld( is2d, "Gradient" );
+    interceptfld_ = createInpFld( is2d, tr("Intercept") );
+    gradientfld_ = createInpFld( is2d, tr("Gradient") );
     gradientfld_->attach( alignedBelow, interceptfld_ );
 
     outputfld_ = new uiGenInput( this, uiStrings::sOutput(), StringListInpSpec(OutputNames) );
-    mAttachCB(outputfld_->valuechanged, uiAVOPolarAttrib::outSel);
+    mAttachCB(outputfld_->valueChanged, uiAVOPolarAttrib::outSel);
     outputfld_->attach( alignedBelow, gradientfld_ );
 
     gateBGfld_ = new uiGenInput( this, zDepLabel(tr("Background "), tr("gate")), FloatInpIntervalSpec().setName("Z start",0).setName("Z stop",1) );

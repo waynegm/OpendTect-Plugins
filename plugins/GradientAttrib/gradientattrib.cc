@@ -196,7 +196,7 @@ bool GradientAttrib::computeData( const DataHolder& output, const BinID& relpos,
 			float res = 0.0;
 			for (int crl=0; crl<size_; crl++) {
 				const DataHolder* data = inputdata_[iln*size_+crl];
-				float val = getInputValue(*data, dataidx_, zmargin_.start+idx, z0);
+				float val = getInputValue(*data, dataidx_, zmargin_.start_+idx, z0);
 				res += mIsUdf(val)?0.0f:val*xkernel_[crl];
 			}
 			reso += ikernel_[iln]*res;
@@ -206,7 +206,7 @@ bool GradientAttrib::computeData( const DataHolder& output, const BinID& relpos,
 
 	for (int idx=0; idx<nrsamples; idx++) {
 		float value = 0.0;
-		const int ipos = idx - zmargin_.start - hsz;
+		const int ipos = idx - zmargin_.start_ - hsz;
 		for (int zi=0; zi<size_; zi++) {
 			value += vals[ipos+zi]*zkernel_[zi];
 		}

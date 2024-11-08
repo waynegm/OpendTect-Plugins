@@ -1,6 +1,4 @@
-#ifndef uigeopackageexportmainwin_h
-#define uigeopackageexportmainwin_h
-
+#pragma once
 #include "uidialog.h"
 
 class uiFileInput;
@@ -39,5 +37,3 @@ private:
 
     uiString    getCaptionStr() const;
 };
-
-#endif

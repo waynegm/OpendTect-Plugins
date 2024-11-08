@@ -1,5 +1,4 @@
-#ifndef uiltfattrib_h
-#define uiltfattrib_h
+#pragma once
 /*
  *   uiLocalAttrib Plugin
  *   Copyright (C) 2019  Wayne Mogg
@@ -74,5 +73,3 @@ protected:
 
     			mDeclReqAttribUIFns
 };
-
-#endif

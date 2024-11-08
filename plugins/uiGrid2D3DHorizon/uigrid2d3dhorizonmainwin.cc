@@ -14,6 +14,7 @@
 #include "emmanager.h"
 #include "emhorizon3d.h"
 #include "emioobjinfo.h"
+#include "executor.h"
 #include "uiiosurface.h"
 #include "uitaskrunner.h"
 #include "paralleltask.h"
@@ -49,12 +50,12 @@ uiGrid2D3DHorizonMainWin::uiGrid2D3DHorizonMainWin( uiParent* p )
 
         if (has2Dhorizon || has3Dhorizon) {
             inputgrp_ = new uiInputGrp( tabparent, has2Dhorizon, has3Dhorizon );
-            tabstack_->addTab( inputgrp_ );
+            tabstack_->addTab( inputgrp_, inputgrp_->getCaption() );
         }
     }
 
     gridgrp_ = new uiGridGrp( tabparent );
-    tabstack_->addTab( gridgrp_ );
+    tabstack_->addTab( gridgrp_, gridgrp_->getCaption() );
 
     uiSurfaceWrite::Setup swsu(EM::Horizon3D::typeStr(), EM::Horizon3D::userTypeStr());
     swsu.withsubsel(false);
@@ -134,7 +135,7 @@ bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - creation of output horizon failed");
         return false;
     }
-    if (!interpolator->saveGridTo(hor3d)) {
+    if (!interpolator->saveGridTo(hor3d.ptr())) {
         ErrMsg("uiGrid2D3DHorizonMainWin::acceptOK - error converting grid to horizon");
         return false;
     }

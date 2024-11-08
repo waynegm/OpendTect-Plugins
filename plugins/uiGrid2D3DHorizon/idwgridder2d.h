@@ -1,5 +1,4 @@
-#ifndef idwgridder2d_h
-#define idwgridder2d_h
+#pragma once
 
 #include "wmgridder2d.h"
 class uiParent;
@@ -20,6 +19,3 @@ public:
 protected:
 
 };
-
-
-#endif

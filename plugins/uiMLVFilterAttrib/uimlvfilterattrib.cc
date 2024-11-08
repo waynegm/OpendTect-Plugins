@@ -62,11 +62,11 @@ uiMLVFilterAttrib::uiMLVFilterAttrib( uiParent* p, bool is2d )
     outfld_ = new uiGenInput( this, tr("Output statistic"),
 	    			   StringListInpSpec(outstr) );
     outfld_->attach( alignedBelow, sizefld_ );
-    mAttachCB(outfld_->valuechanged, uiMLVFilterAttrib::outChgCB);
+    mAttachCB(outfld_->valueChanged, uiMLVFilterAttrib::outChgCB);
 
     sdevsfld_ = new uiGenInput( this, tr("Trim to"), FloatInpSpec(3.0) );
     sdevsfld_->attach( alignedBelow, outfld_  );
-    mAttachCB(sdevsfld_->valuechanged, uiMLVFilterAttrib::sdevsChgCB);
+    mAttachCB(sdevsfld_->valueChanged, uiMLVFilterAttrib::sdevsChgCB);
 
     setHAlignObj( outfld_ );
     outChgCB(0);

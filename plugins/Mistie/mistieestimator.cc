@@ -83,13 +83,13 @@ bool MistieEstimatorFromSeismic::doWork( od_int64 start, od_int64 stop, int thre
             continue;
         }
         if (get2DTrc(lineA, trcnrA, trcA) && get2DTrc(lineB, trcnrB, trcB)) {
-            if (trcA.info().sampling.step > trcB.info().sampling.step) {
-                trcA.info().pick = 0.0;
-                SeisTrc* tmp = trcA.getRelTrc( window_, trcB.info().sampling.step );
+            if (trcA.info().sampling_.step_ > trcB.info().sampling_.step_) {
+                trcA.info().pick_ = 0.0;
+                SeisTrc* tmp = trcA.getRelTrc( window_, trcB.info().sampling_.step_ );
                 trcA = *tmp;
-            } else if (trcA.info().sampling.step < trcB.info().sampling.step) {
-                trcB.info().pick = 0.0;
-                SeisTrc* tmp = trcB.getRelTrc( window_, trcA.info().sampling.step );
+            } else if (trcA.info().sampling_.step_ < trcB.info().sampling_.step_) {
+                trcB.info().pick_ = 0.0;
+                SeisTrc* tmp = trcB.getRelTrc( window_, trcA.info().sampling_.step_ );
                 trcB = *tmp;
             }
             if (allest_)

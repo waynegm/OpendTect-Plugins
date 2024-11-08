@@ -123,19 +123,19 @@ void uiMistieMgr::surveyChgCB( CallBacker* )
 {
     if ( mistiedlg_ ) {
         mistiedlg_->close();
-        deleteAndZeroPtr( mistiedlg_ );
+        deleteAndNullPtr( mistiedlg_ );
     }
     if ( corrdlg_ ) {
 	corrdlg_->close();
-	deleteAndZeroPtr( corrdlg_ );
+	deleteAndNullPtr( corrdlg_ );
     }
     if (corrhor2ddlg_) {
 	corrhor2ddlg_->close();
-	deleteAndZeroPtr( corrhor2ddlg_);
+	deleteAndNullPtr( corrhor2ddlg_);
     }
     if (corrhor3ddlg_) {
 	corrhor3ddlg_->close();
-	deleteAndZeroPtr( corrhor3ddlg_);
+	deleteAndNullPtr( corrhor3ddlg_);
     }
 
 }

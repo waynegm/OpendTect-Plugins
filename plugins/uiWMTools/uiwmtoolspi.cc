@@ -185,8 +185,8 @@ void uiWMToolsMgr::convexHullCB(CallBacker*)
     if ( ps && ps->size() && uipsmgr_.storeNewSet(*ps, false) )
     {
 	RefMan<Pick::Set> newps = psmgr_.get( psmgr_.size()-1 );
-	addPolygon( newps );
-	contours_ += newps;
+	addPolygon( newps.ptr() );
+	contours_ += newps.ptr();
 	contour_levels_ +=  convexhulldlg.getZ();
     }
 }
@@ -206,7 +206,7 @@ void uiWMToolsMgr::faultPolyCB(CallBacker*)
 	    if ( ps && ps->size() && uipsmgr_.storeNewSet(*ps, true) )
 	    {
 		RefMan<Pick::Set> newps = psmgr_.get( psmgr_.size()-1 );
-		addPolygon( newps );
+		addPolygon( newps.ptr() );
 	    }
 	}
     }
@@ -222,8 +222,8 @@ void uiWMToolsMgr::contourPolyCB(CallBacker*)
     if ( ps && 	uipsmgr_.storeNewSet(*ps, false) )
     {
 	RefMan<Pick::Set> newps = psmgr_.get( psmgr_.size()-1 );
-    	addPolygon( newps );
-	contours_ += newps;
+    	addPolygon( newps.ptr() );
+	contours_ += newps.ptr();
 	contour_levels_ += dlg.getZ();
     }
 }
@@ -245,12 +245,12 @@ void uiWMToolsMgr::surveyChangeCB( CallBacker* )
 {
     if (dehdlg_) {
 	dehdlg_->close();
-	deleteAndZeroPtr(dehdlg_);
+	deleteAndNullPtr(dehdlg_);
     }
 
     if (contourdlg_) {
 	contourdlg_->close();
-	deleteAndZeroPtr(contourdlg_);
+	deleteAndNullPtr(contourdlg_);
     }
 
 }

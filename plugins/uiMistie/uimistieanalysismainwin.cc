@@ -144,15 +144,15 @@ public:
         minzchglbl.append(SI().zDomain().uiUnitStr(true));
         minzchgfld_ = new uiGenInput(this, minzchglbl, FloatInpSpec(0.01));
         minzchgfld_->attach(alignedBelow, maxiterfld_);
-        mAttachCB(minzchgfld_->valuechanged, uiCorrCalcDlg::minchgCB);
+        mAttachCB(minzchgfld_->valueChanged, uiCorrCalcDlg::minchgCB);
 
         minphasechgfld_ = new uiGenInput(this, tr("Minimum RMS Phase Change (deg)"), FloatInpSpec(0.01));
         minphasechgfld_->attach(alignedBelow, minzchgfld_);
-        mAttachCB(minphasechgfld_->valuechanged, uiCorrCalcDlg::minchgCB);
+        mAttachCB(minphasechgfld_->valueChanged, uiCorrCalcDlg::minchgCB);
 
         minampchgfld_ = new uiGenInput(this, tr("Minimum RMS Amplitude Change"), FloatInpSpec(0.001));
         minampchgfld_->attach(alignedBelow, minphasechgfld_);
-        mAttachCB(minampchgfld_->valuechanged, uiCorrCalcDlg::minchgCB);
+        mAttachCB(minampchgfld_->valueChanged, uiCorrCalcDlg::minchgCB);
 
         setOkText(uiStrings::sCalculate());
     }
@@ -221,7 +221,7 @@ uiMistieAnalysisMainWin::uiMistieAnalysisMainWin( uiParent* p )
     table_->showGrid( true );
     table_->setNrRows( 10 );
     table_->setLeftHeaderHidden( true );
-    table_->setPrefWidthInChars(80);
+    table_->setPrefWidthInChar(80);
     table_->setPrefHeightInRows(10);
     table_->setTableReadOnly(true);
 
@@ -268,7 +268,7 @@ void uiMistieAnalysisMainWin::closeCB(CallBacker*)
 
     if (corrviewer_) {
         corrviewer_->close();
-	deleteAndZeroPtr( corrviewer_ );
+	deleteAndNullPtr( corrviewer_ );
     }
 
     misties_.erase();
@@ -323,7 +323,7 @@ void uiMistieAnalysisMainWin::xplotCB( CallBacker* )
             misties_.get(idx, lineA, trcA, lineB, trcB, pos, zdiff, phasediff, ampdiff, quality);
 	    if ( !mIsUdf(minquality_) && quality < minquality_ )
 		continue;
-            strm << "[ \"" << lineA << "\" , " << trcA << ", \"" << lineB <<"\", " << trcB << ", " << pos.x << ", " << pos.y << ", " << zdiff << ", " << phasediff << ", " << ampdiff << ", " << quality;
+            strm << "[ \"" << lineA << "\" , " << trcA << ", \"" << lineB <<"\", " << trcB << ", " << pos.x_ << ", " << pos.y_ << ", " << zdiff << ", " << phasediff << ", " << ampdiff << ", " << quality;
             if (corrs_.size()>0)
                 strm << ", " << misties_.getZMistieWith(corrs_, idx) << ", " << misties_.getPhaseMistieWith(corrs_,idx) << ", " << misties_.getAmpMistieWith(corrs_, idx);
 	    strm << "],\n";
@@ -399,8 +399,8 @@ void uiMistieAnalysisMainWin::fillTable()
         table_->setText(RowCol(irow, lineBCol), lineB);
         table_->setValue(RowCol(irow, trcACol), trcA);
         table_->setValue(RowCol(irow, trcBCol), trcB);
-        table_->setValue(RowCol(irow, xCol), pos.x, 1);
-        table_->setValue(RowCol(irow, yCol), pos.y, 1);
+        table_->setValue(RowCol(irow, xCol), pos.x_, 1);
+        table_->setValue(RowCol(irow, yCol), pos.y_, 1);
         table_->setValue(RowCol(irow, zCol), zdiff, 2);
         table_->setValue(RowCol(irow, phaseCol), phasediff, 2);
         table_->setValue(RowCol(irow, ampCol), ampdiff, 2);

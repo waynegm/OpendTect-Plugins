@@ -99,11 +99,11 @@ bool uiGeopackageExportMgr::has3DHorizons()
 
 void uiGeopackageExportMgr::updateMenu( CallBacker* )
 {
-    deleteAndZeroPtr( gpxdlg_ );
+    deleteAndNullPtr( gpxdlg_ );
     uiAction* newitem = new uiAction( tr("Geopackage Export"), mCB(this,uiGeopackageExportMgr,gpxDialog));
     appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertAction( newitem );
 
-    deleteAndZeroPtr(gtifdlg_);
+    deleteAndNullPtr(gtifdlg_);
     newitem = new uiAction( tr("Geotiff Export"), mCB(this,uiGeopackageExportMgr,gtifDialog));
     appl_->menuMgr().getBaseMnu( uiODApplMgr::Exp )->insertAction( newitem );
 
@@ -181,11 +181,11 @@ void uiGeopackageExportMgr::surveyChgCB( CallBacker* )
 {
     if (gpxdlg_) {
 	gpxdlg_->close();
-	deleteAndZeroPtr( gpxdlg_ );
+	deleteAndNullPtr( gpxdlg_ );
     }
     if (gtifdlg_) {
 	gtifdlg_->close();
-	deleteAndZeroPtr( gtifdlg_ );
+	deleteAndNullPtr( gtifdlg_ );
     }
 }
 

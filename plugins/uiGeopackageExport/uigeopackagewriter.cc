@@ -130,20 +130,20 @@ void uiGeopackageWriter::writeSurvey()
     Coord coord;
 
     coord = tk.toCoord(tk.corner(0));
-    points.push_back(coord.x);
-    points.push_back(coord.y);
+    points.push_back(coord.x_);
+    points.push_back(coord.y_);
     coord = tk.toCoord(tk.corner(1));
-    points.push_back(coord.x);
-    points.push_back(coord.y);
+    points.push_back(coord.x_);
+    points.push_back(coord.y_);
     coord = tk.toCoord(tk.corner(3));
-    points.push_back(coord.x);
-    points.push_back(coord.y);
+    points.push_back(coord.x_);
+    points.push_back(coord.y_);
     coord = tk.toCoord(tk.corner(2));
-    points.push_back(coord.x);
-    points.push_back(coord.y);
+    points.push_back(coord.x_);
+    points.push_back(coord.y_);
     coord = tk.toCoord(tk.corner(4));
-    points.push_back(coord.x);
-    points.push_back(coord.y);
+    points.push_back(coord.x_);
+    points.push_back(coord.y_);
 
     std::vector<std::vector<double>> poly({points});
     gpkg_->startTransaction();
@@ -196,8 +196,8 @@ void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
 	for ( int tdx=0; tdx<posns.size(); tdx++ )
 	{
 	    const Coord pos = posns[tdx].coord_;
-	    points.push_back(pos.x);
-	    points.push_back(pos.y);
+	    points.push_back(pos.x_);
+	    points.push_back(pos.y_);
 	}
 
 	gpkg_->startTransaction();
@@ -247,7 +247,7 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
 	gpkg_->startTransaction();
 	for ( int tdx=0; tdx<posns.size(); tdx++ )
 	{
-	    if ( !gpkg_->addPoint(stmt, posns[tdx].coord_.x, posns[tdx].coord_.y,
+	    if ( !gpkg_->addPoint(stmt, posns[tdx].coord_.x_, posns[tdx].coord_.y_,
 			     geom2d->getName(), posns[tdx].nr_))
 	    {
 		ErrMsg("uiGeopackageWriter::write2DStations - writing feature failed.");
@@ -284,7 +284,7 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
     for ( int idx=0; idx<lineids.size(); idx++ )
     {
 	Geometry::RandomLineSet inprls;
-	BufferString msg;
+	uiString msg;
 	IOObj* ioobj = IOM().get(lineids[idx]);
 	if ( ioobj == nullptr )
 	{
@@ -295,7 +295,7 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
 	if (!RandomLineSetTranslator::retrieve( inprls, ioobj, msg ))
 	{
 	    BufferString tmp("uiGeopackageWriter::writeRandomLines - error reading random line - ");
-	    tmp += msg;
+	    tmp += msg.getString();
 	    ErrMsg(tmp);
 	    return;
 	}
@@ -312,8 +312,8 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
 	    for ( int tdx=0; tdx<rdl->nrNodes(); tdx++ )
 	    {
 		const Coord pos = SI().transform(rdl->nodePosition(tdx));
-		points.push_back(pos.x);
-		points.push_back(pos.y);
+		points.push_back(pos.x_);
+		points.push_back(pos.y_);
 	    }
 
 	    gpkg_->startTransaction();
@@ -363,7 +363,7 @@ void uiGeopackageWriter::writeWells( TypeSet<MultiID>& wellids )
 	}
 	const Well::Info& wdinfo = wd->info();
 	gpkg_->startTransaction();
-	if ( !gpkg_->addPoint(stmt, wdinfo.surfacecoord_.x, wdinfo.surfacecoord_.y,
+	if ( !gpkg_->addPoint(stmt, wdinfo.surfacecoord_.x_, wdinfo.surfacecoord_.y_,
 			      wdinfo.name().str(), wdinfo.uwid_.str(), OD::WellTypeDef().indexOf(wdinfo.welltype_)))
 	{
 	    ErrMsg("uiGeopackageWriter::writeWells - writing well data error.");
@@ -415,8 +415,8 @@ void uiGeopackageWriter::writeWellTracks( TypeSet<MultiID>& wellids )
 	for (int tdx=0; tdx<wtrackpos.size(); tdx++)
 	{
 	    Coord3 pos = wtrackpos[tdx];
-	    points.push_back(pos.x);
-	    points.push_back(pos.y);
+	    points.push_back(pos.x_);
+	    points.push_back(pos.y_);
 	}
 	gpkg_->startTransaction();
 	if (!gpkg_->addLineString(stmt, points, wdinfo.name().str()))
@@ -469,10 +469,10 @@ void uiGeopackageWriter::writeWellMarkers( TypeSet<MultiID>& wellids, bool inFee
 	{
 	    float md = wmarkers[tdx]->dah();
 	    Coord3 pos = wtrack.getPos(md);
-	    float tvdss = pos.z;
+	    float tvdss = pos.z_;
 
 	    gpkg_->startTransaction();
-	    if ( !gpkg_->addPoint(stmt, pos.x, pos.y, wdinfo.name().str(), wmarkers[tdx]->name().str(), md, tvdss))
+	    if ( !gpkg_->addPoint(stmt, pos.x_, pos.y_, wdinfo.name().str(), wmarkers[tdx]->name().str(), md, tvdss))
 	    {
 		ErrMsg("uiGeopackageWriter::writeWellMarkers - writing well data error.");
 		ErrMsg(gpkg_->errorMsg());
@@ -516,7 +516,7 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
     for ( int idx=0; idx<lineids.size(); idx++ )
     {
 	RefMan<Pick::Set> ps = new Pick::Set;
-	BufferString msg;
+	uiString msg;
 	IOObj* ioobj = IOM().get(lineids[idx]);
 	if ( !ioobj ) {
 	    ErrMsg("uiGeopackageWriter::writePolyLines - cannot get ioobj" );
@@ -526,7 +526,7 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
 	if (!PickSetTranslator::retrieve(*ps, ioobj, true, msg))
 	{
 	    BufferString tmp("uiGeopackageWriter::writePolyLines - error reading polyline - ");
-	    tmp += msg;
+	    tmp += msg.getString();
 	    ErrMsg(tmp);
 	    return;
 	}
@@ -537,13 +537,13 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
 	for (int rdx=0; rdx<ps->size(); rdx++)
 	{
 	    const Coord3 pos = ps->get(rdx).pos();
-	    points.push_back(pos.x);
-	    points.push_back(pos.y);
+	    points.push_back(pos.x_);
+	    points.push_back(pos.y_);
 	}
 	if (ispolygon)
 	{
-	    points.push_back(ps->get(0).pos().x);
-	    points.push_back(ps->get(0).pos().y);
+	    points.push_back(ps->get(0).pos().x_);
+	    points.push_back(ps->get(0).pos().y_);
 	    std::vector<std::vector<double>> poly({points});
 	    gpkg_->startTransaction();
 	    if (!gpkg_->addPolygon(pg_stmt, poly, ps->name().str()))
@@ -639,14 +639,14 @@ void uiGeopackageWriter::writeHorizon( const char* layerName,
 	{
 	    const StepInterval<int> trcrg = hor->geometry().colRange( geomids[idx] );
 	    mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids[idx]))
-	    if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
+	    if (!survgeom2d || trcrg.isUdf() || !trcrg.step_)
 		continue;
 
 	    TrcKey tk( geomids[idx], -1 );
 	    Coord pos;
 	    float spnr = mUdf(float);
 	    gpkg_->startTransaction();
-	    for ( int trcnr=trcrg.start; trcnr<=trcrg.stop; trcnr+=trcrg.step )
+	    for ( int trcnr=trcrg.start_; trcnr<=trcrg.stop_; trcnr+=trcrg.step_ )
 	    {
 		tk.setTrcNr( trcnr );
 		const float z = hor->getZ( tk );
@@ -654,7 +654,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName,
 		    continue;
 		const float scaledZ = z*zfac;
 		survgeom2d->getPosByTrcNr( trcnr, pos, spnr );
-		if ( !gpkg_->addPoint(stmt, pos.x, pos.y, scaledZ))
+		if ( !gpkg_->addPoint(stmt, pos.x_, pos.y_, scaledZ))
 		{
 		    ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 2D horizon failed.");
 		    ErrMsg(gpkg_->errorMsg());
@@ -702,7 +702,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName,
 
 		const float scaledZ = z*zfac;
 		const Coord pos = SI().transform(bid);
-		if ( !gpkg_->addPoint(stmt, pos.x, pos.y, scaledZ))
+		if ( !gpkg_->addPoint(stmt, pos.x_, pos.y_, scaledZ))
 		{
 		    ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 3D horizon failed.");
 		    ErrMsg(gpkg_->errorMsg());

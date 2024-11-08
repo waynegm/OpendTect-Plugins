@@ -1,3 +1,4 @@
+#pragma once
 /*Copyright (C) 2015 Wayne Mogg All rights reserved.
 
 This file may be used either under the terms of:
@@ -8,10 +9,6 @@ the Free Software Foundation, or
 This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 */
-
-#ifndef procinst_h
-#define procinst_h
-
 /*+
 ________________________________________________________________________
 
@@ -69,5 +66,3 @@ protected:
 	ProcInstImpl*		pD;
 
 };
-
-#endif

@@ -152,7 +152,7 @@ uiRetVal uiGeotiffWriter::setTiffTags(const TrcKeySampling& hs, int nrbands)
     {
 	PtrMan<uint16_t> exsamp = new uint16_t[nrbands-1];
 	for (int idx=0; idx<nrbands-1; idx++)
-	    exsamp[idx] = EXTRASAMPLE_UNSPECIFIED;
+	    exsamp.ptr()[idx] = EXTRASAMPLE_UNSPECIFIED;
 
 	TIFFSetField(tif_, TIFFTAG_EXTRASAMPLES, nrbands-1, exsamp.ptr());
     }
@@ -170,21 +170,14 @@ uiRetVal uiGeotiffWriter::setTiffTags(const TrcKeySampling& hs, int nrbands)
     Coord delInl = hs.toCoord(hs.atIndex(1,0)) - origin;
     Coord delCrl = hs.toCoord(hs.atIndex(0,1)) - origin;
     double geotransform[16] = {};
-    geotransform[0] = delCrl.x;
-    geotransform[1] = delInl.x;
-    geotransform[3] = origin.x - 0.5*delInl.x - 0.5*delCrl.x;
-    geotransform[4] = delCrl.y;
-    geotransform[5] = delInl.y;
-    geotransform[7] = origin.y - 0.5*delInl.y - 0.5*delCrl.y;
+    geotransform[0] = delCrl.x_;
+    geotransform[1] = delInl.x_;
+    geotransform[3] = origin.x_ - 0.5*delInl.x_ - 0.5*delCrl.x_;
+    geotransform[4] = delCrl.y_;
+    geotransform[5] = delInl.y_;
+    geotransform[7] = origin.y_ - 0.5*delInl.y_ - 0.5*delCrl.y_;
     geotransform[15] = 1.0;
     TIFFSetField(tif_, TIFFTAG_GEOTRANSMATRIX, 16, geotransform);
-        // double adfGeoTransform[6];
-        // adfGeoTransform[0] = origin.x - 0.5*delInl.x - 0.5*delCrl.x;
-        // adfGeoTransform[1] = delInl.x;
-        // adfGeoTransform[2] = delCrl.x;
-        // adfGeoTransform[3] = origin.y - 0.5*delInl.y - 0.5*delCrl.y;
-        // adfGeoTransform[4] = delInl.y;
-        // adfGeoTransform[5] = delCrl.y;
     return uiRetVal::OK();
 }
 
@@ -332,7 +325,7 @@ uiRetVal uiGeotiffWriter::writeZSlices( uiTaskRunner& taskrunner, const TypeSet<
 	if ( !ioobj )
 	    return uiRetVal(tr("uiGeotiffWriter::writeZSlices - cannot find data set."));
 
-	const SeisIOObjInfo seisinfo(ioobj);
+	const SeisIOObjInfo seisinfo(ioobj.ptr());
 	TrcKeyZSampling tkzs;
 	seisinfo.getRanges(tkzs);
 	nrBands += seisinfo.nrComponents();
@@ -367,11 +360,11 @@ uiRetVal uiGeotiffWriter::writeZSlices( uiTaskRunner& taskrunner, const TypeSet<
     for ( const auto& seisid : seisids )
     {
 	PtrMan<IOObj> ioobj = IOM().get(seisid);
-	const SeisIOObjInfo seisinfo(ioobj);
+	const SeisIOObjInfo seisinfo(ioobj.ptr());
 	TrcKeyZSampling tkzforload;
 	seisinfo.getRanges(tkzforload);
 	tkzforload.hsamp_ = hs;
-	tkzforload.zsamp_ = StepInterval<float>(slicetime, slicetime, tkzforload.zsamp_.step);
+	tkzforload.zsamp_ = StepInterval<float>(slicetime, slicetime, tkzforload.zsamp_.step_);
 	Seis::SequentialReader rdr( *ioobj, &tkzforload );
 	if ( !rdr.execute() )
 	    return uiRetVal(tr("uiGeotiffWriter::writeZSlices - reading seismic volume failed."));

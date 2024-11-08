@@ -1,5 +1,4 @@
-#ifndef uigeotiffwriter_h
-#define uigeotiffwriter_h
+#pragma once
 
 #include "arraynd.h"
 #include "bufstring.h"
@@ -42,5 +41,3 @@ protected:
     uiRetVal				errmsg_;
 
 };
-
-#endif

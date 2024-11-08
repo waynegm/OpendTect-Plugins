@@ -1,5 +1,4 @@
-#ifndef mistieestimator2d3d_h
-#define mistieestimator2d3d_h
+#pragma once
 
 #include "multiid.h"
 #include "paralleltask.h"
@@ -27,19 +26,19 @@ public:
     od_int64    nrIterations() const;
     uiString    uiMessage() const;
     uiString    uiNrDoneText() const;
-    
+
     const ManagedObjectSet<Seis::RangeSelData>& selData() const	{ return selranges_; }
-    
+
 protected:
     const ObjectSet<BendPoints>&               bpoints_;
     Geom::PosRectangle<Pos::Ordinate_Type>     bounds3d_;
     ManagedObjectSet<Seis::RangeSelData>       selranges_;
-    Threads::Lock lock_;    
-    
+    Threads::Lock lock_;
+
     void	setBounds(TrcKeySampling);
     bool        doWork(od_int64 start, od_int64 stop, int threadis);
     bool        doFinish(bool success);
-    
+
 };
 
 mExpClass(Mistie) MistieEstimatorFromSeismic2D3D : public ParallelTask
@@ -54,25 +53,25 @@ public:
     od_int64    nrIterations() const;
     uiString    uiMessage() const;
     uiString    uiNrDoneText() const;
-    
+
     const MistieData& getMisties() const { return misties_; }
-    
+
 protected:
     const IOObj*                        ioobj2d_;
     const IOObj*                        ioobj3d_;
     const ManagedObjectSet<Seis::RangeSelData>& selranges_;
     int                                 trcstep_;
-    
+
     MistieData                  misties_;
     ZGate                       window_;
     float                       maxshift_;
     bool			allest_;
     Threads::Lock               lock_;
     int                         counter_;
-    
+
     bool        doWork(od_int64 start, od_int64 stop, int threadis);
     bool        doFinish(bool success);
-    
+
     bool        get2DTrc( BufferString line, int trcnr, SeisTrc& trc );
     bool        get3DTrc( int inl, int crl, SeisTrc& trc );
 };
@@ -109,4 +108,3 @@ protected:
     virtual bool        doFinish(bool success) override;
 
 };
-#endif

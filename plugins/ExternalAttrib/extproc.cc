@@ -524,7 +524,7 @@ Interval<int> ExtProc::zmargin() const
 
 void ExtProc::setZMargin( Interval<int> g )
 {
-    ordered_json garr = ordered_json::array({g.start, g.stop});
+    ordered_json garr = ordered_json::array({g.start_, g.stop_});
     ordered_json jobj = ordered_json::object({{"Value", garr}});
     pD->jsonpar_["ZSampMargin"] = jobj;
 }
