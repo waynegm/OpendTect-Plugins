@@ -326,7 +326,7 @@ bool wmGridder2D::loadData()
 	}
 	RefMan<Pick::Set> ps = new Pick::Set;
 	uiString msg;
-	if (!PickSetTranslator::retrieve(*ps, ioobj, true, msg)) {
+	if (!PickSetTranslator::retrieve(*(ps.ptr()), ioobj.ptr(), true, msg)) {
 	    BufferString tmp("wmGridder2D::loadData - error reading contour polygon - ");
 	    tmp += msg.getString();
 	    ErrMsg(tmp);
@@ -349,7 +349,7 @@ bool wmGridder2D::loadData()
         }
 	RefMan<Pick::Set> ps = new Pick::Set;
         uiString msg;
-        if (!PickSetTranslator::retrieve(*ps, ioobj, true, msg)) {
+        if (!PickSetTranslator::retrieve(*(ps.ptr()), ioobj.ptr(), true, msg)) {
             BufferString tmp("wmGridder2D::loadData - error reading crop polygon - ");
             tmp += msg.getString();
             ErrMsg(tmp);
@@ -373,7 +373,7 @@ bool wmGridder2D::loadData()
         }
 	RefMan<Pick::Set> ps = new Pick::Set;
         uiString msg;
-        if (!PickSetTranslator::retrieve(*ps, ioobj, true, msg)) {
+        if (!PickSetTranslator::retrieve(*(ps.ptr()), ioobj.ptr(), true, msg)) {
             BufferString tmp("wmGridder2D::loadData - error reading fault polygon - ");
             tmp += msg.getString();
             ErrMsg(tmp);
