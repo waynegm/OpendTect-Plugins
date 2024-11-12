@@ -181,13 +181,14 @@ bool uiMistieEstimateBySeismic::estimateMisties(MistieData& misties)
 
     TypeSet<Pos::GeomID> geomids;
     lineselfld_->getChosen(geomids);
+    ManagedObjectSet<BendPoints> bendpoints;
 
     uiTaskRunner uitr(this);
-    BendPointFinder2DGeomSet bpfinder(geomids);
+    BendPointFinder2DGeomSet bpfinder(geomids, bendpoints);
     TaskRunner::execute(&uitr, bpfinder);
 
     Line2DInterSectionSet intset;
-    Line2DInterSectionFinder intfinder(bpfinder.bendPoints(),  intset);
+    Line2DInterSectionFinder intfinder(bendpoints,  intset);
     TaskRunner::execute(&uitr, intfinder);
 
     MistieEstimatorFromSeismic misest(seisselfld_->ioobj(true), intset, zrg, lagtime, !onlyzfld_->isChecked());
@@ -195,7 +196,7 @@ bool uiMistieEstimateBySeismic::estimateMisties(MistieData& misties)
     misties = misest.getMisties();
 
     if (use3dfld_ && use3dfld_->isChecked()) {
-	Line3DOverlapFinder lines3Doverlap(data3dfld_->ioobj(true), bpfinder.bendPoints());
+	Line3DOverlapFinder lines3Doverlap(data3dfld_->ioobj(true), bendpoints);
 	TaskRunner::execute(&uitr, lines3Doverlap);
 	MistieEstimatorFromSeismic2D3D misties2d3d(data3dfld_->ioobj(true), seisselfld_->ioobj(true), lines3Doverlap.selData(), zrg, lagtime,
 					trcstepfld_->getIntValue(), !onlyzfld_->isChecked());
@@ -258,12 +259,14 @@ bool uiMistieEstimateByHorizon::estimateMisties(MistieData& misties)
 
     TypeSet<Pos::GeomID> geomids;
     horinpgrp_->getGeoMids(geomids);
+    ManagedObjectSet<BendPoints> bendpoints;
+
     uiTaskRunner uitr(this);
-    BendPointFinder2DGeomSet bpfinder(geomids);
+    BendPointFinder2DGeomSet bpfinder(geomids, bendpoints);
     TaskRunner::execute(&uitr, bpfinder);
 
     Line2DInterSectionSet intset;
-    Line2DInterSectionFinder intfinder(bpfinder.bendPoints(),  intset);
+    Line2DInterSectionFinder intfinder(bendpoints,  intset);
     TaskRunner::execute(&uitr, intfinder);
 
     MistieEstimatorFromHorizon misest(hor2Did, intset);
@@ -285,7 +288,7 @@ bool uiMistieEstimateByHorizon::estimateMisties(MistieData& misties)
 	    obj3d->unRef();
 	    return false;
 	}
-	Line3DOverlapFinder lines3Doverlap(hor3d, bpfinder.bendPoints());
+	Line3DOverlapFinder lines3Doverlap(hor3d, bendpoints);
 	TaskRunner::execute(&uitr, lines3Doverlap);
 	obj3d->unRef();
 	MistieEstimatorFromHorizon2D3D misties2d3d(hor3Did, hor2Did, lines3Doverlap.selData(), trcstepfld_->getIntValue());
