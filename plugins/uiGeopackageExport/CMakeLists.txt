@@ -1,72 +1,50 @@
-if (UNIX)
-    SET(CMAKE_INSTALL_RPATH "\$ORIGIN/")
-    SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+if ( IS_DIRECTORY "${WMDEPS_DIR}" )
+    if ( NOT IS_DIRECTORY "${Tiff_ROOT}" )
+	set( Tiff_ROOT "${WMDEPS_DIR}" )
+    endif()
+    if ( NOT IS_DIRECTORY "${GeoTIFF_ROOT}" )
+	set( GeoTIFF_ROOT "${WMDEPS_DIR}" )
+    endif()
+    if ( NOT IS_DIRECTORY "${gpkg_ROOT}" )
+	set( gpkg_ROOT "${WMDEPS_DIR}" )
+    endif()
+    if ( NOT IS_DIRECTORY "${gpkgio_ROOT}" )
+	set( gpkgio_ROOT "${WMDEPS_DIR}" )
+    endif()
 endif()
 
-list( APPEND OD_MODULE_INCLUDESYSPATH
-    ${OpendTect_DIR}/plugins/CRS
-    ${SQLite3_ROOT}/include
-    ${WMDEPS_DIR}/include
-)
-
-find_library(
-    TIFF_LIBRARY
-    NAMES tiff
-    PATHS ${WMDEPS_DIR}/lib
-    NO_DEFAULT_PATH
-)
-find_library(
-    GEOTIFF_LIBRARY
-    NAMES geotiff geotiff_i geotiff_d
-    PATHS ${WMDEPS_DIR}/lib
-    NO_DEFAULT_PATH
-)
-find_library(
-    GPKGIO_LIBRARY
-    NAMES gpkgio
-    PATHS ${WMDEPS_DIR}/lib
-    NO_DEFAULT_PATH
-)
-find_library(
-    GPKGEXT_LIBRARY
-    NAMES gpkg
-    PATHS ${WMDEPS_DIR}/lib
-    NO_DEFAULT_PATH
-)
-
-add_library(WMDEPS::tiff SHARED IMPORTED)
-add_library(WMDEPS::geotiff SHARED IMPORTED)
-add_library(WMDEPS::gpkgio SHARED IMPORTED)
-add_library(WMDEPS::gpkgext SHARED IMPORTED)
-
-get_filename_component(TIFF_LIBRARY_RP ${TIFF_LIBRARY} REALPATH)
-get_filename_component(TIFF_LIB ${TIFF_LIBRARY} NAME)
-get_filename_component(GEOTIFF_LIBRARY_RP ${GEOTIFF_LIBRARY} REALPATH)
-get_filename_component(GEOTIFF_LIB ${GEOTIFF_LIBRARY} NAME)
-get_filename_component(GPKGEXT_LIBRARY_RP ${GPKGEXT_LIBRARY} REALPATH)
-get_filename_component(GPKGEXT_LIB ${GPKGEXT_LIBRARY} NAME)
-set_target_properties(WMDEPS::tiff PROPERTIES
-  IMPORTED_LOCATION ${TIFF_LIBRARY_RP}
-  IMPORTED_SONAME ${TIFF_LIB}.6
-)
-set_target_properties(WMDEPS::geotiff PROPERTIES
-  IMPORTED_LOCATION ${GEOTIFF_LIBRARY_RP}
-  IMPORTED_SONAME ${GEOTIFF_LIB}.5
-)
-set_target_properties(WMDEPS::gpkgext PROPERTIES
-  IMPORTED_LOCATION ${GPKGEXT_LIBRARY_RP}
-  IMPORTED_SONAME ${GPKGEXT_LIB}.0
-)
-set_target_properties(WMDEPS::gpkgio PROPERTIES
-  IMPORTED_LOCATION ${GPKGIO_LIBRARY}
-  IMPORTED_LINK_DEPENDENT_LIBRARIES SQLite::SQLite3
-)
+find_package( SQLite3 QUIET GLOBAL )
+if ( NOT TARGET SQLite::SQLite3 )
+    set( SQLite3_ROOT "" CACHE PATH "Sqlite directory" )
+    find_package( SQLite3 QUIET REQUIRED )
+endif()
+find_package( Tiff QUIET GLOBAL )
+if ( NOT TARGET TIFF::tiff )
+    set( Tiff_ROOT "" CACHE PATH "Tiff directory" )
+    find_package( Tiff REQUIRED GLOBAL )
+endif()
+find_package( GeoTIFF QUIET GLOBAL )
+if ( NOT GeoTIFF_FOUND )
+    set( GeoTIFF_ROOT "" CACHE PATH "GeoTIFF directory" )
+    find_package( GeoTIFF REQUIRED )
+endif()
+find_package( gpkg QUIET GLOBAL )
+if ( NOT TARGET gpkgio::gpkg_ext )
+    set( gpkg_ROOT "" CACHE PATH "gpkg directory" )
+    find_package( gpkg REQUIRED GLOBAL )
+endif()
+find_package( gpkgio QUIET GLOBAL )
+if ( NOT TARGET gpkgio::gpkgio )
+    set( gpkgio_ROOT "" CACHE PATH "gpkg directory" )
+    find_package( gpkgio REQUIRED GLOBAL )
+endif()
 
 list( APPEND OD_MODULE_EXTERNAL_LIBS
-    WMDEPS::tiff
-    WMDEPS::geotiff
-    WMDEPS::gpkgio
-    WMDEPS::gpkgext
+    TIFF::tiff
+    SQLite::SQLite3
+    ${GeoTIFF_SHARED_LIBRARIES}
+    gpkgio::gpkg_ext
+    gpkgio::gpkgio
 )
 
 SET(OD_MODULE_DEPS uiODMain uiWGMHelp CRS)
@@ -83,8 +61,8 @@ SET(OD_MODULE_SOURCES
     uirandomlinesgrp.cc
     uiwellsgrp.cc
     uipolylinesgrp.cc
-    uihorizongrp.cc )
+    uihorizongrp.cc
+)
 
 SET( OD_PLUGIN_ALO_EXEC ${OD_MAIN_EXEC} )
 OD_INIT_MODULE()
-

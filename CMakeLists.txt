@@ -17,26 +17,7 @@ set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 configure_file(wmplugins_version.h.in wmplugins_version.h)
 file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 
-
-set (SQLite3_ROOT "" CACHE PATH "Sqlite directory")
-set (PROJ_ROOT "" CACHE PATH "Proj9 directory")
-set (WMDEPS_DIR "" CACHE PATH "WMPlugin dependency directory")
-set (SQLITE_DIR ${SQLite3_ROOT})
-
-find_library(
-    PROJ_LIBRARY
-    NAMES proj
-    PATHS ${PROJ_ROOT}/lib
-    NO_DEFAULT_PATH
-)
-find_library(
-    SQLITE_LIBRARY
-    NAMES sqlite3
-    PATHS ${SQLite3_ROOT}/lib
-    NO_DEFAULT_PATH
-)
-
-if((NOT ${EIGEN3_INCLUDE_DIR}) OR (NOT EXISTS ${EIGEN3_INCLUDE_DIR}))
+if( NOT IS_DIRECTORY "${EIGEN3_INCLUDE_DIR}" )
     message("Unable to find system Eigen install - will use local")
     execute_process(COMMAND git submodule update --init -- external/eigen
                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -45,7 +26,7 @@ if((NOT ${EIGEN3_INCLUDE_DIR}) OR (NOT EXISTS ${EIGEN3_INCLUDE_DIR}))
     set(EIGEN3_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
 endif()
 
-if((NOT ${NANOFLANN_INCLUDE_DIR}) OR (NOT EXISTS ${NANOFLANN_INCLUDE_DIR}))
+if( NOT IS_DIRECTORY "${NANOFLANN_INCLUDE_DIR}" )
     message("Unable to find system nanoflann install - will use local")
     execute_process(COMMAND git submodule update --init -- external/nanoflann
                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -55,7 +36,7 @@ if((NOT ${NANOFLANN_INCLUDE_DIR}) OR (NOT EXISTS ${NANOFLANN_INCLUDE_DIR}))
     set(NANOFLANN_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
 endif()
 
-if((NOT ${MBA_INCLUDE_DIR}) OR (NOT EXISTS ${MBA_INCLUDE_DIR}))
+if( NOT IS_DIRECTORY "${MBA_INCLUDE_DIR}" )
     message("Unable to find system mba install - will use local")
     execute_process(COMMAND git submodule update --init -- external/mba
                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -130,5 +111,3 @@ elseif( ${OD_PLFSUBDIR} STREQUAL "lux64" )
     install(FILES VERSION.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/relinfo RENAME ver.wmplugins_lux64.txt)
 endif()
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/bin/python DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/ PATTERN "__pycache__" EXCLUDE)
-
-
