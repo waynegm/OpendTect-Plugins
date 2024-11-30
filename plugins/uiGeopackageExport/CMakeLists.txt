@@ -5,7 +5,7 @@ endif()
 
 list( APPEND OD_MODULE_INCLUDESYSPATH
     ${OpendTect_DIR}/plugins/CRS
-    ${SQLITE_DIR}/include
+    ${SQLite3_ROOT}/include
     ${WMDEPS_DIR}/include
 )
 
@@ -17,13 +17,13 @@ find_library(
 )
 find_library(
     GEOTIFF_LIBRARY
-    NAMES geotiff geotiff_i
+    NAMES geotiff geotiff_i geotiff_d
     PATHS ${WMDEPS_DIR}/lib
     NO_DEFAULT_PATH
 )
 find_library(
     GPKGIO_LIBRARY
-    NAMES gpkgio
+    NAMES gpkgio gpkgio_d
     PATHS ${WMDEPS_DIR}/lib
     NO_DEFAULT_PATH
 )
@@ -42,18 +42,11 @@ list( APPEND OD_MODULE_EXTERNAL_LIBS
     ${GPKGEXT_LIBRARY}
     ${SQLITE_LIBRARY}
 )
-string(REPLACE ";"  "\n " stri "${OD_MODULE_INCLUDESYSPATH}")
-message("${stri}")
-
-string(REPLACE ";"  "\n " str "${OD_MODULE_EXTERNAL_LIBS}")
-message("${str}")
 
 SET(OD_MODULE_DEPS uiODMain uiWGMHelp CRS)
 
 SET(OD_IS_PLUGIN yes)
 SET(OD_MODULE_SOURCES
-#uigeopackagereader.cc
-#uigeopackagetreeitem.cc
     uigeotiffexportmainwin.cc
     uigeotiffwriter.cc
     uigeopackageexportmainwin.cc
