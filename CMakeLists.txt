@@ -17,26 +17,6 @@ set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 configure_file(wmplugins_version.h.in wmplugins_version.h)
 file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 
-if( NOT IS_DIRECTORY "${NANOFLANN_INCLUDE_DIR}" )
-    message("Unable to find system nanoflann install - will use local")
-    execute_process(COMMAND git submodule update --init -- external/nanoflann
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-    file( COPY ${CMAKE_SOURCE_DIR}/external/nanoflann/include/nanoflann.hpp DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
-    file( RENAME ${CMAKE_SOURCE_DIR}/external/include/nanoflann.hpp ${CMAKE_SOURCE_DIR}/external/include/nanoflann.h )
-    set(NANOFLANN_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
-endif()
-
-if( NOT IS_DIRECTORY "${MBA_INCLUDE_DIR}" )
-    message("Unable to find system mba install - will use local")
-    execute_process(COMMAND git submodule update --init -- external/mba
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-    file( COPY ${CMAKE_SOURCE_DIR}/external/mba/mba/mba.hpp DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
-    set(MBA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
-endif()
-
-add_subdirectory(external)
 include_directories(SYSTEM ${WMDEPS_DIR}/include external/include plugins/wm_include "${PROJECT_BINARY_DIR}")
 
 #Setup output directory

@@ -56,7 +56,7 @@ const TypeSet<float>& vals_ = interp_->vals_;
 const TrcKeySampling& hs_ = interp_->hs_;
 Array2DImpl<float>* grid_ = interp_->grid_;
 TypeSet<od_int64> interpidx_ = interp_->interpidx_;
-std::vector<size_t> resindex(interp_->maxpoints_);
+std::vector<uint32_t> resindex(interp_->maxpoints_);
 std::vector<Pos::Ordinate_Type> distsq(interp_->maxpoints_);
 Pos::Ordinate_Type pt[2];
 ,
@@ -97,7 +97,7 @@ Threads::Locker lckr( lock_ );
 grid_->set(ix, iy, fval);
 , )
 
-typedef std::vector<std::pair<size_t,Pos::Ordinate_Type>> RadiusResultSet;
+typedef std::vector<nanoflann::ResultItem<uint32_t,Pos::Ordinate_Type>> RadiusResultSet;
 
 mDefParallelCalc3Pars( IDWLocalInterpolator, od_static_tr("IDWLocalInterpolator","IDW local interpolation"),
 		       const wmIDWGridder2D*, interp, CoordKDTree&, index, Threads::Lock&, lock )
@@ -110,7 +110,7 @@ TypeSet<od_int64> interpidx_ = interp_->interpidx_;
 RadiusResultSet result;
 Pos::Ordinate_Type srsq = interp_->searchradius_/(SI().inlDistance()+SI().crlDistance())*2.0;
 srsq *= srsq;
-nanoflann::SearchParams params;
+nanoflann::SearchParameters params;
 Pos::Ordinate_Type pt[2];
 TypeSet<Coord> usePos;
 TypeSet<float> useVal;

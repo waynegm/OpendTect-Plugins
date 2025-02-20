@@ -85,7 +85,7 @@ protected:
     TypeSet<double>	distsq_;
 };
 
-typedef std::vector<std::pair<size_t,Pos::Ordinate_Type>> RadiusResultSet;
+typedef std::vector<nanoflann::ResultItem<uint32_t,Pos::Ordinate_Type>> RadiusResultSet;
 
 
 mDefParallelCalc3Pars( LTPSInterpolator, od_static_tr("LTPSInterpolator","LTPS interpolation"),
@@ -99,7 +99,7 @@ TypeSet<od_int64> interpidx_ = interp_->interpidx_;
 RadiusResultSet result;
 Pos::Ordinate_Type srsq = interp_->searchradius_/(SI().inlDistance()+SI().crlDistance())*2.0;
 srsq *= srsq;
-nanoflann::SearchParams params;
+nanoflann::SearchParameters params;
 Pos::Ordinate_Type pt[2];
 BufferString tmp;
 ,

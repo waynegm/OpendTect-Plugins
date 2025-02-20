@@ -1,3 +1,0 @@
-[submodule "external/nanoflann"]
-	path = external/nanoflann
-	url = https://github.com/jlblancoc/nanoflann.git
