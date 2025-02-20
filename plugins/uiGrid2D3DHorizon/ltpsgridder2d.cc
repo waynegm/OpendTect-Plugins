@@ -18,7 +18,7 @@
 
 #include "ltpsgridder2d.h"
 #include "nanoflann_extra.h"
-#include "Eigen/Dense"
+#include "eigen3/Eigen/Dense"
 #include "mba.hpp"
 
 #include "paralleltask.h"

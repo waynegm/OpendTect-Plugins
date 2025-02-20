@@ -18,7 +18,7 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Eigen/Core"
+#include "eigen3/Eigen/Core"
 #include "commondefs.h"
 
 namespace EigenTools{

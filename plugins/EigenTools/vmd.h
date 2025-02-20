@@ -17,8 +17,8 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "vmdattribmod.h"
-#include "Eigen/Core"
-#include <unsupported/Eigen/FFT>
+#include "eigen3/Eigen/Core"
+#include "eigen3/unsupported/Eigen/FFT"
 
 
 template <typename X>

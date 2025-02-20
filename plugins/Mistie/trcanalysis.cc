@@ -3,7 +3,7 @@
 #include "seistrc.h"
 #include "survinfo.h"
 
-#include "unsupported/Eigen/FFT"
+#include "eigen3/unsupported/Eigen/FFT"
 
 bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, float& zdiff, float& phasediff, float& ampdiff, float&  quality)
 {

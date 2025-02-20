@@ -1,13 +1,3 @@
 [submodule "external/nanoflann"]
 	path = external/nanoflann
 	url = https://github.com/jlblancoc/nanoflann.git
-[submodule "external/mba"]
-	path = external/mba
-	url = https://github.com/ddemidov/mba.git
-[submodule "python_bindings/pybind11"]
-	path = python_bindings/pybind11
-	url = https://github.com/pybind/pybind11.git
-[submodule "external/eigen"]
-	path = external/eigen
-	url = https://gitlab.com/libeigen/eigen.git
-	branch = 3.4

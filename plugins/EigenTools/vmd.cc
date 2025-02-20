@@ -17,7 +17,7 @@
  */
 #include "vmd.h"
 
-#include <Eigen/Core>
+#include "eigen3/Eigen/Core"
 
 
 VMD::VMD(int nrmodes)

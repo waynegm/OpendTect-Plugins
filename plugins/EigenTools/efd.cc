@@ -17,8 +17,8 @@
  */
 #include "efd.h"
 
-#include <Eigen/Core>
-#include <unsupported/Eigen/FFT>
+#include "eigen3/Eigen/Core"
+#include "eigen3/unsupported/Eigen/FFT"
 #include "eigentools.h"
 
 #include "commondefs.h"

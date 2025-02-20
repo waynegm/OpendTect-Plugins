@@ -21,7 +21,7 @@
 #include "survgeom2d.h"
 #include "survinfo.h"
 
-#include "unsupported/Eigen/FFT"
+#include "eigen3/unsupported/Eigen/FFT"
 #include "trcanalysis.h"
 
 Line3DOverlapFinder::Line3DOverlapFinder(const IOObj* ioobj3D, const ObjectSet<BendPoints>& bpoints)

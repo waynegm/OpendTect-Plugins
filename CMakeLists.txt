@@ -17,15 +17,6 @@ set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
 configure_file(wmplugins_version.h.in wmplugins_version.h)
 file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 
-if( NOT IS_DIRECTORY "${EIGEN3_INCLUDE_DIR}" )
-    message("Unable to find system Eigen install - will use local")
-    execute_process(COMMAND git submodule update --init -- external/eigen
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-    file( COPY ${CMAKE_SOURCE_DIR}/external/eigen/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include )
-    file( COPY ${CMAKE_SOURCE_DIR}/external/eigen/unsupported/Eigen DESTINATION ${CMAKE_SOURCE_DIR}/external/include/unsupported )
-    set(EIGEN3_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/external/include)
-endif()
-
 if( NOT IS_DIRECTORY "${NANOFLANN_INCLUDE_DIR}" )
     message("Unable to find system nanoflann install - will use local")
     execute_process(COMMAND git submodule update --init -- external/nanoflann
@@ -46,7 +37,7 @@ if( NOT IS_DIRECTORY "${MBA_INCLUDE_DIR}" )
 endif()
 
 add_subdirectory(external)
-include_directories(SYSTEM external/include plugins/wm_include "${PROJECT_BINARY_DIR}")
+include_directories(SYSTEM ${WMDEPS_DIR}/include external/include plugins/wm_include "${PROJECT_BINARY_DIR}")
 
 #Setup output directory
 option ( OD_BUILD_LOCAL "Build in local directory" OFF )
