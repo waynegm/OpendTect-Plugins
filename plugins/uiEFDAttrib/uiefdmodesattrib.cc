@@ -139,7 +139,7 @@ void uiEFDModesAttrib::showPosDlgCB( CallBacker* )
 				     "Compute all modes for a single trace",
 				     "Mode Decomposition",
 				     "Empirical Fourier Decomposition",
-				     "Mode", true );
+				     uiStrings::sMode(), true );
     testpanel_->showPosDlg();
 }
 

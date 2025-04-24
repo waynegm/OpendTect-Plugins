@@ -48,7 +48,7 @@ public:
 				uiTestPanel( uiParent* p, const char* procname,
 					    const char* packname,
 					    const char* panelname,
-					    const char* axisnm, bool wva )
+					    const uiString axisnm, bool wva )
 				    : uiAttribPanel( p )
 				    , procname_(procname)
 				    , packname_(packname)
@@ -59,7 +59,8 @@ public:
     BufferString		panelname_;
 
 protected:
-    BufferString		procname_, packname_, axisnm_;
+    BufferString		procname_, packname_;
+    uiString 			axisnm_;
     bool			wva_;
     virtual const char*		getProcName()	{ return procname_; }
     virtual const char*		getPackName()	{ return packname_; }
@@ -106,7 +107,7 @@ template <class T> class uiAttribTestPanel : public CallBacker
 {
 public:
     uiAttribTestPanel(T&, const char*, const char*, const char*,
-		      const char* axisnm="Frequency", bool wva=false);
+		      const uiString axisnm=uiStrings::sFrequency(), bool wva=false);
     ~uiAttribTestPanel();
 
     void				showPosDlg();
@@ -131,7 +132,7 @@ template<class T>
 uiAttribTestPanel<T>::uiAttribTestPanel( T& uiattrib, const char* procname,
 					 const char* packname,
 					 const char* panelname,
-					 const char* axisnm, bool wva )
+					 const uiString axisnm, bool wva )
     : uiattrib_(uiattrib)
     , testpanel_(new uiTestPanel(&uiattrib, procname, packname, panelname, axisnm, wva))
 {}

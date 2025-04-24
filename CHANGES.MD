@@ -1,5 +1,9 @@
 # OpendTect Plugins Release Notes
 
+## Release 2025.1 (aka 8.0)
+- Adapt to OpendTect API changes
+- move all external dependencies to WMPlugin-Deps repository
+
 ## Release 7.0.7
 
 ### DataExtentHorizon

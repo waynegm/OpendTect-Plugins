@@ -81,9 +81,9 @@ void uiCorrViewer::fillTable()
         phasecor = corrs_.getPhaseCor(idx);
         ampcor = corrs_.getAmpCor(idx);
         table_->setText(RowCol(idx, lineCol), line);
-        table_->setValue(RowCol(idx, shiftCol), zcor, 2);
-        table_->setValue(RowCol(idx, phaseCol), phasecor, 2);
-        table_->setValue(RowCol(idx, ampCol), ampcor, 2);
+        table_->setValue(RowCol(idx, shiftCol), zcor, 0, 'f', SI().nrZDecimals());
+        table_->setValue(RowCol(idx, phaseCol), phasecor, 0, 'f', 2);
+        table_->setValue(RowCol(idx, ampCol), ampcor, 0, 'f', 2);
     }
 }
 

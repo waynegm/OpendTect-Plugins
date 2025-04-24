@@ -7,7 +7,7 @@
 
 
 cmake_minimum_required (VERSION 3.20)
-project(OpendTect_Plugins VERSION 2025.0)
+project(OpendTect_Plugins VERSION 2025.1)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -24,6 +24,8 @@ option ( OD_BUILD_LOCAL "Build in local directory" OFF )
 
 #Find OpendTect
 list(APPEND CMAKE_MODULE_PATH "${OpendTect_DIR}/CMakeModules")
+include(CMakePrintHelpers)
+cmake_print_variables(CMAKE_MODULE_PATH)
 find_package( OpendTect )
 get_filename_component( OpendTect_DIR "${OpendTect_DIR}" REALPATH )
 get_filename_component( OD_BINARY_BASEDIR "${OD_BINARY_BASEDIR}" REALPATH )

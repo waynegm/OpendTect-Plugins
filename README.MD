@@ -8,11 +8,7 @@ This is the source code for a collection of plugins for the open source seismic 
  </a>
 </p>
 
-As of 24-June-2022 code development in the master branch is for OpendTect 6.8. If you are interested in the latest source code for:
-
-- OpendTect v6.6 please refer to the 6.6 branch
--  OpendTect v6.4 please refer to the 6.4 branch
--  OpendTect v5 please refer to the v5-stable branch
+Code development in the main branch is for OpendTect 2025 (aka8.0). For earlier versions of OpendTect see the appropriate branch.
 
 For details please see the [documentation](http://waynegm.github.io/WMPlugin-Docs/) or click one of the links below.
 

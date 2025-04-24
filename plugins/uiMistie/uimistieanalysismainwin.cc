@@ -399,12 +399,12 @@ void uiMistieAnalysisMainWin::fillTable()
         table_->setText(RowCol(irow, lineBCol), lineB);
         table_->setValue(RowCol(irow, trcACol), trcA);
         table_->setValue(RowCol(irow, trcBCol), trcB);
-        table_->setValue(RowCol(irow, xCol), pos.x_, 1);
-        table_->setValue(RowCol(irow, yCol), pos.y_, 1);
-        table_->setValue(RowCol(irow, zCol), zdiff, 2);
-        table_->setValue(RowCol(irow, phaseCol), phasediff, 2);
-        table_->setValue(RowCol(irow, ampCol), ampdiff, 2);
-        table_->setValue(RowCol(irow, qualCol), quality, 3);
+        table_->setValue(RowCol(irow, xCol), pos.x_, 0, 'f', SI().nrXYDecimals());
+        table_->setValue(RowCol(irow, yCol), pos.y_, 0, 'f', SI().nrXYDecimals());
+        table_->setValue(RowCol(irow, zCol), zdiff, 0, 'f', SI().nrZDecimals());
+        table_->setValue(RowCol(irow, phaseCol), phasediff, 0, 'f', 2);
+        table_->setValue(RowCol(irow, ampCol), ampdiff, 0, 'f', 2);
+        table_->setValue(RowCol(irow, qualCol), quality, 0, 'f', 3);
 	irow++;
     }
     table_->setPrefHeightInRows(50);

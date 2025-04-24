@@ -204,14 +204,17 @@ mDefODInitPlugin(uiGeopackageExport)
 	libnm.add(".0");
 
     FilePath libfp(GetLibPlfDir(), libnm);
-    if ( !libfp.exists() && GetEnvVarYN("OD_USER_PLUGIN_DIR") )
+    if ( !libfp.exists() && GetEnvVar("OD_USER_PLUGIN_DIR") )
 	libfp = FilePath(GetEnvVar("OD_USER_PLUGIN_DIR"), "bin", GetPlfSubDir(),
 			 GetBinSubDir(), libnm);
 
     if ( libfp.exists() )
 	GeopackageIO::setGPKGlib_location(libfp.fullPath());
     else
-	return BufferString("uiGeopackageExport: cannot find ", libnm);
+    {
+	BufferString msg("uiGeopackageExport: cannot find: ", libnm);
+	return msg.buf();
+    }
 
 //    uiGeopackageTreeItem::initClass();
 
