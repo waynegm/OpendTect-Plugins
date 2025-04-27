@@ -27,13 +27,13 @@ ________________________________________________________________________
 #include "objectset.h"
 #include "file.h"
 #include "filepath.h"
-#include "envvars.h"
+#include "keystrs.h"
 #include "procinst.h"
 #include "pythonaccess.h"
 #include "uistringset.h"
 #include "urllib.h"
 #ifdef __win__
-    #undef snprintf
+    #pragma warning(disable:4996)
     #undef strtoull
     #undef strtoll
 #endif

@@ -42,6 +42,7 @@ uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
 	{
 	    BufferString tmp("uiGeopackageWriter::uiGeopackageWriter - getting survey CRS failed \n");
             ErrMsg(tmp);
+	    return;
 	}
 	const auto* proj = projsys->getProjection();
 	if (proj && open(filename))
@@ -501,13 +502,15 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
 	return;
     }
 
-    sqlite3_stmt* pl_stmt;
-    sqlite3_stmt* pg_stmt;
+    sqlite3_stmt* pl_stmt = nullptr;
+    sqlite3_stmt* pg_stmt = nullptr;
     if (!gpkg_->makeGeomStatement(&pl_stmt, "polylines", srs_->code(), fieldnms) ||
 	!gpkg_->makeGeomStatement(&pg_stmt, "polygons", srs_->code(), fieldnms))
     {
 	sqlite3_finalize(pl_stmt);
-	sqlite3_finalize(pg_stmt);
+	if (pg_stmt)
+	    sqlite3_finalize(pg_stmt);
+
 	ErrMsg("uiGeopackageWriter::writePolyLines - creation of output statement failed.");
 	ErrMsg(gpkg_->errorMsg());
 	return;

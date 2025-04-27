@@ -1,6 +1,7 @@
-#pragma Once
+#pragma once
 
 #include "uidlggroup.h"
+#include "uistring.h"
 #include "ctxtioobj.h"
 
 class uiCheckBox;
