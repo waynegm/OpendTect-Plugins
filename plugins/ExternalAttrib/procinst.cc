@@ -30,9 +30,13 @@ ________________________________________________________________________
 #include "filepath.h"
 #include "file.h"
 #include "pythonaccess.h"
+#include "thread.h"
+#include "threadwork.h"
 #include "uistringset.h"
 #include "extproc.h"
 
+#include <fstream>
+#include <string>
 
 #ifdef __win__
 #include <windows.h>
@@ -68,6 +72,8 @@ public:
 	FILE*			write_fd;
 	BufferString		logFile;
 	uiRetVal		uirv;
+	PtrMan<Threads::Work>	logmonitor;
+	bool			do_logging = true;
 #ifdef __win__
 	HANDLE			hChildProcess;
 	HANDLE			hChildThread;
@@ -101,6 +107,7 @@ ProcInst::ProcInst()
 ProcInst::~ProcInst()
 {
 	finish();
+	pD->do_logging = false;
 	if (pD->input != NULL)
 		delete [] pD->input;
 	if (pD->output != NULL)
@@ -377,6 +384,10 @@ bool ProcInst::start( const BufferStringSet& runargs, SeisInfo& si )
 {
 	bool 	result = false;
 	pD->uirv.setEmpty();
+	pD->logmonitor = new Threads::Work(mCB(this, ProcInst, processLogCB));
+	if (pD->logmonitor)
+	    Threads::WorkManager::twm().addWork(*pD->logmonitor);
+
 	if (start( runargs )) {
 // Check for errors
 		result = writeSeisInfo( si );
@@ -386,16 +397,45 @@ bool ProcInst::start( const BufferStringSet& runargs, SeisInfo& si )
 	return result;
 }
 
-void ProcInst::processLog()
+void ProcInst::processLogCB( CallBacker*)
 {
-    BufferString logmsg;
-    if (!pD->logFile.isEmpty()) {
-	File::getContent(pD->logFile.getCStr(), logmsg);
-	if (!logmsg.isEmpty())
-	    repError(logmsg);
+    if (pD->logFile.isEmpty())
+	return;
 
-	File::remove(pD->logFile.getCStr());
+    while ( !File::exists(pD->logFile.buf()) )
+    {}
+
+    std::ifstream ifs( pD->logFile.buf() );
+    if ( ifs.is_open() )
+    {
+	std::string line;
+	std::streamoff p = 0;
+	while ( pD && pD->do_logging )
+	{
+	    ifs.seekg( p );
+	    while ( std::getline(ifs, line) )
+	    {
+		repError(line.c_str());
+		if ( ifs.tellg()==-1 )
+		    p += line.size();
+		else
+		    p = ifs.tellg();
+	    }
+	    ifs.clear();
+	}
+	ifs.close();
     }
+}
+
+void ProcInst::stopLogging(bool remove)
+{
+    pD->do_logging = false;
+    if (!pD->logmonitor)
+	return;
+
+    Threads::WorkManager::twm().removeWork(*pD->logmonitor);
+    if (!pD->logFile.isEmpty() && remove)
+	    File::remove(pD->logFile);
 }
 
 int ProcInst::finish() {
@@ -411,6 +451,7 @@ int ProcInst::finish() {
 			}
 		} else {
 			ErrMsg("ProcInst::finish - GetExitCodeProcess failed");
+			stopLogging();
 			return -1;
 		}
 		CloseHandle( pD->hChildProcess );
@@ -452,7 +493,7 @@ int ProcInst::finish() {
 	else
 		result = (pid == -1 ? -1 : 0);
 #endif
-	processLog();
+	stopLogging();
 	return result;
 }
 

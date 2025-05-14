@@ -98,10 +98,12 @@ ExtProcImpl::ExtProcImpl(const char* fname, const char* iname)
 ExtProcImpl::~ExtProcImpl()
 {
 // Delete all ProcInst's in idleinsts_
+    idleinstslock_.lock();
     while (!idleinsts_.isEmpty()) {
 	ProcInst* pi = idleinsts_.pop();
 	delete pi;
     }
+    idleinstslock_.unLock();
 }
 
 void ExtProcImpl::setFile(const char* fname, const char* iname)
@@ -302,7 +304,8 @@ bool ExtProc::isOK() const
     return pD->isok_ && pD->uirv_.isOK();
 }
 
-void ExtProc::setSeisInfo( int ninl, int ncrl, float inlDist, float crlDist, float zFactor, float dipFactor )
+void ExtProc::setSeisInfo( int ninl, int ncrl, float inlDist, float crlDist,
+			   float zFactor, float dipFactor, int nrZ )
 {
     (pD->seisinfo_).nrTraces = ninl*ncrl;
     (pD->seisinfo_).nrInl = ninl;
@@ -314,6 +317,7 @@ void ExtProc::setSeisInfo( int ninl, int ncrl, float inlDist, float crlDist, flo
     (pD->seisinfo_).dipFactor = dipFactor;
     (pD->seisinfo_).nrOutput = numOutput();
     (pD->seisinfo_).nrInput = numInput();
+    (pD->seisinfo_).nrZ = nrZ;
 }
 
 void ExtProc::addMetadata( const char* key, const char* value )
@@ -371,7 +375,7 @@ void ExtProc::setInstIdle( ProcInst* pi )
 
 bool ExtProc::compute( ProcInst* pi,  int z0, int inl, int crl)
 {
-    pD->isok_ = pi->compute( z0, inl, crl );
+    pD->isok_ = pi->compute(z0, inl, crl);
     return pD->isok_;
 }
 

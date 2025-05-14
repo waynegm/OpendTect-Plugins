@@ -18,6 +18,7 @@ ________________________________________________________________________
 
 -*/
 #include "bufstring.h"
+#include "callback.h"
 #include "uistringset.h"
 
 struct SeisInfo
@@ -32,11 +33,12 @@ struct SeisInfo
 	float		crlDistance;
 	float		zFactor;
 	float		dipFactor;
+	int		nrZ;
 };
 
 struct ProcInstImpl;
 
-class ProcInst {
+class ProcInst : public CallBacker {
 public:
 	ProcInst();
 	~ProcInst();
@@ -52,7 +54,7 @@ public:
 	BufferString		readAllStdOut();
 	bool			compute( int z0, int inl, int crl );
 
-	void			processLog();
+	void			stopLogging(bool remove=true);
 	uiRetVal		errMsg();
 	bool			isOK();
 
@@ -62,6 +64,7 @@ protected:
 	bool			writeData();
 	bool			readData();
 	void			repError(const char*);
+	void			processLogCB(CallBacker*);
 
 	ProcInstImpl*		pD;
 
