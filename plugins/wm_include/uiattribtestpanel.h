@@ -48,7 +48,7 @@ public:
 				uiTestPanel( uiParent* p, const char* procname,
 					    const char* packname,
 					    const char* panelname,
-					    const uiString axisnm, bool wva )
+					    const uiString& axisnm, bool wva )
 				    : uiAttribPanel( p )
 				    , procname_(procname)
 				    , packname_(packname)
@@ -107,7 +107,8 @@ template <class T> class uiAttribTestPanel : public CallBacker
 {
 public:
     uiAttribTestPanel(T&, const char*, const char*, const char*,
-		      const uiString axisnm=uiStrings::sFrequency(), bool wva=false);
+		      const uiString& axisnm, bool wva=false);
+    uiAttribTestPanel(T&, const char*, const char*, const char*, bool wva=false);
     ~uiAttribTestPanel();
 
     void				showPosDlg();
@@ -132,9 +133,16 @@ template<class T>
 uiAttribTestPanel<T>::uiAttribTestPanel( T& uiattrib, const char* procname,
 					 const char* packname,
 					 const char* panelname,
-					 const uiString axisnm, bool wva )
+					 const uiString& axisnm, bool wva )
     : uiattrib_(uiattrib)
     , testpanel_(new uiTestPanel(&uiattrib, procname, packname, panelname, axisnm, wva))
+{}
+
+template<class T>
+uiAttribTestPanel<T>::uiAttribTestPanel( T& uiattrib, const char* procname,
+					 const char* packname,
+					 const char* panelname, bool wva )
+    : uiAttribTestPanel(uiattrib, procname, packname, panelname, uiStrings::sFrequency(), wva)
 {}
 
 template<class T>
@@ -243,6 +251,9 @@ void uiAttribTestPanel<T>::setPrevSel()
 template<class T>
 void uiAttribTestPanel<T>::showPanelCB( CallBacker* )
 {
+    if (!posdlg_)
+	return;
+
     const int res = posdlg_->uiResult();
     if ( !res )
 	return;
