@@ -46,15 +46,23 @@ void GradientAttrib::initClass()
     desc->addParam( op_type );
 
     EnumParam* out_type = new EnumParam( outputStr() );
-    out_type->addEnum( "Inline" );
-    out_type->addEnum( "Crossline" );
-    out_type->addEnum( "Z" );
-    out_type->setDefaultValue( GradientAttrib::Z );
+    if (desc->is2D())
+    {
+	out_type->addEnum( "Line" );
+	out_type->addEnum( "Z2D" );
+	out_type->setDefaultValue( GradientAttrib::Z2D );
+    }
+    else
+    {
+	out_type->addEnum( "Inline" );
+	out_type->addEnum( "Crossline" );
+	out_type->addEnum( "Z3D" );
+	out_type->setDefaultValue( GradientAttrib::Z3D );
+    }
     desc->addParam( out_type );
 
     desc->addInput( InputSpec("Input data",true) );
     desc->addOutputDataType( Seis::UnknowData );
-
     desc->setLocality( Desc::MultiTrace );
     mAttrEndInitClass
 }
@@ -69,7 +77,7 @@ const float GradientAttrib::farid_7_s[] = {  0.004711,  0.069321,  0.245410, 0.3
 
 GradientAttrib::GradientAttrib( Desc& desc )
     : Provider( desc )
-	, size_(0)
+    , size_(0)
     , stepout_(0,0)
     , zmargin_(0,0)
 {
@@ -79,50 +87,65 @@ GradientAttrib::GradientAttrib( Desc& desc )
 
     mGetEnum( outtype_, outputStr() );
     mGetEnum( optype_, operatorStr() );
-	float*	skernel = NULL;
-	float*	dkernel = NULL;
+    float*	skernel = NULL;
+    float*	dkernel = NULL;
 
-	switch(optype_)
-	{
-		case Kroon_3:	size_ = 3;
-						skernel = new float[size_];
-						dkernel = new float[size_];
-						OD::memCopy( skernel, kroon_3_s, size_*sizeof(float) );
-						OD::memCopy( dkernel, kroon_3_d, size_*sizeof(float) );
-						break;
-		case Farid_5:	size_ = 5;
-						skernel = new float[size_];
-						dkernel = new float[size_];
-						OD::memCopy( skernel, farid_5_s, size_*sizeof(float) );
-						OD::memCopy( dkernel, farid_5_d, size_*sizeof(float) );
-						break;
-		case Farid_7:	size_ = 7;
-						skernel = new float[size_];
-						dkernel = new float[size_];
-						OD::memCopy( skernel, farid_7_s, size_*sizeof(float) );
-						OD::memCopy( dkernel, farid_7_d, size_*sizeof(float) );
-						break;
-	};
+    switch(optype_)
+    {
+	case Kroon_3:	size_ = 3;
+	    skernel = new float[size_];
+	    dkernel = new float[size_];
+	    OD::memCopy( skernel, kroon_3_s, size_*sizeof(float) );
+	    OD::memCopy( dkernel, kroon_3_d, size_*sizeof(float) );
+	    break;
+	case Farid_5:	size_ = 5;
+	    skernel = new float[size_];
+	    dkernel = new float[size_];
+	    OD::memCopy( skernel, farid_5_s, size_*sizeof(float) );
+	    OD::memCopy( dkernel, farid_5_d, size_*sizeof(float) );
+	    break;
+	case Farid_7:	size_ = 7;
+	    skernel = new float[size_];
+	    dkernel = new float[size_];
+	    OD::memCopy( skernel, farid_7_s, size_*sizeof(float) );
+	    OD::memCopy( dkernel, farid_7_d, size_*sizeof(float) );
+	    break;
+    };
 
-	ikernel_ = new float[size_];
-	xkernel_ = new float[size_];
-	zkernel_ = new float[size_];
+    ikernel_ = is2D() ? nullptr : new float[size_];
+    xkernel_ = new float[size_];
+    zkernel_ = new float[size_];
+    if (!is2D())
 	OD::memCopy( ikernel_, skernel, size_*sizeof(float) );
-	OD::memCopy( xkernel_, skernel, size_*sizeof(float) );
-	OD::memCopy( zkernel_, skernel, size_*sizeof(float) );
+    OD::memCopy( xkernel_, skernel, size_*sizeof(float) );
+    OD::memCopy( zkernel_, skernel, size_*sizeof(float) );
+    if (is2D())
+    {
 	switch(outtype_)
 	{
-		case Inline:	OD::memCopy( ikernel_, dkernel, size_*sizeof(float) );
-						break;
-		case Crossline:	OD::memCopy( xkernel_, dkernel, size_*sizeof(float) );
-						break;
-		case Z:			OD::memCopy( zkernel_, dkernel, size_*sizeof(float) );
-						break;
+	    case Line: OD::memCopy( xkernel_, dkernel, size_*sizeof(float) );
+		break;
+	    case Z2D: OD::memCopy( zkernel_, dkernel, size_*sizeof(float) );
+		break;
 	};
-	delete [] skernel;
-	delete [] dkernel;
+    }
+    else
+    {
+	switch(outtype_)
+	{
+	    case Inline: OD::memCopy( ikernel_, dkernel, size_*sizeof(float) );
+		break;
+	    case Crossline: OD::memCopy( xkernel_, dkernel, size_*sizeof(float) );
+		break;
+	    case Z3D: OD::memCopy( zkernel_, dkernel, size_*sizeof(float) );
+		break;
+	};
+    }
 
-	const int hsz = size_/2;
+    delete [] skernel;
+    delete [] dkernel;
+
+    const int hsz = size_/2;
 
     stepout_ = is2D() ? BinID(0,hsz) : BinID(hsz,hsz);
     getTrcPos();
@@ -132,9 +155,11 @@ GradientAttrib::GradientAttrib( Desc& desc )
 
 GradientAttrib::~GradientAttrib()
 {
+    if (!is2D())
 	delete [] ikernel_;
-	delete [] xkernel_;
-	delete [] zkernel_;
+
+    delete [] xkernel_;
+    delete [] zkernel_;
 }
 
 bool GradientAttrib::getTrcPos()
@@ -145,13 +170,13 @@ bool GradientAttrib::getTrcPos()
     centertrcidx_ = 0;
     for ( bid.inl()=-stepout_.inl(); bid.inl()<=stepout_.inl(); bid.inl()++ )
     {
-		for ( bid.crl()=-stepout_.crl(); bid.crl()<=stepout_.crl(); bid.crl()++ )
-		{
-			if ( !bid.inl() && !bid.crl() )
-				centertrcidx_ = trcidx;
-			trcpos_ += bid;
-			trcidx++;
-		}
+	for ( bid.crl()=-stepout_.crl(); bid.crl()<=stepout_.crl(); bid.crl()++ )
+	{
+	    if ( !bid.inl() && !bid.crl() )
+		centertrcidx_ = trcidx;
+	    trcpos_ += bid;
+	    trcidx++;
+	}
     }
 
     return true;
@@ -159,60 +184,69 @@ bool GradientAttrib::getTrcPos()
 
 bool GradientAttrib::getInputData( const BinID& relpos, int zintv )
 {
-	while ( inputdata_.size() < trcpos_.size() )
-		inputdata_ += 0;
+    while ( inputdata_.size() < trcpos_.size() )
+	inputdata_ += 0;
 
-	const BinID bidstep = inputs_[0]->getStepoutStep();
-	for ( int idx=0; idx<trcpos_.size(); idx++ )
-	{
-		const DataHolder* data =
-		inputs_[0]->getData( relpos+trcpos_[idx]*bidstep, zintv );
-        if ( !data ) {
-            const BinID pos = relpos + trcpos_[centertrcidx_]*bidstep;
-            data = inputs_[0]->getData( pos, zintv );
-            if ( !data ) return false;
-        }
-		inputdata_.replace( idx, data );
+    const BinID bidstep = inputs_[0]->getStepoutStep();
+    for ( int idx=0; idx<trcpos_.size(); idx++ )
+    {
+	const DataHolder* data =
+	inputs_[0]->getData( relpos+trcpos_[idx]*bidstep, zintv );
+	if ( !data ) {
+	    const BinID pos = relpos + trcpos_[centertrcidx_]*bidstep;
+	    data = inputs_[0]->getData( pos, zintv );
+	    if ( !data ) return false;
 	}
+	inputdata_.replace( idx, data );
+    }
 
-	dataidx_ = getDataIndex( 0 );
-
-	return true;
+    dataidx_ = getDataIndex( 0 );
+    return true;
 }
 
 bool GradientAttrib::computeData( const DataHolder& output, const BinID& relpos,
 				  int z0, int nrsamples, int threadid ) const
 {
+    if ( inputdata_.isEmpty() ) return false;
 
-	if ( inputdata_.isEmpty() ) return false;
+    const int sz = zmargin_.width() + nrsamples;
+    Array1DImpl<float> vals( sz );
+    const int hsz = size_/2;
 
-	const int sz = zmargin_.width() + nrsamples;
-	Array1DImpl<float> vals( sz );
-	const int hsz = size_/2;
-
-	for ( int idx=0; idx<sz; idx++ ) {
-		float reso = 0.0;
-		for (int iln=0; iln<size_; iln++) {
-			float res = 0.0;
-			for (int crl=0; crl<size_; crl++) {
-				const DataHolder* data = inputdata_[iln*size_+crl];
-				float val = getInputValue(*data, dataidx_, zmargin_.start_+idx, z0);
-				res += mIsUdf(val)?0.0f:val*xkernel_[crl];
-			}
-			reso += ikernel_[iln]*res;
+    for ( int idx=0; idx<sz; idx++ ) {
+	float reso = 0.0;
+	if (!is2D())
+	{
+	    for (int iln=0; iln<size_; iln++) {
+		float res = 0.0;
+		for (int crl=0; crl<size_; crl++) {
+		    const DataHolder* data = inputdata_[iln*size_+crl];
+		    float val = getInputValue(*data, dataidx_, zmargin_.start_+idx, z0);
+		    res += mIsUdf(val)?0.0f:val*xkernel_[crl];
 		}
-		vals.set(idx, reso);
+		reso += ikernel_[iln]*res;
+	    }
 	}
+	else
+	{
+	    for (int crl=0; crl<size_; crl++) {
+		const DataHolder* data = inputdata_[crl];
+		float val = getInputValue(*data, dataidx_, zmargin_.start_+idx, z0);
+		reso += mIsUdf(val)?0.0f:val*xkernel_[crl];
+	    }
+	}
+	vals.set(idx, reso);
+    }
 
-	for (int idx=0; idx<nrsamples; idx++) {
-		float value = 0.0;
-		const int ipos = idx - zmargin_.start_ - hsz;
-		for (int zi=0; zi<size_; zi++) {
-			value += vals[ipos+zi]*zkernel_[zi];
-		}
-		setOutputValue( output, 0, idx, z0, value );
+    for (int idx=0; idx<nrsamples; idx++) {
+	float value = 0.0;
+	const int ipos = idx - zmargin_.start_ - hsz;
+	for (int zi=0; zi<size_; zi++) {
+	    value += vals[ipos+zi]*zkernel_[zi];
 	}
-	return true;
+	setOutputValue( output, 0, idx, z0, value );
+    }
+    return true;
 }
 
 
