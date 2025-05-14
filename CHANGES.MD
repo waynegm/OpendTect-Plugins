@@ -1,8 +1,25 @@
 # OpendTect Plugins Release Notes
 
 ## Release 2025.1 (aka 8.0)
+
 - Adapt to OpendTect API changes
 - move all external dependencies to WMPlugin-Deps repository
+- ensure all pointers are initialised or set to nullptr
+- check pointers to optional ui items before use
+### AVOAttrib
+- fix zero divide in AVO Angle
+### EFDAttrib
+- fix display of test panel
+### External Attributes
+- fix writing of information to log file
+- add script to generate synthetic AVO intercept and gradient for testing
+- add nrZ (number of samples in trace) to SeismicInfo buffer
+### GradientAttrib
+- make it work on 2D
+### LocalAttrib
+- fix display of test panel
+### RSpecAttrib
+- fix display of test panel
 
 ## Release 7.0.7
 
