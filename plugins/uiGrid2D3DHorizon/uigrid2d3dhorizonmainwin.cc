@@ -92,7 +92,7 @@ void uiGrid2D3DHorizonMainWin::tabSelCB( CallBacker* )
 
     uiGroup* grp = tabstack_->currentPage();
     if ( !grp ) return;
-    if (grp->name() == "Input Data")
+    if (inputgrp_ && grp->name() == "Input Data")
         inputgrp_->update();
     else
         gridgrp_->update();
@@ -101,7 +101,9 @@ void uiGrid2D3DHorizonMainWin::tabSelCB( CallBacker* )
 bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
 {
     IOPar par;
-    inputgrp_->fillPar( par );
+    if (inputgrp_)
+	inputgrp_->fillPar( par );
+
     gridgrp_->fillPar( par );
     par.write(getParFileName(), "grid2d3d");
 

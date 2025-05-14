@@ -135,7 +135,7 @@ void uiGeopackageExportMainWin::tabSel( CallBacker* )
 
     uiGroup* grp = tabstack_->currentPage();
     if ( !grp ) return;
-    if (grp->name() == "Horizon")
+    if (grp->name() == "Horizon" && horgrp_)
         horgrp_->update();
 
 }
@@ -169,7 +169,7 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
 
     uiGeopackageWriter gpgWriter(filefld_->fileName(), appendfld_->isChecked());
     if (SI().has3D())
-        if( surveygrp_->doExport() ) {
+        if( surveygrp_ && surveygrp_->doExport() ) {
             setCaption(tr("Exporting 3D Survey"));
             gpgWriter.writeSurvey();
         }
@@ -187,56 +187,48 @@ bool uiGeopackageExportMainWin::acceptOK( CallBacker*)
         }
     }
 
-    if (randomgrp_) {
-        if (randomgrp_->doLineExport()) {
-            setCaption(tr("Exporting Random Lines"));
-            TypeSet<MultiID> lineids;
-            randomgrp_->getLineIds( lineids );
-            gpgWriter.writeRandomLines( lineids );
-        }
+    if (randomgrp_ && randomgrp_->doLineExport()) {
+	setCaption(tr("Exporting Random Lines"));
+	TypeSet<MultiID> lineids;
+	randomgrp_->getLineIds( lineids );
+	gpgWriter.writeRandomLines( lineids );
     }
 
-    if (wellsgrp_) {
-        if (wellsgrp_->doWellExport()) {
-            setCaption(tr("Exporting wells"));
-            TypeSet<MultiID> wellids;
-            wellsgrp_->getWellIds( wellids);
-            gpgWriter.writeWells( wellids );
-        }
-        if (wellsgrp_->doWellTrackExport()) {
-            setCaption(tr("Exporting welltracks"));
-            TypeSet<MultiID> wellids;
-            wellsgrp_->getWellIds( wellids);
-            gpgWriter.writeWellTracks( wellids );
-        }
-        if (wellsgrp_->doMarkerExport()) {
-            setCaption(tr("Exporting markers"));
-            TypeSet<MultiID> wellids;
-            wellsgrp_->getWellIds( wellids);
-            gpgWriter.writeWellMarkers( wellids, wellsgrp_->doInFeet() );
-        }
+    if (wellsgrp_ && wellsgrp_->doWellExport()) {
+	setCaption(tr("Exporting wells"));
+	TypeSet<MultiID> wellids;
+	wellsgrp_->getWellIds( wellids);
+	gpgWriter.writeWells( wellids );
+    }
+    if (wellsgrp_ && wellsgrp_->doWellTrackExport()) {
+	setCaption(tr("Exporting welltracks"));
+	TypeSet<MultiID> wellids;
+	wellsgrp_->getWellIds( wellids);
+	gpgWriter.writeWellTracks( wellids );
+    }
+    if (wellsgrp_ && wellsgrp_->doMarkerExport()) {
+	setCaption(tr("Exporting markers"));
+	TypeSet<MultiID> wellids;
+	wellsgrp_->getWellIds( wellids);
+	gpgWriter.writeWellMarkers( wellids, wellsgrp_->doInFeet() );
     }
 
-    if (polygrp_) {
-        if (polygrp_->doLineExport()) {
-            setCaption(tr("Exporting polylines"));
-            TypeSet<MultiID> lineids;
-            polygrp_->getLineIds( lineids );
-            gpgWriter.writePolyLines( lineids );
-        }
+    if (polygrp_ && polygrp_->doLineExport()) {
+	setCaption(tr("Exporting polylines"));
+	TypeSet<MultiID> lineids;
+	polygrp_->getLineIds( lineids );
+	gpgWriter.writePolyLines( lineids );
     }
 
-    if (horgrp_) {
-        if (horgrp_->doHorizonExport()) {
-            setCaption(tr("Exporting horizon"));
-            MultiID hor2Did, hor3Did;
-            horgrp_->getHorIds(hor2Did, hor3Did);
-            TypeSet<Pos::GeomID> geomids;
-            horgrp_->getGeoMids(geomids);
-            TrcKeyZSampling env;
-            horgrp_->get3Dsel(env);
-            gpgWriter.writeHorizon(horgrp_->outputName(), hor2Did, horgrp_->attrib2D(), geomids, hor3Did, horgrp_->attrib3D(), env);
-        }
+    if (horgrp_ && horgrp_->doHorizonExport()) {
+	setCaption(tr("Exporting horizon"));
+	MultiID hor2Did, hor3Did;
+	horgrp_->getHorIds(hor2Did, hor3Did);
+	TypeSet<Pos::GeomID> geomids;
+	horgrp_->getGeoMids(geomids);
+	TrcKeyZSampling env;
+	horgrp_->get3Dsel(env);
+	gpgWriter.writeHorizon(horgrp_->outputName(), hor2Did, horgrp_->attrib2D(), geomids, hor3Did, horgrp_->attrib3D(), env);
     }
 
     return true;

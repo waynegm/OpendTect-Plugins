@@ -138,6 +138,9 @@ void uiGeotiffWriter::setMetadataField() const
 
 uiRetVal uiGeotiffWriter::setTiffTags(const TrcKeySampling& hs, int nrbands)
 {
+    if (!srs_)
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - srs is undefined."));
+
     TIFFSetField(tif_, TIFFTAG_IMAGEWIDTH, hs.nrCrl());
     TIFFSetField(tif_, TIFFTAG_IMAGELENGTH, hs.nrInl());
     TIFFSetField(tif_, TIFFTAG_COMPRESSION, COMPRESSION_NONE);

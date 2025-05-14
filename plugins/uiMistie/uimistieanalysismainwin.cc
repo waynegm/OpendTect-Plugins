@@ -204,7 +204,6 @@ uiMistieAnalysisMainWin::uiMistieAnalysisMainWin( uiParent* p )
     , calcitem_(tr("Calculate Corrections"), "attributes", "", mCB(this,uiMistieAnalysisMainWin,calcCB), sMnuID++)
     , xplotitem_(tr("Crossplot Mistie Data"), "xplot", "", mCB(this,uiMistieAnalysisMainWin,xplotCB), sMnuID++)
     , helpitem_(tr("Help"), "contexthelp", "", mCB(this,uiMistieAnalysisMainWin,helpCB), sMnuID++)
-    , corrviewer_(0)
 
 {
     setCtrlStyle(CloseOnly);

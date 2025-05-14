@@ -159,7 +159,7 @@ void uiMistieEstimateBySeismic::gatefldchangeCB(CallBacker*)
 
 bool uiMistieEstimateBySeismic::estimateMisties(MistieData& misties)
 {
-    if (!lineselfld_) {
+    if (!lineselfld_ || !seisselfld_) {
 	uiMSG().error( tr("Mistie analysis requires 2D data") );
 	return false;
     }
@@ -195,7 +195,7 @@ bool uiMistieEstimateBySeismic::estimateMisties(MistieData& misties)
     TaskRunner::execute(&uitr, misest);
     misties = misest.getMisties();
 
-    if (use3dfld_ && use3dfld_->isChecked()) {
+    if (trcstepfld_ && data3dfld_ && use3dfld_ && use3dfld_->isChecked()) {
 	Line3DOverlapFinder lines3Doverlap(data3dfld_->ioobj(true), bendpoints);
 	TaskRunner::execute(&uitr, lines3Doverlap);
 	MistieEstimatorFromSeismic2D3D misties2d3d(data3dfld_->ioobj(true), seisselfld_->ioobj(true), lines3Doverlap.selData(), zrg, lagtime,
@@ -291,9 +291,11 @@ bool uiMistieEstimateByHorizon::estimateMisties(MistieData& misties)
 	Line3DOverlapFinder lines3Doverlap(hor3d, bendpoints);
 	TaskRunner::execute(&uitr, lines3Doverlap);
 	obj3d->unRef();
-	MistieEstimatorFromHorizon2D3D misties2d3d(hor3Did, hor2Did, lines3Doverlap.selData(), trcstepfld_->getIntValue());
-	TaskRunner::execute(&uitr, misties2d3d);
-	misties.add(misties2d3d.getMisties());
+	if (trcstepfld_) {
+	    MistieEstimatorFromHorizon2D3D misties2d3d(hor3Did, hor2Did, lines3Doverlap.selData(), trcstepfld_->getIntValue());
+	    TaskRunner::execute(&uitr, misties2d3d);
+	    misties.add(misties2d3d.getMisties());
+	}
     }
 
     return true;

@@ -34,7 +34,7 @@ protected:
 
     TIFF*				tif_	= nullptr;
     GTIF*				gtif_	= nullptr;
-    Coords::AuthorityCode*		srs_;
+    Coords::AuthorityCode*		srs_	= nullptr;
     BufferString			filename_;
     bool				overwrite_ = true;
     BufferStringSet			bandmetadata_;

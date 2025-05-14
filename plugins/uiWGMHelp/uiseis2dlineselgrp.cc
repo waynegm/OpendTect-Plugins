@@ -12,7 +12,6 @@
 
 WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm )
     : uiGroup(p, "Linechooser")
-    , lbchoiceio_(nullptr)
     , selectionDone(this)
 {
     init(cm);
@@ -26,7 +25,6 @@ WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm )
 
 WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm, const BufferStringSet& lnms,const TypeSet<Pos::GeomID>& geomids)
     : uiGroup( p, "Line chooser" )
-    , lbchoiceio_(nullptr)
     , selectionDone(this)
 {
     init(cm);

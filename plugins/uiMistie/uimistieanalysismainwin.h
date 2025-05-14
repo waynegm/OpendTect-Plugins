@@ -35,7 +35,7 @@ protected:
 
     uiToolBar*      tb_;
     uiTable*        table_;
-    uiCorrViewer*   corrviewer_;
+    uiCorrViewer*   corrviewer_ = nullptr;
     BufferString    filename_;
     MistieData      misties_;
     MistieCorrectionData corrs_;

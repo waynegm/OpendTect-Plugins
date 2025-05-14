@@ -18,7 +18,7 @@ public:
 protected:
     uiTabStack*         tabstack_;
     uiGenInput*         scopefld_;
-    uiInputGrp*         inputgrp_;
+    uiInputGrp*         inputgrp_ = nullptr;
     uiGridGrp*          gridgrp_;
     uiSurfaceWrite*     outfld_;
 

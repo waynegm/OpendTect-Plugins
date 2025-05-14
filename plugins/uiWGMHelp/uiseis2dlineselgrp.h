@@ -40,7 +40,7 @@ protected:
 
     uiListBox*              listfld_;
     uiListBoxFilter*        filtfld_;
-    uiListBoxChoiceIO*      lbchoiceio_;
+    uiListBoxChoiceIO*      lbchoiceio_ = nullptr;
 
     void                    init(OD::ChoiceMode);
     void                    readChoiceDone(CallBacker*);
