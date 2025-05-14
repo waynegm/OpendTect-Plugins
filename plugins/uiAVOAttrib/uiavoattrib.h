@@ -39,22 +39,24 @@ public:
 protected:
 
     uiAttrSel*		inp_interceptfld_;
-	uiAttrSel*		inp_gradientfld_;
-	uiGenInput*		outputfld_;
-	uiGenInput*		slopefld_;
-	uiGenInput*		intercept_devfld_;
-	uiGenInput*		gradient_devfld_;
-	uiGenInput*		correlationfld_;
-	uiGenInput*		class2fld_;
+    uiAttrSel*		inp_gradientfld_;
+    uiGenInput*		outputfld_;
+    uiGenInput*		slopefld_;
+    uiGenInput*		intercept_devfld_;
+    uiGenInput*		gradient_devfld_;
+    uiGenInput*		correlationfld_;
+    uiGenInput*		class2fld_;
 
 
     void		actionSel(CallBacker*);
 
     bool		setParameters(const Attrib::Desc&);
     bool		setInput(const Attrib::Desc&);
+    bool		setOutput(const Attrib::Desc&);
 
     bool		getParameters(Attrib::Desc&);
     bool		getInput(Attrib::Desc&);
+    bool		getOutput(Attrib::Desc&);
 
     			mDeclReqAttribUIFns
 };

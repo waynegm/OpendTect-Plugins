@@ -37,10 +37,10 @@ static const char* outputstr[] =
 {
     "Fluid Factor",
     "Lithology Factor",
-	"Porosity Factor",
+    "Porosity Factor",
     "Crossplot Angle",
-	"Crossplot Deviation",
-	"AVO Class",
+    "Crossplot Deviation",
+    "AVO Class",
     0
 };
 
@@ -93,9 +93,9 @@ void uiAVOAttrib::actionSel( CallBacker* )
     const int outval = outputfld_->getIntValue();
 
     intercept_devfld_->display( outval==AVOAttrib::CrossplotAngle || outval==AVOAttrib::CrossplotDeviation );
-	gradient_devfld_->display( outval==AVOAttrib::CrossplotAngle || outval==AVOAttrib::CrossplotDeviation );
-	correlationfld_->display( outval==AVOAttrib::CrossplotDeviation );
-	class2fld_->display( outval==AVOAttrib::AVOClass );
+    gradient_devfld_->display( outval==AVOAttrib::CrossplotAngle || outval==AVOAttrib::CrossplotDeviation );
+    correlationfld_->display( outval==AVOAttrib::CrossplotDeviation );
+    class2fld_->display( outval==AVOAttrib::AVOClass );
 }
 
 
@@ -107,10 +107,10 @@ bool uiAVOAttrib::setParameters( const Desc& desc )
     mIfGetEnum( AVOAttrib::outputStr(), output, outputfld_->setValue(output) );
     mIfGetFloat( AVOAttrib::slopeStr(), slope, slopefld_->setValue(slope) );
     mIfGetFloat( AVOAttrib::intercept_devStr(), intercept_dev, intercept_devfld_->setValue(intercept_dev) );
-	mIfGetFloat( AVOAttrib::gradient_devStr(), gradient_dev, gradient_devfld_->setValue(gradient_dev) );
-	mIfGetFloat( AVOAttrib::correlationStr(), correlation, correlationfld_->setValue(correlation) );
-	mIfGetFloat( AVOAttrib::class2Str(), class2width, class2fld_->setValue(class2width) );
-	actionSel(0);
+    mIfGetFloat( AVOAttrib::gradient_devStr(), gradient_dev, gradient_devfld_->setValue(gradient_dev) );
+    mIfGetFloat( AVOAttrib::correlationStr(), correlation, correlationfld_->setValue(correlation) );
+    mIfGetFloat( AVOAttrib::class2Str(), class2width, class2fld_->setValue(class2width) );
+    actionSel(0);
 
     return true;
 }
@@ -129,23 +129,23 @@ bool uiAVOAttrib::getParameters( Desc& desc )
     if ( desc.attribName() != AVOAttrib::attribName() )
 	return false;
 
-	const int outval = outputfld_->getIntValue();
+    const int outval = outputfld_->getIntValue();
 
     mSetEnum( AVOAttrib::outputStr(), outputfld_->getIntValue() );
-	mSetFloat( AVOAttrib::slopeStr(), slopefld_->getFValue() );
-	if ( outval == AVOAttrib::CrossplotAngle )
+    mSetFloat( AVOAttrib::slopeStr(), slopefld_->getFValue() );
+    if ( outval == AVOAttrib::CrossplotAngle )
     {
     	mSetFloat( AVOAttrib::intercept_devStr(), intercept_devfld_->getFValue() );
     	mSetFloat( AVOAttrib::gradient_devStr(), gradient_devfld_->getFValue() );
     }
     if ( outval == AVOAttrib::CrossplotDeviation )
-	{
-		mSetFloat( AVOAttrib::intercept_devStr(), intercept_devfld_->getFValue() );
-		mSetFloat( AVOAttrib::gradient_devStr(), gradient_devfld_->getFValue() );
-		mSetFloat( AVOAttrib::correlationStr(), correlationfld_->getFValue() );
-	}
-	if ( outval == AVOAttrib::AVOClass )
-		mSetFloat( AVOAttrib::class2Str(), class2fld_->getFValue() );
+    {
+	mSetFloat( AVOAttrib::intercept_devStr(), intercept_devfld_->getFValue() );
+	mSetFloat( AVOAttrib::gradient_devStr(), gradient_devfld_->getFValue() );
+	mSetFloat( AVOAttrib::correlationStr(), correlationfld_->getFValue() );
+    }
+    if ( outval == AVOAttrib::AVOClass )
+	mSetFloat( AVOAttrib::class2Str(), class2fld_->getFValue() );
 
     return true;
 }
