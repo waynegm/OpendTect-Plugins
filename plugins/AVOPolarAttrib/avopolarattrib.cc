@@ -198,7 +198,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
 
     if (isOutputEnabled(EventAngle)) {
         computeEventAngle( A, B, evAngle, quality );
-	Eigen::ArrayXd out = (bgAngle.isFinite()).select(bgAngle,mUdf(float));
+	Eigen::ArrayXd out = (evAngle.isFinite()).select(evAngle,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,EventAngle, idx, z0, out[idx-sampgateBG_.start_]);
     }
