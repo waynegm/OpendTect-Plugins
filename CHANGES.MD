@@ -8,6 +8,8 @@
 - check pointers to optional ui items before use
 ### AVOAttrib
 - fix zero divide in AVO Angle
+### AVOPolarAttrib
+- fix event angle computation
 ### EFDAttrib
 - fix display of test panel
 ### External Attributes
