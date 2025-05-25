@@ -65,18 +65,14 @@ protected:
     virtual const char*		getProcName()	{ return procname_; }
     virtual const char*		getPackName()	{ return packname_; }
     virtual const char*		getPanelName()	{ return panelname_; }
-    void			createAndDisplay2DViewer(FlatDataPack*);
+    void			createAndDisplay2DViewer() override;
 };
 
-inline void uiTestPanel::createAndDisplay2DViewer( FlatDataPack* fdpack )
+inline void uiTestPanel::createAndDisplay2DViewer()
 {
-    if ( !fdpack )
-	return;
-
-    RefMan<FlatDataPack> fdp = fdpack;
     if ( flatvwin_ )
 	flatvwin_->viewer().setPack(
-		    wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD, fdp );
+		    wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD, vddp_.ptr() );
     else
     {
 	flatvwin_ = new uiFlatViewMainWin( parent_,
@@ -85,19 +81,21 @@ inline void uiTestPanel::createAndDisplay2DViewer( FlatDataPack* fdpack )
 	vwr.setInitialSize( uiSize(400,600) );
 	FlatView::Appearance& app = vwr.appearance();
 	app.annot_.setAxesAnnot( true );
-	app.annot_.x1_.sampling_ = fdp->posData().range(true);
-	app.annot_.x2_.sampling_ = fdp->posData().range(false);
+	app.annot_.x1_.sampling_ = vddp_->posData().range(true);
+	app.annot_.x2_.sampling_ = vddp_->posData().range(false);
 	app.annot_.x1_.name_ = axisnm_;
 	if ( wva_ )
 	    app.annot_.x1_.annotinint_ = true;
-	app.setDarkBG( false );
+	app.setDarkBG( true );
 	app.setGeoDefaults( true );
-	app.ddpars_.show( wva_, true );
-	vwr.setPack( wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD,
-		     fdp );
+	app.ddpars_.show( wva_, !wva_);
+	app.ddpars_.wva_.wigg_ = OD::Color::Black();
+	app.ddpars_.wva_.overlap_ = 0.2;
+	vwr.setPack( wva_ ? FlatView::Viewer::WVA : FlatView::Viewer::VD, vddp_.ptr() );
 	flatvwin_->addControl( new uiFlatViewStdControl(vwr,
 		uiFlatViewStdControl::Setup(nullptr).isvertical(true)) );
 	flatvwin_->setDeleteOnClose( false );
+	flatvwin_->showAlwaysOnTop();
     }
 
     flatvwin_->show();
@@ -123,8 +121,8 @@ protected:
     void				setPrevSel();
     void				getPrevSel();
     Attrib::DescID			createTestDesc(Attrib::DescSet*) const;
-    Attrib::Desc*			createNewDescFromDP(Attrib::DescSet*) const;
-    Attrib::Desc*			createNewDesc(Attrib::DescSet*,Attrib::DescID) const;
+    RefMan<Attrib::Desc>		createNewDescFromDP(Attrib::DescSet*) const;
+    RefMan<Attrib::Desc>			createNewDesc(Attrib::DescSet*,Attrib::DescID) const;
 };
 
 
@@ -270,7 +268,7 @@ template<class T>
 Attrib::DescID uiAttribTestPanel<T>::createTestDesc( DescSet* dset ) const
 {
     DescID inpid;
-    Desc* newdesc = 0;
+    RefMan<Desc> newdesc;
     if ( uiattrib_.dpfids_.size() )
 	newdesc = createNewDescFromDP( dset );
     else
@@ -283,21 +281,21 @@ Attrib::DescID uiAttribTestPanel<T>::createTestDesc( DescSet* dset ) const
     if ( !newdesc )
 	return DescID::undef();
 
-    uiattrib_.fillTestParams( newdesc );
+    uiattrib_.fillTestParams( newdesc.ptr() );
     newdesc->updateParams();
     newdesc->setUserRef( testpanel_->panelname_ );
-    return dset->addDesc( newdesc );
+    return dset->addDesc( newdesc.ptr() );
 }
 
 template<class T>
-Attrib::Desc* uiAttribTestPanel<T>::createNewDescFromDP( Attrib::DescSet* dset ) const
+RefMan<Attrib::Desc> uiAttribTestPanel<T>::createNewDescFromDP( Attrib::DescSet* dset ) const
 {
-    Desc* newdesc = PF().createDescCopy( uiattrib_.attribName() );
+    RefMan<Desc> newdesc = PF().createDescCopy( uiattrib_.attribName() );
     newdesc->selectOutput( 0 );
-    Desc* inpdesc= uiattrib_.getInputDescFromDP( uiattrib_.inpfld_ );
+    RefMan<Desc> inpdesc= uiattrib_.getInputDescFromDP( uiattrib_.inpfld_ );
     inpdesc->setDescSet( dset );
-    dset->addDesc( inpdesc );
-    newdesc->setInput( 0, inpdesc );
+    dset->addDesc( inpdesc.ptr() );
+    newdesc->setInput( 0, inpdesc.ptr() );
     newdesc->selectOutput( 0 );
     newdesc->setHidden( true );
     BufferString usrref = "_"; usrref += inpdesc->userRef();
@@ -306,15 +304,15 @@ Attrib::Desc* uiAttribTestPanel<T>::createNewDescFromDP( Attrib::DescSet* dset )
 }
 
 template<class T>
-Attrib::Desc* uiAttribTestPanel<T>::createNewDesc( Attrib::DescSet* descset, Attrib::DescID inpid ) const
+RefMan<Attrib::Desc> uiAttribTestPanel<T>::createNewDesc( Attrib::DescSet* descset, Attrib::DescID inpid ) const
 {
-    Desc* inpdesc = descset->getDesc( inpid );
-    Desc* newdesc = PF().createDescCopy( uiattrib_.attribName() );
+    RefMan<Desc> inpdesc = descset->getDesc( inpid );
+    RefMan<Desc> newdesc = PF().createDescCopy( uiattrib_.attribName() );
     if ( !newdesc || !inpdesc )
 	return nullptr;
 
     newdesc->selectOutput( 0 );
-    newdesc->setInput( 0, inpdesc );
+    newdesc->setInput( 0, inpdesc.ptr() );
     newdesc->setHidden( true );
     BufferString usrref = "_"; usrref += inpdesc->userRef();
     newdesc->setUserRef( usrref );
