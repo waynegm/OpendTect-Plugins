@@ -27,6 +27,7 @@
 #include "survinfo.h"
 #include "uibutton.h"
 #include "uimsg.h"
+#include "uipointsetsel.h"
 #include "ioobj.h"
 #include "emmanager.h"
 #include "emhorizon2d.h"
@@ -57,16 +58,16 @@ uiConvexHull::uiConvexHull( uiParent* p )
     setOkText( tr("Create") );
     setShrinkAllowed(true);
 
-    namefld_ = new uiGenInput(this, tr("Name for new polygon"));
+    outfld_ = uiPointSetPolygonSel::create( this, false, true, tr("Name for new polygon") );
 
     uiString lbl = tr("Z Value ");
     lbl.append( SI().getUiZUnitString() );
     zfld_ = new uiGenInput( this, lbl, FloatInpSpec(SI().zRange(true).start_*SI().zDomain().userFactor()) );
-    zfld_->attach( rightOf, namefld_ );
+    zfld_->attach( rightOf, outfld_ );
 
     colorfld_ = new uiColorInput(this, uiColorInput::Setup(OD::getRandStdDrawColor()).
     lbltxt(uiStrings::sColor()) );
-    colorfld_->attach(alignedBelow, namefld_);
+    colorfld_->attach(alignedBelow, outfld_);
 
     uiSeparator* navsep = new uiSeparator(this, "Navigation Data Selection");
     navsep->attach(stretchedBelow, colorfld_);
@@ -125,13 +126,11 @@ uiConvexHull::~uiConvexHull()
 
 bool uiConvexHull::acceptOK( CallBacker*)
 {
-    polyname_ = namefld_->text();
-    polyname_.trimBlanks();
-    if ( polyname_.isEmpty() ) {
-	uiMSG().error( tr("Please specify a name for the polygon") );
+    const IOObj* ioobj = outfld_->ioobj();
+    if ( !ioobj )
 	return false;
-    }
 
+    polyname_ = ioobj->name();
     float zval = zfld_->getFValue();
     if (mIsUdf(zval)) {
 	uiMSG().error( tr("Z value is undefined. Please enter a valid value") );

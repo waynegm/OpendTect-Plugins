@@ -31,6 +31,7 @@ class Callbacker;
 class uiColorInput;
 class uiGenInput;
 class uiCheckBox;
+class uiPointSetPolygonSel;
 
 
 mClass(uiWMTools) uiConvexHull : public uiDialog
@@ -47,7 +48,7 @@ protected:
 
     WMLib::ui2D3DDataSelGrp*	navinputgrp_;
     WMLib::uiHorInputGrp*	horinputfld_ = nullptr;
-    uiGenInput*			namefld_;
+    uiPointSetPolygonSel*	outfld_;
     uiGenInput*			zfld_;
     uiColorInput*		colorfld_;
     uiCheckBox*                 usenavfld_;

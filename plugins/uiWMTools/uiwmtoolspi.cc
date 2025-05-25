@@ -30,6 +30,7 @@
 #include "odplugin.h"
 #include "survinfo.h"
 #include "uimsg.h"
+#include "iodir.h"
 #include "ioman.h"
 #include "uiioobj.h"
 #include "uimenuhandler.h"
@@ -84,6 +85,7 @@ public:
     void 	polygonParentMenuCB(CallBacker*);
     void	horizonParentMenuCB(CallBacker*);
     void	contourPolyChangeCB(CallBacker*);
+    bool	storeNewPickSet( const Pick::Set& ps, bool aspolygon=false ) const;
 
     uiODMain*   		appl_;
     Pick::SetMgr&		psmgr_;
@@ -203,7 +205,7 @@ void uiWMToolsMgr::faultPolyCB(CallBacker*)
 	for ( int idx=0; idx<nfaults; idx++ )
 	{
 	    RefMan<Pick::Set> ps = faultpolydlg.getPolyForFault(idx);
-	    if ( ps && ps->size() && uipsmgr_.storeNewSet(*ps, true) )
+	    if ( ps && ps->size() && storeNewPickSet(*ps, true) )
 	    {
 		RefMan<Pick::Set> newps = psmgr_.get( psmgr_.size()-1 );
 		addPolygon( newps.ptr() );
@@ -253,6 +255,36 @@ void uiWMToolsMgr::surveyChangeCB( CallBacker* )
 	deleteAndNullPtr(contourdlg_);
     }
 
+}
+
+bool uiWMToolsMgr::storeNewPickSet( const Pick::Set& ps, bool aspoly ) const
+{
+    PtrMan<CtxtIOObj> ctio = mMkCtxtIOObj(PickSet);
+    ctio->setName( ps.name() );
+    PickSetTranslator::fillConstraints( ctio->ctxt_, aspoly );
+    ctio->ctxt_.forread_ = false;
+    if ( uiIOObj::fillCtio(*ctio,false) )
+    {
+	PtrMan<IOObj> ioobj = ctio->ioobj_;
+	IOM().commitChanges( *ioobj );
+	uiString errmsg;
+	if ( !PickSetTranslator::store(ps, ioobj.ptr(), errmsg) )
+	{
+	    uiMSG().error( errmsg );
+	    return false;
+	}
+
+	psmgr_.set( ioobj->key(), cCast(Pick::Set*,&ps) );
+	return true;
+    }
+
+    const IODir iodir( ctio->ctxt_.getSelKey() );
+    FilePath fp = iodir.dirName(); fp.add( ".omf" );
+    uiMSG().error( tr("Cannot add PointSet to database.\n"
+    "Please check write permission of\n%1")
+    .arg(fp.fullPath()) );
+
+    return false;
 }
 
 mDefODInitPlugin(uiWMTools)

@@ -25,6 +25,7 @@ namespace Pick {
 class Callbacker;
 class uiColorInput;
 class uiGenInput;
+class uiPointSetPolygonSel;
 
 
 mClass(uiWMTools) uiContourPoly : public uiDialog
@@ -38,7 +39,7 @@ public:
 
 protected:
 
-    uiGenInput*			namefld_;
+    uiPointSetPolygonSel*	outfld_;
     uiGenInput*			zfld_;
     uiColorInput*		colorfld_;
 
