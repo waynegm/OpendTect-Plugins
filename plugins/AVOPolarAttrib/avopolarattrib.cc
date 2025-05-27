@@ -198,7 +198,7 @@ bool AVOPolarAttrib::computeData( const DataHolder& output, const BinID& relpos,
 
     if (isOutputEnabled(EventAngle)) {
         computeEventAngle( A, B, evAngle, quality );
-	Eigen::ArrayXd out = (bgAngle.isFinite()).select(bgAngle,mUdf(float));
+	Eigen::ArrayXd out = (evAngle.isFinite()).select(evAngle,mUdf(float));
         for (int idx=0; idx<nrsamples; idx++)
             setOutputValue(output,EventAngle, idx, z0, out[idx-sampgateBG_.start]);
     }
@@ -254,7 +254,7 @@ void AVOPolarAttrib::computeEventAngle(  const Eigen::ArrayXXd& A, const Eigen::
     const int sz = A.rows();
     angle.resize(sz);
     qual.resize(sz);
-    const int winsamples = sampgateBG_.width()+1;
+    const int winsamples = sampgate_.width()+1;
 
 
     Eigen::ArrayXd A2 = A.col(centertrcidx_)*A.col(centertrcidx_);
@@ -300,7 +300,7 @@ void AVOPolarAttrib::computeStrength(  const Eigen::ArrayXXd& A, const Eigen::Ar
 {
     const int sz = A.rows();
     result.resize(sz);
-    const int winsamples = sampgateBG_.width()+1;
+    const int winsamples = sampgate_.width()+1;
 
     Eigen::ArrayXi imax(sz);
     Eigen::ArrayXd Amax(sz);
