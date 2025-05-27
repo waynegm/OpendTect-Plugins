@@ -31,17 +31,30 @@ ________________________________________________________________________
 
 using namespace Attrib;
 
-static const char* opstr[] =
+static const char* opstr3d[] =
 {
 	"Kroon 3x3x3",
 	"Farid 5x5x5",
 	"Farid 7x7x7",
 	0
 };
-static const char* outstr[] =
+static const char* opstr2d[] =
+{
+    "Kroon 3x3",
+    "Farid 5x5",
+    "Farid 7x7",
+    0
+};
+static const char* outstr3d[] =
 {
     "Inline",
     "Crossline",
+    "Z",
+    0
+};
+static const char* outstr2d[] =
+{
+    "Line",
     "Z",
     0
 };
@@ -55,10 +68,12 @@ uiGradientAttrib::uiGradientAttrib( uiParent* p, bool is2d )
 {
     inpfld_ = createInpFld( is2d );
  
-    outfld_ = new uiGenInput( this, tr("Output Gradient"), StringListInpSpec(outstr) );
+    outfld_ = new uiGenInput( this, tr("Output Gradient"),
+			      StringListInpSpec(is2d ? outstr2d : outstr3d) );
     outfld_->attach( alignedBelow, inpfld_ );
 	
-	operatorfld_ = new uiGenInput( this, tr("Operator"), StringListInpSpec(opstr) );
+    operatorfld_ = new uiGenInput( this, tr("Operator"),
+				   StringListInpSpec(is2d ? opstr2d : opstr3d) );
     operatorfld_->attach( alignedBelow, outfld_ );
     
 	setHAlignObj( outfld_ );

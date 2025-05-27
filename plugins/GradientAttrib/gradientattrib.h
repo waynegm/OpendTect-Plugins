@@ -38,15 +38,16 @@ namespace Attrib
 mClass(GradientAttrib) GradientAttrib : public Provider
 {
 public:
-	static void				initClass();
-							GradientAttrib(Desc&);
+	static void			initClass();
+					GradientAttrib(Desc&);
 
 	static const char*		attribName()	{ return "GradientAttrib"; }
 
 	static const char*		operatorStr()	{ return "operator"; }
 	static const char*		outputStr()	{ return "output"; }
 
-	enum OutputType			{ Inline, Crossline, Z };
+	enum OutputType3D		{ Inline, Crossline, Z3D };
+	enum OutputType2D		{ Line, Z2D };
 	enum OperatorType		{ Kroon_3, Farid_5, Farid_7};
 	
 	static const float		kroon_3_d[];
@@ -57,32 +58,32 @@ public:
 	static const float		farid_7_s[];
 
 protected:
-							~GradientAttrib();
+					~GradientAttrib();
 	static Provider*		createInstance(Desc&);
 
-	bool					allowParallelComputation() const
-							{ return true; }
+	bool				allowParallelComputation() const
+					{ return true; }
 
-	bool					getInputData(const BinID&,int zintv);
-	bool					computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const;
+	bool				getInputData(const BinID&,int zintv);
+	bool				computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const;
 
 	const BinID*			desStepout(int input,int output) const;
-	const Interval<int>*	desZSampMargin(int input,int output) const
-							{ return &zmargin_; }
+	const Interval<int>*		desZSampMargin(int input,int output) const
+					{ return &zmargin_; }
 				
-	bool					getTrcPos();
+	bool				getTrcPos();
 
-	BinID					stepout_;
+	BinID				stepout_;
 	Interval<int>			zmargin_;
 	TypeSet<BinID>			trcpos_;
-	int						centertrcidx_;
-	int						outtype_;
-	int						optype_;
-	int						size_;
+	int				centertrcidx_;
+	int				outtype_;
+	int				optype_;
+	int				size_;
 	
-	float					*ikernel_, *xkernel_, *zkernel_;
+	float				*ikernel_, *xkernel_, *zkernel_;
 
-	int						dataidx_;
+	int				dataidx_;
 
 	ObjectSet<const DataHolder>	inputdata_;
 };
