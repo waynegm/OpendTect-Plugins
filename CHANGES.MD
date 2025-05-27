@@ -1,5 +1,35 @@
 # OpendTect Plugins Release Notes
 
+## Release 7.0.9
+- ensure all pointers are initialised or set to nullptr
+- check pointers to optional ui items before use
+
+### AVOAttrib
+- fix zero divide in AVO Angle
+
+### AVOPolarAttrib
+- fix event angle computation
+
+### External Attributes
+- add script to generate synthetic AVO intercept and gradient for testing
+- add nrZ (number of samples in trace) to SeismicInfo buffer
+- add python functions to generate synthetic AVO log and intercept/gradient
+
+### GradientAttrib
+- make it work on 2D
+
+### EFDAttrib
+- fix display of test panel
+
+### LocalAttrib
+- fix display of test panel
+
+### RSpecAttrib
+- fix display of test panel
+
+### uiWMTools
+- fix fault polygon extraction
+
 ## Release 7.0.7
 
 ### DataExtentHorizon
