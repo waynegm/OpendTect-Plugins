@@ -97,6 +97,7 @@ inline void uiTestPanel::createAndDisplay2DViewer( FlatDataPack* fdpack )
 	flatvwin_->addControl( new uiFlatViewStdControl(vwr,
 		uiFlatViewStdControl::Setup(nullptr).isvertical(true)) );
 	flatvwin_->setDeleteOnClose( false );
+	flatvwin_->showAlwaysOnTop();
     }
 
     flatvwin_->show();
