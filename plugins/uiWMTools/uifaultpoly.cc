@@ -135,7 +135,10 @@ RefMan<Pick::Set> uiFaultPoly::getPolyForFault( int idx )
 
     BufferString faultname = fault->name();
     const Geometry::FaultStickSurface* fss = fault->geometry().geometryElement();
-
+    if (!fss) {
+	uiMSG().error(tr("uiFaultPoly::getPolyForFault - failed getting FaultStickSurface for fault %1").arg(faultname));
+	return nullptr;
+    }
     Geometry::BinIDSurface* surf = hor_->geometry().geometryElement();
     if (!surf) {
 	uiMSG().error(tr("uiFaultPoly::getPolyForFault - failed getting BinIDSurface for horizon %1").arg(hor_->name()));
@@ -206,19 +209,20 @@ Coord3 uiFaultPoly::lineSegmentIntersection( Coord3 start, Coord3 end,
     const Coord spos = SI().binID2Coord().transformBackNoSnap( start );
     const Coord epos = SI().binID2Coord().transformBackNoSnap( end );
 
-    const BinID bidstart( rrg.snap( spos.x, OD::SnapDownward ), crg.snap( spos.y, OD::SnapDownward ) );
-    const BinID bidend( rrg.snap( epos.x, OD::SnapDownward ), crg.snap( epos.y, OD::SnapDownward ) );
+    const BinID bidstart( rrg.snap(spos.x), crg.snap(spos.y) );
+    const BinID bidend( rrg.snap(epos.x), crg.snap(epos.y) );
 
     StepInterval<int> brrg( bidstart.inl(), bidend.inl(), rrg.step );
     brrg.sort();
+    brrg.widen(rrg.step);
     StepInterval<int> bcrg( bidstart.crl(), bidend.crl(), crg.step );
     bcrg.sort();
+    bcrg.widen(crg.step);
     for ( int row=brrg.start; row<=brrg.stop; row+=brrg.step ) {
 	for ( int col=bcrg.start; col<=bcrg.stop; col+=bcrg.step ) {
-	    Coord3 v00 = surf->getKnot( BinID( row, col), true );
-	    Coord3 v01 = surf->getKnot( BinID( row, col+bcrg.step), true );
-	    Coord3 v11 = surf->getKnot( BinID( row+brrg.step, col+bcrg.step ),
-					true );
+	    Coord3 v00 = surf->getKnot( BinID(row, col), true );
+	    Coord3 v01 = surf->getKnot( BinID(row, col+bcrg.step), true );
+	    Coord3 v11 = surf->getKnot( BinID(row+brrg.step, col+bcrg.step), true );
 	    Coord3 v10 = surf->getKnot( BinID( row+brrg.step, col ), true );
 	    res = lineSegmentIntersectsTriangle( start, end, v00, v01, v11 );
 	    if ( !mIsUdf(res) )
