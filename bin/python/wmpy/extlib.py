@@ -848,3 +848,108 @@ def rolling_window(a, window):
     shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
     strides = a.strides + (a.strides[-1],)
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
+
+def shueyIG(vp0, vs0, rhob0):
+	"""
+	Compute the Intercept and Gradient for elastic property logs
+
+	Parameters
+	----------
+	vp0 : array
+			P-wave velocity
+	vs0 : array
+			S-wave velocity
+	rhob0 : array
+			Density
+
+	Returns
+	-------
+	I : array
+			Intercept
+	G : array
+			Gradient
+
+	"""
+	dvp=vp0[1:]-vp0[:-1]
+	dvs=vs0[1:]-vs0[:-1]
+	drho=rhob0[1:]-rhob0[:-1]
+	drho=np.insert(drho,0,drho[0]) 
+	dvp=np.insert(dvp,0,dvp[0])    
+	dvs=np.insert(dvs,0,dvs[0])     
+	vp=(vp0[1:]+vp0[:-1])/2.0
+	vs=(vs0[1:]+vs0[:-1])/2.0    
+	rho=(rhob0[1:]+rhob0[:-1])/2.0
+	vp=np.insert(vp,0,vp[0])
+	vs=np.insert(vs,0,vs[0])    
+	rho=np.insert(rho,0,rho[0])
+	I = 0.5 * (dvp/vp + drho/rho)
+	G = 0.5 * dvp/vp - 2 * (vs**2/vp**2) * (drho/rho + 2 * dvs/vs)
+	return (I, G)
+
+def makeAVOClassLogs(nrz: int, withgas: bool=True, withbrine: bool=True):
+	"""
+	Make synthetic logs with Class 1, 2, 3 and 4 shale-gas sand-shale-brine sand-shale
+	events spread across the given number of samples
+	
+	Parameters
+	----------
+	nrz : int
+			number of samples in output logs
+	withgas : bool=True
+			if True include gas sand layers
+	withbrine : bool=True
+			if True include brine sand layers
+			
+	Returns
+	-------
+	vp : array
+			P-wave velocity
+	vs : array
+			S-wave velocity
+	rhob : array
+			Density
+			
+	"""
+
+	shale = np.array([[3094,1515,2.40], [2643,1167,2.29], [2192,818,2.16], [3240,1620,2.34]])
+	sandgas = np.array([[4050,2526,2.21], [2781,1665,2.08], [1542,901,1.88], [1650,1090,2.07]])
+	sandbrine = np.array([[4115,2453,2.32], [3048,1595,2.23], [2134,860,2.11], [2590,1060,2.21]])
+	avocl=['Class I','Class II','Class III','Class IV']
+	nsands_in_class = 2
+	nlayers_in_class = 2*nsands_in_class+1
+	layersz = nrz // (nlayers_in_class*len(avocl)) 
+	vp = np.full(nrz, shale[3,0], dtype='f4')
+	vs = np.full(nrz, shale[3,1], dtype='f4')
+	rhob = np.full(nrz, shale[3,2], dtype='f4')
+	stopidx = 0
+	for clidx in range(len(avocl)-1,-1,-1):
+		startidx = stopidx
+		stopidx = startidx + layersz
+		vp[startidx:stopidx] = shale[clidx,0]
+		vs[startidx:stopidx] = shale[clidx,1]
+		rhob[startidx:stopidx] = shale[clidx,2]
+		startidx = stopidx
+		stopidx = startidx +layersz
+		vp[startidx:stopidx] = sandgas[clidx,0] if withgas else sandbrine[clidx,0]
+		vs[startidx:stopidx] = sandgas[clidx,1] if withgas else sandbrine[clidx,1]
+		rhob[startidx:stopidx] = sandgas[clidx,2] if withgas else sandbrine[clidx,2]
+		startidx = stopidx
+		stopidx = startidx + layersz
+		vp[startidx:stopidx] = shale[clidx,0]
+		vs[startidx:stopidx] = shale[clidx,1]
+		rhob[startidx:stopidx] = shale[clidx,2]
+		startidx = stopidx
+		stopidx = startidx +layersz
+		vp[startidx:stopidx] = sandbrine[clidx,0] if withbrine else sandgas[clidx,0]
+		vs[startidx:stopidx] = sandbrine[clidx,1] if withbrine else sandgas[clidx,1]
+		rhob[startidx:stopidx] = sandbrine[clidx,2] if withbrine else sandgas[clidx,2]
+		startidx = stopidx
+		stopidx = startidx +layersz
+		vp[startidx:stopidx] = shale[clidx,0]
+		vs[startidx:stopidx] = shale[clidx,1]
+		rhob[startidx:stopidx] = shale[clidx,2]
+
+	vp += np.random.normal(0, np.max(np.abs(vp))*0.005, len(vp))
+	vs += np.random.normal(0, np.max(np.abs(vs))*0.005, len(vs))
+	rhob += np.random.normal(0, np.max(np.abs(rhob))*0.1, len(rhob.shape))
+	return (vp, vs, rhob)
