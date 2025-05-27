@@ -135,6 +135,10 @@ RefMan<Pick::Set> uiFaultPoly::getPolyForFault( int idx )
 
     BufferString faultname = fault->name();
     const Geometry::FaultStickSurface* fss = fault->geometry().geometryElement();
+    if (!fss) {
+	uiMSG().error(tr("uiFaultPoly::getPolyForFault - failed getting FaultStickSurface for fault %1").arg(faultname));
+	return nullptr;
+    }
 
     Geometry::BinIDSurface* surf = hor_->geometry().geometryElement();
     if (!surf) {
@@ -208,22 +212,21 @@ Coord3 uiFaultPoly::lineSegmentIntersection( Coord3 start, Coord3 end,
     const Coord spos = SI().binID2Coord().transformBackNoSnap( start );
     const Coord epos = SI().binID2Coord().transformBackNoSnap( end );
 
-    const BinID bidstart( rrg.snap( spos.x_, OD::SnapDownward ),
-			  crg.snap( spos.y_, OD::SnapDownward ) );
-    const BinID bidend( rrg.snap( epos.x_, OD::SnapDownward ),
-			crg.snap( epos.y_, OD::SnapDownward ) );
+    const BinID bidstart( rrg.snap(spos.x_), crg.snap(spos.y_) );
+    const BinID bidend( rrg.snap(epos.x_), crg.snap(epos.y_) );
 
     StepInterval<int> brrg( bidstart.inl(), bidend.inl(), rrg.step_ );
     brrg.sort();
+    brrg.widen(rrg.step_);
     StepInterval<int> bcrg( bidstart.crl(), bidend.crl(), crg.step_ );
     bcrg.sort();
+    bcrg.widen(crg.step_);
     for ( int row=brrg.start_; row<=brrg.stop_; row+=brrg.step_ ) {
 	for ( int col=bcrg.start_; col<=bcrg.stop_; col+=bcrg.step_ ) {
-	    Coord3 v00 = surf->getKnot( BinID( row, col), true );
-	    Coord3 v01 = surf->getKnot( BinID( row, col+bcrg.step_), true );
-	    Coord3 v11 = surf->getKnot( BinID( row+brrg.step_, col+bcrg.step_ ),
-					true );
-	    Coord3 v10 = surf->getKnot( BinID( row+brrg.step_, col ), true );
+	    Coord3 v00 = surf->getKnot( BinID(row, col), true );
+	    Coord3 v01 = surf->getKnot( BinID(row, col+bcrg.step_), true );
+	    Coord3 v11 = surf->getKnot( BinID(row+brrg.step_, col+bcrg.step_), true );
+	    Coord3 v10 = surf->getKnot( BinID(row+brrg.step_, col), true );
 	    res = lineSegmentIntersectsTriangle( start, end, v00, v01, v11 );
 	    if ( !mIsUdf(res) )
 		return res;
