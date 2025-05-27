@@ -216,6 +216,9 @@ void uiConvexHull::fillPolyFromHorizon()
 {
     poly_.setEmpty();
     MultiID hor2Did, hor3Did;
+    if (!horinputfld_)
+	return;
+
     horinputfld_->getHorIds(hor2Did, hor3Did);
     if (!hor3Did.isUdf()) {
 	TrcKeyZSampling tkzs;

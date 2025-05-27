@@ -25,12 +25,12 @@ protected:
     uiFileInput*        filefld_;
     uiTabStack*         tabstack_;
     uiCheckBox*         appendfld_;
-    uiSurveyGrp*        surveygrp_;
-    ui2DLinesGrp*       linesgrp_;
-    uiRandomLinesGrp*   randomgrp_;
-    uiWellsGrp*         wellsgrp_;
-    uiPolyLinesGrp*     polygrp_;
-    uiHorizonGrp*       horgrp_;
+    uiSurveyGrp*        surveygrp_ = nullptr;
+    ui2DLinesGrp*       linesgrp_ = nullptr;
+    uiRandomLinesGrp*   randomgrp_ = nullptr;
+    uiWellsGrp*         wellsgrp_ = nullptr;
+    uiPolyLinesGrp*     polygrp_ = nullptr;
+    uiHorizonGrp*       horgrp_ = nullptr;
 
     void            tabSel(CallBacker*);
     bool        acceptOK(CallBacker*);

@@ -42,10 +42,10 @@ public:
     uiCheckBox*                 exp3D_ = nullptr;
 
 protected:
-    uiIOObjSel*                 hor2Dfld_;
-    uiSeis2DLineSelGrp* 	lines2Dfld_;
-    uiIOObjSel*                 hor3Dfld_;
-    uiPosSubSel*                subsel3Dfld_;
+    uiIOObjSel*                 hor2Dfld_ = nullptr;
+    uiSeis2DLineSelGrp* 	lines2Dfld_ = nullptr;
+    uiIOObjSel*                 hor3Dfld_ = nullptr;
+    uiPosSubSel*                subsel3Dfld_ = nullptr;
 
     void		initGrp(CallBacker*);
     void                hor2DselCB(CallBacker*);

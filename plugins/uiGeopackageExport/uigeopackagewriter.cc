@@ -33,7 +33,7 @@
 #include "gpkgio.h"
 
 uiGeopackageWriter::uiGeopackageWriter( const char* filename, bool append )
-: gpkg_(nullptr), srs_(nullptr), append_(append)
+: append_(append)
 {
     if (SI().getCoordSystem()->isProjection())
     {
@@ -263,6 +263,9 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
 
 void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
 {
+    if (!gpkg_ || !srs_)
+	return;
+
     std::vector<std::string> fieldnms({"line_name"});
     std::vector<std::string> fielddefs({"TEXT NOT NULL"});
     if (!gpkg_->addGeomLayer("linestring", "random_lines", srs_->code(), fieldnms, fielddefs))

@@ -12,7 +12,6 @@
 
 WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm )
     : uiGroup(p, "Linechooser")
-    , lbchoiceio_(nullptr)
     , selectionDone(this)
 {
     init(cm);
@@ -26,7 +25,6 @@ WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm )
 
 WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm, const BufferStringSet& lnms,const TypeSet<Pos::GeomID>& geomids)
     : uiGroup( p, "Line chooser" )
-    , lbchoiceio_(nullptr)
     , selectionDone(this)
 {
     init(cm);
@@ -38,7 +36,6 @@ WMLib::uiSeis2DLineSelGrp::uiSeis2DLineSelGrp( uiParent* p, OD::ChoiceMode cm, c
 WMLib::uiSeis2DLineSelGrp::~uiSeis2DLineSelGrp()
 {
     detachAllNotifiers();
-    delete lbchoiceio_;
 }
 
 void WMLib::uiSeis2DLineSelGrp::init( OD::ChoiceMode cm )
@@ -155,6 +152,9 @@ void WMLib::uiSeis2DLineSelGrp::readChoiceDone( CallBacker* )
 
 void WMLib::uiSeis2DLineSelGrp::writeChoiceReq( CallBacker* )
 {
+    if (!lbchoiceio_)
+	return;
+
     MultiID mid = IOObjContext::getStdDirData(IOObjContext::Geom)->id_;
 
     lbchoiceio_->keys().setEmpty();

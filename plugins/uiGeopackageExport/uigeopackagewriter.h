@@ -28,8 +28,8 @@ public:
                           const MultiID& hor3Dkey, const char* attrib3D, const TrcKeyZSampling& cs  );
 
 protected:
-    GeopackageIO*		gpkg_;
-    Coords::AuthorityCode*	srs_;
+    GeopackageIO*		gpkg_ = nullptr;
+    Coords::AuthorityCode*	srs_ = nullptr;
     bool			append_;
 };
 

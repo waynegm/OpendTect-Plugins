@@ -98,10 +98,7 @@ bool wmGridder2D::canHandleFaultPolygons( const char* methodName )
 }
 
 wmGridder2D::wmGridder2D()
-    : grid_(0)
-    , carr_(0)
-    , tr_(nullptr)
-    , searchradius_(mUdf(float))
+    : searchradius_(mUdf(float))
     , maxpoints_(mUdf(int))
 {
     hs_ = SI().sampling( false ).hsamp_;
@@ -115,10 +112,7 @@ wmGridder2D::wmGridder2D()
 
 wmGridder2D::~wmGridder2D()
 {
-    if (carr_) {
-        delete carr_;
-        carr_ = 0;
-    }
+    deleteAndNullPtr(carr_);
 }
 
 // loc is in survey grid coordinates
@@ -527,7 +521,7 @@ bool wmGridder2D::prepareForGridding(uiParent* p)
     if (!grid_) {
 	grid_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
 	if (!grid_) {
-	    ErrMsg("wmGridder2D::prepareForGridding - allocation of array for grid failed");
+	    ErrMsg("wmGridder2D::prepareForGridding - grid is not allocated");
 	    return false;
 	}
     } else
@@ -608,9 +602,14 @@ if (mIsEqual(pos.x, bidSnap.inl(), mDefEps) && mIsEqual(pos.y, bidSnap.crl(), mD
 
 void wmGridder2D::localInterp(uiParent* p, bool approximation)
 {
+    if (!grid_) {
+	uiMSG().error(tr("wmGridder2D::localInterp - grid_ is not allocated."));
+	return;
+    }
+    delete carr_;
     carr_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
     if (!carr_) {
-	ErrMsg("wmGridder2D::prepareForGridding - allocation of array for confidence grid failed");
+	ErrMsg("wmGridder2D::prepareForGridding - carr_ is not allocated");
 	return;
     }
     carr_->setAll(0.0);

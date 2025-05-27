@@ -23,9 +23,9 @@ public:
     
     
 protected:
-    uiSeis2DLineSelGrp*	line2dselfld_;
-    uiCheckBox*		include3dfld_;
-    uiPosSubSel*	subsel3dfld_;
+    uiSeis2DLineSelGrp*	line2dselfld_ = nullptr;
+    uiCheckBox*		include3dfld_ = nullptr;
+    uiPosSubSel*	subsel3dfld_ = nullptr;
     
     void		initGrp(CallBacker*);
     void		include3DCB(CallBacker*);

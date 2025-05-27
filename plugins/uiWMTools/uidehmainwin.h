@@ -37,8 +37,8 @@ public:
 
 protected:
     uiGenInput*                 zfld_;
-    WMLib::uiSeis2DLineSelGrp*  lineselfld_;
-    uiCheckBox*                 include3Dfld_;
+    WMLib::uiSeis2DLineSelGrp*  lineselfld_ = nullptr;
+    uiCheckBox*                 include3Dfld_ = nullptr;
     WMLib::ui3DRangeGrp*        rangefld_;
     uiSurfaceWrite*             outfld_;
 

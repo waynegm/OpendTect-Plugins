@@ -28,8 +28,7 @@
 using namespace WMLib;
 
 uiHorInputGrp::uiHorInputGrp( uiParent* p, bool has2Dhorizon, bool has3Dhorizon, bool show3Dsubsel )
-: uiDlgGroup(p, tr("Input Data")), hor2Dfld_(nullptr), lines2Dfld_(nullptr),
-  hor3Dfld_(nullptr), subsel3Dfld_(nullptr)
+: uiDlgGroup(p, tr("Input Data"))
 {
     uiObject* lastfld = nullptr;
 
@@ -91,15 +90,19 @@ void uiHorInputGrp::exp3DselCB(CallBacker*)
     bool use3d = true;
     if (hor2Dfld_ && exp3D_)
 	use3d = exp3D_->isChecked();
-    hor3Dfld_->setChildrenSensitive(use3d);
-    subsel3Dfld_->setChildrenSensitive(use3d);
+
+    if (hor3Dfld_ && subsel3Dfld_)
+    {
+	hor3Dfld_->setChildrenSensitive(use3d);
+	subsel3Dfld_->setChildrenSensitive(use3d);
+    }
 }
 
 bool uiHorInputGrp::fillPar( IOPar& par ) const
 {
     MultiID hor2Did, hor3Did;
     getHorIds(hor2Did, hor3Did);
-    if (!hor2Did.isUdf() && lines2Dfld_->nrChosen()) {
+    if (!hor2Did.isUdf() && lines2Dfld_ &&lines2Dfld_->nrChosen()) {
         TypeSet<Pos::GeomID> mids;
         getGeoMids(mids);
         if (mids.size()>0) {
@@ -137,7 +140,7 @@ void uiHorInputGrp::usePar( const IOPar& par )
 
     hor2Did.setUdf();
     if (par.get(sKey2DHorizonID(), hor2Did)) {
-        if (hor2Dfld_) {
+        if (hor2Dfld_ && lines2Dfld_) {
             int nlines = 0;
             par.get(sKey2DLineIDNr(), nlines);
             if (nlines>0) {
@@ -272,6 +275,9 @@ void uiHorInputGrp::get3Dsel( TrcKeyZSampling& envelope ) const
 
 void uiHorInputGrp::hor2DselCB(CallBacker* )
 {
+    if (!hor2Dfld_ || !lines2Dfld_)
+	return;
+
     const IOObj* horObj = hor2Dfld_->ioobj(true);
     if (!horObj) {
         lines2Dfld_->clear();
@@ -298,6 +304,9 @@ void uiHorInputGrp::hor2DselCB(CallBacker* )
 
 void uiHorInputGrp::hor3DselCB(CallBacker*)
 {
+    if (!hor3Dfld_ || subsel3Dfld_)
+	return;
+
     const IOObj* horObj = hor3Dfld_->ioobj(true);
     if (horObj) {
         EM::IOObjInfo eminfo(horObj->key());

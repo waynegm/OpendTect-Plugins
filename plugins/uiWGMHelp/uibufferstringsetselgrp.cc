@@ -9,7 +9,6 @@
 
 WMLib::uiBufferStringSetSelGrp::uiBufferStringSetSelGrp( uiParent* p, OD::ChoiceMode cm )
     : uiGroup(p, "String chooser")
-    , lbchoiceio_(nullptr)
     , selectionDone(this)
 {
     init(cm);
@@ -21,7 +20,6 @@ WMLib::uiBufferStringSetSelGrp::uiBufferStringSetSelGrp( uiParent* p, OD::Choice
 
 WMLib::uiBufferStringSetSelGrp::uiBufferStringSetSelGrp( uiParent* p, OD::ChoiceMode cm, const BufferStringSet& lnms)
     : uiGroup( p, "String chooser" )
-    , lbchoiceio_(nullptr)
     , selectionDone(this)
 {
     init(cm);

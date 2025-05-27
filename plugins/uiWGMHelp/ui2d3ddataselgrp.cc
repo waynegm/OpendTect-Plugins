@@ -11,8 +11,6 @@ using namespace WMLib;
 
 ui2D3DDataSelGrp::ui2D3DDataSelGrp( uiParent* p )
     : uiDlgGroup(p, tr("Input Data"))
-    , line2dselfld_(nullptr)
-    , include3dfld_(nullptr)
 {
     if (SI().has2D()) {
 	BufferStringSet lnms;
@@ -64,12 +62,12 @@ void ui2D3DDataSelGrp::get2DGeomIDs( TypeSet<Pos::GeomID>& geomids ) const
 void ui2D3DDataSelGrp::get3Dsel( TrcKeyZSampling& envelope ) const
 {
     envelope.setEmpty();
-    if ( include3dfld_->isChecked() )
+    if ( include3dfld_ && subsel3dfld_ && include3dfld_->isChecked() )
 	envelope = subsel3dfld_->envelope();
 }
 
 void ui2D3DDataSelGrp::include3DCB( CallBacker* )
 {
-    if ( include3dfld_ )
+    if ( include3dfld_ && subsel3dfld_ )
 	subsel3dfld_->setSensitive( include3dfld_->isChecked() );
 }

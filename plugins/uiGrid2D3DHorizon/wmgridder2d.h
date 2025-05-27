@@ -100,12 +100,10 @@ protected:
     Interval<Pos::Ordinate_Type>		inlrg_;
     Interval<Pos::Ordinate_Type>		crlrg_;
 
-    Array2DImpl<float>*				grid_;
-    Array2DImpl<float>*				carr_;
+    Array2DImpl<float>*				grid_ = nullptr;
+    Array2DImpl<float>*				carr_ = nullptr;
     TypeSet<od_int64>				interpidx_;
     TrcKeySampling				hs_;
-
-    const TaskRunner*				tr_;
 
     void					localInterp(uiParent*, bool approximation = true);
 };

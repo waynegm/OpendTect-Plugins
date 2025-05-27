@@ -47,7 +47,7 @@ public:
 protected:
 
     WMLib::ui2D3DDataSelGrp*	navinputgrp_;
-    WMLib::uiHorInputGrp*	horinputfld_;
+    WMLib::uiHorInputGrp*	horinputfld_ = nullptr;
     uiGenInput*			namefld_;
     uiGenInput*			zfld_;
     uiColorInput*		colorfld_;
