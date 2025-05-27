@@ -104,6 +104,9 @@ void uiExternalAttribInp::addField(const char* key, uiGenInput* field)
 
 void uiExternalAttribInp::makeNewUI()
 {
+    if (!extproc_)
+	return;
+
     BufferStringSet keys = extproc_->paramKeys();
     fields_.clear();
     for (auto* key : keys) {
@@ -152,7 +155,10 @@ void uiExternalAttribInp::makeNewUI()
 bool uiExternalAttribInp::setNewParams(const BufferString& encodedstr)
 {
 //Decode
-    if (extproc_->setParamsEncodedStr(encodedstr)) {
+    if (encodedstr.isEmpty())
+	return true;
+
+    if (extproc_ && extproc_->setParamsEncodedStr(encodedstr)) {
 	for (const auto& kv : fields_) {
 	    const BufferString key(kv.first.c_str());
 	    uiGenInput* field = kv.second;
@@ -186,6 +192,9 @@ bool uiExternalAttribInp::setNewParams(const BufferString& encodedstr)
 
 BufferString uiExternalAttribInp::getNewParams(Attrib::Desc& desc, ChangeTracker& chtr_)
 {
+    if (!extproc_)
+	return BufferString::empty();
+
     for (const auto& kv : fields_) {
 	const BufferString key(kv.first.c_str());
 	uiGenInput* field = kv.second;
@@ -208,6 +217,8 @@ void uiExternalAttribInp::makeInputUI(const Attrib::DescSet* ads,
 {
     inpflds_.erase();
     const uiAttrSelData asd( is2d, false );
+    if (!extproc_)
+	return;
 
     BufferStringSet inputs = extproc_->getInputNames();
     for (auto* input : inputs) {
@@ -225,6 +236,9 @@ void uiExternalAttribInp::makeInputUI(const Attrib::DescSet* ads,
 
 void uiExternalAttribInp::makeOutputUI()
 {
+    if (!extproc_)
+	return;
+
     BufferStringSet outputs = extproc_->getOutputNames();
     if (outputs.isEmpty())
 	return;
@@ -237,7 +251,7 @@ void uiExternalAttribInp::makeOutputUI()
 
 void uiExternalAttribInp::makeZSamplingUI()
 {
-    if (!extproc_->hasZMargin() || extproc_->hideZMargin())
+    if (!extproc_ || !extproc_->hasZMargin() || extproc_->hideZMargin())
 	return;
 
     zmarginfld_ = new uiGenInput(nullptr,
@@ -264,7 +278,7 @@ void uiExternalAttribInp::makeZSamplingUI()
 
 void uiExternalAttribInp::makeStepoutUI(bool is2d)
 {
-    if (!extproc_->hasStepOut() || extproc_->hideStepOut())
+    if (!extproc_ ||!extproc_->hasStepOut() || extproc_->hideStepOut())
 	return;
 
     stepoutfld_ = new uiExt_StepOutSel(nullptr, is2d||extproc_->so_same());
@@ -279,6 +293,9 @@ void uiExternalAttribInp::makeStepoutUI(bool is2d)
 
 void uiExternalAttribInp::makeLegacyUI()
 {
+    if (!extproc_)
+	return;
+
     if (extproc_->hasSelect()) {
 	int nsel = extproc_->numSelect();
 	BufferStringSet nms;
@@ -340,11 +357,14 @@ void uiExternalAttribInp::doZmarginCheck( CallBacker* cb )
 
 void uiExternalAttribInp::doStepOutCheck( CallBacker* cb )
 {
+	if (!extproc_)
+	    return;
+
 	BinID val = stepoutfld_->getBinID();
 	if ( extproc_->so_same() )
 	    val.inl() = val.crl();
 
-	if (extproc_ && extproc_->hasStepOut()) {
+	if (extproc_->hasStepOut()) {
 		BinID minval = extproc_->so_minimum();
 		int inl = (val.inl() < minval.inl())? minval.inl():val.inl();
 		int crl = (val.crl() < minval.crl())? minval.crl():val.crl();

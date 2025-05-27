@@ -35,6 +35,7 @@ struct SeisInfo
 	float		crlDistance;
 	float		zFactor;
 	float		dipFactor;
+	int 		nrZ;
 };
 
 struct ProcInstImpl;

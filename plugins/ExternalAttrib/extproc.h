@@ -40,7 +40,7 @@ public:
 
     bool		isOK() const;
     void		setSeisInfo( int niln, int ncrl, float inlDist, float crlDist,
-				     float zFactor, float dipFactor );
+				     float zFactor, float dipFactor, int nrZ );
     void		addMetadata( const char* key, const char* value );
     void		addMetadata( const char* key, const BufferStringSet& values );
     ProcInst*		getIdleInst( int nrsamples );

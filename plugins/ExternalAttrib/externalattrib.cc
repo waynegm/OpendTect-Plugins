@@ -195,9 +195,6 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 	nrout_ = proc_->numOutput();
 	nrin_ = proc_->numInput();
 	getTrcPos();
-	int ninl = stepout_.inl()*2 + 1;
-	int ncrl = stepout_.crl()*2 + 1;
-	proc_->setSeisInfo( ninl, ncrl, inlDist()*SI().inlStep(), crlDist()*SI().crlStep(), zFactor(), dipFactor() );
 	proc_->addMetadata( "Survey", SI().name().str() );
 	proc_->addMetadata( "SurveyDiskLocation", SI().diskLocation().fullPath().str() );
 	BufferStringSet input_names;
@@ -206,7 +203,7 @@ ExternalAttrib::ExternalAttrib( Desc& desc )
 
 	proc_->addMetadata( "InputNames", input_names );
     } else
-	ErrMsg("ExternalAttrib::ExternalAttrib - error creating extrenal procedure");
+	ErrMsg("ExternalAttrib::ExternalAttrib - error creating external procedure");
 }
 
 ExternalAttrib::~ExternalAttrib()
@@ -285,6 +282,18 @@ bool ExternalAttrib::getInputData( const BinID& relpos, int zintv )
     }
 
     return true;
+}
+
+void ExternalAttrib::prepareForComputeData()
+{
+    if (proc_)
+    {
+	int ninl = stepout_.inl()*2 + 1;
+	int ncrl = stepout_.crl()*2 + 1;
+	TrcKeyZSampling tkz;
+	getPossibleVolume(-1, tkz);
+	proc_->setSeisInfo( ninl, ncrl, inlDist()*SI().inlStep(), crlDist()*SI().crlStep(), zFactor(), dipFactor(), tkz.nrZ() );
+    }
 }
 
 bool ExternalAttrib::computeData( const DataHolder& output, const BinID& relpos, int z0, int nrsamples, int threadid ) const

@@ -71,6 +71,7 @@ protected:
     bool		getTrcPos();
 
     bool		getInputData(const BinID&,int zintv) override;
+    void		prepareForComputeData() override;
     bool		computeData(const DataHolder&, const BinID& relpos, int z0, int nrsamples, int threadid) const override;
 
     BufferString	interpfile_;
