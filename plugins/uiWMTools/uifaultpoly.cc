@@ -53,7 +53,7 @@ uiFaultPoly::uiFaultPoly( uiParent* p )
 
     hor3Dfld_ = new uiIOObjSel( this, EMHorizon3DTranslatorGroup::ioContext(), uiStrings::s3DHorizon() );
 
-    faultsfld_ = new uiFaultParSel( this, false );
+    faultsfld_ = new uiFaultParSel( this, EM::IOObjInfo::Fault );
     faultsfld_->attach( alignedBelow, hor3Dfld_ );
 
     prefixfld_ = new uiGenInput(this, tr("Fault polygon/polyline prefix"));
