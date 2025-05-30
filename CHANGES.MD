@@ -22,6 +22,10 @@
 - fix display of test panel
 ### RSpecAttrib
 - fix display of test panel
+### uiWMTools
+- fix fault polygon extraction
+### uiGeopackageExport
+- fix geotiff export not working if horizon extends beyond survey
 
 ## Release 7.0.7
 

@@ -199,7 +199,6 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
     if (!isOK() || !open())
 	return errmsg_;
 
-    const float zfac = SI().zIsTime() ? 1000 : 1;
     EM::IOObjInfo eminfo(hor3Dkey);
     if (!eminfo.isOK())
 	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - cannot read %1.").arg(eminfo.name()));
@@ -216,29 +215,14 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
 	return uirv;
     }
 
-    ConstPtrMan<IOObj> ioobj = IOM().get( hor3Dkey );
-    if ( !ioobj )
-	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - undefined horizon ioobj."));
-
-    EM::SurfaceIOData sd;
-    uiString errmsg;
-    if ( !EM::EMM().getSurfaceData(ioobj->key(), sd, errmsg) )
-	return uiRetVal(tr("uiGeoTiffWriter::writeHorizon - "), errmsg);
-
-    EM::SurfaceIODataSelection sels( sd );
-    sels.selvalues.erase();
-    RefMan<EM::EMObject> emobj = EM::EMM().createTempObject( ioobj->group() );
+    RefMan<EM::EMObject> emobj = EM::EMM().loadIfNotFullyLoaded(hor3Dkey);
     if ( !emobj )
-	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - cannot create temporary horizon."));
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - invalid emobject."));
 
-    emobj->setMultiID( ioobj->key() );
-    mDynamicCastGet(EM::Horizon3D*,hor,emobj.ptr())
-    PtrMan<Executor> loader = hor->geometry().loader( &sels );
-    if ( !loader )
-	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - getting 3D horizon loader failed"));
-
-    if ( !TaskRunner::execute(&taskrunner,*loader) )
-	 return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon failed"));
+    EM::Horizon3D* hor3d = nullptr;
+    hor3d = static_cast<EM::Horizon3D*>( emobj.ptr() );
+    if (!hor3d)
+	return uiRetVal(tr("uiGeotiffWriter::writeHorizon - invalid horizon object."));
 
     float* rowBuff = (float*) _TIFFmalloc(TIFFScanlineSize(tif_));
     BufferString description;
@@ -246,19 +230,32 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
 // Export Z
     if (exportZ)
     {
+	PtrMan<Array2D<float>> array = hor3d->createArray2D();
+	if ( !array )
+	    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - unable to allocate array."));
+
 	description = BufferString("Z value ", SI().getZUnitString());
 	addBandMetadata(bandnr, description);
-	for (int ildx=0; ildx<hs.nrInl(); ildx++)
+	const int ndim = 2;
+	int dims[ndim];
+	for ( int i=0; i<ndim; i++ )
+	    dims[i] = array->info().getSize(i);
+
+	if (dims[1]*sizeof(float)>TIFFScanlineSize(tif_))
+	    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - rowBuff size error"));
+
+	const float zfac = SI().showZ2UserFactor();
+	for (int i=0; i<dims[0]; i++)
 	{
-	    for (int icdx=0; icdx<hs.nrCrl(); icdx++)
+	    for (int j=0; j<dims[1]; j++)
 	    {
-		const auto trckey = hs.trcKeyAt( ildx, icdx );
-		float z = hor->getZ( trckey );
-		if (!mIsUdf(z))
+		float z = array->get( i, j );
+		if ( !mIsUdf(z) )
 		    z *= zfac;
-		rowBuff[icdx] = z;
+
+		rowBuff[j] = z;
 	    }
-	    if (!TIFFWriteScanline(tif_, rowBuff, ildx, bandnr))
+	    if (!TIFFWriteScanline(tif_, rowBuff, i, bandnr))
 	    {
 		_TIFFfree(rowBuff);
 		return uiRetVal(tr("uiGeotiffWriter::writeHorizon - writing horizon z data failed"));
@@ -271,25 +268,32 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
     {
 	for (int iatt=0; iatt<attribs.size(); iatt++)
 	{
-	    PtrMan<Executor> auxloader = hor->auxdata.auxDataLoader(attribs.get(iatt).buf());
-	    if ( !loader || !TaskRunner::execute( &taskrunner, *auxloader ) )
+	    PtrMan<Executor> auxloader = hor3d->auxdata.auxDataLoader(attribs.get(iatt).buf());
+	    if ( !auxloader || !TaskRunner::execute( &taskrunner, *auxloader ) )
 		    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon attributes failed"));
 
-	    if (hor->auxdata.hasAuxDataName(attribs.get(iatt)))
+	    if (hor3d->auxdata.hasAuxDataName(attribs.get(iatt)))
 	    {
-
-		int iaux = hor->auxdata.auxDataIndex(attribs.get(iatt));
+		const int iaux = hor3d->auxdata.auxDataIndex(attribs.get(iatt));
 		description = attribs.get(iatt);
 		addBandMetadata(bandnr, description);
-		for (int ildx=0; ildx<hs.nrInl(); ildx++)
+		PtrMan<Array2D<float>> array = hor3d->auxdata.createArray2D( iaux );
+		const int ndim = 2;
+		int dims[ndim];
+		for ( int i=0; i<ndim; i++ )
+		    dims[i] = array->info().getSize(i);
+
+		if (dims[1]*sizeof(float)>TIFFScanlineSize(tif_))
+		    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - rowBuff size error"));
+
+		for (int i=0; i<dims[0]; i++)
 		{
-		    for (int icdx=0; icdx<hs.nrCrl(); icdx++)
+		    for (int j=0; j<dims[1]; j++)
 		    {
-			const auto trckey = hs.trcKeyAt( ildx, icdx );
-			float z = hor->auxdata.getAuxDataVal( iaux, trckey );
-			rowBuff[icdx] = z;
+			const float val = array->get( i, j );
+			rowBuff[j] = val;
 		    }
-		    if (!TIFFWriteScanline(tif_, rowBuff, ildx, bandnr))
+		    if (!TIFFWriteScanline(tif_, rowBuff, i, bandnr))
 		    {
 			_TIFFfree(rowBuff);
 			return uiRetVal(tr("uiGeotiffWriter::writeHorizon - writing attribute data failed"));
@@ -301,7 +305,7 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
 		return uiRetVal(tr("uiGeotiffWriter::writeHorizon - no data for attribute: %1").arg(attribs.get(iatt)));
 	    }
 	    bandnr++;
-	    hor->auxdata.removeAll();
+	    hor3d->auxdata.removeAll();
 	}
     }
     setMetadataField();
