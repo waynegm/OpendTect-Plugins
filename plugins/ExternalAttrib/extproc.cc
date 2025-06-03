@@ -166,7 +166,9 @@ BufferStringSet ExtProcImpl::getInterpreterArgs() const
 	    FilePath anaconda_root = FilePath(envspath.pathOnly());
 	    FilePath anaconda_scripts = anaconda_root.add("Scripts").add("activate.bat");
 	    res.add(anaconda_scripts.fullPath());
-	    res.add(envname).add("^&").add(pyexe);
+	    res.add(envname).add("^&");
+	    res.add("set").add(BufferString("PYTHONPATH=", ExtProc::getPythonPath().cat(";"))).add("^&");
+	    res.add(pyexe);
 	} else
 	    res.add(infile_);
     } else if (infile_.find(pythonstr)) {
