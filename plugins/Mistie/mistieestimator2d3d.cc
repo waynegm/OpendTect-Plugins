@@ -92,9 +92,9 @@ bool Line3DOverlapFinder::doWork(od_int64 start, od_int64 stop, int tid)
             geom2d->getPosByCoord(crd1, trc1, sp);
             geom2d->getPosByCoord(crd2, trc2, sp);
             Seis::RangeSelData* range = new Seis::RangeSelData();
-            range->cubeSampling().hsamp_.setInlRange(Interval<int>(0,0));
+	    range->setGeomID(bps->geomid_);
+	    range->cubeSampling().hsamp_.setInlRange(Interval<int>(0,0));
             range->cubeSampling().hsamp_.setCrlRange(trc1<trc2 ? Interval<int>(trc1, trc2) : Interval<int>(trc2, trc1));
-            range->setGeomID(bps->geomid_);
 	    Threads::Locker lckr( lock_ );
 	    selranges_ += range;
         }

@@ -7,7 +7,7 @@
 
 
 cmake_minimum_required (VERSION 3.20)
-project(OpendTect_Plugins VERSION 7.0.9)
+project(OpendTect_Plugins VERSION 7.0.10)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
