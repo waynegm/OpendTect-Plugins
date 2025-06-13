@@ -92,9 +92,9 @@ bool Line3DOverlapFinder::doWork(od_int64 start, od_int64 stop, int tid)
             geom2d->getPosByCoord(crd1, trc1, sp);
             geom2d->getPosByCoord(crd2, trc2, sp);
             Seis::RangeSelData* range = new Seis::RangeSelData();
-            range->cubeSampling().hsamp_.setInlRange(Interval<int>(0,0));
+	    range->setGeomID(bps->geomid_);
+	    range->cubeSampling().hsamp_.setInlRange(Interval<int>(0,0));
             range->cubeSampling().hsamp_.setCrlRange(trc1<trc2 ? Interval<int>(trc1, trc2) : Interval<int>(trc2, trc1));
-            range->setGeomID(bps->geomid_);
 	    Threads::Locker lckr( lock_ );
 	    selranges_ += range;
         }
@@ -156,7 +156,8 @@ bool MistieEstimatorFromSeismic2D3D::doWork( od_int64 start, od_int64 stop, int 
 {
     BufferString lineA, lineB;
     int trc1, trc2;
-    SeisTrc trcA, trcB;
+    PtrMan<SeisTrc> trcA = new SeisTrc;
+    PtrMan<SeisTrc> trcB = new SeisTrc;
     for (int idx=mCast(int,start); idx<=stop && shouldContinue(); idx++, addToNrDone(1)) {
         float zdiff = 0.0;
         float phasediff = 0.0;
@@ -179,24 +180,20 @@ bool MistieEstimatorFromSeismic2D3D::doWork( od_int64 start, od_int64 stop, int 
             trcnums += traces.center();
         int count = 0;
         for (int it=0; it<trcnums.size(); it++) {
-            if(get2DTrc(lineB, trcnums[it], trcB)) {
-                Coord pos(trcB.info().getValue(SeisTrcInfo::CoordX), trcB.info().getValue(SeisTrcInfo::CoordY));
+            if(get2DTrc(lineB, trcnums[it], *trcB)) {
+                Coord pos(trcB->info().getValue(SeisTrcInfo::CoordX), trcB->info().getValue(SeisTrcInfo::CoordY));
                 IdxPair bid = SI().binID2Coord().transformBack(pos);
-                if (get3DTrc(bid.first, bid.second, trcA)) {
-                    if (trcA.info().sampling_.step_ > trcB.info().sampling_.step_) {
-                        trcA.info().pick_ = 0.0;
-                        SeisTrc* tmp = trcA.getRelTrc( window_, trcB.info().sampling_.step_ );
-                        trcA = *tmp;
-                    } else if (trcA.info().sampling_.step_ < trcB.info().sampling_.step_) {
-                        trcB.info().pick_ = 0.0;
-                        SeisTrc* tmp = trcB.getRelTrc( window_, trcA.info().sampling_.step_ );
-                        trcB = *tmp;
-                    }
+                if (get3DTrc(bid.first, bid.second, *trcA)) {
+		    float step = mMIN(trcA->info().sampling_.step_, trcB->info().sampling_.step_);
+		    trcA->info().pick_ = 0.0;
+		    trcA = trcA->getRelTrc( window_, step );
+		    trcB->info().pick_ = 0.0;
+		    trcB = trcB->getRelTrc( window_, step );
                     float zd = 0.0;
                     float pd = 0.0;
                     float ad = 1.0;
                     float q = 0.0;
-		    if (allest_ ? computeMistie( trcA, trcB, maxshift_, zd, pd, ad, q ) : computeMistie( trcA, trcB, maxshift_, zd, q )) {
+		    if (allest_ ? computeMistie( *trcA, *trcB, maxshift_, zd, pd, ad, q ) : computeMistie( *trcA, *trcB, maxshift_, zd, q )) {
                         count++;
                         zdiff += zd;
                         cPhasediff +=  std::complex<float>(cos(Math::toRadians(pd)),sin(Math::toRadians(pd)));

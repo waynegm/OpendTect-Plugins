@@ -5,10 +5,10 @@
 
 #include "eigen3/unsupported/Eigen/FFT"
 
-bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, float& zdiff, float& phasediff, float& ampdiff, float&  quality)
+bool computeMistie( const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, float& zdiff, float& phasediff, float& ampdiff, float&  quality)
 {
     Eigen::FFT<double> fft;
-    int n = trcA.size();
+    const int n = trcA.size();
     int nfft = 2*n;
     float dt = trcA.info().sampling_.step_;
 
@@ -16,8 +16,10 @@ bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, flo
     A.setZero(nfft);
     B.setZero(nfft);
     for (int idt=0; idt<n; idt++) {
-        float valA = mIsUdf(trcA.get(idt,0)) ? 0.0 : trcA.get(idt,0);
-        float valB = mIsUdf(trcB.get(idt,0)) ? 0.0 : trcB.get(idt,0);
+	const float val1 = trcA.get(idt,0);
+	const float val2 = trcB.get(idt,0);
+	const float valA = !Math::IsNormalNumber(val1) || mIsUdf(val1) ? 0.0 : val1;
+        const float valB = !Math::IsNormalNumber(val2) || mIsUdf(val2) ? 0.0 : val2;
         A(idt) = valA;
         B(idt) = valB;
     }
@@ -64,10 +66,10 @@ bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, flo
     return true;
 }
 
-bool computeMistie(const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, float& zdiff, float&  quality)
+bool computeMistie( const SeisTrc& trcA, const SeisTrc& trcB, float maxshift, float& zdiff, float&  quality)
 {
     Eigen::FFT<double> fft;
-    int n = trcA.size();
+    const int n = trcA.size();
     int nfft = 2*n;
     float dt = trcA.info().sampling_.step_;
 

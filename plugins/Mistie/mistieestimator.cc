@@ -68,7 +68,8 @@ bool MistieEstimatorFromSeismic::doWork( od_int64 start, od_int64 stop, int thre
 {
     BufferString lineA, lineB;
     int trcnrA, trcnrB;
-    SeisTrc trcA, trcB;
+    PtrMan<SeisTrc> trcA = new SeisTrc;
+    PtrMan<SeisTrc> trcB = new SeisTrc;
 
     for (int idx=mCast(int,start); idx<=stop && shouldContinue(); idx++, addToNrDone(1)) {
         float zdiff = 0.0;
@@ -82,20 +83,16 @@ bool MistieEstimatorFromSeismic::doWork( od_int64 start, od_int64 stop, int thre
             ErrMsg(tmp);
             continue;
         }
-        if (get2DTrc(lineA, trcnrA, trcA) && get2DTrc(lineB, trcnrB, trcB)) {
-            if (trcA.info().sampling_.step_ > trcB.info().sampling_.step_) {
-                trcA.info().pick_ = 0.0;
-                SeisTrc* tmp = trcA.getRelTrc( window_, trcB.info().sampling_.step_ );
-                trcA = *tmp;
-            } else if (trcA.info().sampling_.step_ < trcB.info().sampling_.step_) {
-                trcB.info().pick_ = 0.0;
-                SeisTrc* tmp = trcB.getRelTrc( window_, trcA.info().sampling_.step_ );
-                trcB = *tmp;
-            }
+        if (get2DTrc(lineA, trcnrA, *trcA) && get2DTrc(lineB, trcnrB, *trcB)) {
+	    float step = mMIN(trcA->info().sampling_.step_, trcB->info().sampling_.step_);
+	    trcA->info().pick_ = 0.0;
+	    trcA = trcA->getRelTrc( window_, step );
+	    trcB->info().pick_ = 0.0;
+	    trcB = trcB->getRelTrc( window_, step );
             if (allest_)
-		computeMistie( trcA, trcB, maxshift_, zdiff, phasediff, ampdiff, quality );
+		computeMistie( *trcA, *trcB, maxshift_, zdiff, phasediff, ampdiff, quality );
 	    else
-		computeMistie( trcA, trcB, maxshift_, zdiff, quality );
+		computeMistie( *trcA, *trcB, maxshift_, zdiff, quality );
 
         } else {
             BufferString tmp("MistieEstimatorFromSeismic::doWork - could not get trace data for: ");
