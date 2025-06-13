@@ -1,5 +1,10 @@
 # OpendTect Plugins Release Notes
 
+## Release 7.10
+
+### Mistie
+- fix issue with 2D-3D intersection calculation
+
 ## Release 7.0.9
 
 - ensure all pointers are initialised or set to nullptr
