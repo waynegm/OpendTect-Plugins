@@ -20,6 +20,8 @@
 - make it work on 2D
 ### LocalAttrib
 - fix display of test panel
+### Mistie
+- fix issue with 2D-3D intersection calculation
 ### RSpecAttrib
 - fix display of test panel
 ### uiWMTools
