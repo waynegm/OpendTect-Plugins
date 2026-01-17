@@ -177,7 +177,9 @@ wmIDWGridder2D::wmIDWGridder2D()
 
 bool wmIDWGridder2D::executeGridding(uiParent* p)
 {
-    localInterp(p);
+    if (!localInterp(p))
+	return false;
+
     const CoordTypeSetAdaptor coords( binLocs_ );
     CoordKDTree index( 2, coords );
     Threads::Lock lock;

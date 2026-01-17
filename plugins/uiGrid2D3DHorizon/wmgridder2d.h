@@ -1,5 +1,4 @@
-#ifndef wmgridder2d_h
-#define wmgridder2d_h
+#pragma once
 
 #include <cstddef>
 #include "factory.h"
@@ -105,7 +104,6 @@ protected:
     TypeSet<od_int64>				interpidx_;
     TrcKeySampling				hs_;
 
-    void					localInterp(uiParent*, bool approximation = true);
+    bool					localInterp(uiParent*, bool approximation = true);
+    void					reportMemError(const char*, const char*, od_int64);
 };
-
-#endif

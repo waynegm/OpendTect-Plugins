@@ -171,7 +171,9 @@ wmLTPSGridder2D::wmLTPSGridder2D()
 
 bool wmLTPSGridder2D::executeGridding(uiParent* p)
 {
-    localInterp(p);
+    if (!localInterp(p))
+	return false;
+
     calcResidual();
 
     const CoordTypeSetAdaptor coords( binLocs_ );

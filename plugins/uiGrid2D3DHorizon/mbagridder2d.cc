@@ -18,7 +18,9 @@ bool wmMBAGridder2D::prepareForGridding(uiParent* p)
 
 bool wmMBAGridder2D::executeGridding(uiParent* p)
 {
-    localInterp(p);
+    if (!localInterp(p))
+	return false;
+
     std::vector<mba::point<2>> binLocs(binLocs_.size());
     std::vector<float> vals(binLocs_.size());
     for (int idx=0; idx<binLocs_.size(); idx++) {
