@@ -1,5 +1,4 @@
-#ifndef uimistieanalysismainwin_h
-#define uimistieanalysismainwin_h
+#pragma once
 
 #include "uidialog.h"
 #include "menuhandler.h"
@@ -51,10 +50,10 @@ protected:
     MenuItem        calcitem_;
     MenuItem        xplotitem_;
     MenuItem        helpitem_;
-    
+
     void            createToolBar();
     void            fillTable();
-    
+
     void            helpCB(CallBacker*);
     void            newCB(CallBacker*);
     void            openCB(CallBacker*);
@@ -65,12 +64,10 @@ protected:
     void            calcCB(CallBacker*);
     void            xplotCB(CallBacker*);
     void            closeCB(CallBacker*);
-    
+
     bool            checkMistieSave();
-    
+
 private:
 
     uiString    getCaptionStr() const;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef wmparamsetget_h
-#define wmparamsetget_h
+#pragma once
 
 #ifndef mSetIntInterval
 
@@ -12,7 +11,7 @@
 #endif
 
 #ifndef mIfGetIntInterval
-	
+
 #define mIfGetIntInterval( str, var, setfunc ) \
 	Attrib::ValParam* valparam##var =\
 	const_cast<Attrib::ValParam*>(desc.getValParam(str));\
@@ -29,7 +28,7 @@
 		}\
 		setfunc; \
 }
-#endif		
+#endif
 
 #ifndef mGetIntIntervalFromDesc
 
@@ -46,12 +45,8 @@ if ( gateparam##var ) \
 	var = gateparam##var->getDefaultGateValue();\
 	}\
 }
-	
+
 #define mGetIntInterval( var, varstring ) \
 mGetIntIntervalFromDesc( desc_, var, varstring )
-	
-#endif
-
-
 
 #endif

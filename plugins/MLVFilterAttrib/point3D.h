@@ -1,3 +1,4 @@
+#pragma once
 /*Copyright (C) 2014 Wayne Mogg All rights reserved.
 
 This file may be used either under the terms of:
@@ -9,9 +10,6 @@ This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-#ifndef point3D_h
-#define point3D_h
-
 /*+
 ________________________________________________________________________
 
@@ -19,7 +17,7 @@ ________________________________________________________________________
  Date:          January 2014
  ________________________________________________________________________
 
--*/ 
+-*/
 namespace wmGeom
 {
 
@@ -49,7 +47,7 @@ class Point3D
     inline Point3D<T>		operator-(const Point3D<T>&) const;
     inline Point3D<T>		operator*(const T factor) const;
     inline Point3D<T>		operator/(const T den) const;
-    
+
     inline bool			isDefined() const;
     inline double		abs() const;
     inline T			sqAbs() const;
@@ -58,12 +56,12 @@ class Point3D
     inline T			dot(const Point3D<T>&) const;
 
     static Point3D<T>		udf() { return Point3D<T>(mUdf(T),mUdf(T)); }
-    
+
     T 				x;
     T 				y;
     T				z;
-  
-}; 
+
+};
 
 template <class T> inline
 Point3D<T>::Point3D ( T xx , T yy , T zz )
@@ -76,7 +74,7 @@ Point3D<T>& Point3D<T>::setFrom( const Point3D<TT>& a )
 
 template <class T> inline
 void Point3D<T>::setXYZ( T xx, T yy, T zz )
-{ x = xx ; y = yy; z=zz; }  
+{ x = xx ; y = yy; z=zz; }
 
 template <class T> template <class TT> inline
 void Point3D<T>::setXYZ( TT xx, TT yy, TT zz )
@@ -147,8 +145,8 @@ Point3D<T> Point3D<T>::operator /( const T den ) const
 template <class T> inline
 bool Point3D<T>::isDefined() const
 { return !mIsUdf(x) && !mIsUdf(y) && !mIsUdf(z); }
-    
-    
+
+
 template <class T> inline
 double Point3D<T>::abs() const
 { return ::Math::Sqrt( (double)sqAbs() ); }
@@ -179,6 +177,5 @@ T Point3D<T>::dot( const Point3D<T>& pt ) const
     return x*pt.x + y*pt.y + z*pt.z;
 }
 
-  
+
 }
-#endif

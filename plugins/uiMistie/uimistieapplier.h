@@ -1,5 +1,4 @@
-#ifndef uimistieapplier_h
-#define uimistieapplier_h
+#pragma once
 
 #include "uimistiemod.h"
 #include "uiattrdesced.h"
@@ -25,12 +24,9 @@ protected:
 
     bool        setParameters(const Attrib::Desc&);
     bool        setInput(const Attrib::Desc&);
-    
+
     bool        getParameters(Attrib::Desc&);
     bool        getInput(Attrib::Desc&);
-    
+
     mDeclReqAttribUIFns
 };
-
-
-#endif

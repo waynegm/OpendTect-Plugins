@@ -1,5 +1,4 @@
-#ifndef uigeopackageexportmainwin_h
-#define uigeopackageexportmainwin_h
+#pragma once
 
 #include "uidialog.h"
 
@@ -39,5 +38,3 @@ private:
 
     uiString    getCaptionStr() const;
 };
-
-#endif

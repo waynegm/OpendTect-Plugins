@@ -1,5 +1,4 @@
-#ifndef uicorrviewer_h
-#define uicorrviewer_h
+#pragma once
 
 #include "uidialog.h"
 #include "menuhandler.h"
@@ -26,7 +25,7 @@ public:
 
     void            newCorrData();
     bool            checkSave();
-    
+
 protected:
 
     uiToolBar*      tb_;
@@ -36,10 +35,10 @@ protected:
 
     MenuItem        saveitem_;
     MenuItem        saveasitem_;
-    
+
     void            createToolBar();
     void            fillTable();
-    
+
     void            saveCB(CallBacker*);
     void            saveasCB(CallBacker*);
     void            closeCB(CallBacker*);
@@ -47,5 +46,3 @@ private:
 
     uiString    getCaptionStr() const;
 };
-
-#endif

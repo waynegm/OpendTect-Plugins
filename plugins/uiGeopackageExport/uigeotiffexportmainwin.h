@@ -1,5 +1,4 @@
-#ifndef uigeotiffexportmainwin_h
-#define uigeotiffexportmainwin_h
+#pragma once
 
 #include "uidialog.h"
 
@@ -33,5 +32,3 @@ private:
 
     uiString    getCaptionStr() const;
 };
-
-#endif

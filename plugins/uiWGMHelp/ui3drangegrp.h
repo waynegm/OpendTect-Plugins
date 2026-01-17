@@ -1,5 +1,4 @@
-#ifndef ui3drangegrp_h
-#define ui3drangegrp_h
+#pragma once
 
 #include "uiwgmhelpmod.h"
 #include "uidlggroup.h"
@@ -37,5 +36,3 @@ protected:
 
 };
 }; //namespace
-
-#endif

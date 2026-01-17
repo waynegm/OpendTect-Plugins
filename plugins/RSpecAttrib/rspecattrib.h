@@ -1,6 +1,4 @@
-#ifndef rspecattrib_h
-#define rspecattrib_h
-
+#pragma once
 /*
  *   RSpecAttrib Plugin
  *   Copyright (C) 2019  Wayne Mogg
@@ -72,7 +70,3 @@ protected:
 };
 
 }; // namespace Attrib
-
-#endif
-
-

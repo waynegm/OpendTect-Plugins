@@ -1,5 +1,4 @@
-#ifndef uipolylinesgrp_h
-#define uipolylinesgrp_h
+#pragma once
 
 #include "uidlggroup.h"
 #include "ctxtioobj.h"
@@ -13,17 +12,12 @@ class uiPolyLinesGrp : public uiDlgGroup
 public:
     uiPolyLinesGrp(uiParent*);
     ~uiPolyLinesGrp() {}
-    
+
     bool doLineExport();
     void getLineIds( TypeSet<MultiID>& lineids );
     void reset();
-    
+
 protected:
     CtxtIOObj      ctio_;
     uiIOObjSelGrp* linesfld_;
 };
-
-
-
-
-#endif

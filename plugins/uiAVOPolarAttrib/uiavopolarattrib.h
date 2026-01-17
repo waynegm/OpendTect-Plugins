@@ -1,5 +1,4 @@
-#ifndef uiavopolarattrib_h
-#define uiavopolarattrib_h
+#pragma once
 
 #include "uiavopolarattribmod.h"
 #include "uiattrdesced.h"
@@ -40,6 +39,3 @@ protected:
 
     mDeclReqAttribUIFns
 };
-
-
-#endif

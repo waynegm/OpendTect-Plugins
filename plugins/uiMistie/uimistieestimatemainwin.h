@@ -1,5 +1,4 @@
-#ifndef uimistieestimatemainwin_h
-#define uimistieestimatemainwin_h
+#pragma once
 
 #include "uidialog.h"
 #include "uigroup.h"
@@ -64,7 +63,7 @@ mClass(uiMistie) uiMistieEstimateMainWin : public uiDialog
 public:
     uiMistieEstimateMainWin(uiParent*);
     ~uiMistieEstimateMainWin();
-    
+
     const MistieData& getMisties() const { return misties_; };
 
 protected:
@@ -74,13 +73,11 @@ protected:
     MistieData                  misties_;
 
     void			modeCB(CallBacker*);
-    
+
     bool            acceptOK(CallBacker*);
-    
+
 private:
 
     uiString    getCaptionStr() const;
     void        initCB(CallBacker*);
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef ltfattrib_h
-#define ltfattrib_h
+#pragma once
 /*
  *   LocalAttrib Plugin
  *   Copyright (C) 2019  Wayne Mogg
@@ -26,7 +25,7 @@
 	Time-Frequency decomposition using local attributes
 
 */
-    
+
 
 namespace Attrib
 {
@@ -53,7 +52,7 @@ protected:
     static Provider*		createInstance(Desc&);
 	static void				updateDesc(Desc&);
     static void				updateDefaults(Desc&);
-    
+
     bool					allowParallelComputation() const { return false; }
 
     const Interval<int>*	desZSampMargin(int,int) const { return &zsampMargin_; }
@@ -62,11 +61,11 @@ protected:
     bool					computeData(const DataHolder&,const BinID& relpos, int z0,int nrsamples,int threadid) const;
 
     bool					areAllOutputsEnabled() const;
-    
+
     Interval<float>		gate_;
     float				window_; // effective time window
     float				step_; // frequency spacing
-    
+
     float		freq_;
 	int			smooth_;
     int			niter_;
@@ -75,11 +74,7 @@ protected:
 	const DataHolder*	indata_;
 	int					indataidx_;
     Interval<int>		zsampMargin_;
-	
+
 };
 
 }; // namespace Attrib
-
-#endif
-
-

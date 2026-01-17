@@ -1,6 +1,4 @@
-#ifndef uigeopackagetreeitem_h
-#define uigeopackagetreeitem_h
-
+#pragma once
 /*
  *   uiGeopackageExport Plugin
  *   Copyright (C) 2019  Wayne Mogg
@@ -85,5 +83,3 @@ private:
 
     MenuItem                optionsmenuitem_;
 };
-
-#endif

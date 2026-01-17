@@ -1,5 +1,4 @@
-#ifndef uiinputgrp_h
-#define uiinputgrp_h
+#pragma once
 
 #include "uidlggroup.h"
 
@@ -41,8 +40,3 @@ protected:
     void                hor3DselCB(CallBacker*);
     void		updateUICB(CallBacker*);
 };
-
-
-
-
-#endif

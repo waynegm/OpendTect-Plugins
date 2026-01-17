@@ -1,6 +1,4 @@
- 
-#ifndef uisurveygrp_h
-#define uisurveygrp_h
+#pragma once
 
 #include "uidlggroup.h"
 
@@ -10,15 +8,10 @@ class uiSurveyGrp : public uiDlgGroup
 { mODTextTranslationClass(uiSurveyGrp);
 public:
     uiSurveyGrp(uiParent*);
-    
+
     bool doExport();
-    
+
 protected:
     uiGenInput* expSurveyfld_;
-    
+
 };
-
-
-
-
-#endif

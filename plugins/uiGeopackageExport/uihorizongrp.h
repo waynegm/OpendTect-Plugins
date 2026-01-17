@@ -1,5 +1,4 @@
-#ifndef uihorizongrp_h
-#define uihorizongrp_h
+#pragma once
 
 #include "uidlggroup.h"
 
@@ -45,8 +44,3 @@ protected:
     void		updateUICB(CallBacker*);
 
 };
-
-
-
-
-#endif
