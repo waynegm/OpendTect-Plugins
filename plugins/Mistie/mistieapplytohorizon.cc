@@ -79,8 +79,11 @@ bool MistieApplyToHorizon2D::doWork( od_int64 start, od_int64 stop, int threadid
 	return false;
 
     for (int idx=mCast(int,start); idx<=stop && shouldContinue(); idx++, addToNrDone(1)) {
-	const StepInterval<int> trcrg = inphor_->geometry().colRange( geomids_[idx] );
-	mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids_[idx]))
+	const Pos::GeomID& geomid = geomids_[idx];
+	if (!geomid.isValid() || !geomid.is2D())
+	    continue;
+	const StepInterval<int> trcrg = inphor_->geometry().colRange( geomid );
+	mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomid))
 	if (!survgeom2d || trcrg.isUdf() || !trcrg.step_)
 	{
 	    BufferString tmp("MistieApplyToHorizon2D::doWork - geometry error for: ");
@@ -165,9 +168,11 @@ MistieApplyToHorizon3D::MistieApplyToHorizon3D(const MultiID oldhor3did,
     }
 
     arr2d_ = inphor_->createArray2D();
-    nlocs_ = arr2d_->totalSize();
-    BufferString tmp;
-    outhor_->setFullyLoaded(true);
+    if (arr2d_ || arr2d_->isOK())
+    {
+	nlocs_ = arr2d_->totalSize();
+	outhor_->setFullyLoaded(true);
+    }
 }
 
 MistieApplyToHorizon3D::~MistieApplyToHorizon3D()

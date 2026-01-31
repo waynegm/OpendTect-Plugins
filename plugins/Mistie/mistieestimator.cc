@@ -33,7 +33,11 @@ MistieEstimatorFromSeismic::MistieEstimatorFromSeismic(const IOObj* ioobj, Line2
     Coord pos;
     for (int idx=0; idx<intset.size(); idx++) {
         Pos::GeomID geomidA = intset[idx]->geomID();
+	if (!geomidA.isValid() || !geomidA.is2D())
+	    continue;
         mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomidA) );
+	if (!geom2d)
+	    continue;
         lineA = Survey::GM().getName(geomidA);
         for (int idp=0; idp<intset[idx]->size(); idp++) {
             Line2DInterSection::Point pint = intset[idx]->getPoint(idp);
@@ -107,6 +111,8 @@ bool MistieEstimatorFromSeismic::doWork( od_int64 start, od_int64 stop, int thre
 bool MistieEstimatorFromSeismic::get2DTrc( BufferString line, int trcnr, SeisTrc& trc )
 {
     Pos::GeomID geomid = Survey::GM().getGeomID(line);
+    if (!geomid.isValid() || !geomid.is2D())
+	return false;
 
     Seis::RangeSelData range;
     range.setGeomID(geomid);
@@ -136,7 +142,11 @@ MistieEstimatorFromHorizon::MistieEstimatorFromHorizon(MultiID hor2did, Line2DIn
     Coord pos;
     for (int idx=0; idx<intset.size(); idx++) {
 	Pos::GeomID geomidA = intset[idx]->geomID();
+	if (!geomidA.isValid() || !geomidA.is2D())
+	    continue;
 	mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomidA) );
+	if (!geom2d)
+	    continue;
 	lineA = Survey::GM().getName(geomidA);
 	for (int idp=0; idp<intset[idx]->size(); idp++) {
 	    Line2DInterSection::Point pint = intset[idx]->getPoint(idp);
@@ -203,9 +213,13 @@ bool MistieEstimatorFromHorizon::doWork( od_int64 start, od_int64 stop, int thre
 	    continue;
 	}
 	Pos::GeomID geomidA = Survey::GM().getGeomID(lineA);
+	if (!geomidA.isValid() || !geomidA.is2D())
+	    continue;
 	TrcKey tkA(geomidA, trcnrA);
 	const float zA = hor2d_->getZ(tkA);
 	Pos::GeomID geomidB = Survey::GM().getGeomID(lineB);
+	if (!geomidB.isValid() || !geomidB.is2D())
+	    continue;
 	TrcKey tkB(geomidB, trcnrB);
 	const float zB = hor2d_->getZ(tkB);
 	if (!mIsUdf(zA) && !mIsUdf(zB))

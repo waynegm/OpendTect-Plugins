@@ -70,7 +70,10 @@ bool Line3DOverlapFinder::doWork(od_int64 start, od_int64 stop, int tid)
         if (!bps)
             continue;
         int bpssize = bps->idxs_.size();
-        mDynamicCastGet(const Survey::Geometry2D*,geom2d,Survey::GM().getGeometry(bps->geomid_));
+	const Pos::GeomID& geomid = bps->geomid_;
+	if (!geomid.isValid() || !geomid.is2D())
+	    continue;
+	mDynamicCastGet(const Survey::Geometry2D*,geom2d,Survey::GM().getGeometry(geomid));
         if (!geom2d)
             continue;
         const TypeSet<PosInfo::Line2DPos>& linepos = geom2d->data().positions();
@@ -226,6 +229,8 @@ bool MistieEstimatorFromSeismic2D3D::doWork( od_int64 start, od_int64 stop, int 
 bool MistieEstimatorFromSeismic2D3D::get2DTrc( BufferString line, int trcnr, SeisTrc& trc )
 {
     Pos::GeomID geomid = Survey::GM().getGeomID(line);
+    if (!geomid.isValid() || !geomid.is2D())
+	return false;
 
     Seis::RangeSelData range;
     range.setGeomID(geomid);
@@ -275,7 +280,11 @@ MistieEstimatorFromHorizon2D3D::MistieEstimatorFromHorizon2D3D(MultiID hor3Did, 
     Coord pos;
     lineA += "3D";
     for (int idx=0; idx<selranges_.size(); idx++) {
-	lineB = Survey::GM().getName(selranges_[idx]->geomID());
+	const Pos::GeomID& geomid = selranges_[idx]->geomID();
+	if (!geomid.isValid() || !geomid.is2D())
+	    continue;
+
+	lineB = Survey::GM().getName(geomid);
 	trcA = selranges[idx]->crlRange().start_;
 	trcB = selranges[idx]->crlRange().stop_;
 	misties_.add(lineA, trcA, lineB, trcB, pos);
@@ -353,7 +362,10 @@ bool MistieEstimatorFromHorizon2D3D::doWork( od_int64 start, od_int64 stop, int 
 	    trcnums += traces.center();
 	int count = 0;
 	for (int it=0; it<trcnums.size(); it++) {
-	    const TrcKey tk2d(Survey::GM().getGeomID(lineB), trcnums[it]);
+	    const Pos::GeomID& geomid = Survey::GM().getGeomID(lineB);
+	    if (!geomid.isValid() || !geomid.is2D())
+		continue;
+	    const TrcKey tk2d(geomid, trcnums[it]);
 	    const Coord3 pos2d = hor2d_->getCoord(tk2d);
 	    float z3d = hor3d_->getZ(SI().transform(pos2d.coord()));
 	    if (!mIsUdf(z3d) && !mIsUdf(pos2d.z_))
