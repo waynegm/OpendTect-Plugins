@@ -104,5 +104,7 @@ protected:
     TypeSet<od_int64>				interpidx_;
     TrcKeySampling				hs_;
 
-    void					localInterp(uiParent*, bool approximation = true);
+    bool	localInterp(uiParent*, bool approximation = true);
+    void	reportMemError(const char*, const char*, od_int64);
+};
 };

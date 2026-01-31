@@ -7,7 +7,8 @@ wmNRNGridder2D::wmNRNGridder2D()
 
 bool wmNRNGridder2D::executeGridding(uiParent* p)
 {
-    localInterp(p, false);
+    if (!localInterp(p, false))
+	return false;
 
     for (int idx=0; idx<interpidx_.size(); idx++) {
 	BinID gridBid = hs_.atIndex(interpidx_[idx]);

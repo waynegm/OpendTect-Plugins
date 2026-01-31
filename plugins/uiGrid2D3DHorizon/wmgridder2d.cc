@@ -23,7 +23,19 @@
 #include "pickset.h"
 #include "picksettr.h"
 #include "uitaskrunner.h"
+#include "odsysmem.h"
 
+void wmGridder2D::reportMemError(const char* where, const char* errmsg, od_int64 memsize)
+{
+    ErrMsg(BufferString(where, " - ", errmsg));
+    od_int64 totalmem, freemem;
+    OD::getSystemMemory(totalmem, freemem);
+    BufferString msg;
+    msg.add(" Require (MB): ").add(float(memsize/mDef1MB), 1);
+    msg.add(" Free (MB): ").add(float(freemem/mDef1MB),1);
+    ErrMsg(msg);
+    uiMSG().error(tr("%1. %2").arg(errmsg).arg(msg.buf()));
+}
 
 const char* wmGridder2D::sKeyInput()		{ return "Input"; }
 const char* wmGridder2D::sKeyGridDef()		{ return "GridDef"; }
@@ -246,6 +258,15 @@ bool wmGridder2D::loadData()
            obj->unRef();
            return false;
         }
+        od_int64 totalsz = hor3Dsubsel_.totalNr();
+	if (!binLocs_.setCapacity(totalsz, false) || !vals_.setCapacity(totalsz, false))
+	{
+	    reportMemError("wmGridder2D::loadData",
+			   "cannot allocate memory for 3D input data",
+			    totalsz*(sizeof(float)+sizeof(Coord)) );
+	    obj->unRef();
+	    return false;
+	}
         for (int iln=hor3Dsubsel_.start_.inl(); iln<=hor3Dsubsel_.stop_.inl(); iln+=hor3Dsubsel_.step_.inl()) {
 	    Coord coord;
 	    bool first = true;
@@ -256,7 +277,7 @@ bool wmGridder2D::loadData()
                 if (mIsUdf(z))
                     continue;
 		coord = Coord(iln, xln);
-		setPoint(Coord(iln, xln), z);
+		setPoint(coord, z);
 		if (first) {
 		    cvxhullpoly_.add(coord);
 		    first = false;
@@ -285,7 +306,16 @@ bool wmGridder2D::loadData()
             mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids_[idx]))
             if (!survgeom2d || trcrg.isUdf() || !trcrg.step_)
                 continue;
-
+	    int numloc = trcrg.nrSteps();
+	    od_int64 newcap = binLocs_.size() + numloc;
+	    if (!binLocs_.setCapacity(newcap, false) || !vals_.setCapacity(newcap, false))
+	    {
+		reportMemError("wmGridder2D::loadData",
+			       "cannot allocate memory for 2D input data",
+			       numloc*(sizeof(float)+sizeof(Coord)));
+		obj->unRef();
+		return false;
+	    }
             TrcKey tk( geomids_[idx], -1 );
             float spnr = mUdf(float);
 	    Coord binLoc;
@@ -324,6 +354,15 @@ bool wmGridder2D::loadData()
 	    BufferString tmp("wmGridder2D::loadData - error reading contour polygon - ");
 	    tmp += msg.getString();
 	    ErrMsg(tmp);
+	    return false;
+	}
+	int numloc = ps->size();
+	od_int64 newcap = binLocs_.size() + numloc;
+	if (!binLocs_.setCapacity(newcap, false) || !vals_.setCapacity(newcap, false))
+	{
+	    reportMemError("wmGridder2D::loadData",
+			   "cannot allocate memory for contour input data",
+			    numloc*(sizeof(float)+sizeof(Coord)));
 	    return false;
 	}
 	for (int idp=0; idp<ps->size(); idp++) {
@@ -519,15 +558,24 @@ bool wmGridder2D::prepareForGridding(uiParent* p)
 	return false;
     if (!setScope())
 	return false;
-    if (!grid_) {
+    if (!grid_)
+    {
 	grid_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
-	if (!grid_) {
-	    ErrMsg("wmGridder2D::prepareForGridding - grid_ is not allocated.");
+	if (!grid_)
+	{
+	    ErrMsg("wmGridder2D::prepareForGridding - cannot create grid array.");
 	    return false;
 	}
     } else
 	grid_->setSize(hs_.nrInl(), hs_.nrCrl());
-
+    if ( !grid_->isOK() )
+    {
+	reportMemError("wmGridder2D::prepareForGridding",
+		       "cannot allocate memory for output grid",
+			grid_->totalSize()*sizeof(float));
+	deleteAndNullPtr(grid_);
+	return false;
+    }
     grid_->setAll(0.0);
     interpidx_.erase();
     Threads::Lock lock;
@@ -601,18 +649,26 @@ if (mIsEqual(pos.x_, bidSnap.inl(), mDefEps) && mIsEqual(pos.y_, bidSnap.crl(), 
 }
 , )
 
-void wmGridder2D::localInterp(uiParent* p, bool approximation)
+bool wmGridder2D::localInterp(uiParent* p, bool approximation)
 {
     if (!grid_) {
 	uiMSG().error(tr("wmGridder2D::localInterp - grid_ is not allocated."));
-	return;
+	return false;
     }
 
     delete carr_;
     carr_ = new Array2DImpl<float>(hs_.nrInl(), hs_.nrCrl());
     if (!carr_) {
-	ErrMsg("wmGridder2D::localInterp - carr_ is not allocated.");
-	return;
+	ErrMsg("wmGridder2D::localInterp - cannot create carr_ array.");
+	return false;
+    }
+    if ( !carr_->isOK() )
+    {
+	reportMemError("wmGridder2D::localInterp",
+		       "cannot allocate memory for carr array",
+			carr_->totalSize()*sizeof(float));
+	deleteAndNullPtr(carr_);
+	return false;
     }
     carr_->setAll(0.0);
 
@@ -643,7 +699,7 @@ void wmGridder2D::localInterp(uiParent* p, bool approximation)
 	    binLocs_ += Coord(gridBid.inl(), gridBid.crl());
 	} else if (!approximation)
 		interpidx_ += idx;
-
     }
+    return true;
 }
 
