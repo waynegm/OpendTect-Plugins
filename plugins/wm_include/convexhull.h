@@ -1,4 +1,4 @@
-#prafma once
+#pragma once
 /*
 *   Convex Hull for a set of points
 *   Copyright (C) 2019  Wayne Mogg
