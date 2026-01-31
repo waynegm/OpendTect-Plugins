@@ -153,6 +153,9 @@ void WMLib::uiSeis2DLineSelGrp::readChoiceDone( CallBacker* )
 
 void WMLib::uiSeis2DLineSelGrp::writeChoiceReq( CallBacker* )
 {
+    if (!lbchoiceio_)
+	return;
+
     MultiID mid = IOObjContext::getStdDirData(IOObjContext::Geom)->id_;
 
     lbchoiceio_->keys().setEmpty();

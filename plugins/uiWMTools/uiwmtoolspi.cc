@@ -156,6 +156,9 @@ void uiWMToolsMgr::setupDEHMenu()
     if ( !itm || !itm->getMenu() ) return;
 
     uiMenu* prochormenu = const_cast<uiMenu*>(itm->getMenu());
+    if (!prochormenu)
+	return;
+
     prochormenu->insertAction( new uiAction(m3Dots(tr("Create Data Extent Horizon")),mCB(this,uiWMToolsMgr,dataExtentHorizonCB)) );
 }
 
