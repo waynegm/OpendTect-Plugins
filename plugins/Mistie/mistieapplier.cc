@@ -76,20 +76,23 @@ bool MistieApplier::getInputData( const BinID& relpos, int zintv )
 
 void MistieApplier::prepareForComputeData()
 {
+    shift_ = 0.0;
+    phase_ = 0.0;
+    amp_ = 1.0;
     BufferString dname;
     if (is2D()) {
         Pos::GeomID geomid = getGeomID();
+	if (!geomid.isValid() || !geomid.is2D())
+	    return;
         mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomid) );
+	if (!geom2d)
+	    return;
         dname = geom2d->getName();
     } else {
         dname = "3D_"; dname += getDesc().getInput(0)->userRef();
     }
     if (!corrections_.get(dname, shift_, phase_, amp_)) {
-        shift_ = 0.0;
-        phase_ = 0.0;
-        amp_ = 1.0;
-        BufferString tmp("MistieApplier::prepareForComputeData - no mistie corrections for: ");
-        tmp += dname;
+        BufferString tmp("MistieApplier::prepareForComputeData - no mistie corrections for: ", dname);
         ErrMsg(tmp);
     }
 }
