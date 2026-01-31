@@ -184,7 +184,10 @@ void uiGeopackageWriter::write2DLines( TypeSet<Pos::GeomID>& geomids )
 
     for ( int idx=0; idx<geomids.size(); idx++ )
     {
-	mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+	const Pos::GeomID& geomid = geomids[idx];
+	if (!geomid.isValid() || !geomid.is2D())
+	    continue;
+	mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomid) );
 	if ( !geom2d )
 	    continue;
 
@@ -238,7 +241,10 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
 
     for ( int idx=0; idx<geomids.size(); idx++ )
     {
-	mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+	const Pos::GeomID& geomid = geomids[idx];
+	if (!geomid.isValid() || !geomid.is2D())
+	    continue;
+	mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomid) );
 	if ( !geom2d )
 	    continue;
 	const PosInfo::Line2DData& geom = geom2d->data();
@@ -640,12 +646,15 @@ void uiGeopackageWriter::writeHorizon( const char* layerName,
 
 	for (int idx=0; idx<geomids.size(); idx++)
 	{
-	    const StepInterval<int> trcrg = hor->geometry().colRange( geomids[idx] );
-	    mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids[idx]))
+	    const Pos::GeomID& geomid = geomids[idx];
+	    if (!geomid.isValid() || !geomid.is2D())
+		continue;
+	    const StepInterval<int> trcrg = hor->geometry().colRange( geomid );
+	    mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomid))
 	    if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
 		continue;
 
-	    TrcKey tk( geomids[idx], -1 );
+	    TrcKey tk( geomid, -1 );
 	    Coord pos;
 	    float spnr = mUdf(float);
 	    gpkg_->startTransaction();

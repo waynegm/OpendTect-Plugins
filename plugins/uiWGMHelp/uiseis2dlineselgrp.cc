@@ -140,6 +140,9 @@ void WMLib::uiSeis2DLineSelGrp::selChgCB(CallBacker*)
 
 void WMLib::uiSeis2DLineSelGrp::readChoiceDone( CallBacker* )
 {
+    if (!lbchoiceio_)
+	return;
+
     TypeSet<Pos::GeomID> gids;
     for ( int idx=0; idx<lbchoiceio_->chosenKeys().size(); idx++ )
     {

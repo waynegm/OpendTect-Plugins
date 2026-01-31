@@ -303,8 +303,11 @@ bool wmGridder2D::loadData()
             return false;
         }
         for (int idx=0; idx<geomids_.size(); idx++) {
-            const StepInterval<int> trcrg = hor->geometry().colRange( geomids_[idx] );
-            mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomids_[idx]))
+	    const Pos::GeomID& geomid = geomids_[idx];
+	    if (!geomid.isValid() || !geomid.is2D())
+		continue;
+            const StepInterval<int> trcrg = hor->geometry().colRange(geomid);
+            mDynamicCastGet(const Survey::Geometry2D*,survgeom2d,Survey::GM().getGeometry(geomid))
             if (!survgeom2d || trcrg.isUdf() || !trcrg.step)
                 continue;
 

@@ -155,7 +155,8 @@ void uiInputGrp::usePar( const IOPar& par )
 		{
 		    Pos::GeomID id;
 		    if (inp_par->get(IOPar::compKey(wmGridder2D::sKey2DLineID(),idx), id))
-			mids += id;
+			if (id.isValid() && id.is2D())
+			    mids += id;
 		}
 		lines2Dfld_->setChosen(mids);
 	    }
@@ -172,9 +173,9 @@ void uiInputGrp::usePar( const IOPar& par )
 	    for (int idx=0; idx<nrcontpoly; idx++)
 	    {
 		MultiID id;
-		if (!inp_par->get(IOPar::compKey(wmGridder2D::sKeyContourPolyID(), idx), id))
-		    return;
-		polyIDs += id;
+		if (inp_par->get(IOPar::compKey(wmGridder2D::sKeyContourPolyID(), idx), id))
+		    if (!id.isUdf())
+			polyIDs += id;
 	    }
 	    contpolyfld_->setSelectedPolygons(polyIDs);
 	}
@@ -222,10 +223,13 @@ void uiInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
         TypeSet<Pos::GeomID> geomids;
         getGeoMids(geomids);
         for (int idx=0; idx<geomids.size(); idx++) {
-            mDynamicCastGet( const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomids[idx]) );
+	    const Pos::GeomID& geomid = geomids[idx];
+	    if  (!geomid.isValid() || !geomid.is2D())
+		continue;
+            mDynamicCastGet(const Survey::Geometry2D*, geom2d, Survey::GM().getGeometry(geomid) );
             if ( !geom2d )
                 continue;
-            int gidx = horGeomids.indexOf(geomids[idx]);
+            int gidx = horGeomids.indexOf(geomid);
             StepInterval<int> trcrng = trcRanges[gidx];
             Coord pos;
             float spnr;
