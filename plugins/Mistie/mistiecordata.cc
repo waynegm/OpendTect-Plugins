@@ -68,7 +68,7 @@ int MistieCorrectionData::getIndex( const char* dataname ) const
 BufferString MistieCorrectionData::getDataName( int idx ) const
 {
     BufferString result;
-    if (idx>=0 && idx<size())
+    if (datanames_.validIdx(idx))
         result = datanames_.get(idx);
     return result;
 }
@@ -76,7 +76,7 @@ BufferString MistieCorrectionData::getDataName( int idx ) const
 float MistieCorrectionData::getZCor( int idx ) const
 {
     float result = 0.0;
-    if (idx>=0 && idx<size())
+    if (shifts_.validIdx(idx))
         result = shifts_[idx];
     return result;
 }
@@ -84,14 +84,14 @@ float MistieCorrectionData::getZCor( int idx ) const
 float MistieCorrectionData::getPhaseCor( int idx ) const
 {
     float result = 0.0;
-    if (idx>=0 && idx<size())
+    if (phases_.validIdx(idx))
         result = phases_[idx];
     return result;
 }
 float MistieCorrectionData::getAmpCor( int idx ) const
 {
     float result = 1.0;
-    if (idx>=0 && idx<size())
+    if (amps_.validIdx(idx))
         result = amps_[idx];
     return result;
 }
@@ -102,7 +102,7 @@ bool MistieCorrectionData::get( const char* name, float& shift, float& phase, fl
     shift = 0.0;
     phase = 0.0;
     amp = 1.0;
-    if (idx>=0) {
+    if (shifts_.validIdx(idx)) {
         shift = shifts_[idx];
         phase = phases_[idx];
         amp = amps_[idx];
