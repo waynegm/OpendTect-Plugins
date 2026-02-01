@@ -7,7 +7,7 @@
 
 
 cmake_minimum_required (VERSION 3.20)
-project(OpendTect_Plugins VERSION 2025.1)
+project(OpendTect_Plugins VERSION 2025.2)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -33,6 +33,7 @@ get_filename_component( OD_BINARY_BASEDIR "${OD_BINARY_BASEDIR}" REALPATH )
 
 #Setup the modules
 set ( PLUGINS uiWGMHelp
+	    B2NDIO
 	    EigenTools
             uiWMTools
             uiGeopackageExport
