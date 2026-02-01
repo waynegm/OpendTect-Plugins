@@ -1,5 +1,14 @@
 # OpendTect Plugins Release Notes
 
+## Release 2025.2
+## Geopackage Export
+- add checks that 2D geomids are valid and are 2D
+## Grid 2D3D
+- add checks that 2D geomids are valid and are 2D
+- add out of memory checks when allocating large arrays
+## Mistie
+- add checks that 2D geomids are valid and are 2D
+
 ## Release 2025.1 (aka 8.0)
 
 - Adapt to OpendTect API changes
