@@ -168,7 +168,7 @@ MistieApplyToHorizon3D::MistieApplyToHorizon3D(const MultiID oldhor3did,
     }
 
     arr2d_ = inphor_->createArray2D();
-    if (arr2d_ || arr2d_->isOK())
+    if (arr2d_ && arr2d_->isOK())
     {
 	nlocs_ = arr2d_->totalSize();
 	outhor_->setFullyLoaded(true);

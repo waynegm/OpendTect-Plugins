@@ -26,6 +26,15 @@
 
 using namespace Eigen;
 
+ArrayXf EFD::TKEO(const ArrayXf& input)
+{
+    const int ns = input.size();
+    const int nsm2 = ns-2;
+    ArrayXf result = input.square();
+    result(seq(1,nsm2)) = result(seq(1,nsm2)) - input(seq(0,nsm2-1))*input(seq(2,nsm2+1));
+    return result;
+}
+
 EFD::EFD(int maxmodes, PadMode padmode, bool deramp, int tapersz)
     : maxnrmodes_(maxmodes)
     , padmode_(padmode)
@@ -121,7 +130,9 @@ Array2Xf EFD::getModeTKInstFrequency(int modenum, float dt)
 	yn(seq(1,ns-1)) = yn(seq(1,ns-1)) - mode(seq(0,nsm2));
 	ArrayXf ynp1 = mode;
 	ynp1(seq(0,nsm2)) = mode(seq(1,ns-1)) - ynp1(seq(0,nsm2));
-	auto desa_arg = 1.0f - (TKEO(yn)+TKEO(ynp1))/(4.0f*mode_tk);
+	auto tk = TKEO(yn);
+	auto tkp1 = TKEO(ynp1);
+	auto desa_arg = 1.0f - (tk+tkp1)/(4.0f*mode_tk);
 
 	mif.row(1) = (mode_tk/(1.0f-desa_arg.square())).sqrt();
 	mif.row(0) =  desa_arg.acos()/(M_2PI*dt);
@@ -243,11 +254,3 @@ VectorXcf EFD::computeAnalyticSignalSpectrum(int modenum)
     return spec;
 }
 
-ArrayXf EFD::TKEO(const ArrayXf& input)
-{
-    const int ns = input.size();
-    const int nsm2 = ns-2;
-    ArrayXf result = input.square();
-    result(seq(1,nsm2)) = result(seq(1,nsm2)) - input(seq(0,nsm2-1))*input(seq(2,nsm2+1));
-    return result;
-}

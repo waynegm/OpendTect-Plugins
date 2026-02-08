@@ -1,12 +1,19 @@
 # OpendTect Plugins Release Notes
 
 ## Release 2025.2
-## Geopackage Export
+- update dependencies
+
+### External Attributes
+- remove local copy of nlohmann/json
+
+### Geopackage Export
 - add checks that 2D geomids are valid and are 2D
-## Grid 2D3D
+
+### Grid 2D3D
 - add checks that 2D geomids are valid and are 2D
 - add out of memory checks when allocating large arrays
-## Mistie
+
+### Mistie
 - add checks that 2D geomids are valid and are 2D
 
 ## Release 2025.1 (aka 8.0)
@@ -15,26 +22,36 @@
 - move all external dependencies to WMPlugin-Deps repository
 - ensure all pointers are initialised or set to nullptr
 - check pointers to optional ui items before use
+
 ### AVOAttrib
 - fix zero divide in AVO Angle
+
 ### AVOPolarAttrib
 - fix event angle computation
+
 ### EFDAttrib
 - fix display of test panel
+
 ### External Attributes
 - fix writing of information to log file
 - add script to generate synthetic AVO intercept and gradient for testing
 - add nrZ (number of samples in trace) to SeismicInfo buffer
+
 ### GradientAttrib
 - make it work on 2D
+
 ### LocalAttrib
 - fix display of test panel
+
 ### Mistie
 - fix issue with 2D-3D intersection calculation
+
 ### RSpecAttrib
 - fix display of test panel
+
 ### uiWMTools
 - fix fault polygon extraction
+
 ### uiGeopackageExport
 - fix geotiff export not working if horizon extends beyond survey
 

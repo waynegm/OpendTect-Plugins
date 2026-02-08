@@ -107,4 +107,4 @@ protected:
     bool	localInterp(uiParent*, bool approximation = true);
     void	reportMemError(const char*, const char*, od_int64);
 };
-};
+

@@ -31,8 +31,8 @@ void wmGridder2D::reportMemError(const char* where, const char* errmsg, od_int64
     od_int64 totalmem, freemem;
     OD::getSystemMemory(totalmem, freemem);
     BufferString msg;
-    msg.add(" Require (MB): ").add(float(memsize/mDef1MB), 1);
-    msg.add(" Free (MB): ").add(float(freemem/mDef1MB),1);
+    msg.add(" Require (MB): ").addDec(float(memsize/mDef1MB), 1);
+    msg.add(" Free (MB): ").addDec(float(freemem/mDef1MB),1);
     ErrMsg(msg);
     uiMSG().error(tr("%1. %2").arg(errmsg).arg(msg.buf()));
 }
