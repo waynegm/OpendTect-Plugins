@@ -245,6 +245,7 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
 	const PosInfo::Line2DData& geom = geom2d->data();
 	const TypeSet<PosInfo::Line2DPos>& posns = geom.positions();
 
+	bool ok = true;
 	gpkg_->startTransaction();
 	for ( int tdx=0; tdx<posns.size(); tdx++ )
 	{
@@ -254,10 +255,12 @@ void uiGeopackageWriter::write2DStations( TypeSet<Pos::GeomID>& geomids )
 		ErrMsg("uiGeopackageWriter::write2DStations - writing feature failed.");
 		ErrMsg(gpkg_->errorMsg());
 		gpkg_->rollbackTransaction();
+		ok = false;
 		break;
 	    }
 	}
-	gpkg_->commitTransaction();
+	if (ok)
+	    gpkg_->commitTransaction();
     }
     sqlite3_finalize(stmt);
 }
@@ -301,7 +304,7 @@ void uiGeopackageWriter::writeRandomLines( TypeSet<MultiID>& lineids )
 	    BufferString tmp("uiGeopackageWriter::writeRandomLines - error reading random line - ");
 	    tmp += msg.getString();
 	    ErrMsg(tmp);
-	    return;
+	    continue;
 	}
 
 	for (int rdx=0; rdx<inprls.size(); rdx++)
@@ -534,7 +537,7 @@ void uiGeopackageWriter::writePolyLines( TypeSet<MultiID>& lineids )
 	    BufferString tmp("uiGeopackageWriter::writePolyLines - error reading polyline - ");
 	    tmp += msg.getString();
 	    ErrMsg(tmp);
-	    return;
+	    continue;
 	}
 
 	const bool ispolygon = ps->isPolygon() && ps->disp_.connect_==Pick::Set::Disp::Close;
@@ -651,6 +654,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName,
 	    TrcKey tk( geomids[idx], -1 );
 	    Coord pos;
 	    float spnr = mUdf(float);
+	    bool ok = true;
 	    gpkg_->startTransaction();
 	    for ( int trcnr=trcrg.start_; trcnr<=trcrg.stop_; trcnr+=trcrg.step_ )
 	    {
@@ -665,12 +669,12 @@ void uiGeopackageWriter::writeHorizon( const char* layerName,
 		    ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 2D horizon failed.");
 		    ErrMsg(gpkg_->errorMsg());
 		    gpkg_->rollbackTransaction();
-		    sqlite3_finalize(stmt);
-		    obj->unRef();
+		    ok = false;
 		    break;
 		}
 	    }
-	    gpkg_->commitTransaction();
+	    if (ok)
+		gpkg_->commitTransaction();
 	}
 	obj->unRef();
     }
@@ -694,6 +698,7 @@ void uiGeopackageWriter::writeHorizon( const char* layerName,
 	    return;
 	}
 
+	bool ok = true;
 	gpkg_->startTransaction();
 	TrcKeySampling expSel = cs.hsamp_;
 	for (int iln=expSel.start_.inl(); iln<=expSel.stop_.inl(); iln+=expSel.step_.inl())
@@ -713,13 +718,13 @@ void uiGeopackageWriter::writeHorizon( const char* layerName,
 		    ErrMsg("uiGeopackageWriter::writeHorizon - creating point for 3D horizon failed.");
 		    ErrMsg(gpkg_->errorMsg());
 		    gpkg_->rollbackTransaction();
-		    sqlite3_finalize(stmt);
-		    obj->unRef();
+		    ok = false;
 		    break;
 		}
 	    }
 	}
-	gpkg_->commitTransaction();
+	if (ok)
+	    gpkg_->commitTransaction();
 	obj->unRef();
     }
     sqlite3_finalize(stmt);

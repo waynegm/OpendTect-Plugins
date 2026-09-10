@@ -120,7 +120,7 @@ void uiGeopackageExportMgr::gpxDialog( CallBacker* )
             " The survey '%1' currently has a CRS set to: '%2' which is not a projected CRS."
             " You can set the survey CRS using the Survey-Select/Setup menu item.").arg(si->name()).arg(si->getCoordSystem()->factoryKeyword()) );
             uiMSG().message(msg);
-            gpxdlg_->close();
+            deleteAndNullPtr(gpxdlg_);
             return;
         }
     }
@@ -135,7 +135,7 @@ void uiGeopackageExportMgr::gtifDialog( CallBacker* )
         if (!has3DHorizons()) {
             uiString msg( tr("The current project does not contain any 3D horizons that can be exported to Geotiff.") );
             uiMSG().message(msg);
-            gtifdlg_->close();
+            deleteAndNullPtr(gtifdlg_);
             return;
         }
     }

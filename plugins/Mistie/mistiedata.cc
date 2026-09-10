@@ -137,7 +137,7 @@ bool MistieData::add( const char* dataA, int trcA, const char* dataB, int trcB, 
 
 float MistieData::getZMistie( int idx ) const
 {
-    return zdiff_[idx];
+    return zdiff_.validIdx(idx) ? zdiff_[idx] : 0.0f;
 }
 
 float MistieData::getZMistieWith(const MistieCorrectionData& corrections, int idx ) const
@@ -154,7 +154,7 @@ float MistieData::getZMistieWith(const MistieCorrectionData& corrections, int id
 
 float MistieData::getPhaseMistie( int idx ) const
 {
-    return phasediff_[idx];
+    return phasediff_.validIdx(idx) ? phasediff_[idx] : 0.0f;
 }
 
 float MistieData::getPhaseMistieWith(const MistieCorrectionData& corrections, int idx ) const
@@ -171,7 +171,7 @@ float MistieData::getPhaseMistieWith(const MistieCorrectionData& corrections, in
 
 float MistieData::getAmpMistie( int idx ) const
 {
-    return ampdiff_[idx];
+    return ampdiff_.validIdx(idx) ? ampdiff_[idx] : 1.0f;
 }
 
 float MistieData::getAmpMistieWith(const MistieCorrectionData& corrections, int idx ) const
@@ -188,12 +188,12 @@ float MistieData::getAmpMistieWith(const MistieCorrectionData& corrections, int 
 
 float MistieData::getQuality( int idx ) const
 {
-    return quality_[idx];
+    return quality_.validIdx(idx) ? quality_[idx] : 0.0f;
 }
 
 Coord MistieData::getPos( int idx ) const
 {
-    return pos_[idx];
+    return pos_.validIdx(idx) ? pos_[idx] : Coord(0,0);
 }
 
 void MistieData::getAllLines( BufferStringSet& lnms ) const

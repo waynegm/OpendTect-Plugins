@@ -102,6 +102,7 @@ bool MistieEstimatorFromSeismic::doWork( od_int64 start, od_int64 stop, int thre
             BufferString tmp("MistieEstimatorFromSeismic::doWork - could not get trace data for: ");
             tmp += lineA; tmp+= " "; tmp += lineB;
             ErrMsg(tmp);
+            continue;
         }
         misties_.set(idx, zdiff, phasediff, ampdiff, quality);
     }

@@ -80,6 +80,8 @@ bool uiGeotiffWriter::open()
     if (!gtif_)
     {
 	errmsg_.set(tr("uiGeotiffWriter::open - cannot create Geotiff directory."));
+	XTIFFClose(tif_);
+	tif_ = nullptr;
 	return false;
     }
 
@@ -232,7 +234,10 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
     {
 	PtrMan<Array2D<float>> array = hor3d->createArray2D();
 	if ( !array )
+	{
+	    _TIFFfree(rowBuff);
 	    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - unable to allocate array."));
+	}
 
 	description = BufferString("Z value ", SI().getZUnitString());
 	addBandMetadata(bandnr, description);
@@ -242,7 +247,10 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
 	    dims[i] = array->info().getSize(i);
 
 	if (dims[1]*sizeof(float)>TIFFScanlineSize(tif_))
+	{
+	    _TIFFfree(rowBuff);
 	    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - rowBuff size error"));
+	}
 
 	const float zfac = SI().showZ2UserFactor();
 	for (int i=0; i<dims[0]; i++)
@@ -270,7 +278,10 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
 	{
 	    PtrMan<Executor> auxloader = hor3d->auxdata.auxDataLoader(attribs.get(iatt).buf());
 	    if ( !auxloader || !TaskRunner::execute( &taskrunner, *auxloader ) )
-		    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon attributes failed"));
+	    {
+		_TIFFfree(rowBuff);
+		return uiRetVal(tr("uiGeotiffWriter::writeHorizon - loading 3D horizon attributes failed"));
+	    }
 
 	    if (hor3d->auxdata.hasAuxDataName(attribs.get(iatt)))
 	    {
@@ -284,7 +295,10 @@ uiRetVal uiGeotiffWriter::writeHorizon( uiTaskRunner& taskrunner, const MultiID&
 		    dims[i] = array->info().getSize(i);
 
 		if (dims[1]*sizeof(float)>TIFFScanlineSize(tif_))
+		{
+		    _TIFFfree(rowBuff);
 		    return uiRetVal(tr("uiGeotiffWriter::writeHorizon - rowBuff size error"));
+		}
 
 		for (int i=0; i<dims[0]; i++)
 		{
@@ -374,7 +388,10 @@ uiRetVal uiGeotiffWriter::writeZSlices( uiTaskRunner& taskrunner, const TypeSet<
 	tkzforload.zsamp_ = StepInterval<float>(slicetime, slicetime, tkzforload.zsamp_.step_);
 	Seis::SequentialReader rdr( *ioobj, &tkzforload );
 	if ( !rdr.execute() )
+	{
+	    _TIFFfree(rowBuff);
 	    return uiRetVal(tr("uiGeotiffWriter::writeZSlices - reading seismic volume failed."));
+	}
 
 	ConstRefMan<RegularSeisDataPack> dp = rdr.getDataPack();
 	if ( !dp )
