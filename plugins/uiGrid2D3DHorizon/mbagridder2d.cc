@@ -1,5 +1,5 @@
 #include "mbagridder2d.h"
-#include "mba.hpp"
+#include "mba/mba.hpp"
 #include <array>
 #include "uiparent.h"
 

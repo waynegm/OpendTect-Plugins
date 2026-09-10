@@ -19,7 +19,7 @@
 #include "ltpsgridder2d.h"
 #include "nanoflann_extra.h"
 #include "eigen3/Eigen/Dense"
-#include "mba.hpp"
+#include "mba/mba.hpp"
 
 #include "paralleltask.h"
 #include "survinfo.h"

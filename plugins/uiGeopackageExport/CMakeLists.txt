@@ -18,6 +18,11 @@ if ( NOT TARGET SQLite::SQLite3 )
     set( SQLite3_ROOT "" CACHE PATH "Sqlite directory" )
     find_package( SQLite3 QUIET REQUIRED )
 endif()
+if ( TARGET SQLite::SQLite3 AND UNIX AND NOT APPLE )
+    # FindSQLite3 leaves IMPORTED_SONAME unset, so OD's runtime-lib staging can't
+    # resolve sqlite3's .so.0. Its soname is stable across Linux distros and conda.
+    set_target_properties( SQLite::SQLite3 PROPERTIES IMPORTED_SONAME "libsqlite3.so.0" )
+endif()
 find_package( Tiff QUIET GLOBAL )
 if ( NOT TARGET TIFF::tiff )
     set( Tiff_ROOT "" CACHE PATH "Tiff directory" )

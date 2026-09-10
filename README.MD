@@ -8,7 +8,7 @@ This is the source code for a collection of plugins for the open source seismic 
  </a>
 </p>
 
-Code development in the main branch is for OpendTect 2025 (aka8.0). For earlier versions of OpendTect see the appropriate branch.
+Code development in the main branch is for OpendTect 2026. For earlier versions of OpendTect see the appropriate branch.
 
 For details please see the [documentation](http://waynegm.github.io/WMPlugin-Docs/) or click one of the links below.
 
@@ -30,6 +30,56 @@ For details please see the [documentation](http://waynegm.github.io/WMPlugin-Doc
 
 ## Building and Installation
 
-* [Build from Source](http://waynegm.github.io/WMPlugin-Docs/docs/gettingstarted/building-from-source/)
+The [Pixi](https://pixi.prefix.dev/latest/) package manager can be used to obtain all required dependencies and build OpendTect plugins for OpendTect 2026. All build files are written to the **build-pixi** folder. The built plugins are written to the **inst/2026** folder.
 
-* [Installation](http://waynegm.github.io/WMPlugin-Docs/docs/gettingstarted/installation/)
+**Note for Windows**: you will need to install msvc2022 64 bit (>= v17.8.4 - free community edition is sufficient).
+
+**Note for macOS**: the supplied **pixi.toml** file is only set up for Windows and Linux. Extending it to **macOS** should be relatively simple if you have access to that hardware.
+
+#### Install Pixi
+<details>
+  <summary><b>Linux and macOS</b></summary>
+
+```bash
+  curl -fsSL https://pixi.sh/install.sh | sh
+```
+</details>
+<details>
+  <summary><b>Windows</b></summary>
+
+  <kbd>[**Download installer**](https://github.com/prefix-dev/pixi/releases/latest/download/pixi-x86_64-pc-windows-msvc.msi)</kbd>
+
+  Or run:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm -useb https://pixi.sh/install.ps1 | iex"
+```
+</details>
+
+#### Git Clone the OpendTect-Plugins Main Branch
+Assuming **git** is installed, open a shell window and enter:
+```bash
+git clone -b main --depth 1 https://github.com/waynegm/OpendTect-Plugins.git
+```
+This will create a folder called **OpendTect-Plugins** with the source code.
+#### Configure
+To configure the build, open a shell:
+- cd into the source code folder:
+```bash
+ cd OpendTect-Plugins
+ ```
+- Edit **pixi.toml** and change the **activation.env** table so that the `OpendTect_DIR` variable points at your OpendTect 2026 installation.
+- In a shell enter:
+```bash
+pixi run config
+```
+#### Build
+To build, open a shell, change to the source code folder (unless already there) and enter:
+```bash
+pixi run build
+```
+#### Run
+To run OpendTect with the plugins loaded, open a shell, change to the source code folder (unless already there) and enter:
+```bash
+pixi run release
+```

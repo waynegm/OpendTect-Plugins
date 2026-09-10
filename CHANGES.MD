@@ -1,5 +1,9 @@
 # OpendTect Plugins Release Notes
 
+## Release 2026.1
+- transition to **pixi** build system
+- rebuild against OpendTect 2026 API
+
 ## Release 2025.2
 - update dependencies
 

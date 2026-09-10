@@ -10,6 +10,8 @@ mistie_report.h
 .directory
 __pycache__
 build/*
+build_pixi/*
+inst/*
 # Compiled Object files
 *.slo
 *.lo

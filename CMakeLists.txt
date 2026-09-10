@@ -7,10 +7,14 @@
 
 
 cmake_minimum_required (VERSION 3.20)
-project(OpendTect_Plugins VERSION 2025.2)
+project(OpendTect_Plugins VERSION 2026.1)
 
 if ( POLICY CMP0144 )
     cmake_policy( SET CMP0144 NEW )
+endif()
+
+if ( POLICY CMP0177 )
+    cmake_policy( SET CMP0177 NEW )
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -18,11 +22,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set ( OD_SUBSYSTEM "waynegm_plugin" )
 set ( OpendTect_DIR "" CACHE PATH "OpendTect directory" )
-set ( WMDEPS_DIR "" CACHE PATH "WM Plugin Dependencies directory" )
 configure_file(wmplugins_version.h.in wmplugins_version.h)
 file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 
-include_directories(SYSTEM ${WMDEPS_DIR}/include external/include plugins/wm_include "${PROJECT_BINARY_DIR}")
+set(EXTERNALS_INSTALL_DIR "${CMAKE_BINARY_DIR}/externals-install" CACHE PATH "External dependencies install prefix")
+list(APPEND CMAKE_PREFIX_PATH "${EXTERNALS_INSTALL_DIR}")
+include_directories(SYSTEM $ENV{CONDA_PREFIX}/include "${EXTERNALS_INSTALL_DIR}/include" plugins/wm_include "${PROJECT_BINARY_DIR}")
 
 #Setup output directory
 option ( OD_BUILD_LOCAL "Build in local directory" OFF )
