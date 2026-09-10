@@ -144,8 +144,10 @@ void uiInputGrp::usePar( const IOPar& par )
         if ( eminfo.isOK() )
 	{
 	    hor2Dfld_->setSensitive( true );
+	    hor2Dfld_->setInput( hor2Did );
 	    hor2Dfld_->setChecked( true );
 	    lines2Dfld_->setSensitive( true );
+	    hor2DselCB(nullptr);
 	    int nlines = 0;
 	    inp_par->get(wmGridder2D::sKey2DLineIDNr(), nlines);
 	    if (nlines>0)
@@ -277,6 +279,12 @@ void uiInputGrp::getInputRange( Interval<int>& inlrg, Interval<int>& crlrg )
             crlrg.include(cR);
         }
     }
+}
+
+bool uiInputGrp::hasInput() const
+{
+    return (hor2Dfld_->isChecked() && hor2Dfld_->ioobj(true))
+        || (hor3Dfld_->isChecked() && hor3Dfld_->ioobj(true));
 }
 
 int uiInputGrp::num2DLinesChosen()

@@ -125,6 +125,7 @@ wmGridder2D::wmGridder2D()
 
 wmGridder2D::~wmGridder2D()
 {
+    deleteAndNullPtr(grid_);
     deleteAndNullPtr(carr_);
 }
 
@@ -511,7 +512,7 @@ bool wmGridder2D::faultBetween(Coord s1p1, Coord s1p2) const
     for (int idx=0; idx<faultpoly_.size(); idx++) {
 	const auto* poly = faultpoly_[idx];
 	if (!poly->getRange(true).overlaps(segx) || !poly->getRange(false).overlaps(segy))
-	    return false;
+	    continue;
 	Coord s2p1 = poly->getVertex(0);
         for (int iv=0; iv<poly->size(); iv++) {
             const Coord s2p2 = poly->nextVertex(iv);
@@ -691,9 +692,9 @@ bool wmGridder2D::localInterp(uiParent* p, bool approximation)
 	if (mIsUdf(gridval))
 	    continue;
 
-	const float carr = carr_->get(ix,iy);
-	if (carr!=0.0) {
-	    const float val = gridval/carr;
+	const float count = carr_->get(ix,iy);
+	if (count!=0.0) {
+	    const float val = gridval/count;
 	    grid_->set(ix, iy, val);
 	    vals_ +=  val;
 	    binLocs_ += Coord(gridBid.inl(), gridBid.crl());

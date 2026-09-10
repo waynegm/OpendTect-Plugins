@@ -3,6 +3,7 @@
 ## Release 2026.1
 - transition to **pixi** build system
 - rebuild against OpendTect 2026 API
+- fix some minor issues in uiGrid2D3DHorizon plugin
 
 ## Release 2025.2
 - update dependencies

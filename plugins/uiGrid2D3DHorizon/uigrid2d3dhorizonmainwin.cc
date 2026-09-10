@@ -81,7 +81,6 @@ uiGrid2D3DHorizonMainWin::~uiGrid2D3DHorizonMainWin()
 BufferString uiGrid2D3DHorizonMainWin::getParFileName()
 {
     FilePath fp(GetDataDir(), "Misc", "grid2d3d.par");
-    ErrMsg(fp.fullPath());
     return fp.fullPath();
 }
 
@@ -100,6 +99,11 @@ void uiGrid2D3DHorizonMainWin::tabSelCB( CallBacker* )
 
 bool uiGrid2D3DHorizonMainWin::acceptOK( CallBacker*)
 {
+    if (inputgrp_ && !inputgrp_->hasInput()) {
+        uiMSG().error(tr("Please select at least one horizon as input."));
+        return false;
+    }
+
     IOPar par;
     if (inputgrp_)
 	inputgrp_->fillPar( par );

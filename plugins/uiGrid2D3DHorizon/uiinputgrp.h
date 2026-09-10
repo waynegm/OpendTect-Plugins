@@ -26,6 +26,7 @@ public:
     void        getGeoMids( TypeSet<Pos::GeomID>& geomids ) const;
     void        get3Dsel( TrcKeyZSampling& envelope ) const;
     void        update();
+    bool        hasInput() const;
     bool        fillPar(IOPar&) const;
     void        usePar(const IOPar&);
 
