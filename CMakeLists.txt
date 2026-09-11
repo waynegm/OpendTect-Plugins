@@ -27,7 +27,12 @@ file (WRITE "${CMAKE_SOURCE_DIR}/VERSION.txt" ${CMAKE_PROJECT_VERSION})
 
 set(EXTERNALS_INSTALL_DIR "${CMAKE_BINARY_DIR}/externals-install" CACHE PATH "External dependencies install prefix")
 list(APPEND CMAKE_PREFIX_PATH "${EXTERNALS_INSTALL_DIR}")
-include_directories(SYSTEM $ENV{CONDA_PREFIX}/include "${EXTERNALS_INSTALL_DIR}/include" plugins/wm_include "${PROJECT_BINARY_DIR}")
+foreach(_pfx IN LISTS CMAKE_PREFIX_PATH)
+    if(EXISTS "${_pfx}/include")
+        include_directories(SYSTEM "${_pfx}/include")
+    endif()
+endforeach()
+include_directories(SYSTEM plugins/wm_include "${PROJECT_BINARY_DIR}")
 
 #Setup output directory
 option ( OD_BUILD_LOCAL "Build in local directory" OFF )

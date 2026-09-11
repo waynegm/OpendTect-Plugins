@@ -6,7 +6,7 @@ version = "2026"
 description = "Pixi setup to build WMPlugins for OpendTect v2026"
 
 [activation.env]
-OpendTect_DIR = "/opt/seismic/OpendTect_rc/2026"
+OpendTect_DIR = "C:/Users/wayne/OpendTect_Free/2026"
 OD_BINARY_BASEDIR = "$OpendTect_DIR"
 
 [dependencies]
@@ -37,7 +37,7 @@ sysroot_linux-64 = "*"
 [target.win-64.tasks.externals]
 cmd = [
     "cmake",
-    "-G", "Ninja Multi-Config",
+    "-G", "Visual Studio 17 2022",
     "-S", "./externals",
     "-B", "./build_pixi/externals",
     "-D", "EXTERNALS_INSTALL_DIR=./build_pixi/externals-install",
@@ -52,12 +52,12 @@ cmd = [
 depends-on = ["externals"]
 cmd = [
     "cmake",
-    "-G", "Ninja Multi-Config",
+    "-G", "Visual Studio 17 2022",
     "-S", "./",
     "-B", "./build_pixi",
     "-D", "OpendTect_DIR=$OpendTect_DIR",
     "-D", "CMAKE_INSTALL_PREFIX=./inst/2026",
-    "-D", "CMAKE_PREFIX_PATH=$CONDA_PREFIX/Library"
+    "-D", "CMAKE_PREFIX_PATH=$CONDA_PREFIX/Library",
 ]
 
 [target.linux-64.tasks.externals]
@@ -120,7 +120,7 @@ env = {OD_USER_PLUGIN_DIR="./inst/2026", QT_QPA_PLATFORM="xcb"}
 
 [target.win-64.tasks.release]
 cmd = "$OpendTect_DIR/bin/win64/Release/od_main.exe"
-env = {OD_USER_PLUGIN_DIR="./inst/2026", QT_QPA_PLATFORM="xcb"}
+env = {OD_USER_PLUGIN_DIR="./inst/2026"}
 
 # [environments.odbind]
 # no-default-feature = true
