@@ -6,7 +6,7 @@ version = "2026"
 description = "Pixi setup to build WMPlugins for OpendTect v2026"
 
 [activation.env]
-OpendTect_DIR = "C:/Users/wayne/OpendTect_Free/2026"
+OpendTect_DIR = "/opt/seismic/OpendTect_rc/2026"
 OD_BINARY_BASEDIR = "$OpendTect_DIR"
 
 [dependencies]
@@ -122,26 +122,25 @@ env = {OD_USER_PLUGIN_DIR="./inst/2026", QT_QPA_PLATFORM="xcb"}
 cmd = "$OpendTect_DIR/bin/win64/Release/od_main.exe"
 env = {OD_USER_PLUGIN_DIR="./inst/2026"}
 
-# [environments.odbind]
-# no-default-feature = true
-# dependencies = {
-#     python  = "3.12.*",
-#     pytest = "*",
-#     numpy = "*",
-#     jupyterlab = "*",
-#     matplotlib-base = "*",
-#     tqdm = "*",
-#     folium = "*",
-#     xarray = "*",
-#     pandas = "*",
-#     jupytext = "*"
-# }
-# solve-group = "shared"
-#
-# [environments.odbind.activation.env]
-# PYTHONPATH = "$PIXI_PROJECT_ROOT/inst/bin/python"
-#
-# [environments.odbind.tasks]
-# python = {cmd="python"}
-# jupyter = {cmd="jupyter lab", cwd="plugins/ODBind/Examples/Python"}
-# odbind-tests = {cmd="pytest", cwd="plugins/ODBind"}
+[environments.wmpy]
+no-default-feature = true
+dependencies = {
+    python  = "3.12.*",
+    pytest = "*",
+    numpy = "*",
+    numba = "*",
+    jupyterlab = "*",
+    matplotlib-base = "*",
+    scipy = "*",
+    tqdm = "*",
+    jupytext = "*"
+}
+solve-group = "shared"
+
+[environments.wmpy.activation.env]
+PYTHONPATH = "$PIXI_PROJECT_ROOT/inst/bin/python"
+
+[environments.wmpy.tasks]
+python = {cmd="python"}
+jupyter = {cmd="jupyter lab", cwd="bin/python/"}
+wmpy-tests = {cmd="pytest", cwd="bin/python/wmpy"}
