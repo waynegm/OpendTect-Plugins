@@ -14,6 +14,7 @@
 #include "emioobjinfo.h"
 #include "emhorizon3d.h"
 #include "wmgridder2d.h"
+#include "itergridder2d.h"
 #include "uipolygonparsel.h"
 #include "uicompoundparsel.h"
 #include "wmplugins.h"
@@ -29,6 +30,8 @@ ui2D3DInterpol* ui2D3DInterpol::create( const char* methodName, uiParent* p )
 	return (ui2D3DInterpol*) new uiMBA(p);
     else if (tmp == wmGridder2D::MethodNames[wmGridder2D::NRN])
 	return (ui2D3DInterpol*) new uiNearestNeighbour(p);
+    else if (tmp == wmGridder2D::MethodNames[wmGridder2D::ITER])
+	return (ui2D3DInterpol*) new uiIter(p);
     else {
         ErrMsg("ui2D3DInterpol::create - unrecognised method name");
         return nullptr;
@@ -70,11 +73,17 @@ uiGridGrp::uiGridGrp( uiParent* p )
 //	faultsurffld_ = new uiFaultParSel( this, false );
 //	faultsurffld_->attach( alignedBelow, faultpolyfld_);
 
+    smoothpassesfld_ = new uiGenInput( this, tr("Smooth passes"), IntInpSpec(0) );
+    smoothpassesfld_->attach( alignedBelow, faultpolyfld_ );
+
+    smoothradiusfld_ = new uiGenInput( this, tr("Smooth radius (grid steps)"), IntInpSpec(2) );
+    smoothradiusfld_->attach( rightOf, smoothpassesfld_ );
+
     for ( int idx=0; wmGridder2D::MethodNames[idx]; idx++ )
     {
 	ui2D3DInterpol* methodgrp = ui2D3DInterpol::create( wmGridder2D::MethodNames[idx], this );
 	if ( methodgrp )
-	    methodgrp->attach( alignedBelow, faultpolyfld_ );
+	    methodgrp->attach( alignedBelow, smoothpassesfld_ );
 	methodgrps_ += methodgrp;
     }
 
@@ -185,6 +194,15 @@ bool uiGridGrp::fillPar( IOPar& par ) const
     const int methodidx = methodfld_->getIntValue( 0 );
     grd_par.set( wmGridder2D::sKeyMethod(), wmGridder2D::MethodNames[methodidx] );
     bool res = methodgrps_[methodidx]->fillPar( grd_par );
+
+    const int nsmooth = smoothpassesfld_->getIntValue();
+    if ( nsmooth < 0 ) {
+	uiMSG().error( tr("Smooth passes must be zero or positive") );
+	return false;
+    }
+    grd_par.set( wmGridder2D::sKeySmoothing(), nsmooth );
+    grd_par.set( wmGridder2D::sKeySmoothingRadius(), smoothradiusfld_->getIntValue() );
+
     par.mergeComp(grd_par, wmGridder2D::sKeyGridDef());
     return res;
 }
@@ -234,6 +252,14 @@ void uiGridGrp::usePar( const IOPar& par )
 
     gridfld_->usePar(*grd_par);
 
+    int nsmooth = 0;
+    grd_par->get( wmGridder2D::sKeySmoothing(), nsmooth );
+    smoothpassesfld_->setValue( nsmooth );
+
+    int sradius = 2;
+    grd_par->get( wmGridder2D::sKeySmoothingRadius(), sradius );
+    smoothradiusfld_->setValue( sradius );
+
     BufferStringSet strs( wmGridder2D::MethodNames );
     int methodidx = strs.indexOf(grd_par->find(wmGridder2D::sKeyMethod()));
     methodfld_->setValue( methodidx );
@@ -249,12 +275,12 @@ ui2D3DInterpol::ui2D3DInterpol( uiParent* p )
 uiIDW::uiIDW( uiParent* p )
     : ui2D3DInterpol(p)
 {
-    uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
+    uiString titletext( tr("Gridding Search Radius %1").arg(SI().getUiXYUnitString()) );
     searchradiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(8000.0) );
     searchradiusfld_->setWithCheck( true );
     searchradiusfld_->setChecked( true );
 
-    maxpointsfld_ = new uiGenInput( this, tr("Maximum points"), IntInpSpec(50) );
+    maxpointsfld_ = new uiGenInput( this, tr("Maximum Points"), IntInpSpec(50) );
     maxpointsfld_->setWithCheck( true );
     maxpointsfld_->setChecked( true );
     maxpointsfld_->attach(alignedBelow, searchradiusfld_);
@@ -309,10 +335,10 @@ void uiIDW::usePar( const IOPar& par )
 uiLTPS::uiLTPS(uiParent* p)
     : ui2D3DInterpol(p)
 {
-    uiString titletext( tr("Search radius %1").arg(SI().getUiXYUnitString()) );
+    uiString titletext( tr("Gridding Search Radius %1").arg(SI().getUiXYUnitString()) );
     searchradiusfld_ = new uiGenInput( this, titletext, FloatInpSpec(8000.0) );
 
-    maxpointsfld_ = new uiGenInput( this, tr("Maximum points per sector"), IntInpSpec(4) );
+    maxpointsfld_ = new uiGenInput( this, tr("Maximum Points/Sector"), IntInpSpec(4) );
     maxpointsfld_->attach(alignedBelow, searchradiusfld_);
 }
 
@@ -355,5 +381,30 @@ uiMBA::uiMBA(uiParent* p)
 uiNearestNeighbour::uiNearestNeighbour(uiParent* p)
 : ui2D3DInterpol(p)
 {}
+
+uiIter::uiIter(uiParent* p)
+    : ui2D3DInterpol(p)
+{
+    iterationsfld_ = new uiGenInput( this, tr("Gridding Iterations"), IntInpSpec(100) );
+}
+
+bool uiIter::fillPar( IOPar& par ) const
+{
+    const int niter = iterationsfld_->getIntValue(0);
+    if ( niter<=0 )
+    {
+	uiMSG().error( tr("Iterations must be a positive integer") );
+	return false;
+    }
+    par.set( wmIterativeGridder2D::sKeyNIter(), niter );
+    return true;
+}
+
+void uiIter::usePar( const IOPar& par )
+{
+    int niter = 100;
+    par.get( wmIterativeGridder2D::sKeyNIter(), niter );
+    iterationsfld_->setValue(niter);
+}
 
 

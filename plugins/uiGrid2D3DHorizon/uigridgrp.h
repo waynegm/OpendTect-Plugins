@@ -32,6 +32,8 @@ protected:
     uiGenInput*                 methodfld_;
     WMLib::uiPolygonParSel*     faultpolyfld_;
     ObjectSet<ui2D3DInterpol>   methodgrps_;
+    uiGenInput*                 smoothpassesfld_;
+    uiGenInput*                 smoothradiusfld_;
 
     void                scopeChgCB(CallBacker*);
     void                horChgCB(CallBacker*);
@@ -96,4 +98,16 @@ public:
     uiNearestNeighbour(uiParent*);
 
 protected:
+};
+
+class uiIter : public ui2D3DInterpol
+{ mODTextTranslationClass(uiIter);
+public:
+    uiIter(uiParent*);
+
+    virtual bool    fillPar(IOPar&) const;
+    virtual void    usePar(const IOPar&);
+
+protected:
+    uiGenInput*         iterationsfld_;
 };

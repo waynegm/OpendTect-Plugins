@@ -23,6 +23,7 @@ SET(OD_MODULE_SOURCES
     mbagridder2d.cc
     idwgridder2d.cc
     nrngridder2d.cc
+    itergridder2d.cc
     uigrid2d3dhorizonmainwin.cc
     uigrid2d3dhorizonpi.cc
     uiinputgrp.cc

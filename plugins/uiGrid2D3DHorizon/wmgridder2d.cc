@@ -3,6 +3,7 @@
 #include "idwgridder2d.h"
 #include "ltpsgridder2d.h"
 #include "nrngridder2d.h"
+#include "itergridder2d.h"
 
 #include "uimsg.h"
 #include "bufstring.h"
@@ -24,6 +25,9 @@
 #include "picksettr.h"
 #include "uitaskrunner.h"
 #include "odsysmem.h"
+
+#include <cmath>
+#include <vector>
 
 void wmGridder2D::reportMemError(const char* where, const char* errmsg, od_int64 memsize)
 {
@@ -57,6 +61,8 @@ const char* wmGridder2D::sKey2DLineID()     { return "2DLineID"; }
 const char* wmGridder2D::sKey3DHorizonID()  { return "3DHorizonID"; }
 const char* wmGridder2D::sKeyRegularization()    { return "Regularization"; }
 const char* wmGridder2D::sKeyTension()      { return "Tension"; }
+const char* wmGridder2D::sKeySmoothing()       { return "SmoothPasses"; }
+const char* wmGridder2D::sKeySmoothingRadius() { return "SmoothRadius"; }
 
 const char* wmGridder2D::MethodNames[] =
 {
@@ -64,6 +70,7 @@ const char* wmGridder2D::MethodNames[] =
     "Multilevel B-Splines",
     "Inverse Distance Weighted",
     "Nearest Neighbour",
+    "Iterative Second Derivative",
     0
 };
 
@@ -87,6 +94,8 @@ wmGridder2D* wmGridder2D::create( const char* methodName )
 	return (wmGridder2D*) new wmMBAGridder2D();
     else if (tmp == MethodNames[NRN])
 	return (wmGridder2D*) new wmNRNGridder2D();
+    else if (tmp == MethodNames[ITER])
+	return (wmGridder2D*) new wmIterativeGridder2D();
     else {
         ErrMsg("wmGridder2D::create - unrecognised method name");
         return nullptr;
@@ -103,6 +112,8 @@ bool wmGridder2D::canHandleFaultPolygons( const char* methodName )
     else if (tmp == MethodNames[MBA])
 	return true;
     else if (tmp == MethodNames[NRN])
+	return true;
+    else if (tmp == MethodNames[ITER])
 	return true;
     else {
 	ErrMsg("wmGridder2D::canHandleFaultPolygons - unrecognised method name");
@@ -222,6 +233,8 @@ bool wmGridder2D::usePar(const IOPar& par)
             faultids_ += fltid;
         }
     }
+    grd_par->get( sKeySmoothing(), smoothpasses_ );
+    grd_par->get( sKeySmoothingRadius(), smoothradius_ );
     return true;
 }
 
@@ -700,6 +713,72 @@ bool wmGridder2D::localInterp(uiParent* p, bool approximation)
 	    binLocs_ += Coord(gridBid.inl(), gridBid.crl());
 	} else if (!approximation)
 		interpidx_ += idx;
+    }
+    return true;
+}
+
+bool wmGridder2D::smoothGrid( uiParent* )
+{
+    if ( smoothpasses_ < 1 || !grid_ )
+	return true;
+
+    const int nrinl = hs_.nrInl();
+    const int nrcrl = hs_.nrCrl();
+    const size_t total = (size_t)nrinl * nrcrl;
+    const int radius = smoothradius_ < 1 ? 1 : smoothradius_;
+    const double sigma = radius / 2.0;
+    const double inv2sig2 = 1.0 / (2.0 * sigma * sigma);
+
+    std::vector<float> snap( total );
+
+    for ( int pass=0; pass<smoothpasses_; pass++ )
+    {
+	// Snapshot the current grid — read from snap, write to grid_
+	for ( int iy=0; iy<nrcrl; iy++ )
+	    for ( int ix=0; ix<nrinl; ix++ )
+		snap[(size_t)iy*nrinl+ix] = grid_->get(ix,iy);
+
+	for ( int iy=0; iy<nrcrl; iy++ )
+	{
+	    for ( int ix=0; ix<nrinl; ix++ )
+	    {
+		// Skip data-fixed nodes
+		if ( fixedmask_ && fixedmask_->get(ix,iy) )
+		    continue;
+		const float cv = snap[(size_t)iy*nrinl+ix];
+		if ( mIsUdf(cv) )
+		    continue;
+
+		const Coord cc(ix,iy);
+		// Include self at weight 1.0 to anchor the result
+		double vsum = cv;
+		double wsum = 1.0;
+
+		for ( int dy=-radius; dy<=radius; dy++ )
+		{
+		    const int ny = iy+dy;
+		    if ( ny<0 || ny>=nrcrl )
+			continue;
+		    for ( int dx=-radius; dx<=radius; dx++ )
+		    {
+			if ( dx==0 && dy==0 )
+			    continue;
+			const int nx = ix+dx;
+			if ( nx<0 || nx>=nrinl )
+			    continue;
+			const float v = snap[(size_t)ny*nrinl+nx];
+			if ( mIsUdf(v) )
+			    continue;
+			if ( faultBetween(cc, Coord(nx,ny)) )
+			    continue;
+			const double w = std::exp( -(dx*dx+dy*dy)*inv2sig2 );
+			vsum += w * v;
+			wsum += w;
+		    }
+		}
+		grid_->set( ix, iy, (float)(vsum/wsum) );
+	    }
+	}
     }
     return true;
 }

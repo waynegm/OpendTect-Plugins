@@ -183,8 +183,9 @@ bool wmLTPSGridder2D::executeGridding(uiParent* p)
     uiTaskRunner uitr(p);
     uitr.setCaption(toUiString("Refine grid"));
     LTPSInterpolator interp( interpidx_.size(), this, nfindex, lock );
-    const bool res = uitr.execute(interp);
-    return res;
+    if ( !uitr.execute(interp) )
+	return false;
+    return smoothGrid(p);
 }
 
 void wmLTPSGridder2D::calcResidual()

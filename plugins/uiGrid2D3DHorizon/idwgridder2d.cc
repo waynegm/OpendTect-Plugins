@@ -199,6 +199,6 @@ bool wmIDWGridder2D::executeGridding(uiParent* p)
 	uitr.execute(interp);
     }
 
-    return true;
+    return smoothGrid(p);
 }
 

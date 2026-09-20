@@ -21,7 +21,7 @@ public:
     friend class LocalInterpolator;
     friend class GridMask;
     enum ScopeType   { Range, BoundingBox, ConvexHull, Horizon };
-    enum Method { LTPS, MBA, IDW, NRN };
+    enum Method { LTPS, MBA, IDW, NRN, ITER };
     static const char*	ScopeNames[];
     static const char*	MethodNames[];
     static wmGridder2D*	create(const char* methodName);
@@ -67,6 +67,8 @@ public:
     static const char*  sKey3DHorizonID();
     static const char*  sKeyRegularization();
     static const char*  sKeyTension();
+    static const char*  sKeySmoothing();
+    static const char*  sKeySmoothingRadius();
 
 protected:
 
@@ -106,5 +108,11 @@ protected:
 
     bool	localInterp(uiParent*, bool approximation = true);
     void	reportMemError(const char*, const char*, od_int64);
+
+    bool	smoothGrid(uiParent*);
+
+    Array2DImpl<unsigned char>*		fixedmask_ = nullptr;
+    int					smoothpasses_ = 0;
+    int					smoothradius_ = 2;
 };
 

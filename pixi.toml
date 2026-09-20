@@ -118,6 +118,10 @@ depends-on = ["clean", "config"]
 cmd = "$OpendTect_DIR/bin/lux64/Release/od_main"
 env = {OD_USER_PLUGIN_DIR="./inst/2026", QT_QPA_PLATFORM="xcb"}
 
+[target.linux-64.tasks.debug]
+cmd = "gdb $OpendTect_DIR/bin/lux64/Debug/od_main"
+env = {OD_USER_PLUGIN_DIR="./inst/2026", QT_QPA_PLATFORM="xcb"}
+
 [target.win-64.tasks.release]
 cmd = "$OpendTect_DIR/bin/win64/Release/od_main.exe"
 env = {OD_USER_PLUGIN_DIR="./inst/2026"}

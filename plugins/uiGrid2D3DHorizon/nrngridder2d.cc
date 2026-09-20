@@ -21,6 +21,6 @@ bool wmNRNGridder2D::executeGridding(uiParent* p)
 	grid_->set(ix, iy, (gridval==0.0 ? mUdf(float) : gridval));
 
     }
-    return true;
+    return smoothGrid(p);
 }
 

@@ -40,6 +40,6 @@ bool wmMBAGridder2D::executeGridding(uiParent* p)
 	int iy = hs_.crlIdx(gridBid.crl());
 	grid_->set(ix, iy, interp(mba::point<2>{{(double)gridBid.inl(), (double)gridBid.crl()}}));
     }
-    return true;
+    return smoothGrid(p);
 }
 
