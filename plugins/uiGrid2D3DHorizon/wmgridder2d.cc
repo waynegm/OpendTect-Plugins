@@ -252,7 +252,14 @@ void wmGridder2D::getHorRange(Interval<int>& inlrg, Interval<int>& crlrg)
 
 bool wmGridder2D::saveGridTo(EM::Horizon3D* hor3d)
 {
-	hor3d->geometry().geometryElement()->setArray(hs_.start_, hs_.step_, grid_, true);
+    if ( !hor3d || !grid_ )
+	return false;
+    hor3d->geometry().geometryElement()->setArray(hs_.start_, hs_.step_, grid_, true);
+    // setArray with takeover=true transfers ownership to the horizon:
+    // forget our pointer so the destructor does not free it again,
+    // which left the displayed horizon with a dangling array (crash
+    // when contouring traversed the freed memory).
+    grid_ = nullptr;
     return true;
 }
 
@@ -971,6 +978,50 @@ private:
 };
 
 
+// Runs all smoothing passes as one task so the progress bar advances
+// per pass. Executing each GridSmoother through the uiTaskRunner
+// separately pops up a new bar per pass that never fills.
+class wmGridder2D::SmoothPasses : public SequentialTask
+{
+public:
+    SmoothPasses( wmGridder2D& interp, std::vector<float>& snap,
+		  int nrinl, int nrcrl )
+    : SequentialTask("Smooth grid")
+    , interp_(&interp)
+    , snap_(&snap)
+    , nrinl_(nrinl)
+    , nrcrl_(nrcrl)
+    , done_(0)
+    {}
+
+    od_int64	nrDone() const override		{ return done_; }
+    od_int64	totalNr() const override	{ return interp_->smoothpasses_; }
+
+private:
+    int nextStep() override
+    {
+	wmGridder2D& interp = *interp_;
+	// Snapshot the current grid — read from snap, write to grid_
+	for ( int iy=0; iy<nrcrl_; iy++ )
+	    for ( int ix=0; ix<nrinl_; ix++ )
+		(*snap_)[(size_t)iy*nrinl_+ix] = interp.grid_->get(ix,iy);
+
+	GridSmoother smoother( interp, *snap_, nrinl_, nrcrl_,
+			       interp.smoothradius_ );
+	if ( !smoother.execute() )
+	    return ErrorOccurred();
+	done_++;
+	return done_>=interp.smoothpasses_ ? Finished() : MoreToDo();
+    }
+
+    wmGridder2D*		interp_;
+    std::vector<float>*		snap_;
+    int				nrinl_;
+    int				nrcrl_;
+    int				done_;
+};
+
+
 bool wmGridder2D::smoothGrid( uiParent* p )
 {
     if ( smoothpasses_ < 1 || !grid_ )
@@ -981,20 +1032,11 @@ bool wmGridder2D::smoothGrid( uiParent* p )
     const size_t total = (size_t)nrinl * nrcrl;
 
     std::vector<float> snap( total );
+    SmoothPasses passes( *this, snap, nrinl, nrcrl );
     uiTaskRunner uitr(p);
     uitr.setCaption( toUiString("Smooth grid") );
-
-    for ( int pass=0; pass<smoothpasses_; pass++ )
-    {
-	// Snapshot the current grid — read from snap, write to grid_
-	for ( int iy=0; iy<nrcrl; iy++ )
-	    for ( int ix=0; ix<nrinl; ix++ )
-		snap[(size_t)iy*nrinl+ix] = grid_->get(ix,iy);
-
-	GridSmoother smoother( *this, snap, nrinl, nrcrl, smoothradius_ );
-	if ( !uitr.execute( smoother ) )
-	    return false;
-    }
+    if ( !uitr.execute( passes ) )
+	return false;
     return true;
 }
 

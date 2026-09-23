@@ -115,6 +115,7 @@ protected:
     bool	smoothGrid(uiParent*);
 
     class GridSmoother;
+    class SmoothPasses;
 
     Array2DImpl<unsigned char>*		fixedmask_ = nullptr;
     int					smoothpasses_ = 0;
