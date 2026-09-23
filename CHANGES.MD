@@ -3,9 +3,12 @@
 ## Release 2026.1
 - transition to **pixi** build system
 - rebuild against OpendTect 2026 API
-- fix some minor issues in uiGrid2D3DHorizon plugin
 - fix some minor issues in uiMistie plugin
 - fix some minor issues in Geopackage/Geotiff plugin
+
+### Grid 2D3D
+- add iterative second derivative, fault aware gridding algorithm  
+- fix lock issue in localInterp option
 
 ## Release 2025.2
 - update dependencies
