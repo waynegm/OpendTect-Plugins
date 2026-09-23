@@ -27,6 +27,7 @@
 #include "odsysmem.h"
 
 #include <cmath>
+#include <algorithm>
 #include <vector>
 
 void wmGridder2D::reportMemError(const char* where, const char* errmsg, od_int64 memsize)
@@ -626,11 +627,13 @@ if (mIsEqual(pos.x_, bidSnap.inl(), mDefEps) && mIsEqual(pos.y_, bidSnap.crl(), 
     if (ix<0 || ix>=hs_.nrInl() || iy<0 || iy>=hs_.nrCrl())
 	continue;
 
+    // Read-modify-write must be atomic: concurrent points routinely share
+    // cells, and a value read outside the lock loses contributions.
+    Threads::Locker lckr( lock_ );
     const float prev = grid_->get(ix,iy);
     if (mIsUdf(prev))
 	continue;
 
-    Threads::Locker lckr( lock_ );
     grid_->set(ix, iy, prev + vals_[idx]);
     carr_->set(ix, iy, carr_->get(ix, iy) + 1.0);
 } else {
@@ -645,10 +648,6 @@ if (mIsEqual(pos.x_, bidSnap.inl(), mDefEps) && mIsEqual(pos.y_, bidSnap.crl(), 
 	if (ix<0 || ix>=hs_.nrInl() || iy<0 || iy>=hs_.nrCrl())
 	    continue;
 
-	const float prev = grid_->get(ix,iy);
-	if (mIsUdf(prev))
-	    continue;
-
 	const Coord rpos(r[ir].inl(), r[ir].crl());
 	if (interp_->faultBetween(pos, rpos))
 	    continue;
@@ -656,7 +655,12 @@ if (mIsEqual(pos.x_, bidSnap.inl(), mDefEps) && mIsEqual(pos.y_, bidSnap.crl(), 
 	const double dist = rpos.sqHorDistTo(pos);
 	const double wgt = tanh(dist)/dist;
 
+	// Atomic read-modify-write (see exact branch above).
 	Threads::Locker lckr( lock_ );
+	const float prev = grid_->get(ix,iy);
+	if (mIsUdf(prev))
+	    continue;
+
 	grid_->set(ix, iy, prev + wgt*vals_[idx]);
 	carr_->set(ix, iy, carr_->get(ix, iy) + wgt);
     }
@@ -697,6 +701,12 @@ bool wmGridder2D::localInterp(uiParent* p, bool approximation)
     if (!approximation)
 	interpidx_.erase();
 
+    od_int64 ndata = 0;
+    double datasum = 0.0;
+    float datamin = mUdf(float);
+    float datamax = mUdf(float);
+    BinID dataminbid;
+    BinID datamaxbidx;
     for (od_int64 idx=0; idx<hs_.totalNr(); idx++) {
 	const BinID gridBid = hs_.atIndex(idx);
 	const int ix = hs_.inlIdx(gridBid.inl());
@@ -711,13 +721,257 @@ bool wmGridder2D::localInterp(uiParent* p, bool approximation)
 	    grid_->set(ix, iy, val);
 	    vals_ +=  val;
 	    binLocs_ += Coord(gridBid.inl(), gridBid.crl());
+	    ndata++;
+	    datasum += val;
+	    if ( mIsUdf(datamin) || val<datamin )
+		{ datamin = val; dataminbid = gridBid; }
+	    if ( mIsUdf(datamax) || val>datamax )
+		{ datamax = val; datamaxbidx = gridBid; }
 	} else if (!approximation)
 		interpidx_ += idx;
     }
+    logGriddedDataQC( ndata, datasum, datamin, dataminbid,
+		      datamax, datamaxbidx );
     return true;
 }
 
-bool wmGridder2D::smoothGrid( uiParent* )
+// QC logging for the shared gridding front-end. Exact gridders pin these
+// values, so a single bad pick becomes a pinnacle/pit in every method.
+// Always logs a one-line summary; details only the worst isolated outliers
+// (large z-score against same-side neighbors), capped to avoid log spam.
+void wmGridder2D::logGriddedDataQC( od_int64 ndata, double datasum,
+				    float datamin, const BinID& dataminbid,
+				    float datamax, const BinID& datamaxbidx ) const
+{
+    if ( ndata <= 0 )
+    {
+	ErrMsg( "wmGridder2D::localInterp - no input points gridded" );
+	return;
+    }
+    {
+	BufferString msg( "wmGridder2D::localInterp - gridded data n=" );
+	msg.add( ndata );
+	msg.add( " mean=" ).addDec( float(datasum/ndata), 2 );
+	msg.add( " min=" ).addDec( datamin, 2 );
+	msg.add( " at " ).add( dataminbid.toString() );
+	msg.add( " max=" ).addDec( datamax, 2 );
+	msg.add( " at " ).add( datamaxbidx.toString() );
+	ErrMsg( msg );
+    }
+
+    struct Outlier { BinID bid; float val; double dev; double z; };
+    std::vector<Outlier> outliers;
+    const int nrinl = hs_.nrInl();
+    const int nrcrl = hs_.nrCrl();
+    for ( int idx=0; idx<binLocs_.size(); idx++ )
+    {
+	const Coord& pos = binLocs_[idx];
+	const int ix = hs_.inlIdx( mNINT32(pos.x_) );
+	const int iy = hs_.crlIdx( mNINT32(pos.y_) );
+	if ( ix<0 || ix>=nrinl || iy<0 || iy>=nrcrl )
+	    continue;
+	const float v = grid_->get(ix,iy);
+	if ( mIsUdf(v) )
+	    continue;
+	double nsum = 0.0;
+	double nsum2 = 0.0;
+	int n = 0;
+	for ( int dy=-1; dy<=1; dy++ )
+	{
+	    const int ny = iy+dy;
+	    if ( ny<0 || ny>=nrcrl )
+		continue;
+	    for ( int dx=-1; dx<=1; dx++ )
+	    {
+		if ( dx==0 && dy==0 )
+		    continue;
+		const int nx = ix+dx;
+		if ( nx<0 || nx>=nrinl )
+		    continue;
+		if ( carr_->get(nx,ny)==0.0f )
+		    continue;
+		const float nv = grid_->get(nx,ny);
+		if ( mIsUdf(nv) )
+		    continue;
+		nsum += nv;
+		nsum2 += (double)nv*nv;
+		n++;
+	    }
+	}
+	if ( n < 5 )
+	    continue;
+	const double nmean = nsum/n;
+	double var = nsum2/n - nmean*nmean;
+	if ( var < 0.0 )
+	    var = 0.0;
+	const double sd = std::sqrt( var );
+	const double dev = std::fabs( (double)v - nmean );
+	if ( sd<=0.0 || dev<=4.0*sd || dev<=1e-3 )
+	    continue;
+	// Re-test against same-side neighbors only, so real fault
+	// offsets are not reported as outliers.
+	nsum = 0.0; nsum2 = 0.0; n = 0;
+	const Coord cc( pos.x_, pos.y_ );
+	for ( int dy=-1; dy<=1; dy++ )
+	{
+	    const int ny = iy+dy;
+	    if ( ny<0 || ny>=nrcrl )
+		continue;
+	    for ( int dx=-1; dx<=1; dx++ )
+	    {
+		if ( dx==0 && dy==0 )
+		    continue;
+		const int nx = ix+dx;
+		if ( nx<0 || nx>=nrinl )
+		    continue;
+		if ( carr_->get(nx,ny)==0.0f )
+		    continue;
+		const BinID nb( hs_.lineID(nx), hs_.traceID(ny) );
+		if ( faultBetween(cc, Coord(nb.inl(),nb.crl())) )
+		    continue;
+		const float nv = grid_->get(nx,ny);
+		if ( mIsUdf(nv) )
+		    continue;
+		nsum += nv;
+		nsum2 += (double)nv*nv;
+		n++;
+	    }
+	}
+	if ( n < 5 )
+	    continue;
+	const double nmean2 = nsum/n;
+	double var2 = nsum2/n - nmean2*nmean2;
+	if ( var2 < 0.0 )
+	    var2 = 0.0;
+	const double sd2 = std::sqrt( var2 );
+	const double dev2 = std::fabs( (double)v - nmean2 );
+	if ( sd2<=0.0 || dev2<=4.0*sd2 || dev2<=1e-3 )
+	    continue;
+	Outlier o;
+	o.bid = BinID( hs_.lineID(ix), hs_.traceID(iy) );
+	o.val = v;
+	o.dev = dev2;
+	o.z = dev2/sd2;
+	outliers.push_back( o );
+    }
+    if ( outliers.empty() )
+	return;
+    std::sort( outliers.begin(), outliers.end(),
+	       []( const Outlier& a, const Outlier& b ) { return a.dev > b.dev; } );
+    {
+	BufferString msg( "wmGridder2D::localInterp - " );
+	msg.add( (od_int64)outliers.size() );
+	msg.add( " isolated data spikes (exact gridders will show these as pinnacles/pits)" );
+	ErrMsg( msg );
+    }
+    const size_t nrep = outliers.size()<20 ? outliers.size() : 20;
+    for ( size_t idx=0; idx<nrep; idx++ )
+    {
+	const Outlier& o = outliers[idx];
+	BufferString msg( "  outlier at " );
+	msg.add( o.bid.toString() );
+	msg.add( " val=" ).addDec( o.val, 2 );
+	msg.add( " dev=" ).addDec( o.dev, 2 );
+	msg.add( " z=" ).addDec( o.z, 1 );
+	ErrMsg( msg );
+    }
+}
+
+class wmGridder2D::GridSmoother : public ParallelTask
+{
+    mODTextTranslationClass(wmGridder2D::GridSmoother);
+public:
+    /* Runs a single smoothing pass over the grid: reads exclusively from
+       snap_ (the caller-owned snapshot taken before the pass) and writes
+       each cell of grid_ independently, so ranges are lock-free. */
+    GridSmoother( const wmGridder2D& it, std::vector<float>& snap,
+		  int nrinl, int nrcrl, int radius )
+	: iter_(&it)
+	, snap_(&snap)
+	, nrinl_(nrinl)
+	, nrcrl_(nrcrl)
+	, radius_( radius<1 ? 1 : radius )
+    {
+	const double sigma = radius_ / 2.0;
+	inv2sig2_ = 1.0 / (2.0 * sigma * sigma);
+    }
+
+    od_int64	nrIterations() const override	{ return (od_int64)nrinl_*nrcrl_; }
+    uiString	uiMessage() const override	{ return tr("Smoothing the surface"); }
+    uiString	uiNrDoneText() const override	{ return sPosFinished(); }
+
+protected:
+
+    bool doPrepare( int ) override		{ return true; }
+
+    bool doWork( od_int64 start, od_int64 stop, int ) override
+    {
+	const wmGridder2D& it = *iter_;
+	Array2DImpl<float>& grid = *it.grid_;
+	std::vector<float>& snap = *snap_;
+	const int nrinl = nrinl_;
+	const int radius = radius_;
+	const double inv2sig2 = inv2sig2_;
+	// Fault polygons live in BinID coordinates, not grid indices.
+	const int inl0 = it.hs_.start_.inl();
+	const int istp = it.hs_.step_.inl();
+	const int crl0 = it.hs_.start_.crl();
+	const int cstp = it.hs_.step_.crl();
+	// If the caller pinned data-fixed nodes (iterative gridder), skip them.
+	const bool hasfxm = it.fixedmask_ != nullptr;
+	for ( od_int64 id=start; id<=stop; id++ )
+	{
+	    const int iy = (int)(id/nrinl);
+	    const int ix = (int)(id%nrinl);
+	    if ( hasfxm && it.fixedmask_->get(ix,iy) )
+		continue;
+	    const float cv = snap[id];
+	    if ( mIsUdf(cv) )
+		continue;
+
+	    const Coord cc((double)(inl0+istp*ix), (double)(crl0+cstp*iy));
+	    // Include self at weight 1.0 to anchor the result
+	    double vsum = cv;
+	    double wsum = 1.0;
+
+	    for ( int dy=-radius; dy<=radius; dy++ )
+	    {
+		const int ny = iy+dy;
+		if ( ny<0 || ny>=nrcrl_ )
+		    continue;
+		for ( int dx=-radius; dx<=radius; dx++ )
+		{
+		    if ( dx==0 && dy==0 )
+			continue;
+		    const int nx = ix+dx;
+		    if ( nx<0 || nx>=nrinl )
+			continue;
+		    const float v = snap[(size_t)ny*nrinl+nx];
+		    if ( mIsUdf(v) )
+			continue;
+		    if ( it.faultBetween(cc, Coord((double)(inl0+istp*nx), (double)(crl0+cstp*ny))) )
+			continue;
+		    const double w = std::exp( -(dx*dx+dy*dy)*inv2sig2 );
+		    vsum += w * v;
+		    wsum += w;
+		}
+	    }
+	    grid.set( ix, iy, (float)(vsum/wsum) );
+	}
+	return true;
+    }
+
+private:
+    const wmGridder2D*		iter_;
+    std::vector<float>*		snap_;
+    int				nrinl_;
+    int				nrcrl_;
+    int				radius_;
+    double			inv2sig2_ = 0.0;
+};
+
+
+bool wmGridder2D::smoothGrid( uiParent* p )
 {
     if ( smoothpasses_ < 1 || !grid_ )
 	return true;
@@ -725,11 +979,10 @@ bool wmGridder2D::smoothGrid( uiParent* )
     const int nrinl = hs_.nrInl();
     const int nrcrl = hs_.nrCrl();
     const size_t total = (size_t)nrinl * nrcrl;
-    const int radius = smoothradius_ < 1 ? 1 : smoothradius_;
-    const double sigma = radius / 2.0;
-    const double inv2sig2 = 1.0 / (2.0 * sigma * sigma);
 
     std::vector<float> snap( total );
+    uiTaskRunner uitr(p);
+    uitr.setCaption( toUiString("Smooth grid") );
 
     for ( int pass=0; pass<smoothpasses_; pass++ )
     {
@@ -738,47 +991,9 @@ bool wmGridder2D::smoothGrid( uiParent* )
 	    for ( int ix=0; ix<nrinl; ix++ )
 		snap[(size_t)iy*nrinl+ix] = grid_->get(ix,iy);
 
-	for ( int iy=0; iy<nrcrl; iy++ )
-	{
-	    for ( int ix=0; ix<nrinl; ix++ )
-	    {
-		// Skip data-fixed nodes
-		if ( fixedmask_ && fixedmask_->get(ix,iy) )
-		    continue;
-		const float cv = snap[(size_t)iy*nrinl+ix];
-		if ( mIsUdf(cv) )
-		    continue;
-
-		const Coord cc(ix,iy);
-		// Include self at weight 1.0 to anchor the result
-		double vsum = cv;
-		double wsum = 1.0;
-
-		for ( int dy=-radius; dy<=radius; dy++ )
-		{
-		    const int ny = iy+dy;
-		    if ( ny<0 || ny>=nrcrl )
-			continue;
-		    for ( int dx=-radius; dx<=radius; dx++ )
-		    {
-			if ( dx==0 && dy==0 )
-			    continue;
-			const int nx = ix+dx;
-			if ( nx<0 || nx>=nrinl )
-			    continue;
-			const float v = snap[(size_t)ny*nrinl+nx];
-			if ( mIsUdf(v) )
-			    continue;
-			if ( faultBetween(cc, Coord(nx,ny)) )
-			    continue;
-			const double w = std::exp( -(dx*dx+dy*dy)*inv2sig2 );
-			vsum += w * v;
-			wsum += w;
-		    }
-		}
-		grid_->set( ix, iy, (float)(vsum/wsum) );
-	    }
-	}
+	GridSmoother smoother( *this, snap, nrinl, nrcrl, smoothradius_ );
+	if ( !uitr.execute( smoother ) )
+	    return false;
     }
     return true;
 }

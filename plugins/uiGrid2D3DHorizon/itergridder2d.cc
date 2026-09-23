@@ -36,9 +36,10 @@
  * second-derivative optimization (Leger & Clochard, OGST 75, 62, 2020).
  *
  * The cost function is the L2 norm of the surface second derivative,
- * computed by finite differences on the grid:
+ * computed by finite differences on the grid (paper eq. 6-9):
  *
- *   Q = sum wII*Dii^2 + sum wIJ*Dij^2 + sum wJJ*Djj^2
+ *   2Q = QII + 2*QIJ + QJJ
+ *   QII = sum Dii^2, QJJ = sum Djj^2, QIJ = sum Dij^2
  *
  * with the stencils
  *
@@ -47,8 +48,15 @@
  *   Dij = f(i,j) + f(i+1,j+1) - f(i+1,j) - f(i,j+1)   (eq. 5)
  *
  * Weights: wII = 1/hI^4, wJJ = 1/hJ^4, wIJ = 1/(hI^2*hJ^2).
- * The factor of 2 in the cost (2*QIJ) is absorbed into the gradient
- * computation as the literal "2.0*wIJ_" coefficient in IterTerms::doWork.
+ * The paper sums raw differences (unit grid); the weights convert them to
+ * physical second derivatives so anisotropic survey grids are handled
+ * (paper section 2.1: trace distances manage X/Y anisotropy).  The
+ * minimized cost is therefore
+ *
+ *   Q = sum wII*Dii^2 + 2*sum wIJ*Dij^2 + sum wJJ*Djj^2,
+ *
+ * up to an irrelevant global scale.  Its gradient carries 2.0*wII_,
+ * 2.0*wJJ_ and 4.0*wIJ_ coefficients in IterTerms::doWork.
  *
  * summed over triplets/quadruplets containing at least one unknown.  Any
  * term whose cells straddle a fault trace is dropped, so both sides of the
@@ -169,6 +177,14 @@ protected:
 	const std::vector<double>& pv = *pv_;
 	const int nrinl = nrinl_;
 	const int stride = stride_;
+	// Fault polygons live in BinID (survey) coordinates, while ix/iy are
+	// zero-based grid indices. Convert before testing fault crossings.
+	const int inl0 = iter.hs_.start_.inl();
+	const int istp = iter.hs_.step_.inl();
+	const int crl0 = iter.hs_.start_.crl();
+	const int cstp = iter.hs_.step_.crl();
+	const auto gc = [&]( int gx, int gy ) -> Coord
+	{ return Coord( (double)(inl0+istp*gx), (double)(crl0+cstp*gy) ); };
 	const int w0v = band->w0;
 	const auto add = [&band,&w0v]( int u, double k )
 	{ if ( u>=w0v && u<=band->w1 ) band->buf[u-w0v] += k; };
@@ -182,8 +198,8 @@ protected:
 		continue;
 
 	    if ( iter.valid(ix-stride,iy) && iter.valid(ix+stride,iy)
-	      && !iter.faultBetween(Coord(ix-stride,iy),Coord(ix,iy))
-	      && !iter.faultBetween(Coord(ix,iy),Coord(ix+stride,iy)) )
+	      && !iter.faultBetween(gc(ix-stride,iy),gc(ix,iy))
+	      && !iter.faultBetween(gc(ix,iy),gc(ix+stride,iy)) )
 	    {
 		const int uW = umap.get(ix-stride,iy);
 		const int uC = umap.get(ix,iy);
@@ -198,8 +214,8 @@ protected:
 	    }
 
 	    if ( iter.valid(ix,iy-stride) && iter.valid(ix,iy+stride)
-	      && !iter.faultBetween(Coord(ix,iy-stride),Coord(ix,iy))
-	      && !iter.faultBetween(Coord(ix,iy),Coord(ix,iy+stride)) )
+	      && !iter.faultBetween(gc(ix,iy-stride),gc(ix,iy))
+	      && !iter.faultBetween(gc(ix,iy),gc(ix,iy+stride)) )
 	    {
 		const int uS = umap.get(ix,iy-stride);
 		const int uC = umap.get(ix,iy);
@@ -214,10 +230,10 @@ protected:
 	    }
 
 	    if ( iter.valid(ix+stride,iy) && iter.valid(ix,iy+stride) && iter.valid(ix+stride,iy+stride)
-	      && !iter.faultBetween(Coord(ix,iy),Coord(ix+stride,iy))
-	      && !iter.faultBetween(Coord(ix,iy),Coord(ix,iy+stride))
-	      && !iter.faultBetween(Coord(ix+stride,iy),Coord(ix+stride,iy+stride))
-	      && !iter.faultBetween(Coord(ix,iy+stride),Coord(ix+stride,iy+stride)) )
+	      && !iter.faultBetween(gc(ix,iy),gc(ix+stride,iy))
+	      && !iter.faultBetween(gc(ix,iy),gc(ix,iy+stride))
+	      && !iter.faultBetween(gc(ix+stride,iy),gc(ix+stride,iy+stride))
+	      && !iter.faultBetween(gc(ix,iy+stride),gc(ix+stride,iy+stride)) )
 	    {
 		const int u00 = umap.get(ix,iy);
 		const int u10 = umap.get(ix+stride,iy);
@@ -226,7 +242,7 @@ protected:
 		if ( u00>=0 || u10>=0 || u01>=0 || u11>=0 ) {
 		    const double D = pv[row+ix] + pv[(iy+stride)*nrinl+ix+stride]
 				   - pv[row+ix+stride] - pv[(iy+stride)*nrinl+ix];
-		    const double k = 2.0*wIJ_*D;
+		    const double k = 4.0*wIJ_*D;
 		    if ( u00>=0 ) add(u00,k);
 		    if ( u11>=0 ) add(u11,k);
 		    if ( u10>=0 ) add(u10,-k);
@@ -373,6 +389,7 @@ public:
     void	setAlpha( double a )		{ alpha_ = a; }
     double	rrnew() const			{ return rrnew_; }
     double	rdotap() const			{ return rdotap_; }
+    double	maxdx() const			{ return maxdx_; }
 
 protected:
 
@@ -380,6 +397,7 @@ protected:
     {
 	rrnewp_.assign( nrthreads, 0.0 );
 	rdotapp_.assign( nrthreads, 0.0 );
+	maxdxp_.assign( nrthreads, 0.0 );
 	return true;
     }
 
@@ -394,6 +412,7 @@ protected:
 	const double alpha = alpha_;
 	double rrnew = 0.0;
 	double rdotap = 0.0;
+	double maxdx = 0.0;
 	for ( od_int64 u=start; u<=stop; u++ )
 	{
 	    const int i = (int)u;
@@ -404,10 +423,17 @@ protected:
 	    r[i] = ri;
 	    rrnew += ri*ri;
 	    rdotap += ri*apv;
-	    grid.set( x, y, (float)(grid.get(x,y) + alpha*p[i]) );
+	    const double dx = alpha*p[i];
+	    const double adx = dx<0.0 ? -dx : dx;
+	    if ( adx>maxdx )
+		maxdx = adx;
+	    grid.set( x, y, (float)(grid.get(x,y) + dx) );
 	}
 	rrnewp_[tid] += rrnew;
 	rdotapp_[tid] += rdotap;
+	// A worker may handle several ranges per execute(): keep the max.
+	if ( maxdx>maxdxp_[tid] )
+	    maxdxp_[tid] = maxdx;
 	return true;
     }
 
@@ -415,10 +441,14 @@ protected:
     {
 	double rn = 0.0;
 	double rd = 0.0;
+	double mx = 0.0;
 	for ( size_t idx=0; idx<rrnewp_.size(); idx++ )
 	{ rn += rrnewp_[idx]; rd += rdotapp_[idx]; }
+	for ( size_t idx=0; idx<maxdxp_.size(); idx++ )
+	{ if ( maxdxp_[idx]>mx ) mx = maxdxp_[idx]; }
 	rrnew_ = rn;
 	rdotap_ = rd;
+	maxdx_ = mx;
 	return success;
     }
 
@@ -432,9 +462,11 @@ private:
     od_int64				nu_;
     std::vector<double>			rrnewp_;
     std::vector<double>			rdotapp_;
+    std::vector<double>			maxdxp_;
     double				alpha_ = 0.0;
     double				rrnew_ = 0.0;
     double				rdotap_ = 0.0;
+    double				maxdx_ = 0.0;
 };
 
 
@@ -549,7 +581,12 @@ protected:
 		    break;
 		if ( kind_==Jacobi )
 		{
-		    const Coord cc(ix,iy);
+		    // Fault polygons use BinID coordinates, not grid indices.
+		    const int inl0 = iter_->hs_.start_.inl();
+		    const int istp = iter_->hs_.step_.inl();
+		    const int crl0 = iter_->hs_.start_.crl();
+		    const int cstp = iter_->hs_.step_.crl();
+		    const Coord cc((double)(inl0+istp*ix), (double)(crl0+cstp*iy));
 		    double sum = 0.0;
 		    int n = 0;
 		    for ( int dd=0; dd<4; dd++ )
@@ -562,7 +599,7 @@ protected:
 			if ( nx<0 || nx>=nrinl || ny<0 || ny>=nrcrl
 			  || mIsUdf(snap[(size_t)ny*nrinl+nx]) )
 			    continue;
-			if ( iter_->faultBetween(cc, Coord(nx,ny)) )
+			if ( iter_->faultBetween(cc, Coord((double)(inl0+istp*nx), (double)(crl0+cstp*ny))) )
 			    continue;
 			sum += snap[(size_t)ny*nrinl+nx];
 			n++;
@@ -678,11 +715,15 @@ wmIterativeGridder2D::~wmIterativeGridder2D()
 const char* wmIterativeGridder2D::sKeyNIter()
 { return "NIterations"; }
 
+const char* wmIterativeGridder2D::sKeyTol()
+{ return "ConvergenceTolerance"; }
+
 bool wmIterativeGridder2D::usePar(const IOPar& par)
 {
     if (!wmGridder2D::usePar(par))
 	return false;
     par.get(sKeyNIter(), niter_);
+    par.get(sKeyTol(), dxtol_);
     return true;
 }
 
@@ -987,6 +1028,10 @@ void wmIterativeGridder2D::solveLevel( int stride, int niter )
 	updatetask.execute();
 	if ( updatetask.rrnew() <= 1e-30*rr0 )
 	    break;
+	// No visible change anymore: further iterations only burn time.
+	// dxtol_<=0 disables this test (exact convergence, e.g. self-test).
+	if ( dxtol_>0.0 && updatetask.maxdx()<=dxtol_ )
+	    break;
 	double beta = -alpha*updatetask.rdotap()/rr;
 	if ( beta<0.0 )
 	    beta = 0.0;
@@ -1040,6 +1085,7 @@ bool wmIterativeGridder2D::selfTest()
 	// niter must exceed the unknown count for CG to converge to the
 	// exact minimizer (its convergence is N-step on this quadratic).
 	mg.setNIter(200);
+	mg.setTol(0.0);
 	const int nlevels = mg.computeLevels(nu);
 	RunMultiScale rms(mg, mg.niter_, nlevels);
 	return rms.execute();

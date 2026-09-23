@@ -107,9 +107,14 @@ protected:
     TrcKeySampling				hs_;
 
     bool	localInterp(uiParent*, bool approximation = true);
+    void	logGriddedDataQC(od_int64 ndata, double datasum,
+				 float datamin, const BinID& dataminbid,
+				 float datamax, const BinID& datamaxbidx) const;
     void	reportMemError(const char*, const char*, od_int64);
 
     bool	smoothGrid(uiParent*);
+
+    class GridSmoother;
 
     Array2DImpl<unsigned char>*		fixedmask_ = nullptr;
     int					smoothpasses_ = 0;

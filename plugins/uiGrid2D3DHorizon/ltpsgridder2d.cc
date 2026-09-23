@@ -95,7 +95,7 @@ const TypeSet<Coord>& locs_ = interp_->binLocs_;
 const TypeSet<float>& vals_ = interp_->vals_;
 const TrcKeySampling& hs_ = interp_->hs_;
 Array2DImpl<float>* grid_ = interp_->grid_;
-TypeSet<od_int64> interpidx_ = interp_->interpidx_;
+const TypeSet<od_int64>& interpidx_ = interp_->interpidx_;
 RadiusResultSet result;
 Pos::Ordinate_Type srsq = interp_->searchradius_/(SI().inlDistance()+SI().crlDistance())*2.0;
 srsq *= srsq;

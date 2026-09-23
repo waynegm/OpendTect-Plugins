@@ -37,8 +37,10 @@ public:
     bool		executeGridding(uiParent*);
     bool		usePar(const IOPar&);
     void		setNIter(int n) { niter_ = n; }
+    void		setTol(double t) { dxtol_ = t; }
 
     static const char*	sKeyNIter();
+    static const char*	sKeyTol();
 
 #ifdef WMITERSELFTEST
     static bool		selfTest();
@@ -55,6 +57,7 @@ protected:
     bool		valid(int ix, int iy) const;
 
     int					niter_;
+    double				dxtol_ = 1e-3;
     Array2DImpl<float>*			fixedval_ = nullptr;
     Array2DImpl<unsigned char>*		fixed_ = nullptr;
     Array2DImpl<int>*			cnt_ = nullptr;
